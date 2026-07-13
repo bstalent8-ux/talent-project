@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/notifications/create";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -92,6 +93,17 @@ export async function POST(req: NextRequest, { params }: Params) {
     .from("conversations")
     .update({ last_message_at: message.created_at })
     .eq("id", id);
+
+  // Notify the other participant
+  const receiverId = conv.brand_id === user.id ? conv.talent_id : conv.brand_id;
+  await createNotification({
+    userId:        receiverId,
+    type:          "message",
+    title:         "رسالة جديدة",
+    message:       content.trim().slice(0, 80),
+    referenceId:   id,
+    referenceType: "chat",
+  });
 
   return NextResponse.json({ message }, { status: 201 });
 }

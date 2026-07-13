@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { recalcRating } from "@/lib/recalcRating";
+import { createNotification } from "@/lib/notifications/create";
 
 // GET /api/reviews?talent_id=xxx
 export async function GET(req: NextRequest) {
@@ -87,6 +88,23 @@ export async function POST(req: NextRequest) {
 
     // Recalculate avg_rating + total_reviews and bust Next.js cache.
     await recalcRating(booking.talent_id);
+
+    // Notify the talent that they received a review
+    const { data: talentProfile } = await adminClient
+      .from("talent_profiles")
+      .select("user_id")
+      .eq("id", booking.talent_id)
+      .maybeSingle();
+    if (talentProfile?.user_id) {
+      await createNotification({
+        userId:        talentProfile.user_id,
+        type:          "review",
+        title:         `تقييم جديد ⭐ ${rating}/5`,
+        message:       comment?.trim() || "حصلت على تقييم جديد من أحد العملاء.",
+        referenceId:   null,
+        referenceType: "review",
+      });
+    }
 
     return NextResponse.json({ review }, { status: 201 });
   } catch (e: any) {

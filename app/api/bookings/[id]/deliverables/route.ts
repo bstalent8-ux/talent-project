@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/notifications/create";
 
 // GET — list deliverables for booking
 export async function GET(
@@ -68,6 +69,16 @@ export async function POST(
     });
   }
 
+  // Notify brand that deliverables were submitted
+  await createNotification({
+    userId:        booking.brand_id,
+    type:          "booking",
+    title:         "تم تسليم العمل 📦",
+    message:       "قدّمت الموهبة العمل. يرجى المراجعة والموافقة.",
+    referenceId:   id,
+    referenceType: "booking",
+  });
+
   return NextResponse.json({ deliverable, status: "completed" });
 }
 
@@ -102,6 +113,16 @@ export async function PATCH(
         .then(() => null, () => null);
     }
     await adminClient.from("bookings").update({ status: "paid" }).eq("id", id);
+    if (booking.talent_user_id) {
+      await createNotification({
+        userId:        booking.talent_user_id,
+        type:          "payment",
+        title:         "تمت الموافقة على عملك ✅",
+        message:       "تم الموافقة على العمل المسلّم وتحرير المبلغ.",
+        referenceId:   id,
+        referenceType: "booking",
+      });
+    }
     return NextResponse.json({ success: true, status: "paid" });
   }
 
@@ -110,6 +131,16 @@ export async function PATCH(
       await adminClient.from("deliverables").update({ status: "revision_requested", feedback: feedback ?? null }).eq("id", deliverable_id);
     }
     await adminClient.from("bookings").update({ status: "in_progress" }).eq("id", id);
+    if (booking.talent_user_id) {
+      await createNotification({
+        userId:        booking.talent_user_id,
+        type:          "booking",
+        title:         "طُلب تعديل على العمل 🔄",
+        message:       feedback ?? "طلب العميل إجراء تعديلات على العمل المسلّم.",
+        referenceId:   id,
+        referenceType: "booking",
+      });
+    }
     const { data: conv } = await adminClient
       .from("conversations").select("id").eq("brand_id", user.id).eq("talent_id", booking.talent_user_id ?? "").maybeSingle();
     if (conv) {

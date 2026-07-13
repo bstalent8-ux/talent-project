@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/notifications/create";
 
 // PATCH — talent accepts or rejects the brief
 export async function PATCH(
@@ -64,6 +65,20 @@ export async function PATCH(
       message_type: "text",
     });
   }
+
+  // Notify brand of talent's response
+  const notifTitle  = action === "accept" ? "قبلت الموهبة الملخص ✅" : "رفضت الموهبة الملخص ❌";
+  const notifMsg    = action === "accept"
+    ? "قبلت الموهبة ملخص المشروع، يمكنك المتابعة للدفع."
+    : `رفضت الموهبة الملخص${reject_reason ? `: ${reject_reason}` : ""}`;
+  await createNotification({
+    userId:        booking.brand_id,
+    type:          "brief",
+    title:         notifTitle,
+    message:       notifMsg,
+    referenceId:   id,
+    referenceType: "booking",
+  });
 
   return NextResponse.json({ success: true, status: newStatus });
 }

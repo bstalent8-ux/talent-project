@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import { createClient } from "@/lib/supabase/client";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 const NAV_LINKS = {
   ar: [
@@ -205,19 +206,7 @@ export default function Navbar({
           </button>
 
           {/* Notifications — desktop only */}
-          {!isMobile && (
-            <button style={{ background: "none", border: "none", cursor: "pointer", padding: "8px", color: MUTED, display: "flex", position: "relative" }}>
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span style={{
-                position: "absolute", top: "4px", left: "4px",
-                width: "16px", height: "16px", backgroundColor: "#FF6B2B", borderRadius: "50%",
-                fontSize: "10px", fontWeight: 700, color: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>3</span>
-            </button>
-          )}
+          {!isMobile && <NotificationBell />}
 
          {/* Avatar + Dropdown */}
 <div ref={dropdownRef} style={{ position: "relative", flexShrink: 0 }}>

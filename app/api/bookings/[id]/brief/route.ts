@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/notifications/create";
 
 // GET — get brief for booking
 export async function GET(
@@ -38,7 +39,7 @@ export async function POST(
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { data: booking } = await adminClient
-    .from("bookings").select("brand_id,status").eq("id", id).single();
+    .from("bookings").select("brand_id,talent_user_id,status").eq("id", id).single();
   if (!booking) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (booking.brand_id !== user.id) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   if (!["contacting"].includes(booking.status))
@@ -79,6 +80,18 @@ export async function POST(
       sender_id: user.id,
       content: `📋 تم إرسال ملخص المشروع: "${title}"\n📋 Project brief sent: "${title}"`,
       message_type: "text",
+    });
+  }
+
+  // Notify talent about new brief
+  if (booking.talent_user_id) {
+    await createNotification({
+      userId:        booking.talent_user_id,
+      type:          "brief",
+      title:         "تم إرسال ملخص المشروع 📋",
+      message:       `"${title}" — يرجى مراجعة الملخص والرد عليه`,
+      referenceId:   id,
+      referenceType: "booking",
     });
   }
 

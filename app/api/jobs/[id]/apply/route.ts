@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/notifications/create";
 
 // POST /api/jobs/[id]/apply — talent submits a proposal
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -52,6 +53,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Notify the brand that someone applied
+  await createNotification({
+    userId:        job.brand_id,
+    type:          "job_application",
+    title:         "طلب تقديم جديد",
+    message:       message ?? "تقدّم أحد المواهب على وظيفتك",
+    referenceId:   jobId,
+    referenceType: "job",
+  });
+
   return NextResponse.json({ application }, { status: 201 });
 }
 

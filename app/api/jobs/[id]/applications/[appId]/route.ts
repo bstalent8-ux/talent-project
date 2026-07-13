@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/notifications/create";
 
 // PATCH /api/jobs/[id]/applications/[appId]
 // body: { action: "accept" | "reject", reject_reason?: string }
@@ -36,6 +37,16 @@ export async function PATCH(
       .update({ status: "rejected", reject_reason: reject_reason ?? null })
       .eq("id", appId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    await createNotification({
+      userId:        app.talent_id,
+      type:          "job_application",
+      title:         "تم رفض طلبك",
+      message:       reject_reason ?? "للأسف لم يتم قبول طلبك على هذه الوظيفة",
+      referenceId:   jobId,
+      referenceType: "job",
+    });
+
     return NextResponse.json({ success: true, status: "rejected" });
   }
 
@@ -99,6 +110,15 @@ export async function PATCH(
       sender_id: user.id,
       content: `✅ تم قبول عرضك للوظيفة. دعنا نبدأ!\n✅ Your proposal was accepted. Let's get started!`,
       message_type: "text",
+    });
+
+    await createNotification({
+      userId:        app.talent_id,
+      type:          "booking",
+      title:         "تم قبول طلبك! 🎉",
+      message:       "تهانينا! تم قبول عرضك وتم إنشاء مشروع جديد.",
+      referenceId:   bookingId,
+      referenceType: "booking",
     });
 
     return NextResponse.json({
