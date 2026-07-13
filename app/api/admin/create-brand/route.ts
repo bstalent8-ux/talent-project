@@ -28,7 +28,7 @@ export async function POST() {
   let finalId = userId;
   if (!finalId) {
     const { data: users } = await adminClient.auth.admin.listUsers();
-    const existing = users?.users?.find((u) => u.email === brand.email);
+    const existing = (users?.users ?? []).find((u: { email?: string }) => u.email === brand.email);
     finalId = existing?.id;
   }
 

@@ -105,7 +105,7 @@ export default function TalentModelProfile({
             <ReviewsCard reviews={reviews} rating={talent.rating} />
             <BrandsCard brands={brands} />
             <TrustCard />
-            <BriefCard talentUserId={talent.id} talentName={talent.name ?? ""} talentAvatar={talent.avatar_url ?? null} talentCategory={talent.category ?? null} />
+            <BriefCard talentUserId={talent.id} talentName={talent.name ?? ""} talentAvatar={talent.avatarUrl ?? null} talentCategory={talent.category ?? null} />
             <QuestionCard />
           </div>
         </div>

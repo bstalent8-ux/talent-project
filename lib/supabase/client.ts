@@ -11,9 +11,6 @@ export function createClient() {
     {
       auth: {
         debug: false,
-        // Auto-recover from stale/invalid refresh tokens (e.g. after project pause).
-        // When token refresh fails, sign out silently so the user gets a clean state.
-        onAuthStateChange: undefined,
       },
     }
   );

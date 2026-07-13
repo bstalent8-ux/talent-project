@@ -95,8 +95,9 @@ export async function PATCH(
     }
     // Release payment to talent balance
     if (booking.talent_user_id && booking.amount) {
+      // Graceful fallback if RPC not defined
       await adminClient.rpc("increment_balance", { user_id: booking.talent_user_id, amount: booking.amount })
-        .catch(() => null); // Graceful fallback if RPC not defined
+        .then(() => null, () => null);
     }
     await adminClient.from("bookings").update({ status: "paid" }).eq("id", id);
     return NextResponse.json({ success: true, status: "paid" });

@@ -31,7 +31,7 @@ export async function GET() {
     const userId = authData?.user?.id ?? (
       // user already exists — fetch id
       (await adminClient.auth.admin.listUsers({ perPage: 1000 }))
-        .data?.users?.find(u => u.email === brand.email)?.id
+        .data?.users?.find((u: { email?: string; id: string }) => u.email === brand.email)?.id
     );
 
     if (!userId) { results[brand.handle] = "could not resolve user id"; continue; }

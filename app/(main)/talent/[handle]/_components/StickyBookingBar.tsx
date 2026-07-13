@@ -148,7 +148,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
       <DirectBriefModal
         talentUserId={talent.id}
         talentName={talent.name ?? ""}
-        talentAvatar={talent.avatar_url ?? null}
+        talentAvatar={talent.avatarUrl ?? null}
         talentCategory={talent.category ?? null}
         dark={dark}
         lang={lang}

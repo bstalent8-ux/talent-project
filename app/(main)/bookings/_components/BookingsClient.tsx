@@ -25,7 +25,8 @@ interface Booking {
   brief:  { status: string } | null;
 }
 
-interface Props { bookings: Record<string, unknown>[]; myRole: string; myId: string }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface Props { bookings: any[]; myRole: string; myId: string }
 
 export default function BookingsClient({ bookings, myRole }: Props) {
   const { dark, lang } = useSite();
@@ -62,7 +63,7 @@ export default function BookingsClient({ bookings, myRole }: Props) {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {(bookings as Booking[]).map((b) => {
+            {bookings.map((b) => {
               const sl = STATUS_LABELS[b.status] ?? { ar: b.status, en: b.status, color: MUTED };
               const other = isBrand ? b.talent : b.brand;
               const daysAgo = Math.floor((Date.now() - new Date(b.created_at).getTime()) / 86400000);
