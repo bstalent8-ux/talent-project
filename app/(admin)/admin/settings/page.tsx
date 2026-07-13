@@ -1,4 +1,5 @@
 "use client";
+export const runtime = 'edge';
 import { useEffect, useRef, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import { useSite } from "@/contexts/SiteContext";

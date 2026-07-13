@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import QuestionClient from "./_components/QuestionClient";
 
 export default function QuestionPage() {

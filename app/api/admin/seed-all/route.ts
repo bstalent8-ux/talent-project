@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 /**
  * GET /api/admin/seed-all
  * Seeds bookings (all pipeline stages), reviews (all statuses),

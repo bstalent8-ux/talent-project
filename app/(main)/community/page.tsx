@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import CommunityClient from "./_components/CommunityClient";
 
 export const metadata = {

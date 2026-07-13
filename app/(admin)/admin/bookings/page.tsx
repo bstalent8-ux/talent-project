@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 export const dynamic = "force-dynamic";
 
 import { fetchAdminBookings } from "@/features/admin/services/admin.service";
