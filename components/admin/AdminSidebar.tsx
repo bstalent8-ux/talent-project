@@ -106,6 +106,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
           flexDirection: "column",
           padding: "24px 0",
           position: "sticky",
+          
           top: 0,
           flexShrink: 0,
           transition: "width 0.28s cubic-bezier(0.4,0,0.2,1), transform 0.28s cubic-bezier(0.4,0,0.2,1)",
