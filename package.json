@@ -11,6 +11,7 @@
     "deploy": "npm run pages:build && wrangler pages deploy"
   },
   "dependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.2",
     "@swc/helpers": "0.5.23",
@@ -18,7 +19,7 @@
     "dotenv": "^17.4.2",
     "framer-motion": "^12.42.0",
     "lucide-react": "^1.21.0",
-    "next": "^16.2.9",
+    "next": "15.3.4",
     "next-intl": "^4.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
