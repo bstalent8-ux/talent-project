@@ -77,9 +77,9 @@ const COMPANY_LINKS = (t: LinksMap) => [
 ];
 
 const LEGAL_LINKS = (t: LinksMap) => [
-  { label: t.terms,   href: "/legal/terms" },
-  { label: t.privacy, href: "/legal/privacy" },
-  { label: t.cookies, href: "/legal/cookies" },
+  { label: t.terms,   href: "/terms" },
+  { label: t.privacy, href: "/privacy" },
+  { label: t.cookies, href: "/cookies" },
 ];
 
 // SVG social icons (lucide doesn't bundle brand icons)
