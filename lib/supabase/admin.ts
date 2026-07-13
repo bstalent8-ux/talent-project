@@ -16,7 +16,11 @@ function getAdminClient(): SupabaseClient {
 
   _admin = createClient(url, key, {
     global: {
-      fetch: (u, opts = {}) => fetch(u, { ...opts, cache: "no-store" }),
+      fetch: (u, opts = {}) => {
+        const headers = new Headers((opts as RequestInit).headers);
+        headers.set("User-Agent", "supabase-js/2 (Node.js server)");
+        return fetch(u, { ...opts, cache: "no-store", headers });
+      },
     },
   });
 
