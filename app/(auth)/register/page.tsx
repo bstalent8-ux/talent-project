@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 type Role = "talent" | "brand";
 type Lang = "ar" | "en";
@@ -33,6 +34,7 @@ const INIT: FormData = {
 
 const TX = {
   ar: {
+    eyebrow:         "انضم الآن //",
     headline:        "أنت على بُعد 30 ثانية",
     sub:             "من أكبر سوق مواهب في العالم العربي",
     fullName:        "الاسم الكامل",
@@ -52,7 +54,7 @@ const TX = {
     termsLink:       "الشروط والأحكام",
     terms2:          "و",
     privacyLink:     "سياسة الخصوصية",
-    submit:          "إنشاء الحساب",
+    submit:          "إنشاء الحساب ←",
     loading:         "جاري الإنشاء...",
     haveAccount:     "لديك حساب؟",
     signIn:          "تسجيل الدخول",
@@ -62,8 +64,15 @@ const TX = {
     errPassMismatch: "كلمتا المرور غير متطابقتين",
     errTerms:        "يجب الموافقة على الشروط والأحكام",
     errPhone:        "الرجاء إدخال رقم هاتف صحيح",
+    brand2:          "منصة المواهب",
+    brandHighlight:  "العربية.",
+    brandDesc:       "موديلز، UGC Creators، وإنفلونسرز — كلهم في مكان واحد. براندات موثقة. تعاون حقيقي.",
+    stat1: "متوسط التقييم",
+    stat2: "براند",
+    stat3: "موهبة",
   },
   en: {
+    eyebrow:         "JOIN NOW //",
     headline:        "You're 30 seconds away",
     sub:             "from the largest Arab talent marketplace",
     fullName:        "Full name",
@@ -83,7 +92,7 @@ const TX = {
     termsLink:       "Terms of Service",
     terms2:          "and",
     privacyLink:     "Privacy Policy",
-    submit:          "Create account",
+    submit:          "Create account →",
     loading:         "Creating...",
     haveAccount:     "Already have an account?",
     signIn:          "Sign in",
@@ -93,30 +102,44 @@ const TX = {
     errPassMismatch: "Passwords do not match",
     errTerms:        "You must agree to the terms and conditions",
     errPhone:        "Please enter a valid phone number",
+    brand2:          "Arab Talent",
+    brandHighlight:  "Platform.",
+    brandDesc:       "Models, UGC Creators, and Influencers — all in one place. Verified brands. Real collaboration.",
+    stat1: "Avg Rating",
+    stat2: "Brands",
+    stat3: "Talents",
   },
 };
 
+const floatingTalents = [
+  { name: "سارة أحمد", sub: "Fashion · 8.4k", color: "#00C9B1" },
+  { name: "عمر خالد",  sub: "UGC · 12k",      color: "#FFB800" },
+  { name: "مي حسين",   sub: "Model · 5.2k",   color: "#FF6B2B" },
+];
+
 export default function RegisterPage() {
-  const router = useRouter();
-  const [form,      setForm]      = useState<FormData>(INIT);
-  const [loading,   setLoading]   = useState(false);
-  const [showPass,  setShowPass]  = useState(false);
-  const [showConf,  setShowConf]  = useState(false);
-  const [error,     setError]     = useState("");
-  const [lang,      setLang]      = useState<Lang>("ar");
-  const [mode,      setMode]      = useState<Mode>("dark");
+  const router   = useRouter();
+  const isMobile = useIsMobile();
+
+  const [form,     setForm]     = useState<FormData>(INIT);
+  const [loading,  setLoading]  = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [showConf, setShowConf] = useState(false);
+  const [error,    setError]    = useState("");
+  const [lang,     setLang]     = useState<Lang>("ar");
+  const [mode,     setMode]     = useState<Mode>("dark");
 
   const tx   = TX[lang];
   const dark = mode === "dark";
   const dir  = lang === "ar" ? "rtl" : "ltr";
 
-  const BG     = dark ? "#060d18"  : "#f8fafc";
-  const CARD   = dark ? "#0d1a2e"  : "#ffffff";
-  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#e2e8f0";
-  const INP    = dark ? "rgba(255,255,255,0.04)" : "#f8fafc";
-  const TEXT   = dark ? "#f1f5f9"  : "#0f172a";
-  const MUTED  = dark ? "#64748b"  : "#94a3b8";
-  const TEAL   = "#00C9B1";
+  const bg   = dark ? "#0a0a0a" : "#f5f5f0";
+  const card = dark ? "#111111" : "#ffffff";
+  const text = dark ? "#f1f5f9" : "#0f172a";
+  const muted= dark ? "#6b7280" : "#64748b";
+  const inp  = dark ? "#1a1a1a" : "#f8fafc";
+  const bord = dark ? "#2a2a2a" : "#e2e8f0";
+  const gold = "#FFB800";
 
   const set = (k: keyof FormData, v: any) => setForm(f => ({ ...f, [k]: v }));
 
@@ -155,7 +178,6 @@ export default function RegisterPage() {
       const uid = data.user?.id;
       if (!uid) { setError("Something went wrong. Please try again."); setLoading(false); return; }
 
-      // Build minimal profile — everything else filled via profile completion
       const handle = form.email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-");
 
       await fetch("/api/profile", {
@@ -194,105 +216,101 @@ export default function RegisterPage() {
     form.password.length < 8 ? 2 :
     form.password.match(/[A-Z]/) && form.password.match(/[0-9]/) ? 4 : 3;
 
-  const strengthColor = ["transparent", "#ef4444", "#f59e0b", "#00C9B1", "#00D26A"][passStrength];
+  const strengthColor = ["transparent", "#ef4444", "#f59e0b", gold, "#00D26A"][passStrength];
 
   const inputStyle: React.CSSProperties = {
-    width:       "100%",
-    padding:     "12px 16px",
-    background:  INP,
-    border:      `1px solid ${BORDER}`,
-    borderRadius: 10,
-    color:       TEXT,
-    fontSize:    15,
-    outline:     "none",
-    boxSizing:   "border-box",
-    fontFamily:  "'Cairo', sans-serif",
-    transition:  "border-color 0.15s",
+    width:        "100%",
+    padding:      "11px 14px",
+    background:   inp,
+    border:       `1px solid ${bord}`,
+    borderRadius: 8,
+    color:        text,
+    fontSize:     14,
+    outline:      "none",
+    boxSizing:    "border-box",
+    fontFamily:   "'Cairo', sans-serif",
   };
 
   const labelStyle: React.CSSProperties = {
-    display:     "block",
-    color:       MUTED,
-    fontSize:    13,
+    display:      "block",
+    color:        muted,
+    fontSize:     13,
     marginBottom: 6,
-    fontWeight:  500,
+    fontWeight:   500,
   };
 
   return (
     <div style={{
-      minHeight:       "100vh",
-      backgroundColor: BG,
-      display:         "flex",
-      flexDirection:   "column",
-      alignItems:      "center",
-      padding:         "32px 16px 48px",
-      fontFamily:      "'Cairo', sans-serif",
-      direction:       dir,
+      minHeight: "100vh", display: "flex", flexDirection: "row",
+      backgroundColor: bg, fontFamily: "'Cairo', sans-serif", direction: dir,
     }}>
 
-      {/* Top bar */}
-      <div style={{ width: "100%", maxWidth: 520, display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-        <Image
-          src={dark ? "/assets/logo-dark.png" : "/assets/logo-light.png"}
-          alt="Talents"
-          width={110}
-          height={32}
-          style={{ objectFit: "contain" }}
-        />
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {/* ── FORM SIDE ── */}
+      <div style={{
+        width:           isMobile ? "100%" : "48%",
+        minWidth:        isMobile ? "unset" : "400px",
+        display:         "flex",
+        flexDirection:   "column",
+        justifyContent:  "center",
+        padding:         isMobile ? "32px 24px" : "40px 52px",
+        position:        "relative",
+        backgroundColor: card,
+        overflowY:       "auto",
+      }}>
+
+        {/* Controls top */}
+        <div style={{
+          position: "absolute", top: "24px",
+          [lang === "ar" ? "right" : "left"]: "24px",
+          display: "flex", gap: "8px", alignItems: "center",
+        }}>
           <button onClick={() => setLang(lang === "ar" ? "en" : "ar")} style={{
-            background: INP, border: `1px solid ${BORDER}`, borderRadius: 6,
-            padding: "4px 10px", cursor: "pointer", color: MUTED,
-            fontSize: 12, fontWeight: 600, fontFamily: "'Cairo', sans-serif",
+            background: inp, border: "none", borderRadius: "6px",
+            padding: "4px 10px", cursor: "pointer",
+            color: muted, fontSize: "12px", fontWeight: 600, fontFamily: "'Cairo', sans-serif",
           }}>
             {lang === "ar" ? "EN" : "ع"}
           </button>
           <button onClick={() => setMode(dark ? "light" : "dark")} style={{
-            background: INP, border: `1px solid ${BORDER}`, borderRadius: 6,
-            padding: "4px 10px", cursor: "pointer", fontSize: 14,
+            background: inp, border: "none", borderRadius: "6px",
+            padding: "4px 10px", cursor: "pointer", fontSize: "13px",
           }}>
             {dark ? "☀️" : "🌙"}
           </button>
-          <Link href="/login" style={{ color: MUTED, fontSize: 13, textDecoration: "none" }}>
+          <Link href="/login" style={{ color: muted, fontSize: 13, textDecoration: "none", marginInlineStart: 4 }}>
             {tx.haveAccount}{" "}
-            <span style={{ color: TEAL, fontWeight: 700 }}>{tx.signIn}</span>
+            <span style={{ color: gold, fontWeight: 700 }}>{tx.signIn}</span>
           </Link>
         </div>
-      </div>
 
-      {/* Card */}
-      <div style={{
-        width:           "100%",
-        maxWidth:        520,
-        background:      CARD,
-        border:          `1px solid ${BORDER}`,
-        borderRadius:    20,
-        padding:         "36px 40px",
-      }}>
+        {/* Heading */}
+        <p style={{ color: gold, fontSize: "11px", fontWeight: 700, letterSpacing: "3px", marginBottom: "8px" }}>
+          {tx.eyebrow}
+        </p>
+        <h1 style={{ color: text, fontSize: "28px", fontWeight: 800, margin: "0 0 6px" }}>
+          {tx.headline}
+        </h1>
+        <p style={{ color: muted, fontSize: "14px", marginBottom: "28px" }}>
+          {tx.sub}
+        </p>
 
-        {/* Headline */}
-        <div style={{ marginBottom: 28, textAlign: "center" }}>
-          <h1 style={{ color: TEXT, fontSize: 26, fontWeight: 700, margin: "0 0 6px" }}>{tx.headline}</h1>
-          <p style={{ color: MUTED, fontSize: 14, margin: 0 }}>{tx.sub}</p>
-        </div>
-
-        {/* User type toggle */}
+        {/* Role toggle */}
         <div style={{ marginBottom: 20 }}>
           <label style={labelStyle}>{tx.iAm}</label>
           <div style={{ display: "flex", gap: 8 }}>
             {(["talent", "brand"] as Role[]).map((r) => (
               <button key={r} onClick={() => set("role", r)} style={{
-                flex:        1,
-                padding:     "11px 0",
-                background:  form.role === r ? TEAL : INP,
-                color:       form.role === r ? "#fff" : MUTED,
-                border:      `1px solid ${form.role === r ? TEAL : BORDER}`,
-                borderRadius: 10,
-                cursor:      "pointer",
-                fontSize:    14,
-                fontWeight:  600,
-                fontFamily:  "'Cairo', sans-serif",
-                transition:  "all 0.2s",
+                flex:         1,
+                padding:      "10px 0",
+                background:   form.role === r ? gold : inp,
+                color:        form.role === r ? "#000" : muted,
+                border:       `1px solid ${form.role === r ? gold : bord}`,
+                borderRadius: 8,
+                cursor:       "pointer",
+                fontSize:     13,
+                fontWeight:   700,
+                fontFamily:   "'Cairo', sans-serif",
+                transition:   "all 0.15s",
               }}>
                 {r === "talent" ? tx.talent : tx.brand}
               </button>
@@ -305,84 +323,46 @@ export default function RegisterPage() {
           <div style={{
             background:   "rgba(239,68,68,0.08)",
             border:       "1px solid rgba(239,68,68,0.3)",
-            borderRadius: 8,
-            padding:      "10px 14px",
-            color:        "#ef4444",
-            fontSize:     13,
-            marginBottom: 16,
+            borderRadius: 8, padding: "10px 14px",
+            color: "#ef4444", fontSize: 13, marginBottom: 16,
           }}>
             {error}
           </div>
         )}
 
         {/* Fields */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-          {/* Full name */}
           <div>
             <label style={labelStyle}>{tx.fullName}</label>
-            <input
-              type="text"
-              placeholder={tx.fullNamePH}
-              value={form.fullName}
-              onChange={(e) => set("fullName", e.target.value)}
-              style={inputStyle}
-            />
+            <input type="text" placeholder={tx.fullNamePH} value={form.fullName}
+              onChange={(e) => set("fullName", e.target.value)} style={inputStyle} />
           </div>
 
-          {/* Email */}
           <div>
             <label style={labelStyle}>{tx.email}</label>
-            <input
-              type="email"
-              placeholder={tx.emailPH}
-              value={form.email}
-              onChange={(e) => set("email", e.target.value)}
-              dir="ltr"
-              style={inputStyle}
-            />
+            <input type="email" placeholder={tx.emailPH} value={form.email}
+              onChange={(e) => set("email", e.target.value)} dir="ltr" style={inputStyle} />
           </div>
 
-          {/* Phone */}
           <div>
             <label style={labelStyle}>{tx.phone}</label>
-            <input
-              type="tel"
-              placeholder={tx.phonePH}
-              value={form.phone}
-              onChange={(e) => set("phone", e.target.value)}
-              dir="ltr"
-              style={inputStyle}
-            />
+            <input type="tel" placeholder={tx.phonePH} value={form.phone}
+              onChange={(e) => set("phone", e.target.value)} dir="ltr" style={inputStyle} />
           </div>
 
-          {/* Password */}
           <div>
             <label style={labelStyle}>{tx.password}</label>
             <div style={{ position: "relative" }}>
               <input
-                type={showPass ? "text" : "password"}
-                placeholder={tx.passwordPH}
-                value={form.password}
-                onChange={(e) => set("password", e.target.value)}
-                dir="ltr"
-                style={{ ...inputStyle, paddingRight: 44 }}
+                type={showPass ? "text" : "password"} placeholder={tx.passwordPH}
+                value={form.password} onChange={(e) => set("password", e.target.value)}
+                dir="ltr" style={{ ...inputStyle, paddingRight: 42 }}
               />
-              <button
-                onClick={() => setShowPass(!showPass)}
-                style={{
-                  position:   "absolute",
-                  right:      14,
-                  top:        "50%",
-                  transform:  "translateY(-50%)",
-                  background: "none",
-                  border:     "none",
-                  cursor:     "pointer",
-                  color:      MUTED,
-                  fontSize:   14,
-                  padding:    0,
-                }}
-              >
+              <button onClick={() => setShowPass(!showPass)} style={{
+                position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", cursor: "pointer", color: muted, fontSize: 14, padding: 0,
+              }}>
                 {showPass ? "🙈" : "👁"}
               </button>
             </div>
@@ -390,53 +370,35 @@ export default function RegisterPage() {
               <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} style={{
-                    flex:        1,
-                    height:      3,
-                    borderRadius: 2,
-                    background:  passStrength >= i ? strengthColor : BORDER,
-                    transition:  "background 0.2s",
+                    flex: 1, height: 3, borderRadius: 2,
+                    background: passStrength >= i ? strengthColor : bord,
+                    transition: "background 0.2s",
                   }} />
                 ))}
               </div>
             )}
           </div>
 
-          {/* Confirm password */}
           <div>
             <label style={labelStyle}>{tx.confirm}</label>
             <div style={{ position: "relative" }}>
               <input
-                type={showConf ? "text" : "password"}
-                placeholder={tx.confirmPH}
-                value={form.confirmPassword}
-                onChange={(e) => set("confirmPassword", e.target.value)}
+                type={showConf ? "text" : "password"} placeholder={tx.confirmPH}
+                value={form.confirmPassword} onChange={(e) => set("confirmPassword", e.target.value)}
                 dir="ltr"
                 style={{
                   ...inputStyle,
-                  paddingRight: 44,
+                  paddingRight: 42,
                   borderColor:
-                    form.confirmPassword && form.confirmPassword !== form.password
-                      ? "#ef4444"
-                      : form.confirmPassword && form.confirmPassword === form.password
-                      ? "#00D26A"
-                      : BORDER,
+                    form.confirmPassword && form.confirmPassword !== form.password ? "#ef4444" :
+                    form.confirmPassword && form.confirmPassword === form.password  ? "#00D26A" :
+                    bord,
                 }}
               />
-              <button
-                onClick={() => setShowConf(!showConf)}
-                style={{
-                  position:   "absolute",
-                  right:      14,
-                  top:        "50%",
-                  transform:  "translateY(-50%)",
-                  background: "none",
-                  border:     "none",
-                  cursor:     "pointer",
-                  color:      MUTED,
-                  fontSize:   14,
-                  padding:    0,
-                }}
-              >
+              <button onClick={() => setShowConf(!showConf)} style={{
+                position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", cursor: "pointer", color: muted, fontSize: 14, padding: 0,
+              }}>
                 {showConf ? "🙈" : "👁"}
               </button>
             </div>
@@ -445,49 +407,113 @@ export default function RegisterPage() {
           {/* Terms */}
           <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
             <input
-              type="checkbox"
-              checked={form.agreeToTerms}
+              type="checkbox" checked={form.agreeToTerms}
               onChange={(e) => set("agreeToTerms", e.target.checked)}
-              style={{ marginTop: 3, flexShrink: 0, accentColor: TEAL, width: 16, height: 16, cursor: "pointer" }}
+              style={{ marginTop: 3, flexShrink: 0, accentColor: gold, width: 16, height: 16, cursor: "pointer" }}
             />
-            <span style={{ color: MUTED, fontSize: 13, lineHeight: 1.6 }}>
+            <span style={{ color: muted, fontSize: 13, lineHeight: 1.6 }}>
               {tx.terms1}{" "}
-              <Link href="/terms" style={{ color: TEAL, textDecoration: "none" }}>{tx.termsLink}</Link>
+              <Link href="/terms" style={{ color: gold, textDecoration: "none" }}>{tx.termsLink}</Link>
               {" "}{tx.terms2}{" "}
-              <Link href="/privacy" style={{ color: TEAL, textDecoration: "none" }}>{tx.privacyLink}</Link>
+              <Link href="/privacy" style={{ color: gold, textDecoration: "none" }}>{tx.privacyLink}</Link>
             </span>
           </label>
 
           {/* Submit */}
           <button
-            onClick={handleSubmit}
-            disabled={loading}
+            onClick={handleSubmit} disabled={loading}
             style={{
-              width:        "100%",
-              padding:      "14px 0",
-              background:   loading ? (dark ? "rgba(255,255,255,0.06)" : "#e2e8f0") : TEAL,
-              color:        loading ? MUTED : "#fff",
-              border:       "none",
-              borderRadius: 12,
-              fontSize:     16,
-              fontWeight:   700,
-              fontFamily:   "'Cairo', sans-serif",
-              cursor:       loading ? "wait" : "pointer",
-              transition:   "opacity 0.2s",
-              marginTop:    4,
+              width: "100%", padding: "14px 0",
+              backgroundColor: gold, color: "#000",
+              border: "none", borderRadius: 10,
+              fontSize: 15, fontWeight: 800,
+              fontFamily: "'Cairo', sans-serif",
+              cursor: loading ? "wait" : "pointer",
+              opacity: loading ? 0.7 : 1,
+              marginTop: 4,
             }}
           >
             {loading ? tx.loading : tx.submit}
           </button>
         </div>
+
+        <p style={{ textAlign: "center", color: muted, fontSize: "13px", margin: "16px 0 0" }}>
+          {tx.haveAccount}{" "}
+          <Link href="/login" style={{ color: gold, fontWeight: 700, textDecoration: "none" }}>
+            {tx.signIn}
+          </Link>
+        </p>
       </div>
 
-      <p style={{ color: MUTED, fontSize: 12, marginTop: 16, textAlign: "center" }}>
-        {tx.haveAccount}{" "}
-        <Link href="/login" style={{ color: TEAL, textDecoration: "none", fontWeight: 600 }}>
-          {tx.signIn}
-        </Link>
-      </p>
+      {/* ── BRANDING SIDE — desktop only ── */}
+      {!isMobile && (
+        <div style={{
+          flex: 1, position: "relative", overflow: "hidden",
+          backgroundColor: "#0a0a0a",
+          backgroundImage: "radial-gradient(ellipse at 30% 60%, rgba(255,184,0,0.08) 0%, transparent 60%)",
+          display: "flex", flexDirection: "column", justifyContent: "space-between",
+          padding: "32px 48px",
+        }}>
+          <div style={{ textAlign: lang === "ar" ? "right" : "left" }}>
+            <Image src="/assets/logo.png" alt="Talents" width={110} height={32}
+              style={{ height: "32px", width: "auto" }} />
+          </div>
+
+          {/* Floating cards */}
+          <div style={{
+            position: "absolute", left: "48px", top: "50%",
+            transform: "translateY(-60%)",
+            display: "flex", flexDirection: "column", gap: "12px",
+          }}>
+            {floatingTalents.map((tl, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: "10px",
+                backgroundColor: "rgba(255,255,255,0.05)",
+                backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "12px", padding: "10px 14px",
+              }}>
+                <div style={{
+                  width: "36px", height: "36px", borderRadius: "50%",
+                  backgroundColor: tl.color + "33",
+                  border: `2px solid ${tl.color}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "14px", fontWeight: 700, color: tl.color,
+                }}>
+                  {tl.name[0]}
+                </div>
+                <div>
+                  <p style={{ color: "#f1f5f9", fontSize: "13px", fontWeight: 700, margin: 0 }}>{tl.name}</p>
+                  <p style={{ color: "#6b7280", fontSize: "11px", margin: 0 }}>{tl.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Headline */}
+          <div style={{ textAlign: lang === "ar" ? "right" : "left" }}>
+            <h2 style={{ color: "#f1f5f9", fontSize: "52px", fontWeight: 900, lineHeight: 1.15, margin: "0 0 16px" }}>
+              {tx.brand2}<br />
+              <span style={{ color: gold, fontStyle: "italic" }}>{tx.brandHighlight}</span>
+            </h2>
+            <p style={{ color: "#6b7280", fontSize: "15px", lineHeight: 1.7, maxWidth: "320px", margin: lang === "ar" ? "0 0 0 auto" : "0 auto 0 0" }}>
+              {tx.brandDesc}
+            </p>
+            <div style={{ display: "flex", gap: "40px", marginTop: "40px", justifyContent: lang === "ar" ? "flex-end" : "flex-start" }}>
+              {[
+                { val: "4.9",  label: tx.stat1 },
+                { val: "83",   label: tx.stat2 },
+                { val: "+247", label: tx.stat3 },
+              ].map((s, i) => (
+                <div key={i} style={{ textAlign: lang === "ar" ? "right" : "left" }}>
+                  <p style={{ color: gold, fontSize: "22px", fontWeight: 900, margin: 0 }}>{s.val}</p>
+                  <p style={{ color: "#6b7280", fontSize: "12px", margin: "2px 0 0" }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

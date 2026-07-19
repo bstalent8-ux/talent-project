@@ -7,11 +7,6 @@ export default async function RootPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (user) {
-    // Logged-in users → home dashboard
-    redirect("/home");
-  } else {
-    // Guests → login
-    redirect("/login");
-  }
+  // Always go to home — guests can browse, logged-in users see personalized content
+  redirect("/home");
 }

@@ -227,10 +227,17 @@ export default function DashboardPage() {
   const [physForm,      setPhysForm]      = useState<any>({});
   const [physSaving,    setPhysSaving]    = useState(false);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (retryCount = 0) => {
     const res = await fetch("/api/me");
     if (res.status === 401) { router.push("/login"); return; }
-    if (!res.ok) { setStatus("none"); return; }
+    if (!res.ok) {
+      // Race condition after registration — retry up to 3 times with backoff
+      if (retryCount < 3) {
+        await new Promise(r => setTimeout(r, 1000 * (retryCount + 1)));
+        return fetchProfile(retryCount + 1);
+      }
+      setStatus("none"); return;
+    }
     const { profile: prof, talentProfile: talentProf, portfolioItems } = await res.json();
     setProfile(prof);
     setTp(talentProf ?? null);
@@ -406,8 +413,73 @@ export default function DashboardPage() {
   );
 
   if (status === "none") return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: BG }}>
-      <p style={{ color: MUTED, fontFamily: "'Cairo',sans-serif" }}>{t.noProfile}</p>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: BG, padding: "24px 16px", fontFamily: "'Cairo',sans-serif", direction: lang === "ar" ? "rtl" : "ltr" }}>
+      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+      {/* Welcome card */}
+      <div style={{ width: "100%", maxWidth: 480, animation: "fadeUp 0.5s ease" }}>
+
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <img src="/assets/logo.png" alt="Talents" style={{ height: 36, objectFit: "contain" }} />
+        </div>
+
+        {/* Welcome banner */}
+        <div style={{
+          background: dark ? "linear-gradient(135deg,#1a2a0a 0%,#0d1a0a 100%)" : "linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%)",
+          border: `1px solid ${dark ? "#2d5a1b" : "#86efac"}`,
+          borderRadius: 20, padding: "32px 28px", textAlign: "center", marginBottom: 20,
+        }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>🎉</div>
+          <h1 style={{ color: TEXT, fontSize: 24, fontWeight: 800, margin: "0 0 8px" }}>
+            {lang === "ar" ? "أهلاً وسهلاً!" : "Welcome aboard!"}
+          </h1>
+          <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.7, margin: 0 }}>
+            {lang === "ar"
+              ? "تم إنشاء حسابك بنجاح. أكمل ملفك الشخصي لتظهر في نتائج البحث."
+              : "Your account was created successfully. Complete your profile to appear in search results."}
+          </p>
+        </div>
+
+        {/* Steps */}
+        {[
+          { icon: "📸", title: lang === "ar" ? "أضف صورتك" : "Add your photo",         pct: "15%" },
+          { icon: "📝", title: lang === "ar" ? "أكمل بياناتك" : "Fill your details",   pct: "25%" },
+          { icon: "📦", title: lang === "ar" ? "أضف باقاتك" : "Add your packages",     pct: "35%" },
+          { icon: "🖼️", title: lang === "ar" ? "ارفع أعمالك" : "Upload your portfolio", pct: "15%" },
+        ].map((s, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", gap: 14,
+            background: CARD, border: `1px solid ${BORDER}`,
+            borderRadius: 12, padding: "14px 18px", marginBottom: 10,
+          }}>
+            <span style={{ fontSize: 22 }}>{s.icon}</span>
+            <span style={{ color: TEXT, fontSize: 14, fontWeight: 600, flex: 1 }}>{s.title}</span>
+            <span style={{
+              background: `${GREEN}22`, color: GREEN,
+              fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20,
+            }}>+{s.pct}</span>
+          </div>
+        ))}
+
+        {/* CTA */}
+        <button
+          onClick={() => { setStatus("loading"); fetchProfile(); }}
+          style={{
+            width: "100%", padding: "15px 0", marginTop: 8,
+            background: "#FFB800", color: "#000",
+            border: "none", borderRadius: 12,
+            fontSize: 16, fontWeight: 800, cursor: "pointer",
+            fontFamily: "'Cairo',sans-serif",
+          }}
+        >
+          {lang === "ar" ? "ابدأ الآن ←" : "Get Started →"}
+        </button>
+
+        <p style={{ textAlign: "center", color: MUTED, fontSize: 12, marginTop: 16 }}>
+          {lang === "ar" ? "كل 10 ثوانٍ تنضم موهبة جديدة 🚀" : "A new talent joins every 10 seconds 🚀"}
+        </p>
+      </div>
     </div>
   );
 

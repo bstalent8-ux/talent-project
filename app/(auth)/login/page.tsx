@@ -16,8 +16,8 @@ const tx = {
     eyebrow:    "WELCOME BACK //",
     heading:    "أهلاً بيك من جديد",
     sub:        "سجل دخولك وكمّل من حيث وقفت",
-    email:      "البريد الإلكتروني",
-    emailPH:    "example@email.com",
+    email:      "البريد الإلكتروني أو اسم المستخدم",
+    emailPH:    "example@email.com أو @username",
     password:   "كلمة المرور",
     passwordPH: "كلمة المرور",
     forgot:     "نسيت كلمة المرور؟",
@@ -37,8 +37,8 @@ const tx = {
     eyebrow:    "WELCOME BACK //",
     heading:    "Welcome Back",
     sub:        "Sign in and continue where you left off",
-    email:      "Email",
-    emailPH:    "example@email.com",
+    email:      "Email or Username",
+    emailPH:    "example@email.com or @username",
     password:   "Password",
     passwordPH: "Your password",
     forgot:     "Forgot password?",
@@ -90,13 +90,27 @@ export default function LoginPage() {
   async function handleLogin() {
     if (!email || !password) { setError(t.error); return; }
     setLoading(true); setError("");
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+
+    // Resolve username → email if needed
+    let resolvedEmail = email.trim();
+    if (!resolvedEmail.includes("@") || resolvedEmail.startsWith("@")) {
+      const handle = resolvedEmail.replace(/^@/, "").toLowerCase();
+      const res = await fetch("/api/auth/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: handle }),
+      });
+      if (!res.ok) { setLoading(false); setError(t.error); return; }
+      const { email: found } = await res.json();
+      resolvedEmail = found;
+    }
+
+    const { error: err } = await supabase.auth.signInWithPassword({ email: resolvedEmail, password });
     setLoading(false);
     if (err) { setError(t.error); return; }
 
     const res = await fetch("/api/me/role");
     const { role } = await res.json();
-    console.log("User role:", role);
     if (role === "admin") {
       router.push("/admin");
     } else {
