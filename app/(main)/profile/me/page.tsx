@@ -13,10 +13,40 @@ import {
 import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { createClient } from "@/lib/supabase/client";
+import ProfileCompletionCard from "@/components/profile/ProfileCompletionCard";
 
 /* ─── colour helpers ─── */
 const GREEN = "#00D26A";
 const GOLD  = "#F4B740";
+
+const SOCIAL_ICONS: Record<string, React.ReactNode> = {
+  instagram: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stopColor="#fdf497"/><stop offset="5%" stopColor="#fdf497"/><stop offset="45%" stopColor="#fd5949"/><stop offset="60%" stopColor="#d6249f"/><stop offset="90%" stopColor="#285AEB"/></radialGradient></defs>
+      <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#ig)"/>
+      <circle cx="12" cy="12" r="4.5" stroke="white" strokeWidth="1.8" fill="none"/>
+      <circle cx="17.2" cy="6.8" r="1.2" fill="white"/>
+    </svg>
+  ),
+  tiktok: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="24" height="24" rx="5" fill="#010101"/>
+      <path d="M16.5 5.5c.4 2 1.8 3.2 3.5 3.4v2.3c-1.2 0-2.4-.4-3.5-1.1v5c0 2.6-2.1 4.7-4.7 4.7A4.7 4.7 0 017 15c0-2.6 2.1-4.7 4.7-4.7.3 0 .6 0 .8.1v2.4c-.3-.1-.5-.1-.8-.1a2.3 2.3 0 100 4.6 2.3 2.3 0 002.3-2.3V5.5h2.5z" fill="white"/>
+    </svg>
+  ),
+  youtube: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="5" width="22" height="14" rx="4" fill="#FF0000"/>
+      <polygon points="10,8.5 10,15.5 16,12" fill="white"/>
+    </svg>
+  ),
+  linkedin: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="24" height="24" rx="5" fill="#0A66C2"/>
+      <path d="M7 9h2.5v8H7V9zm1.25-1.5a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zM11 9h2.4v1.1h.03C13.8 9.4 14.8 9 16 9c2.5 0 3 1.6 3 3.7V17h-2.5v-3.8c0-.9 0-2.1-1.3-2.1-1.3 0-1.5 1-1.5 2V17H11V9z" fill="white"/>
+    </svg>
+  ),
+};
 
 type MediaItem  = { id: string; url: string; media_type: "photo" | "video"; caption: string | null };
 type PkgItem    = { id: string; name: string; price: string; popular: boolean; features: string[] };
@@ -52,10 +82,11 @@ const TX = {
     linkedin:       "لينكد إن",
     height:         "الطول (سم)",
     weight:         "الوزن (كجم)",
+    age:            "العمر",
     hairColor:      "لون الشعر",
-    eyeColor:       "لون العين",
-    languages:      "اللغات",
-    ageRange:       "الفئة العمرية",
+    shoeSize:       "مقاس الجزمة",
+    languages:      "اللغة",
+    dialect:        "اللهجة",
     portfolio:      "البورتفوليو",
     addPhoto:       "إضافة صورة",
     addVideo:       "إضافة فيديو",
@@ -118,10 +149,11 @@ const TX = {
     linkedin:       "LinkedIn",
     height:         "Height (cm)",
     weight:         "Weight (kg)",
+    age:            "Age",
     hairColor:      "Hair Color",
-    eyeColor:       "Eye Color",
-    languages:      "Languages",
-    ageRange:       "Age Range",
+    shoeSize:       "Shoe Size",
+    languages:      "Language",
+    dialect:        "Dialect",
     portfolio:      "Portfolio",
     addPhoto:       "Add Photo",
     addVideo:       "Add Video",
@@ -191,52 +223,66 @@ export default function DashboardPage() {
   const [addons,        setAddons]        = useState<AddonItem[]>([]);
   const [brands,        setBrands]        = useState<string[]>([]);
   const [newBrand,      setNewBrand]      = useState("");
+  const [physicalModal, setPhysicalModal] = useState(false);
+  const [physForm,      setPhysForm]      = useState<any>({});
+  const [physSaving,    setPhysSaving]    = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const res = await fetch("/api/me");
-      if (res.status === 401) { router.push("/login"); return; }
-      if (!res.ok) { setStatus("none"); return; }
-      const { profile: prof, talentProfile: talentProf, portfolioItems } = await res.json();
-      setProfile(prof);
-      setTp(talentProf ?? null);
-      setMedia(portfolioItems ?? []);
-      setPackages(talentProf?.packages ?? []);
-      setAddons(talentProf?.social_links?.usage_addons ?? []);
-      setBrands(talentProf?.social_links?.brands ?? []);
-      const sl = (talentProf?.social_links ?? {}) as Record<string,string>;
-      setForm({
-        full_name:    prof.full_name    ?? "",
-        handle:       prof.handle       ?? "",
-        city:         prof.city         ?? "",
-        bio:          prof.bio ?? talentProf?.bio ?? "",
-        avatar_url:   prof.avatar_url   ?? "",
-        instagram:    sl.instagram      ?? "",
-        tiktok:       sl.tiktok         ?? "",
-        youtube:      sl.youtube        ?? "",
-        linkedin:     sl.linkedin       ?? "",
-        height:       sl.height         ?? "",
-        weight:       sl.weight         ?? "",
-        hair_color:   sl.hair_color     ?? "",
-        eye_color:    sl.eye_color      ?? "",
-        languages:    sl.languages      ?? "",
-        age_range:    sl.age_range      ?? "",
-        availability: talentProf?.availability ?? "available",
-      });
-      setStatus("ready");
-    })();
-  }, []);
+  const fetchProfile = async () => {
+    const res = await fetch("/api/me");
+    if (res.status === 401) { router.push("/login"); return; }
+    if (!res.ok) { setStatus("none"); return; }
+    const { profile: prof, talentProfile: talentProf, portfolioItems } = await res.json();
+    setProfile(prof);
+    setTp(talentProf ?? null);
+    setMedia(portfolioItems ?? []);
+    setPackages(talentProf?.packages ?? []);
+    setAddons(talentProf?.social_links?.usage_addons ?? []);
+    setBrands(talentProf?.social_links?.brands ?? []);
+    const sl = (talentProf?.social_links ?? {}) as Record<string,string>;
+    setPhysForm({
+      height:     sl.height     ?? "",
+      weight:     sl.weight     ?? "",
+      age:        sl.age        ?? "",
+      hair_color: sl.hair_color ?? "",
+      shoe_size:  sl.shoe_size  ?? "",
+      languages:  sl.languages  ?? "",
+      dialect:    sl.dialect    ?? "",
+    });
+    setForm({
+      full_name:    prof.full_name    ?? "",
+      handle:       prof.handle       ?? "",
+      city:         prof.city         ?? "",
+      bio:          prof.bio ?? talentProf?.bio ?? "",
+      avatar_url:   prof.avatar_url   ?? "",
+      instagram:    sl.instagram      ?? "",
+      tiktok:       sl.tiktok         ?? "",
+      youtube:      sl.youtube        ?? "",
+      linkedin:     sl.linkedin       ?? "",
+      height:       sl.height         ?? "",
+      weight:       sl.weight         ?? "",
+      age:          sl.age            ?? "",
+      hair_color:   sl.hair_color     ?? "",
+      shoe_size:    sl.shoe_size      ?? "",
+      languages:    sl.languages      ?? "",
+      dialect:      sl.dialect        ?? "",
+      availability: talentProf?.availability ?? "available",
+    });
+    setStatus("ready");
+  };
+
+  useEffect(() => { fetchProfile(); }, []);
 
   const handleAvatarUpload = async (file: File) => {
     setUploading(true);
     try {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
-      fd.append("folder", process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER ?? "talents");
-      const res  = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
+      const res  = await fetch("/api/profile/avatar", { method: "POST", body: fd });
       const data = await res.json();
-      if (data.secure_url) setForm((f: any) => ({ ...f, avatar_url: data.secure_url }));
+      if (data.avatar_url) {
+        setForm((f: any) => ({ ...f, avatar_url: data.avatar_url }));
+        setProfile((p: any) => ({ ...p, avatar_url: data.avatar_url }));
+      }
     } catch {}
     setUploading(false);
   };
@@ -270,6 +316,21 @@ export default function DashboardPage() {
     setMedia(prev => prev.filter(m => m.id !== id));
   };
 
+  const savePhysical = async () => {
+    const hasAny = Object.values(physForm).some((v: any) => String(v).trim().length > 0);
+    if (!hasAny) return;
+    setPhysSaving(true);
+    try {
+      await fetch("/api/profile/complete", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section: "physical", data: physForm }),
+      });
+      await fetchProfile();
+      setPhysicalModal(false);
+    } catch {}
+    setPhysSaving(false);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const supabase = createClient();
@@ -280,8 +341,9 @@ export default function DashboardPage() {
       instagram: form.instagram, tiktok: form.tiktok,
       youtube: form.youtube, linkedin: form.linkedin,
       height: form.height, weight: form.weight,
-      hair_color: form.hair_color, eye_color: form.eye_color,
-      languages: form.languages, age_range: form.age_range,
+      age: form.age, hair_color: form.hair_color,
+      shoe_size: form.shoe_size, languages: form.languages,
+      dialect: form.dialect,
       usage_addons: addons,
       brands,
     };
@@ -393,6 +455,14 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       <div style={{ maxWidth: 1440, margin: "0 auto", padding: "24px 24px" }}>
+
+        {/* ─── Profile Completion Card ─── */}
+        <ProfileCompletionCard
+          profile={profile}
+          talentProfile={tp}
+          portfolioItems={media}
+          onUpdate={fetchProfile}
+        />
 
         {/* ─── Top action bar ─── */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
@@ -597,23 +667,23 @@ export default function DashboardPage() {
               <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>{t.socialLinks}</h3>
               {edit ? (
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
-                  {([["instagram", t.instagram, "📸"], ["tiktok", t.tiktok, "🎵"], ["youtube", t.youtube, "▶️"], ["linkedin", t.linkedin, "💼"]] as [string,string,string][]).map(([k, label, icon]) => (
+                  {([["instagram", t.instagram], ["tiktok", t.tiktok], ["youtube", t.youtube], ["linkedin", t.linkedin]] as [string,string][]).map(([k, label]) => (
                     <div key={k}>
-                      <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{icon} {label}</label>
+                      <label style={{ color: MUTED, fontSize: 11, display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>{SOCIAL_ICONS[k]} {label}</label>
                       <input value={form[k]} onChange={e => setF(k, e.target.value)} style={{ ...inp, direction: "ltr" }} placeholder={`@${k}`} />
                     </div>
                   ))}
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {([["instagram","📸"],["tiktok","🎵"],["youtube","▶️"],["linkedin","💼"]] as [string,string][]).filter(([k]) => sl[k]).map(([k, icon]) => (
+                  {(["instagram","tiktok","youtube","linkedin"]).filter(k => form[k]).map(k => (
                     <div key={k} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
-                      <span style={{ fontSize: 16 }}>{icon}</span>
+                      <span style={{ fontSize: 16, display:"flex", alignItems:"center" }}>{SOCIAL_ICONS[k]}</span>
                       <span style={{ color: MUTED, fontSize: 13, textTransform: "capitalize" }}>{k}</span>
-                      <span style={{ color: GREEN, fontSize: 13, fontWeight: 700, marginRight: "auto", direction: "ltr" }}>{sl[k]}</span>
+                      <span style={{ color: GREEN, fontSize: 13, fontWeight: 700, marginLeft: "auto", direction: "ltr" }}>{form[k]}</span>
                     </div>
                   ))}
-                  {!["instagram","tiktok","youtube","linkedin"].some(k => sl[k]) && (
+                  {!["instagram","tiktok","youtube","linkedin"].some(k => form[k]) && (
                     <p style={{ color: MUTED, fontSize: 13 }}>—</p>
                   )}
                 </div>
@@ -623,10 +693,20 @@ export default function DashboardPage() {
             {/* Physical info — editable */}
             {tp && (
               <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
-                <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>{t.physicalInfo}</h3>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.physicalInfo}</h3>
+                  {!edit && (
+                    <button
+                      onClick={() => { setPhysForm({ height: form.height, weight: form.weight, age: form.age, hair_color: form.hair_color, shoe_size: form.shoe_size, languages: form.languages, dialect: form.dialect }); setPhysicalModal(true); }}
+                      style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", backgroundColor: "rgba(0,201,177,0.08)", border: `1px solid rgba(0,201,177,0.2)`, borderRadius: 8, color: "#00C9B1", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+                    >
+                      ✏️ {lang === "ar" ? "تعديل" : "Edit"}
+                    </button>
+                  )}
+                </div>
                 {edit ? (
                   <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
-                    {([["height",t.height],["weight",t.weight],["hair_color",t.hairColor],["eye_color",t.eyeColor],["languages",t.languages],["age_range",t.ageRange]] as [string,string][]).map(([k, label]) => (
+                    {([["height",t.height],["weight",t.weight],["age",t.age],["hair_color",t.hairColor],["shoe_size",t.shoeSize],["languages",t.languages],["dialect",t.dialect]] as [string,string][]).map(([k, label]) => (
                       <div key={k}>
                         <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{label}</label>
                         <input value={form[k]} onChange={e => setF(k, e.target.value)} style={inp} />
@@ -635,12 +715,21 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                    {([["height",t.height],["weight",t.weight],["hair_color",t.hairColor],["eye_color",t.eyeColor],["languages",t.languages],["age_range",t.ageRange]] as [string,string][]).filter(([k]) => sl[k]).map(([k, label]) => (
+                    {([["height",t.height],["weight",t.weight],["age",t.age],["hair_color",t.hairColor],["shoe_size",t.shoeSize],["languages",t.languages],["dialect",t.dialect]] as [string,string][]).filter(([k]) => form[k]).map(([k, label]) => (
                       <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
                         <span style={{ color: MUTED, fontSize: 13 }}>{label}</span>
-                        <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{sl[k]}</span>
+                        <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{form[k]}</span>
                       </div>
                     ))}
+                    {!["height","weight","age","hair_color","shoe_size","languages","dialect"].some(k => form[k]) && (
+                      <button
+                        onClick={() => setPhysicalModal(true)}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: `1px dashed rgba(0,201,177,0.3)`, borderRadius: 10, color: "#00C9B1", fontSize: 13, fontWeight: 700, cursor: "pointer", background: "transparent", fontFamily: "'Cairo',sans-serif" }}
+                      >
+                        <span style={{ fontSize: 18 }}>📏</span>
+                        {lang === "ar" ? "أضف بياناتك الشخصية" : "Add your personal details"}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -648,7 +737,7 @@ export default function DashboardPage() {
 
             {/* ─── Packages ─── */}
             {tp && (
-              <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
+              <div id="packages-section" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                   <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.packages}</h3>
                   {edit && (
@@ -713,7 +802,7 @@ export default function DashboardPage() {
 
             {/* ─── Usage Rights Add-ons ─── */}
             {tp && (
-              <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
+              <div id="usage-addons-section" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                   <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.usageAddons}</h3>
                   {edit && (
@@ -855,6 +944,55 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Physical Info Quick-Edit Modal ── */}
+      {physicalModal && (
+        <div onClick={e => e.target === e.currentTarget && setPhysicalModal(false)} style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:480, width:"100%", maxHeight:"90vh", overflowY:"auto", fontFamily:"'Cairo',sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+              <h3 style={{ color:TEXT, fontSize:17, fontWeight:700, margin:0 }}>📏 {t.physicalInfo}</h3>
+              <button onClick={() => setPhysicalModal(false)} style={{ background: dark?"rgba(255,255,255,0.08)":"#f1f5f9", border:"none", borderRadius:8, width:32, height:32, cursor:"pointer", fontSize:16, color:MUTED, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+              {([
+                ["height",    t.height,    "ltr"],
+                ["weight",    t.weight,    "ltr"],
+                ["age",       t.age,       "ltr"],
+                ["hair_color",t.hairColor, ""],
+                ["shoe_size", t.shoeSize,  "ltr"],
+              ] as [string,string,string][]).map(([k,label,d]) => (
+                <div key={k}>
+                  <label style={{ color:MUTED, fontSize:11, display:"block", marginBottom:4 }}>{label}</label>
+                  <input
+                    value={physForm[k] ?? ""}
+                    onChange={e => setPhysForm((p: any) => ({ ...p, [k]: e.target.value }))}
+                    style={{ ...inp, direction: d as any }}
+                    placeholder={label}
+                  />
+                </div>
+              ))}
+              {([["languages", t.languages], ["dialect", t.dialect]] as [string,string][]).map(([k,label]) => (
+                <div key={k} style={{ gridColumn:"1/-1" }}>
+                  <label style={{ color:MUTED, fontSize:11, display:"block", marginBottom:4 }}>{label}</label>
+                  <input
+                    value={physForm[k] ?? ""}
+                    onChange={e => setPhysForm((p: any) => ({ ...p, [k]: e.target.value }))}
+                    style={inp}
+                    placeholder={label}
+                  />
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={savePhysical}
+              disabled={physSaving}
+              style={{ width:"100%", padding:"12px 0", marginTop:16, background: physSaving ? (dark?"rgba(255,255,255,0.06)":"#e2e8f0") : "#00C9B1", border:"none", borderRadius:10, color: physSaving ? MUTED : "#fff", fontSize:15, fontWeight:700, cursor: physSaving ? "not-allowed" : "pointer", fontFamily:"'Cairo',sans-serif" }}
+            >
+              {physSaving ? (lang === "ar" ? "جاري الحفظ..." : "Saving...") : (lang === "ar" ? "حفظ" : "Save")}
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
