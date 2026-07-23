@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Paths that are always accessible regardless of account status
-const ALWAYS_ALLOWED = ["/blocked", "/login", "/register", "/forgot-password"];
+const ALWAYS_ALLOWED = ["/blocked", "/login", "/register", "/forgot-password", "/system_design.html"];
 
 // Prefixes to skip entirely (static assets, Next internals)
 const SKIP_PREFIXES = ["/_next", "/favicon", "/assets", "/api/auth"];
@@ -75,6 +75,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Match all routes except static files
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|mjs|map|json|txt|xml|html|mp4|webm|mov|woff|woff2)$).*)",
   ],
 };

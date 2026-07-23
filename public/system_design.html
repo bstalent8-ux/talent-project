@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,84 +8,539 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Changa:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{--primary:#0f766e;--secondary:#d7a84f;--accent:#16a3a3;--ink:#f7fafc;--muted:#9aa6b2;--surface:#101720;--card:#141d27;--line:rgba(255,255,255,.1);--page:#070b10;--radius:14px;--font:Cairo,system-ui,sans-serif;--display:Changa,Cairo,system-ui,sans-serif}
-    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 10%,color-mix(in srgb,var(--primary) 25%,transparent),transparent 28rem),linear-gradient(135deg,#070b10,#0c1219 58%,#070b10);color:var(--ink);font-family:var(--font);min-height:100vh} button,input,select{font:inherit} a{color:inherit}.shell{display:grid;grid-template-columns:420px 1fr;min-height:100vh}.panel{padding:28px;border-inline-end:1px solid var(--line);background:rgba(7,11,16,.86);backdrop-filter:blur(18px);overflow:auto}.brand{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:26px}.brand h1{margin:0;font:800 24px/1.15 var(--display)}.brand span{color:var(--muted);font-size:13px}.pill{border:1px solid color-mix(in srgb,var(--secondary) 45%,transparent);color:var(--secondary);border-radius:999px;padding:7px 11px;font-weight:800;font-size:12px}.group{display:grid;gap:14px;margin:0 0 24px}.group h2{margin:0 0 2px;font-size:15px}.field{display:grid;gap:8px}.field label{font-size:12px;color:var(--muted);font-weight:800}.field input,.field select{width:100%;border:1px solid var(--line);background:#0c1219;color:var(--ink);border-radius:10px;padding:11px 12px;outline:none}.field input:focus,.field select:focus{border-color:var(--secondary);box-shadow:0 0 0 3px color-mix(in srgb,var(--secondary) 26%,transparent)}.colors{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.swatch{display:grid;gap:8px}.swatch input{height:44px;padding:4px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:sticky;bottom:0;padding-top:14px;background:linear-gradient(180deg,transparent,#070b10 28%)}.btn{border:0;border-radius:10px;padding:12px 14px;font-weight:900;cursor:pointer}.btn.primary{background:var(--secondary);color:#11100d}.btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}.preview{padding:28px;display:grid;grid-template-rows:auto 1fr;gap:18px;min-width:0}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px}.toolbar h2{margin:0;font-size:16px}.toolbar a{border:1px solid var(--line);border-radius:10px;padding:9px 12px;text-decoration:none;font-weight:800;color:var(--secondary)}.frameWrap{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#0c1219;box-shadow:0 24px 70px rgba(0,0,0,.32);min-height:0}.frameWrap iframe{width:100%;height:100%;min-height:760px;border:0;background:white}.mediaPreview{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#0c1219;border:1px solid var(--line)}.mediaPreview img,.mediaPreview video,.mediaPreview iframe{width:100%;height:100%;object-fit:cover;border:0}.note{margin:0;color:var(--muted);font-size:12px;line-height:1.7}.status{min-height:22px;color:var(--secondary);font-weight:800;font-size:12px}.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.quick button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px;cursor:pointer;font-weight:800}@media(max-width:1000px){.shell{grid-template-columns:1fr}.panel{border-inline-end:0;border-bottom:1px solid var(--line)}.frameWrap iframe{min-height:680px}}@media(max-width:560px){.panel,.preview{padding:18px}.colors,.quick,.actions{grid-template-columns:1fr}.brand{align-items:flex-start;flex-direction:column}}
+    :root {
+      --primary: #0f766e;
+      --secondary: #d7a84f;
+      --accent: #16a3a3;
+      --ink: #f7fafc;
+      --muted: #a8b3bf;
+      --surface: #101720;
+      --panel: #0b1118;
+      --card: #141d27;
+      --line: rgba(255, 255, 255, .12);
+      --page: #070b10;
+      --radius: 12px;
+      --font: Cairo, system-ui, sans-serif;
+      --display: Changa, Cairo, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--font);
+      background:
+        radial-gradient(circle at 16% 8%, color-mix(in srgb, var(--primary) 28%, transparent), transparent 27rem),
+        radial-gradient(circle at 92% 18%, color-mix(in srgb, var(--secondary) 18%, transparent), transparent 24rem),
+        linear-gradient(135deg, #070b10, #0d141c 55%, #070b10);
+    }
+    button, input, select { font: inherit; }
+    a { color: inherit; }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    .panel {
+      padding: 28px;
+      border-inline-end: 1px solid var(--line);
+      background: rgba(7, 11, 16, .88);
+      backdrop-filter: blur(18px);
+      overflow: auto;
+    }
+    .brand {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+    .brand h1 {
+      margin: 0;
+      font: 800 24px/1.15 var(--display);
+      letter-spacing: 0;
+    }
+    .brand p {
+      margin: 8px 0 0;
+      max-width: 31ch;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .pill {
+      border: 1px solid color-mix(in srgb, var(--secondary) 48%, transparent);
+      color: var(--secondary);
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-weight: 800;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .group {
+      display: grid;
+      gap: 14px;
+      margin: 0 0 24px;
+    }
+    .group h2 {
+      margin: 0 0 2px;
+      color: white;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+    .field { display: grid; gap: 8px; }
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0c1219;
+      color: var(--ink);
+      border-radius: 10px;
+      padding: 11px 12px;
+      outline: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--secondary) 26%, transparent);
+    }
+    .colors, .quick {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .swatch { display: grid; gap: 8px; }
+    .swatch input { height: 44px; padding: 4px; cursor: pointer; }
+    .quick button, .btn, .toolbar a {
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 900;
+      text-decoration: none;
+    }
+    .quick button {
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--ink);
+      padding: 9px;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      position: sticky;
+      bottom: 0;
+      padding-top: 14px;
+      background: linear-gradient(180deg, transparent, #070b10 30%);
+    }
+    .btn { border: 0; padding: 12px 14px; }
+    .btn.primary { background: var(--secondary); color: #11100d; }
+    .btn.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+    .note, .status {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+    .status { min-height: 22px; color: var(--secondary); font-weight: 900; }
+
+    .preview {
+      min-width: 0;
+      padding: 28px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 18px;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .toolbar h2 { margin: 0; font-size: 16px; }
+    .toolbar a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      color: var(--secondary);
+      padding: 9px 12px;
+    }
+    .sitePreview {
+      position: relative;
+      min-height: 640px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #071018;
+      isolation: isolate;
+    }
+    .siteMedia, .siteMedia img, .siteMedia video, .siteMedia iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .siteMedia img, .siteMedia video { object-fit: cover; }
+    .siteMedia::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(5, 9, 13, .92) 0%, rgba(5, 9, 13, .72) 42%, rgba(5, 9, 13, .18) 100%),
+        linear-gradient(0deg, rgba(5, 9, 13, .52), transparent 45%);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .siteContent {
+      position: relative;
+      z-index: 3;
+      max-width: 680px;
+      padding: clamp(32px, 6vw, 76px);
+      min-height: 640px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 22px;
+    }
+    .siteContent h3 {
+      margin: 0;
+      max-width: 11ch;
+      color: white;
+      font: 800 clamp(42px, 7vw, 92px)/.95 var(--display);
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+    .siteContent p {
+      margin: 0;
+      max-width: 58ch;
+      color: rgba(255, 255, 255, .82);
+      font-size: 17px;
+      line-height: 1.85;
+    }
+    .ctaRow { display: flex; flex-wrap: wrap; gap: 12px; }
+    .mockCta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      border-radius: 10px;
+      padding: 11px 15px;
+      font-weight: 900;
+    }
+    .mockCta.primary { background: var(--secondary); color: #12100b; }
+    .mockCta.ghost { border: 1px solid rgba(255,255,255,.22); color: white; }
+    .tokens {
+      position: absolute;
+      z-index: 4;
+      inset-inline: clamp(20px, 4vw, 44px);
+      bottom: clamp(18px, 4vw, 38px);
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .token {
+      min-height: 72px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(8, 13, 18, .76);
+    }
+    .token b { display: block; color: white; font-size: 13px; }
+    .token span { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .token i { display: block; width: 100%; height: 7px; margin-top: 10px; border-radius: 999px; }
+    .token:nth-child(1) i { background: var(--primary); }
+    .token:nth-child(2) i { background: var(--secondary); }
+    .token:nth-child(3) i { background: var(--accent); }
+
+    @media (max-width: 1000px) {
+      .shell { grid-template-columns: 1fr; }
+      .panel { border-inline-end: 0; border-bottom: 1px solid var(--line); }
+      .sitePreview, .siteContent { min-height: 600px; }
+    }
+    @media (max-width: 640px) {
+      .panel, .preview { padding: 18px; }
+      .brand { flex-direction: column; }
+      .colors, .quick, .actions, .tokens { grid-template-columns: 1fr; }
+      .siteContent { justify-content: flex-start; min-height: 720px; padding: 28px; }
+      .siteContent h3 { font-size: 48px; }
+    }
   </style>
 </head>
 <body>
   <main class="shell">
     <aside class="panel">
       <div class="brand">
-        <div><h1>System Design</h1><span>تحكم سريع في ألوان وفونتات وميديا الصفحة الرئيسية</span></div>
+        <div>
+          <h1>System Design</h1>
+          <p>Control the project colors, fonts, and home hero media from one local page.</p>
+        </div>
         <span class="pill">Talents</span>
       </div>
 
       <section class="group">
-        <h2>الألوان</h2>
+        <h2>Colors</h2>
         <div class="colors">
           <div class="swatch"><label for="primary">Primary</label><input id="primary" type="color"></div>
           <div class="swatch"><label for="secondary">Gold</label><input id="secondary" type="color"></div>
           <div class="swatch"><label for="accent">Accent</label><input id="accent" type="color"></div>
         </div>
         <div class="quick">
-          <button data-preset="classic">Classic</button>
-          <button data-preset="green">Green</button>
-          <button data-preset="blue">Blue</button>
+          <button type="button" data-preset="classic">Classic</button>
+          <button type="button" data-preset="green">Green</button>
+          <button type="button" data-preset="blue">Blue</button>
         </div>
       </section>
 
       <section class="group">
-        <h2>الفونتات</h2>
+        <h2>Fonts</h2>
         <div class="field"><label for="fontSans">Body font</label><select id="fontSans"><option>Cairo</option><option>Tahoma</option><option>Arial</option><option>system-ui</option></select></div>
         <div class="field"><label for="fontDisplay">Display font</label><select id="fontDisplay"><option>Changa</option><option>Cairo</option><option>Tahoma</option><option>Arial</option><option>system-ui</option></select></div>
       </section>
 
       <section class="group">
         <h2>Home hero media</h2>
-        <div class="field"><label for="mediaType">نوع الميديا</label><select id="mediaType"><option value="image">Image URL</option><option value="video">Video URL</option><option value="youtube">YouTube</option></select></div>
-        <div class="field"><label for="mediaUrl">لينك الصورة / الفيديو / YouTube</label><input id="mediaUrl" type="url" dir="ltr"></div>
-        <div class="field"><label for="posterUrl">Poster للفيديو</label><input id="posterUrl" type="url" dir="ltr"></div>
-        <div class="field"><label for="fileInput">Upload image/video للمعاينة المحلية</label><input id="fileInput" type="file" accept="image/*,video/*"></div>
-        <p class="note">الملف المرفوع يتخزن في المتصفح على نفس الجهاز. للموقع العام استخدم لينك مباشر أو YouTube.</p>
-        <div class="mediaPreview" id="mediaPreview"></div>
+        <div class="field"><label for="mediaType">Media type</label><select id="mediaType"><option value="image">Image URL</option><option value="video">Video URL</option><option value="youtube">YouTube</option></select></div>
+        <div class="field"><label for="mediaUrl">Image / video / YouTube URL</label><input id="mediaUrl" type="url" dir="ltr"></div>
+        <div class="field"><label for="posterUrl">Video poster URL</label><input id="posterUrl" type="url" dir="ltr"></div>
+        <div class="field"><label for="fileInput">Upload local image/video</label><input id="fileInput" type="file" accept="image/*,video/*"></div>
+        <p class="note">Uploaded files are kept in this browser only. For deployment, use a public URL or YouTube link.</p>
       </section>
 
       <div class="actions">
-        <button class="btn primary" id="saveBtn">حفظ وتطبيق</button>
-        <button class="btn secondary" id="resetBtn">رجوع Default</button>
+        <button class="btn primary" id="saveBtn" type="button">Save changes</button>
+        <button class="btn secondary" id="resetBtn" type="button">Reset default</button>
       </div>
       <p class="status" id="status"></p>
     </aside>
 
     <section class="preview">
       <div class="toolbar">
-        <h2>Live preview</h2>
-        <a href="/home" target="_blank" rel="noreferrer">فتح الهوم</a>
+        <h2>Stable local preview</h2>
+        <a href="/home" target="_blank" rel="noreferrer">Open real home</a>
       </div>
-      <div class="frameWrap"><iframe id="siteFrame" src="/home" title="Talents home preview"></iframe></div>
+      <div class="sitePreview" aria-label="Home page preview">
+        <div class="siteMedia" id="mediaPreview"></div>
+        <div class="siteContent">
+          <h3>Talents that move brands</h3>
+          <p>This preview uses the same saved tokens and hero media as the live home page without embedding the Next.js route during development.</p>
+          <div class="ctaRow">
+            <span class="mockCta primary">Explore talent</span>
+            <span class="mockCta ghost">Plan a campaign</span>
+          </div>
+        </div>
+        <div class="tokens">
+          <div class="token"><b>Primary</b><span id="primaryLabel"></span><i></i></div>
+          <div class="token"><b>Secondary</b><span id="secondaryLabel"></span><i></i></div>
+          <div class="token"><b>Accent</b><span id="accentLabel"></span><i></i></div>
+        </div>
+      </div>
     </section>
   </main>
 
   <script>
-    const KEY='talents_system_design', DB='talents-system-design', STORE='media', UPLOADED='indexeddb:hero-media';
-    const defaults={theme:{primary:'#0f766e',secondary:'#d7a84f',accent:'#16a3a3',fontSans:'Cairo',fontDisplay:'Changa'},home:{type:'image',url:'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=2200&q=82',poster:'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=82'}};
-    const $=id=>document.getElementById(id); let uploadedObjectUrl='';
-    function current(){try{return {...defaults,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{return defaults}}
-    function deepMerge(a,b){return {theme:{...a.theme,...(b.theme||{})},home:{...a.home,...(b.home||{})}}}
-    function readForm(){return {theme:{primary:$('primary').value,secondary:$('secondary').value,accent:$('accent').value,fontSans:$('fontSans').value,fontDisplay:$('fontDisplay').value},home:{type:$('mediaType').value,url:$('mediaUrl').value.trim()||defaults.home.url,poster:$('posterUrl').value.trim()||defaults.home.poster}}}
-    function fillForm(data){$('primary').value=data.theme.primary;$('secondary').value=data.theme.secondary;$('accent').value=data.theme.accent;$('fontSans').value=data.theme.fontSans;$('fontDisplay').value=data.theme.fontDisplay;$('mediaType').value=data.home.type;$('mediaUrl').value=data.home.url;$('posterUrl').value=data.home.poster;applyTheme(data);renderMedia(data)}
-    function applyTheme(data){const root=document.documentElement;root.style.setProperty('--primary',data.theme.primary);root.style.setProperty('--secondary',data.theme.secondary);root.style.setProperty('--accent',data.theme.accent);root.style.setProperty('--font',`'${data.theme.fontSans}',system-ui,sans-serif`);root.style.setProperty('--display',`'${data.theme.fontDisplay}',system-ui,sans-serif`)}
-    function youtube(url){try{const u=new URL(url);let id='';if(u.hostname.includes('youtu.be'))id=u.pathname.slice(1);else if(u.pathname.includes('/embed/'))id=u.pathname.split('/embed/')[1].split('/')[0];else id=u.searchParams.get('v')||'';return id?`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&playsinline=1&modestbranding=1`:url}catch{return url}}
-    function renderMedia(data){const box=$('mediaPreview');box.innerHTML='';const type=data.home.type,url=data.home.url;if(type==='youtube'){const el=document.createElement('iframe');el.src=youtube(url);el.allow='autoplay; encrypted-media; picture-in-picture';box.appendChild(el)}else if(type==='video'){const el=document.createElement('video');el.src=url;el.poster=data.home.poster;el.autoplay=true;el.muted=true;el.loop=true;el.playsInline=true;box.appendChild(el)}else{const el=document.createElement('img');el.src=url;box.appendChild(el)}}
-    function openDb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
-    async function saveBlob(blob){const db=await openDb();await new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(blob,'hero-media');tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
-    function save(data){localStorage.setItem(KEY,JSON.stringify(data));applyTheme(data);renderMedia(data);window.dispatchEvent(new Event('talents-system-design-change'));$('siteFrame').contentWindow?.location.reload();$('status').textContent='تم الحفظ وتطبيق التغييرات';setTimeout(()=>$('status').textContent='',2400)}
-    $('saveBtn').onclick=()=>save(readForm());
-    $('resetBtn').onclick=()=>{localStorage.removeItem(KEY);fillForm(defaults);$('siteFrame').contentWindow?.location.reload();$('status').textContent='رجعنا للـ default'};
-    $('fileInput').onchange=async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;await saveBlob(file);if(uploadedObjectUrl)URL.revokeObjectURL(uploadedObjectUrl);uploadedObjectUrl=URL.createObjectURL(file);const data=readForm();data.home.type=file.type.startsWith('video/')?'video':'image';data.home.url=UPLOADED;$('mediaType').value=data.home.type;$('mediaUrl').value=UPLOADED;renderMedia({...data,home:{...data.home,url:uploadedObjectUrl}});save(data)};
-    ['primary','secondary','accent','fontSans','fontDisplay','mediaType','mediaUrl','posterUrl'].forEach(id=>$(id).addEventListener('input',()=>{const data=readForm();applyTheme(data);renderMedia(data)}));
-    document.querySelectorAll('[data-preset]').forEach(btn=>btn.onclick=()=>{const presets={classic:{primary:'#0f766e',secondary:'#d7a84f',accent:'#16a3a3'},green:{primary:'#00D26A',secondary:'#F4B740',accent:'#1ea672'},blue:{primary:'#1565C0',secondary:'#FFB800',accent:'#60A5FA'}};const data=readForm();data.theme={...data.theme,...presets[btn.dataset.preset]};fillForm(data)});
-    fillForm(deepMerge(defaults,current()));
+    const KEY = 'talents_system_design';
+    const DB = 'talents-system-design';
+    const STORE = 'media';
+    const UPLOADED = 'indexeddb:hero-media';
+    const defaults = {
+      theme: {
+        primary: '#0f766e',
+        secondary: '#d7a84f',
+        accent: '#16a3a3',
+        fontSans: 'Cairo',
+        fontDisplay: 'Changa'
+      },
+      home: {
+        type: 'image',
+        url: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=2200&q=82',
+        poster: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=82'
+      }
+    };
+    const $ = (id) => document.getElementById(id);
+    let uploadedObjectUrl = '';
+
+    function mergeDesign(value) {
+      return {
+        theme: { ...defaults.theme, ...(value && value.theme ? value.theme : {}) },
+        home: { ...defaults.home, ...(value && value.home ? value.home : {}) }
+      };
+    }
+
+    function current() {
+      try { return mergeDesign(JSON.parse(localStorage.getItem(KEY) || '{}')); }
+      catch { return mergeDesign({}); }
+    }
+
+    function readForm() {
+      return {
+        theme: {
+          primary: $('primary').value,
+          secondary: $('secondary').value,
+          accent: $('accent').value,
+          fontSans: $('fontSans').value,
+          fontDisplay: $('fontDisplay').value
+        },
+        home: {
+          type: $('mediaType').value,
+          url: $('mediaUrl').value.trim() || defaults.home.url,
+          poster: $('posterUrl').value.trim() || defaults.home.poster
+        }
+      };
+    }
+
+    function applyTheme(data) {
+      const root = document.documentElement;
+      root.style.setProperty('--primary', data.theme.primary);
+      root.style.setProperty('--secondary', data.theme.secondary);
+      root.style.setProperty('--accent', data.theme.accent);
+      root.style.setProperty('--font', `'${data.theme.fontSans}', system-ui, sans-serif`);
+      root.style.setProperty('--display', `'${data.theme.fontDisplay}', system-ui, sans-serif`);
+      $('primaryLabel').textContent = data.theme.primary;
+      $('secondaryLabel').textContent = data.theme.secondary;
+      $('accentLabel').textContent = data.theme.accent;
+    }
+
+    function fillForm(data) {
+      $('primary').value = data.theme.primary;
+      $('secondary').value = data.theme.secondary;
+      $('accent').value = data.theme.accent;
+      $('fontSans').value = data.theme.fontSans;
+      $('fontDisplay').value = data.theme.fontDisplay;
+      $('mediaType').value = data.home.type;
+      $('mediaUrl').value = data.home.url;
+      $('posterUrl').value = data.home.poster;
+      applyTheme(data);
+      renderMedia(data);
+    }
+
+    function youtube(url) {
+      try {
+        const u = new URL(url);
+        let id = '';
+        if (u.hostname.includes('youtu.be')) id = u.pathname.slice(1);
+        else if (u.pathname.includes('/embed/')) id = u.pathname.split('/embed/')[1].split('/')[0];
+        else id = u.searchParams.get('v') || '';
+        return id ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&playsinline=1&modestbranding=1` : url;
+      } catch { return url; }
+    }
+
+    function openDb() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB, 1);
+        request.onupgradeneeded = () => request.result.createObjectStore(STORE);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function saveBlob(blob) {
+      const db = await openDb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(blob, 'hero-media');
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function loadUploadedUrl() {
+      const db = await openDb();
+      const blob = await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const request = tx.objectStore(STORE).get('hero-media');
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => reject(request.error);
+      });
+      if (!blob) return '';
+      if (uploadedObjectUrl) URL.revokeObjectURL(uploadedObjectUrl);
+      uploadedObjectUrl = URL.createObjectURL(blob);
+      return uploadedObjectUrl;
+    }
+
+    async function renderMedia(data) {
+      const box = $('mediaPreview');
+      box.innerHTML = '';
+      let url = data.home.url;
+      if (url === UPLOADED) url = await loadUploadedUrl();
+      if (!url) url = defaults.home.url;
+
+      if (data.home.type === 'youtube') {
+        const el = document.createElement('iframe');
+        el.src = youtube(url);
+        el.allow = 'autoplay; encrypted-media; picture-in-picture';
+        box.appendChild(el);
+        return;
+      }
+      if (data.home.type === 'video') {
+        const el = document.createElement('video');
+        el.src = url;
+        el.poster = data.home.poster;
+        el.autoplay = true;
+        el.muted = true;
+        el.loop = true;
+        el.playsInline = true;
+        box.appendChild(el);
+        return;
+      }
+      const el = document.createElement('img');
+      el.src = url;
+      el.alt = '';
+      box.appendChild(el);
+    }
+
+    function save(data) {
+      localStorage.setItem(KEY, JSON.stringify(data));
+      applyTheme(data);
+      renderMedia(data);
+      $('status').textContent = 'Saved. Open /home or refresh it to see the live page.';
+      setTimeout(() => $('status').textContent = '', 3000);
+    }
+
+    $('saveBtn').onclick = () => save(readForm());
+    $('resetBtn').onclick = () => {
+      localStorage.removeItem(KEY);
+      fillForm(mergeDesign({}));
+      $('status').textContent = 'Reset to defaults.';
+    };
+    $('fileInput').onchange = async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      await saveBlob(file);
+      const data = readForm();
+      data.home.type = file.type.startsWith('video/') ? 'video' : 'image';
+      data.home.url = UPLOADED;
+      $('mediaType').value = data.home.type;
+      $('mediaUrl').value = UPLOADED;
+      save(data);
+    };
+    ['primary', 'secondary', 'accent', 'fontSans', 'fontDisplay', 'mediaType', 'mediaUrl', 'posterUrl'].forEach((id) => {
+      $(id).addEventListener('input', () => {
+        const data = readForm();
+        applyTheme(data);
+        renderMedia(data);
+      });
+    });
+    document.querySelectorAll('[data-preset]').forEach((btn) => {
+      btn.onclick = () => {
+        const presets = {
+          classic: { primary: '#0f766e', secondary: '#d7a84f', accent: '#16a3a3' },
+          green: { primary: '#00D26A', secondary: '#F4B740', accent: '#1ea672' },
+          blue: { primary: '#1565C0', secondary: '#FFB800', accent: '#60A5FA' }
+        };
+        const data = readForm();
+        data.theme = { ...data.theme, ...presets[btn.dataset.preset] };
+        fillForm(data);
+      };
+    });
+
+    fillForm(current());
   </script>
 </body>
 </html>

@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 // Blocking script — runs before React hydrates to prevent flash of wrong theme/lang.
 // Reads site_language / site_theme from localStorage; falls back to "ar" and time-based mode.
 const INIT_SCRIPT = `(function(){try{
+
   var l=localStorage.getItem('site_language')||'ar';
   var m=localStorage.getItem('site_theme');
   if(!m){var h=new Date().getHours();m=(h>=6&&h<18)?'light':'dark';}
