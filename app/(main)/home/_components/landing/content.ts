@@ -410,7 +410,7 @@ export const faqs: FAQItem[] = [
   },
   {
     question: { ar: "هل الباقات هنا تنفيذ كامل؟", en: "Are packages fully implemented?" },
-    answer: { ar: "هذا Preview بصري فقط للـ landing، بدون تغيير flow الدفع أو الحجز الحالي.", en: "This is a landing-page preview only and does not change current booking or payment flows." },
+    answer: { ar: "الباقات الآن ديناميكية من لوحة التحكم، والاشتراك يتفعل مباشرة بدون ربط دفع في هذه المرحلة.", en: "Packages are now managed dynamically from admin, and subscriptions activate immediately without payment integration in this phase." },
   },
 ];
 

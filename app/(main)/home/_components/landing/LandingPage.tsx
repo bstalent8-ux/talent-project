@@ -15,6 +15,10 @@ import {
   Star,
 } from "lucide-react";
 import type { TalentCard as ServerTalentCard } from "../../../explore/page";
+import PackageCard from "@/components/packages/PackageCard";
+import PackageSkeleton from "@/components/packages/PackageSkeleton";
+import packageStyles from "@/components/packages/PackagePricing.module.css";
+import type { MarketplacePackage, TalentType } from "@/features/packages/types";
 import styles from "./LandingPage.module.css";
 import {
   brandMoments,
@@ -27,7 +31,6 @@ import {
   floatingChips,
   heroMedia,
   pageCopy,
-  pricingPackages,
   quoteIcon,
   stats,
   talentSteps,
@@ -40,6 +43,9 @@ type Props = {
   lang: LandingLang;
   talents: ServerTalentCard[];
   totalTalents: number;
+  talentTypes: TalentType[];
+  pricingPackages: MarketplacePackage[];
+  initialPricingTalentType: string;
 };
 
 type DesignMedia = {
@@ -683,8 +689,48 @@ function TestimonialsSection({ lang }: { lang: LandingLang }) {
   );
 }
 
-function PricingPreview({ lang }: { lang: LandingLang }) {
+type PricingTarget = Pick<TalentType, "id" | "label_ar" | "label_en">;
+
+const brandPricingTarget: PricingTarget = {
+  id: "brand",
+  label_ar: "باقات البراندات",
+  label_en: "Brand packages",
+};
+
+function typeLabel(type: PricingTarget, lang: LandingLang) {
+  return lang === "ar" ? type.label_ar : type.label_en;
+}
+
+function PricingPreview({
+  lang,
+  talentTypes,
+  initialPackages,
+  initialTalentType,
+}: {
+  lang: LandingLang;
+  talentTypes: TalentType[];
+  initialPackages: MarketplacePackage[];
+  initialTalentType: string;
+}) {
   const t = pageCopy[lang];
+  const [activeType, setActiveType] = useState(initialTalentType);
+  const [packages, setPackages] = useState(initialPackages);
+  const [loading, setLoading] = useState(false);
+  const pricingTargets: PricingTarget[] = [...talentTypes.slice(0, 5), brandPricingTarget];
+
+  async function loadPackages(type: string) {
+    setActiveType(type);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/packages?audience=${encodeURIComponent(type)}&limit=3`);
+      const data = await res.json();
+      setPackages(res.ok ? data.packages ?? [] : []);
+    } catch {
+      setPackages([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <section className={`${styles.section} ${styles.sectionLight}`} aria-labelledby="landing-pricing">
@@ -692,21 +738,51 @@ function PricingPreview({ lang }: { lang: LandingLang }) {
         <SectionHeader
           id="landing-pricing"
           kicker={t.pricing}
-          title={lang === "ar" ? "Preview للباقات بدون تغيير نظام الدفع الحالي" : "A pricing preview without changing payment flows"}
+          title={lang === "ar" ? "باقات ديناميكية للمواهب والبراندات" : "Dynamic packages for talents and brands"}
           description={
             lang === "ar"
-              ? "الهدف هنا تحسين التحويل وشرح قيمة المنصة، وليس بناء billing كامل."
-              : "This improves conversion and explains value without implementing full billing."
+              ? "كل حساب يشاهد الباقات المناسبة له فقط، مع مدد وأسعار قابلة للإدارة من لوحة التحكم."
+              : "Each account sees only the packages that match its type, with durations and prices managed from admin."
+          }
+          action={
+            <ButtonLink href={`/packages?type=${activeType}`} variant="quiet">
+              {lang === "ar" ? "عرض كل الباقات" : "View all packages"}
+              <ArrowIcon lang={lang} />
+            </ButtonLink>
           }
         />
+        {pricingTargets.length ? (
+          <div className={packageStyles.typeTabs} role="tablist">
+            {pricingTargets.map((type) => (
+              <button
+                className={`${packageStyles.typeTab} ${activeType === type.id ? packageStyles.tabActive : ""}`}
+                key={type.id}
+                type="button"
+                role="tab"
+                aria-selected={activeType === type.id}
+                onClick={() => loadPackages(type.id)}
+              >
+                {typeLabel(type, lang)}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         <div className={styles.pricingGrid}>
-          {pricingPackages.map((item) => (
-            <article className={styles.pricingCard} key={item.name.en}>
-              <h3>{localize(item.name, lang)}</h3>
-              <p className={styles.price}>{localize(item.price, lang)}</p>
-              <p>{localize(item.description, lang)}</p>
-            </article>
-          ))}
+          {loading ? (
+            <div className={styles.pricingWide}>
+              <PackageSkeleton />
+            </div>
+          ) : packages.length ? (
+            packages.map((item) => (
+              <PackageCard compact key={item.id} pkg={item} lang={lang} />
+            ))
+          ) : (
+            <div className={`${packageStyles.emptyState} ${styles.pricingWide}`}>
+              <h3>{lang === "ar" ? "لا توجد باقات منشورة بعد" : "No published packages yet"}</h3>
+              <p>{lang === "ar" ? "أنشئ باقات من لوحة التحكم لتظهر هنا تلقائيًا." : "Create packages from admin and they will appear here automatically."}</p>
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -761,7 +837,14 @@ function FinalCTA({ lang }: { lang: LandingLang }) {
   );
 }
 
-export default function LandingPage({ lang, talents, totalTalents }: Props) {
+export default function LandingPage({
+  lang,
+  talents,
+  totalTalents,
+  talentTypes,
+  pricingPackages,
+  initialPricingTalentType,
+}: Props) {
   const displayedTalents = formatRealTalents(talents, lang);
   const filledTalents = displayedTalents.length >= 4 ? displayedTalents : fallbackTalents(lang);
   const designMedia = useDesignMedia();
@@ -775,7 +858,12 @@ export default function LandingPage({ lang, talents, totalTalents }: Props) {
       <CampaignSection lang={lang} />
       <FeatureSection lang={lang} />
       <TestimonialsSection lang={lang} />
-      <PricingPreview lang={lang} />
+      <PricingPreview
+        lang={lang}
+        talentTypes={talentTypes}
+        initialPackages={pricingPackages}
+        initialTalentType={initialPricingTalentType}
+      />
       <FAQSection lang={lang} />
       <FinalCTA lang={lang} />
     </div>
