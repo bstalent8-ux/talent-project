@@ -19,6 +19,7 @@ import PackageCard from "@/components/packages/PackageCard";
 import PackageSkeleton from "@/components/packages/PackageSkeleton";
 import packageStyles from "@/components/packages/PackagePricing.module.css";
 import type { MarketplacePackage, TalentType } from "@/features/packages/types";
+import type { MarketplaceCategory } from "@/features/categories/types";
 import styles from "./LandingPage.module.css";
 import {
   brandMoments,
@@ -44,6 +45,7 @@ type Props = {
   talents: ServerTalentCard[];
   totalTalents: number;
   talentTypes: TalentType[];
+  categories: MarketplaceCategory[];
   pricingPackages: MarketplacePackage[];
   initialPricingTalentType: string;
 };
@@ -704,11 +706,13 @@ function typeLabel(type: PricingTarget, lang: LandingLang) {
 function PricingPreview({
   lang,
   talentTypes,
+  categories,
   initialPackages,
   initialTalentType,
 }: {
   lang: LandingLang;
   talentTypes: TalentType[];
+  categories: MarketplaceCategory[];
   initialPackages: MarketplacePackage[];
   initialTalentType: string;
 }) {
@@ -716,13 +720,19 @@ function PricingPreview({
   const [activeType, setActiveType] = useState(initialTalentType);
   const [packages, setPackages] = useState(initialPackages);
   const [loading, setLoading] = useState(false);
-  const pricingTargets: PricingTarget[] = [...talentTypes.slice(0, 5), brandPricingTarget];
+  const pricingTargets: PricingTarget[] = categories.length
+    ? categories.slice(0, 7).map((category) => ({
+      id: category.id,
+      label_ar: category.label_ar,
+      label_en: category.role_type === "brand" ? `${category.label_en} - Brand` : category.label_en,
+    }))
+    : [...talentTypes.slice(0, 5), brandPricingTarget];
 
   async function loadPackages(type: string) {
     setActiveType(type);
     setLoading(true);
     try {
-      const res = await fetch(`/api/packages?audience=${encodeURIComponent(type)}&limit=3`);
+      const res = await fetch(`/api/packages?categoryId=${encodeURIComponent(type)}&limit=3`);
       const data = await res.json();
       setPackages(res.ok ? data.packages ?? [] : []);
     } catch {
@@ -842,6 +852,7 @@ export default function LandingPage({
   talents,
   totalTalents,
   talentTypes,
+  categories,
   pricingPackages,
   initialPricingTalentType,
 }: Props) {
@@ -861,6 +872,7 @@ export default function LandingPage({
       <PricingPreview
         lang={lang}
         talentTypes={talentTypes}
+        categories={categories}
         initialPackages={pricingPackages}
         initialTalentType={initialPricingTalentType}
       />

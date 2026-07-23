@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import {
   fetchAdminPackages,
-  fetchTalentTypes,
+  fetchPackageCategories,
   upsertAdminPackage,
 } from "@/features/packages/services/package.service";
 
@@ -52,7 +52,7 @@ export async function GET() {
   try {
     const [packages, talentTypes] = await Promise.all([
       fetchAdminPackages(),
-      fetchTalentTypes(false),
+      fetchPackageCategories(false),
     ]);
     return NextResponse.json({ packages, talentTypes });
   } catch (error) {

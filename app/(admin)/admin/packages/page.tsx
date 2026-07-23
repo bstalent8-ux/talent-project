@@ -2,13 +2,13 @@ export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 import AdminPackagesClient from "./_components/AdminPackagesClient";
-import { fetchAdminPackages, fetchTalentTypes } from "@/features/packages/services/package.service";
+import { fetchAdminPackages, fetchPackageCategories } from "@/features/packages/services/package.service";
 
 export default async function AdminPackagesPage() {
-  const [packages, talentTypes] = await Promise.all([
+  const [packages, categories] = await Promise.all([
     fetchAdminPackages(),
-    fetchTalentTypes(false),
+    fetchPackageCategories(false),
   ]);
 
-  return <AdminPackagesClient initialPackages={packages} talentTypes={talentTypes} />;
+  return <AdminPackagesClient initialPackages={packages} talentTypes={categories} />;
 }

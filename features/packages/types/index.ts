@@ -1,6 +1,8 @@
 export type BillingDuration = 1 | 3 | 6 | 12;
 
 export type SubscriptionStatus = "pending" | "active" | "cancelled" | "expired";
+import type { MarketplaceCategory } from "@/features/categories/types";
+
 export type PackageTargetType = "talent_type" | "all_talents" | "role" | "all_roles";
 export type PackageAudience = "talent" | "brand" | "user" | "admin";
 
@@ -18,6 +20,13 @@ export interface PackageTarget {
   target_type: PackageTargetType;
   target_id: string;
   talent_type?: TalentType | null;
+}
+
+export interface PackageCategory {
+  id: string;
+  package_id: string;
+  category_id: string;
+  category?: MarketplaceCategory | null;
 }
 
 export interface PackagePlan {
@@ -44,6 +53,7 @@ export interface MarketplacePackage {
   created_at: string;
   updated_at: string;
   targets: PackageTarget[];
+  categories: PackageCategory[];
   plans: PackagePlan[];
   features: PackageFeature[];
 }

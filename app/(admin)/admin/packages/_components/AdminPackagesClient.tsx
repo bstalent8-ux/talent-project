@@ -33,7 +33,7 @@ const EMPTY_FORM: FormState = {
   name: "",
   description: "",
   is_active: true,
-  target_ids: ["all_roles"],
+  target_ids: ["ugc"],
   plans: [
     { duration_months: 1, price: 0, currency: "EGP", is_active: true },
     { duration_months: 3, price: 0, currency: "EGP", is_active: true },
@@ -52,7 +52,7 @@ function toForm(pkg: MarketplacePackage): FormState {
     name: pkg.name,
     description: pkg.description ?? "",
     is_active: pkg.is_active,
-    target_ids: pkg.targets.map(targetValue),
+    target_ids: targetValue(pkg),
     plans: pkg.plans.map((plan) => ({
       duration_months: plan.duration_months,
       price: plan.price,
@@ -66,48 +66,11 @@ function toForm(pkg: MarketplacePackage): FormState {
   };
 }
 
-function targetValue(target: MarketplacePackage["targets"][number]) {
-  if (target.target_type === "all_roles") return "all_roles";
-  if (target.target_type === "all_talents") return "all_talents";
-  if (target.target_type === "role" && target.target_id === "brand") return "brand";
-  return target.target_id;
+function targetValue(pkg: MarketplacePackage) {
+  return pkg.categories.length
+    ? pkg.categories.map((category) => category.category_id)
+    : pkg.targets.map((target) => target.target_id);
 }
-
-const allRolesTarget: TargetOption = {
-  id: "all_roles",
-  label_ar: "كل أنواع الحسابات",
-  label_en: "All roles",
-};
-
-const allTalentsTarget: TargetOption = {
-  id: "all_talents",
-  label_ar: "كل أنواع المواهب",
-  label_en: "All talent types",
-};
-
-const talentRoleTarget: TargetOption = {
-  id: "talent",
-  label_ar: "كل حسابات المواهب",
-  label_en: "Talent role",
-};
-
-const brandTarget: TargetOption = {
-  id: "brand",
-  label_ar: "البراندات",
-  label_en: "Brands",
-};
-
-const userTarget: TargetOption = {
-  id: "user",
-  label_ar: "المستخدمين",
-  label_en: "Users",
-};
-
-const adminTarget: TargetOption = {
-  id: "admin",
-  label_ar: "الإدارة",
-  label_en: "Admins",
-};
 
 function labelFor(type: TargetOption, lang: "ar" | "en") {
   return lang === "ar" ? type.label_ar : type.label_en;
@@ -132,7 +95,7 @@ export default function AdminPackagesClient({
     [packages, selectedId],
   );
   const targetOptions = useMemo<TargetOption[]>(
-    () => [allRolesTarget, allTalentsTarget, talentRoleTarget, ...talentTypes, brandTarget, userTarget, adminTarget],
+    () => talentTypes,
     [talentTypes],
   );
 
@@ -145,7 +108,7 @@ export default function AdminPackagesClient({
     description: lang === "ar" ? "الوصف" : "Description",
     active: lang === "ar" ? "فعالة" : "Active",
     inactive: lang === "ar" ? "غير فعالة" : "Inactive",
-    targets: lang === "ar" ? "أنواع المواهب المستهدفة" : "Target talent types",
+    targets: lang === "ar" ? "التصنيفات المستهدفة" : "Target categories",
     plans: lang === "ar" ? "مدد وأسعار الاشتراك" : "Billing durations and prices",
     features: lang === "ar" ? "المميزات" : "Features",
     duration: lang === "ar" ? "المدة بالشهور" : "Months",

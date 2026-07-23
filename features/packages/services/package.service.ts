@@ -1,7 +1,10 @@
 import { adminClient } from "@/lib/supabase/admin";
+import { fetchCategories, fetchProfileCategories, normalizeCategoryId, setProfileCategories } from "@/features/categories/services/category.service";
+import type { CategoryRoleType, MarketplaceCategory } from "@/features/categories/types";
 import type {
   MarketplacePackage,
   PackageAudience,
+  PackageCategory,
   PackageFeature,
   PackagePlan,
   PackageTarget,
@@ -15,6 +18,10 @@ const PACKAGE_SELECT = `
   id, name, description, is_active, created_at, updated_at,
   package_targets (
     id, package_id, target_type, target_id
+  ),
+  package_categories (
+    id, package_id, category_id,
+    categories (id, role_type, label_ar, label_en, description, is_active, sort_order)
   ),
   package_plans (
     id, package_id, duration_months, price, currency, is_active
@@ -123,6 +130,14 @@ function mapPackage(row: Record<string, unknown>): MarketplacePackage {
       talent_type: null,
     })) satisfies PackageTarget[];
 
+  const categories = asArray(row.package_categories as Record<string, unknown>[])
+    .map((item) => ({
+      id: String(item.id),
+      package_id: String(item.package_id),
+      category_id: String(item.category_id),
+      category: asArray(item.categories as MarketplaceCategory | MarketplaceCategory[] | null)[0] ?? null,
+    })) satisfies PackageCategory[];
+
   const plans = asArray(row.package_plans as Record<string, unknown>[])
     .map((plan) => ({
       id: String(plan.id),
@@ -151,21 +166,25 @@ function mapPackage(row: Record<string, unknown>): MarketplacePackage {
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
     targets,
+    categories,
     plans,
     features,
   };
 }
 
 export async function fetchTalentTypes(activeOnly = true): Promise<TalentType[]> {
-  let query = adminClient
-    .from("talent_types")
-    .select("id, label_ar, label_en, is_active, sort_order")
-    .order("sort_order", { ascending: true });
+  const categories = await fetchCategories("talent", activeOnly);
+  return categories.map((category) => ({
+    id: category.id,
+    label_ar: category.label_ar,
+    label_en: category.label_en,
+    is_active: category.is_active,
+    sort_order: category.sort_order,
+  }));
+}
 
-  if (activeOnly) query = query.eq("is_active", true);
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return (data ?? []) as TalentType[];
+export async function fetchPackageCategories(activeOnly = true): Promise<MarketplaceCategory[]> {
+  return fetchCategories(undefined, activeOnly);
 }
 
 export async function fetchAdminPackages(): Promise<MarketplacePackage[]> {
@@ -191,6 +210,48 @@ export async function fetchPublicPackagesByAudience(
 ): Promise<MarketplacePackage[]> {
   const normalized = normalizeTalentTypeId(value);
   const audience = normalizePackageAudience(value);
+  const categoryId = normalizeCategoryId(normalized);
+  const roleType: CategoryRoleType = audience === "brand" ? "brand" : "talent";
+
+  const { data: categoryRows, error: categoryError } = await adminClient
+    .from("package_categories")
+    .select("package_id, category_id, categories(role_type)")
+    .eq("category_id", categoryId);
+
+  if (!categoryError) {
+    const packageIds = [
+      ...new Set(
+        (categoryRows ?? [])
+          .filter((row) => {
+            const category = asArray(row.categories as { role_type?: string } | { role_type?: string }[] | null)[0];
+            return !category?.role_type || category.role_type === roleType;
+          })
+          .map((row) => row.package_id as string),
+      ),
+    ];
+    if (!packageIds.length) return [];
+
+    let query = adminClient
+      .from("packages")
+      .select(PACKAGE_SELECT)
+      .in("id", packageIds)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+
+    if (limit) query = query.limit(limit);
+
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+
+    return (data ?? [])
+      .map((row) => mapPackage(row as Record<string, unknown>))
+      .map((pkg) => ({
+        ...pkg,
+        plans: pkg.plans.filter((plan) => plan.is_active),
+      }))
+      .filter((pkg) => pkg.categories.some((category) => category.category_id === categoryId) && pkg.plans.length > 0);
+  }
+
   const talentType = audience === "talent" && normalized !== "all_talents" ? normalized : undefined;
 
   const { data: targetRows, error: targetError } = await adminClient
@@ -247,26 +308,19 @@ export async function upsertAdminPackage(input: PackageUpsertInput, packageId?: 
 
   const deleteResults = await Promise.all([
     adminClient.from("package_targets").delete().eq("package_id", id),
+    adminClient.from("package_categories").delete().eq("package_id", id),
     adminClient.from("package_plans").delete().eq("package_id", id),
     adminClient.from("package_features").delete().eq("package_id", id),
   ]);
 
-  const deleteError = deleteResults.find((result) => result.error)?.error;
+  const deleteError = deleteResults.find((result, index) => index > 1 && result.error)?.error;
   if (deleteError) throw new Error(deleteError.message);
 
-  const targetMap = new Map<string, Pick<PackageTarget, "target_type" | "target_id">>();
-  input.target_ids
-    .map(packageTargetFromValue)
-    .filter((target): target is Pick<PackageTarget, "target_type" | "target_id"> => Boolean(target))
-    .forEach((target) => {
-      targetMap.set(`${target.target_type}:${target.target_id}`, target);
-    });
-
-  const targets = [...targetMap.values()].map((target) => ({
-    package_id: id,
-    target_type: target.target_type,
-    target_id: target.target_id,
-  }));
+  const packageCategories = [...new Set(input.target_ids.map(normalizeCategoryId).filter(Boolean))]
+    .map((category_id) => ({
+      package_id: id,
+      category_id,
+    }));
 
   const plans = input.plans
     .filter((plan) => plan.duration_months > 0)
@@ -287,7 +341,7 @@ export async function upsertAdminPackage(input: PackageUpsertInput, packageId?: 
     }));
 
   const writes = [];
-  if (targets.length) writes.push(adminClient.from("package_targets").insert(targets));
+  if (packageCategories.length) writes.push(adminClient.from("package_categories").insert(packageCategories));
   if (plans.length) writes.push(adminClient.from("package_plans").insert(plans));
   if (features.length) writes.push(adminClient.from("package_features").insert(features));
 
@@ -325,9 +379,11 @@ export async function createActiveSubscription(input: {
   if (profileError || !profile) throw new Error("Profile not found");
 
   const role = String((profile as Record<string, unknown>).role ?? "");
-  const requestedAudience = normalizePackageAudience(input.audience || input.talentType || role);
+  const requestedAudience = normalizePackageAudience(input.audience || role);
   const tp = asArray((profile as Record<string, unknown>).talent_profiles as Record<string, unknown>[])[0];
-  const resolvedTalentType = normalizeTalentTypeId(input.talentType || String(tp?.category ?? ""));
+  const profileCategories = await fetchProfileCategories(input.userId);
+  const requestedCategory = normalizeCategoryId(input.talentType || profileCategories[0]?.id || String(tp?.category ?? ""));
+  const resolvedTalentType = normalizeTalentTypeId(requestedCategory);
 
   if (requestedAudience === "brand" && role !== "brand") {
     throw new Error("Only brand accounts can subscribe to brand packages");
@@ -335,7 +391,7 @@ export async function createActiveSubscription(input: {
   if (requestedAudience === "talent" && role !== "talent") {
     throw new Error("Only talent accounts can subscribe to talent packages");
   }
-  if (requestedAudience === "talent" && !resolvedTalentType) throw new Error("Talent type is required");
+  if (requestedAudience === "talent" && !requestedCategory) throw new Error("Talent type is required");
 
   const { data: plan, error: planError } = await adminClient
     .from("package_plans")
@@ -343,7 +399,8 @@ export async function createActiveSubscription(input: {
       id, package_id, duration_months, price, currency, is_active,
       packages (
         id, is_active,
-        package_targets (id, target_type, target_id)
+        package_targets (id, target_type, target_id),
+        package_categories (id, category_id, categories(role_type))
       )
     `)
     .eq("id", input.planId)
@@ -356,6 +413,12 @@ export async function createActiveSubscription(input: {
   if (!pkg?.is_active) throw new Error("Package is not active");
 
   const targets = asArray(pkg.package_targets as Record<string, unknown>[]);
+  const categoryTargets = asArray(pkg.package_categories as Record<string, unknown>[]);
+  const matchesCategory = categoryTargets.some((target) => {
+    const category = asArray(target.categories as { role_type?: string } | { role_type?: string }[] | null)[0];
+    return String(target.category_id) === requestedCategory
+      && (!category?.role_type || category.role_type === requestedAudience);
+  });
   const matchesTarget = targets.some((target) => (
     targetMatchesAudience(
       {
@@ -366,7 +429,7 @@ export async function createActiveSubscription(input: {
       resolvedTalentType,
     )
   ));
-  if (!matchesTarget) throw new Error("Package is not available for this account type");
+  if (!matchesCategory && !matchesTarget) throw new Error("Package is not available for this account type");
 
   const startsAt = new Date();
   const expiresAt = new Date(startsAt);

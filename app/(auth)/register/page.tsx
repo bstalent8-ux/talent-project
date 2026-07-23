@@ -32,7 +32,7 @@ const INIT: FormData = {
   confirmPassword: "",
   role:            "talent",
   talentType:      "ugc",
-  brandCategory:   "fashion",
+  brandCategory:   "brand_fashion",
   agreeToTerms:    false,
 };
 
@@ -45,9 +45,9 @@ const TALENT_TYPES = [
 ];
 
 const BRAND_CATEGORIES = [
-  { value: "fashion", ar: "Fashion", en: "Fashion" },
-  { value: "food", ar: "Food", en: "Food" },
-  { value: "tech", ar: "Tech", en: "Tech" },
+  { value: "brand_fashion", ar: "Fashion", en: "Fashion" },
+  { value: "brand_food", ar: "Food", en: "Food" },
+  { value: "technology", ar: "Tech", en: "Tech" },
 ];
 
 const TX = {
@@ -212,8 +212,8 @@ export default function RegisterPage() {
             handle,
             full_name:    form.fullName.trim(),
             phone_number: form.phone.trim(),
-            ...(form.role === "brand" && { brand_category: form.brandCategory }),
           },
+          categoryIds: form.role === "talent" ? [form.talentType] : [form.brandCategory],
           ...(form.role === "talent" && {
             talentProfileData: {
               category:     form.talentType,
@@ -222,6 +222,13 @@ export default function RegisterPage() {
               packages:     [],
               availability: "available",
               profile_views: 0,
+            },
+          }),
+          ...(form.role === "brand" && {
+            brandProfileData: {
+              category_id: form.brandCategory,
+              company_name: form.fullName.trim(),
+              status: "pending",
             },
           }),
         }),

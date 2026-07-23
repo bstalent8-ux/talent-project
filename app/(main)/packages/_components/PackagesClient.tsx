@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { CreditCard, ShieldCheck, Sparkles } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import type { MarketplacePackage, PackagePlan, TalentType } from "@/features/packages/types";
+import type { MarketplaceCategory } from "@/features/categories/types";
 import PackageCard from "@/components/packages/PackageCard";
 import BillingDurationSelector from "@/components/packages/BillingDurationSelector";
 import FeatureComparison from "@/components/packages/FeatureComparison";
@@ -12,12 +13,6 @@ import packageStyles from "@/components/packages/PackagePricing.module.css";
 import styles from "./PackagesPage.module.css";
 
 type PackageAudienceOption = Pick<TalentType, "id" | "label_ar" | "label_en">;
-
-const brandOption: PackageAudienceOption = {
-  id: "brand",
-  label_ar: "باقات البراندات",
-  label_en: "Brand packages",
-};
 
 function labelFor(type: PackageAudienceOption, lang: "ar" | "en") {
   return lang === "ar" ? type.label_ar : type.label_en;
@@ -31,10 +26,12 @@ function choosePlan(pkg: MarketplacePackage, duration: number) {
 
 export default function PackagesClient({
   talentTypes,
+  categories,
   initialTalentType,
   initialPackages,
 }: {
   talentTypes: TalentType[];
+  categories: MarketplaceCategory[];
   initialTalentType: string;
   initialPackages: MarketplacePackage[];
 }) {
@@ -47,8 +44,14 @@ export default function PackagesClient({
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const audienceOptions = useMemo<PackageAudienceOption[]>(
-    () => [...talentTypes, brandOption],
-    [talentTypes],
+    () => categories.length
+      ? categories.map((category) => ({
+        id: category.id,
+        label_ar: category.label_ar,
+        label_en: category.role_type === "brand" ? `${category.label_en} - Brand` : category.label_en,
+      }))
+      : talentTypes,
+    [categories, talentTypes],
   );
   const activeLabel = audienceOptions.find((type) => type.id === activeType);
   const availableDurations = useMemo(
@@ -61,7 +64,7 @@ export default function PackagesClient({
     setMessage(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/packages?audience=${encodeURIComponent(type)}`);
+      const res = await fetch(`/api/packages?categoryId=${encodeURIComponent(type)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load packages");
       setPackages(data.packages ?? []);
@@ -88,8 +91,8 @@ export default function PackagesClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           planId: plan.id,
-          talentType: activeType === "brand" ? undefined : activeType,
-          audience: activeType === "brand" ? "brand" : "talent",
+          talentType: activeType,
+          audience: categories.find((category) => category.id === activeType)?.role_type ?? "talent",
         }),
       });
       const data = await res.json();

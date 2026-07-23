@@ -2,6 +2,7 @@ export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 import {
+  fetchPackageCategories,
   fetchPublicPackagesByAudience,
   fetchTalentTypes,
   normalizeTalentTypeId,
@@ -15,8 +16,11 @@ export default async function PackagesPage({
 }) {
   const params = searchParams ? await searchParams : {};
   const selected = normalizeTalentTypeId(String(params.type ?? "ugc"));
-  const talentTypes = await fetchTalentTypes(true);
-  const initialType = selected === "brand" || talentTypes.some((type) => type.id === selected)
+  const [talentTypes, categories] = await Promise.all([
+    fetchTalentTypes(true),
+    fetchPackageCategories(true),
+  ]);
+  const initialType = categories.some((type) => type.id === selected)
     ? selected
     : talentTypes[0]?.id ?? "ugc";
   const packages = await fetchPublicPackagesByAudience(initialType);
@@ -25,6 +29,7 @@ export default async function PackagesPage({
     <PackagesClient
       initialPackages={packages}
       initialTalentType={initialType}
+      categories={categories}
       talentTypes={talentTypes}
     />
   );
