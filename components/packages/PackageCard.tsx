@@ -29,6 +29,9 @@ function formatPrice(plan: PackagePlan, lang: LandingLang) {
 }
 
 function audienceLabel(pkg: MarketplacePackage, lang: LandingLang) {
+  if (pkg.targets.some((target) => target.target_type === "all_roles")) {
+    return lang === "ar" ? "باقة لكل الحسابات" : "All roles package";
+  }
   if (pkg.targets.some((target) => target.target_type === "role" && target.target_id === "brand")) {
     return lang === "ar" ? "باقة براند" : "Brand package";
   }

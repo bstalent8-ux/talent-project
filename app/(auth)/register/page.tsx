@@ -19,6 +19,8 @@ interface FormData {
   password:        string;
   confirmPassword: string;
   role:            Role;
+  talentType:      string;
+  brandCategory:   string;
   agreeToTerms:    boolean;
 }
 
@@ -29,8 +31,24 @@ const INIT: FormData = {
   password:        "",
   confirmPassword: "",
   role:            "talent",
+  talentType:      "ugc",
+  brandCategory:   "fashion",
   agreeToTerms:    false,
 };
+
+const TALENT_TYPES = [
+  { value: "ugc", ar: "UGC Creator", en: "UGC Creator" },
+  { value: "influencer", ar: "Influencer", en: "Influencer" },
+  { value: "fashion", ar: "Fashion", en: "Fashion" },
+  { value: "food_reviewer", ar: "Food Reviewer", en: "Food Reviewer" },
+  { value: "media_buyers", ar: "Media Buyers", en: "Media Buyers" },
+];
+
+const BRAND_CATEGORIES = [
+  { value: "fashion", ar: "Fashion", en: "Fashion" },
+  { value: "food", ar: "Food", en: "Food" },
+  { value: "tech", ar: "Tech", en: "Tech" },
+];
 
 const TX = {
   ar: {
@@ -150,6 +168,10 @@ export default function RegisterPage() {
       return tx.errEmail;
     if (form.phone.replace(/\D/g, "").length < 9)
       return tx.errPhone;
+    if (form.role === "talent" && !form.talentType)
+      return lang === "ar" ? "اختار نوع الموهبة" : "Please choose a talent type";
+    if (form.role === "brand" && !form.brandCategory)
+      return lang === "ar" ? "اختار تصنيف البراند" : "Please choose a brand category";
     if (form.password.length < 8)
       return tx.errPassShort;
     if (form.password !== form.confirmPassword)
@@ -190,10 +212,11 @@ export default function RegisterPage() {
             handle,
             full_name:    form.fullName.trim(),
             phone_number: form.phone.trim(),
+            ...(form.role === "brand" && { brand_category: form.brandCategory }),
           },
           ...(form.role === "talent" && {
             talentProfileData: {
-              category:     "ugc",
+              category:     form.talentType,
               specialties:  [],
               social_links: {},
               packages:     [],
@@ -316,6 +339,36 @@ export default function RegisterPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <label style={labelStyle}>
+            {form.role === "talent"
+              ? (lang === "ar" ? "نوع الموهبة" : "Talent type")
+              : (lang === "ar" ? "تصنيف البراند" : "Brand category")}
+          </label>
+          <select
+            value={form.role === "talent" ? form.talentType : form.brandCategory}
+            onChange={(event) => {
+              if (form.role === "talent") set("talentType", event.target.value);
+              else set("brandCategory", event.target.value);
+            }}
+            style={{
+              ...inputStyle,
+              cursor: "pointer",
+              appearance: "none",
+              backgroundImage: `linear-gradient(45deg, transparent 50%, ${muted} 50%), linear-gradient(135deg, ${muted} 50%, transparent 50%)`,
+              backgroundPosition: lang === "ar" ? "16px 50%, 10px 50%" : "calc(100% - 16px) 50%, calc(100% - 10px) 50%",
+              backgroundSize: "6px 6px, 6px 6px",
+              backgroundRepeat: "no-repeat",
+            }}
+          >
+            {(form.role === "talent" ? TALENT_TYPES : BRAND_CATEGORIES).map((item) => (
+              <option key={item.value} value={item.value}>
+                {lang === "ar" ? item.ar : item.en}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Error */}

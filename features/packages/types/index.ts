@@ -1,8 +1,8 @@
 export type BillingDuration = 1 | 3 | 6 | 12;
 
 export type SubscriptionStatus = "pending" | "active" | "cancelled" | "expired";
-export type PackageTargetType = "talent_type" | "all_talents" | "role";
-export type PackageAudience = "talent" | "brand";
+export type PackageTargetType = "talent_type" | "all_talents" | "role" | "all_roles";
+export type PackageAudience = "talent" | "brand" | "user" | "admin";
 
 export interface TalentType {
   id: string;

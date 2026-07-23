@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "userId and role are required" }, { status: 400 });
     }
 
-    // profiles columns: id, handle, full_name, avatar_url, city, bio, role
+    // profiles columns: id, handle, full_name, avatar_url, city, bio, role, brand_category
     const { error: profileErr } = await adminClient
       .from("profiles")
       .upsert({ id: userId, role, ...profileData });

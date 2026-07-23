@@ -9,6 +9,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS brand_category text;
+
 CREATE TABLE IF NOT EXISTS public.talent_types (
   id         text PRIMARY KEY,
   label_ar   text NOT NULL,
@@ -31,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.packages (
 CREATE TABLE IF NOT EXISTS public.package_targets (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   package_id  uuid NOT NULL REFERENCES public.packages(id) ON DELETE CASCADE,
-  target_type text NOT NULL DEFAULT 'talent_type' CHECK (target_type IN ('talent_type','all_talents','role')),
+  target_type text NOT NULL DEFAULT 'talent_type' CHECK (target_type IN ('talent_type','all_talents','role','all_roles')),
   target_id   text NOT NULL,
   created_at  timestamptz NOT NULL DEFAULT now(),
   UNIQUE (package_id, target_type, target_id)
@@ -41,7 +44,7 @@ ALTER TABLE public.package_targets DROP CONSTRAINT IF EXISTS package_targets_tar
 ALTER TABLE public.package_targets DROP CONSTRAINT IF EXISTS package_targets_target_type_check;
 ALTER TABLE public.package_targets
   ADD CONSTRAINT package_targets_target_type_check
-  CHECK (target_type IN ('talent_type','all_talents','role'));
+  CHECK (target_type IN ('talent_type','all_talents','role','all_roles'));
 
 CREATE TABLE IF NOT EXISTS public.package_plans (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -120,12 +123,15 @@ INSERT INTO public.talent_types (id, label_ar, label_en, sort_order)
 VALUES
   ('ugc', 'مبدع محتوى UGC', 'UGC Creator', 10),
   ('influencer', 'مؤثر', 'Influencer', 20),
-  ('host', 'مذيع / مقدم', 'Host / Presenter', 30),
-  ('model', 'موديل', 'Model', 40),
-  ('actor', 'ممثل', 'Actor', 50),
-  ('photographer', 'مصور', 'Photographer', 60),
-  ('videographer', 'مصوري فيديو', 'Videographer', 70),
-  ('designer', 'مصمم', 'Designer', 80)
+  ('fashion', 'موضة وأزياء', 'Fashion', 30),
+  ('food_reviewer', 'مراجع مطاعم وأكل', 'Food Reviewer', 40),
+  ('media_buyers', 'ميديا بايرز', 'Media Buyers', 50),
+  ('host', 'مذيع / مقدم', 'Host / Presenter', 60),
+  ('model', 'موديل', 'Model', 70),
+  ('actor', 'ممثل', 'Actor', 80),
+  ('photographer', 'مصور', 'Photographer', 90),
+  ('videographer', 'مصوري فيديو', 'Videographer', 100),
+  ('designer', 'مصمم', 'Designer', 110)
 ON CONFLICT (id) DO UPDATE SET
   label_ar = EXCLUDED.label_ar,
   label_en = EXCLUDED.label_en,
@@ -138,7 +144,11 @@ VALUES
   ('22222222-2222-4222-8222-222222222222', 'UGC Creator Pro', 'Built for UGC creators who need more portfolio capacity, briefs, and featured placement.', true),
   ('33333333-3333-4333-8333-333333333333', 'Influencer Elite', 'Premium discovery and campaign tools for influencers working with fast-moving brands.', true),
   ('44444444-4444-4444-8444-444444444444', 'Host Starter', 'A focused plan for hosts and presenters building a professional booking pipeline.', true),
-  ('55555555-5555-4555-8555-555555555555', 'Brand Campaign Pro', 'For brands that want to post jobs, shortlist talent, and manage campaign conversations faster.', true)
+  ('55555555-5555-4555-8555-555555555555', 'Brand Campaign Pro', 'For brands that want to post jobs, shortlist talent, and manage campaign conversations faster.', true),
+  ('66666666-6666-4666-8666-666666666666', 'Marketplace Access', 'A universal package available for every account role across the marketplace.', true),
+  ('77777777-7777-4777-8777-777777777777', 'Fashion Creator Plus', 'For fashion creators who need stronger profile visibility, portfolio space, and brand campaign discovery.', true),
+  ('88888888-8888-4888-8888-888888888888', 'Food Reviewer Pro', 'For food reviewers creating restaurant content, reviews, and campaign-ready portfolio proof.', true),
+  ('99999999-9999-4999-8999-999999999999', 'Media Buyer Growth', 'For media buyers who need campaign visibility, lead access, and professional marketplace credibility.', true)
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,
@@ -150,7 +160,11 @@ VALUES
   ('22222222-2222-4222-8222-222222222222', 'talent_type', 'ugc'),
   ('33333333-3333-4333-8333-333333333333', 'talent_type', 'influencer'),
   ('44444444-4444-4444-8444-444444444444', 'talent_type', 'host'),
-  ('55555555-5555-4555-8555-555555555555', 'role', 'brand')
+  ('55555555-5555-4555-8555-555555555555', 'role', 'brand'),
+  ('66666666-6666-4666-8666-666666666666', 'all_roles', 'all'),
+  ('77777777-7777-4777-8777-777777777777', 'talent_type', 'fashion'),
+  ('88888888-8888-4888-8888-888888888888', 'talent_type', 'food_reviewer'),
+  ('99999999-9999-4999-8999-999999999999', 'talent_type', 'media_buyers')
 ON CONFLICT (package_id, target_type, target_id) DO NOTHING;
 
 INSERT INTO public.package_plans (id, package_id, duration_months, price, currency, is_active)
@@ -174,7 +188,23 @@ VALUES
   ('55555555-5555-4555-8555-555555555501', '55555555-5555-4555-8555-555555555555', 1, 1800, 'EGP', true),
   ('55555555-5555-4555-8555-555555555503', '55555555-5555-4555-8555-555555555555', 3, 5000, 'EGP', true),
   ('55555555-5555-4555-8555-555555555506', '55555555-5555-4555-8555-555555555555', 6, 9400, 'EGP', true),
-  ('55555555-5555-4555-8555-555555555512', '55555555-5555-4555-8555-555555555555', 12, 17000, 'EGP', true)
+  ('55555555-5555-4555-8555-555555555512', '55555555-5555-4555-8555-555555555555', 12, 17000, 'EGP', true),
+  ('66666666-6666-4666-8666-666666666601', '66666666-6666-4666-8666-666666666666', 1, 300, 'EGP', true),
+  ('66666666-6666-4666-8666-666666666603', '66666666-6666-4666-8666-666666666666', 3, 800, 'EGP', true),
+  ('66666666-6666-4666-8666-666666666606', '66666666-6666-4666-8666-666666666666', 6, 1500, 'EGP', true),
+  ('66666666-6666-4666-8666-666666666612', '66666666-6666-4666-8666-666666666666', 12, 2800, 'EGP', true),
+  ('77777777-7777-4777-8777-777777777701', '77777777-7777-4777-8777-777777777777', 1, 900, 'EGP', true),
+  ('77777777-7777-4777-8777-777777777703', '77777777-7777-4777-8777-777777777777', 3, 2450, 'EGP', true),
+  ('77777777-7777-4777-8777-777777777706', '77777777-7777-4777-8777-777777777777', 6, 4600, 'EGP', true),
+  ('77777777-7777-4777-8777-777777777712', '77777777-7777-4777-8777-777777777777', 12, 8200, 'EGP', true),
+  ('88888888-8888-4888-8888-888888888801', '88888888-8888-4888-8888-888888888888', 1, 850, 'EGP', true),
+  ('88888888-8888-4888-8888-888888888803', '88888888-8888-4888-8888-888888888888', 3, 2300, 'EGP', true),
+  ('88888888-8888-4888-8888-888888888806', '88888888-8888-4888-8888-888888888888', 6, 4300, 'EGP', true),
+  ('88888888-8888-4888-8888-888888888812', '88888888-8888-4888-8888-888888888888', 12, 7600, 'EGP', true),
+  ('99999999-9999-4999-8999-999999999901', '99999999-9999-4999-8999-999999999999', 1, 1200, 'EGP', true),
+  ('99999999-9999-4999-8999-999999999903', '99999999-9999-4999-8999-999999999999', 3, 3300, 'EGP', true),
+  ('99999999-9999-4999-8999-999999999906', '99999999-9999-4999-8999-999999999999', 6, 6200, 'EGP', true),
+  ('99999999-9999-4999-8999-999999999912', '99999999-9999-4999-8999-999999999999', 12, 11200, 'EGP', true)
 ON CONFLICT (package_id, duration_months, currency) DO UPDATE SET
   price = EXCLUDED.price,
   is_active = EXCLUDED.is_active;
@@ -198,7 +228,19 @@ VALUES
   ('55555555-5555-4555-8555-555555555555', 'job_posts', '20'),
   ('55555555-5555-4555-8555-555555555555', 'shortlist_limit', '150'),
   ('55555555-5555-4555-8555-555555555555', 'chat_sessions', '100'),
-  ('55555555-5555-4555-8555-555555555555', 'campaign_support', 'priority')
+  ('55555555-5555-4555-8555-555555555555', 'campaign_support', 'priority'),
+  ('66666666-6666-4666-8666-666666666666', 'marketplace_access', 'true'),
+  ('66666666-6666-4666-8666-666666666666', 'profile_visibility', 'standard'),
+  ('66666666-6666-4666-8666-666666666666', 'support_level', 'community'),
+  ('77777777-7777-4777-8777-777777777777', 'portfolio_limit', '55'),
+  ('77777777-7777-4777-8777-777777777777', 'style_campaign_requests', '45'),
+  ('77777777-7777-4777-8777-777777777777', 'featured_profile', 'true'),
+  ('88888888-8888-4888-8888-888888888888', 'restaurant_campaign_requests', '40'),
+  ('88888888-8888-4888-8888-888888888888', 'review_portfolio_limit', '50'),
+  ('88888888-8888-4888-8888-888888888888', 'featured_profile', 'true'),
+  ('99999999-9999-4999-8999-999999999999', 'lead_access', '60'),
+  ('99999999-9999-4999-8999-999999999999', 'campaign_case_studies', '25'),
+  ('99999999-9999-4999-8999-999999999999', 'priority_discovery', 'true')
 ON CONFLICT (package_id, feature_key) DO UPDATE SET
   feature_value = EXCLUDED.feature_value;
 

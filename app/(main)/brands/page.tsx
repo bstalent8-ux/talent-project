@@ -37,7 +37,7 @@ function detectIndustry(name: string, bio: string | null): string | null {
 export default async function BrandsPage() {
   const { data } = await adminClient
     .from("profiles")
-    .select("id, handle, full_name, avatar_url, city, bio, is_verified, is_approved")
+    .select("id, handle, full_name, avatar_url, city, bio, brand_category, is_verified, is_approved")
     .eq("role", "brand")
     .not("handle", "is", null);
 
@@ -62,7 +62,7 @@ export default async function BrandsPage() {
     avatar_url: p.avatar_url ?? null,
     city: p.city ?? null,
     bio: p.bio ?? null,
-    industry: detectIndustry(p.full_name ?? "", p.bio),
+    industry: p.brand_category ?? detectIndustry(p.full_name ?? "", p.bio),
     verified: Boolean(p.is_verified),
     collab_count: collabMap[p.id] ?? 0,
   }));

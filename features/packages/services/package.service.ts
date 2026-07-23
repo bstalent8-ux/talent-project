@@ -25,12 +25,21 @@ const PACKAGE_SELECT = `
 `;
 
 const ALL_TALENTS_TARGET_ID = "all";
+const ALL_ROLES_TARGET_ID = "all";
 const BRAND_TARGET_ID = "brand";
+const ROLE_TARGETS = new Set(["talent", "brand", "user", "admin"]);
 
 export function normalizeTalentTypeId(value: string | null | undefined): string {
   const raw = (value ?? "").trim().toLowerCase();
   if (!raw) return "";
+  if (raw === "all_roles" || raw === "all-roles" || raw === "everyone") return "all_roles";
   if (raw === "all_talents" || raw === "all-talents" || raw === "all") return "all_talents";
+  if (raw === "user" || raw === "users") return "user";
+  if (raw === "admin" || raw === "admins") return "admin";
+  if (raw === "talent" || raw === "talents") return "talent";
+  if (raw.includes("fashion") || raw.includes("style") || raw.includes("mode")) return "fashion";
+  if (raw.includes("food reviewer") || raw.includes("food-reviewer") || raw.includes("food_reviewer") || (raw.includes("food") && raw.includes("review"))) return "food_reviewer";
+  if (raw.includes("media buyer") || raw.includes("media-buyer") || raw.includes("media_buyers") || raw.includes("media buyers") || raw.includes("ads buyer")) return "media_buyers";
   if (raw === "brand" || raw === "brands" || raw.includes("company") || raw.includes("براند") || raw.includes("شركة")) return "brand";
 
   if (raw.includes("ugc") || raw.includes("content") || raw.includes("محتوى") || raw.includes("كونتنت")) return "ugc";
@@ -48,10 +57,13 @@ export function normalizeTalentTypeId(value: string | null | undefined): string 
 }
 
 export function normalizePackageAudience(value: string | null | undefined): PackageAudience {
-  return normalizeTalentTypeId(value) === "brand" ? "brand" : "talent";
+  const normalized = normalizeTalentTypeId(value);
+  if (normalized === "brand" || normalized === "user" || normalized === "admin") return normalized;
+  return "talent";
 }
 
 export function packageTargetValue(target: Pick<PackageTarget, "target_type" | "target_id">): string {
+  if (target.target_type === "all_roles") return "all_roles";
   if (target.target_type === "all_talents") return "all_talents";
   if (target.target_type === "role" && target.target_id === BRAND_TARGET_ID) return "brand";
   return target.target_id;
@@ -60,11 +72,14 @@ export function packageTargetValue(target: Pick<PackageTarget, "target_type" | "
 function packageTargetFromValue(value: string): Pick<PackageTarget, "target_type" | "target_id"> | null {
   const normalized = normalizeTalentTypeId(value);
   if (!normalized) return null;
+  if (normalized === "all_roles") {
+    return { target_type: "all_roles", target_id: ALL_ROLES_TARGET_ID };
+  }
   if (normalized === "all_talents") {
     return { target_type: "all_talents", target_id: ALL_TALENTS_TARGET_ID };
   }
-  if (normalized === "brand") {
-    return { target_type: "role", target_id: BRAND_TARGET_ID };
+  if (ROLE_TARGETS.has(normalized)) {
+    return { target_type: "role", target_id: normalized };
   }
   return { target_type: "talent_type", target_id: normalized };
 }
@@ -74,12 +89,21 @@ function targetMatchesAudience(
   audience: PackageAudience,
   talentType?: string,
 ): boolean {
+  if (target.target_type === "all_roles" && target.target_id === ALL_ROLES_TARGET_ID) {
+    return true;
+  }
+
   if (audience === "brand") {
     return target.target_type === "role" && target.target_id === BRAND_TARGET_ID;
   }
 
+  if (audience === "user" || audience === "admin") {
+    return target.target_type === "role" && target.target_id === audience;
+  }
+
   return (
     (target.target_type === "all_talents" && target.target_id === ALL_TALENTS_TARGET_ID)
+    || (target.target_type === "role" && target.target_id === "talent")
     || (target.target_type === "talent_type" && target.target_id === talentType)
   );
 }
@@ -168,7 +192,6 @@ export async function fetchPublicPackagesByAudience(
   const normalized = normalizeTalentTypeId(value);
   const audience = normalizePackageAudience(value);
   const talentType = audience === "talent" && normalized !== "all_talents" ? normalized : undefined;
-  if (audience === "talent" && !talentType && normalized !== "all_talents") return [];
 
   const { data: targetRows, error: targetError } = await adminClient
     .from("package_targets")
