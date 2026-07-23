@@ -23,7 +23,7 @@ function getTimeBasedMode(): Mode {
 
 export function SiteProvider({ children }: { children: ReactNode }) {
   // SSR defaults must match server render to avoid hydration mismatch.
-  // useEffect runs after hydration and syncs from localStorage — one silent re-render,
+  // useEffect runs after hydration and syncs from localStorage in one silent re-render,
   // no console errors. The blocking <head> script handles CSS/DOM side instantly.
   const [lang, setLangState] = useState<Lang>("ar");
   const [mode, setModeState] = useState<Mode>("dark");
@@ -34,6 +34,11 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     const resolvedLang: Lang = storedLang === "ar" || storedLang === "en" ? storedLang : "ar";
     const resolvedMode: Mode =
       storedMode === "dark" || storedMode === "light" ? storedMode : getTimeBasedMode();
+
+    document.documentElement.setAttribute("lang", resolvedLang);
+    document.documentElement.setAttribute("dir", resolvedLang === "ar" ? "rtl" : "ltr");
+    document.documentElement.setAttribute("data-theme", resolvedMode);
+
     setLangState(resolvedLang);
     setModeState(resolvedMode);
   }, []);

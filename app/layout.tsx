@@ -1,15 +1,21 @@
 export const runtime = 'edge';
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SiteProvider } from "@/contexts/SiteContext";
 
 export const metadata: Metadata = {
-  title: "Talents — منصة المواهب العربية",
+  title: "Talents - منصة المواهب العربية",
   description: "ربط البراندات بأفضل المواهب والمؤثرين في العالم العربي",
 };
 
-// Blocking script — runs before React hydrates to prevent flash of wrong theme/lang.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#070b10",
+};
+
+// Blocking script runs before React hydrates to prevent flash of wrong theme/lang.
 // Reads site_language / site_theme from localStorage; falls back to "ar" and time-based mode.
 const INIT_SCRIPT = `(function(){try{
 
