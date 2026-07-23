@@ -15,7 +15,7 @@ export interface Notification {
   created_at: string;
 }
 
-export function useNotifications() {
+export function useNotifications(enabled = true) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount]     = useState(0);
   const [loading, setLoading]             = useState(true);
@@ -24,6 +24,13 @@ export function useNotifications() {
 
   // ── Initial fetch ────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
     let cancelled = false;
     const supabase = createClient();
 
@@ -48,11 +55,11 @@ export function useNotifications() {
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [enabled]);
 
   // ── Realtime subscription ────────────────────────────────────────────────────
   useEffect(() => {
-    if (!userId) return;
+    if (!enabled || !userId) return;
     const supabase = createClient();
 
     const channel = supabase
@@ -77,7 +84,7 @@ export function useNotifications() {
 
     channelRef.current = channel;
     return () => { supabase.removeChannel(channel); };
-  }, [userId]);
+  }, [enabled, userId]);
 
   // ── Actions ──────────────────────────────────────────────────────────────────
   const markAsRead = useCallback(async (id: string) => {

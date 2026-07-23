@@ -45,6 +45,7 @@ export default function FloatingChatWidget() {
   const [text, setText]             = useState("");
   const [apiError, setApiError]     = useState<string | null>(null);
   const [openingChat, setOpeningChat] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLTextAreaElement>(null);
@@ -65,8 +66,9 @@ export default function FloatingChatWidget() {
 
   // ─── get own id ──────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!initialized) return;
     createClient().auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null));
-  }, []);
+  }, [initialized]);
 
   // ─── load conversations ──────────────────────────────────────────────────
   const loadConvs = useCallback(async () => {
@@ -83,8 +85,8 @@ export default function FloatingChatWidget() {
   }, []);
 
   useEffect(() => {
-    if (open) loadConvs();
-  }, [open, loadConvs]);
+    if (open && myId) loadConvs();
+  }, [open, myId, loadConvs]);
 
   // ─── global realtime: listen to ALL my messages for list-view notifications ─
   useEffect(() => {
@@ -171,6 +173,7 @@ export default function FloatingChatWidget() {
     async function handler(e: Event) {
       const detail = (e as CustomEvent<{ otherUserId?: string; conversationId?: string }>).detail;
       setOpen(true);
+      setInitialized(true);
 
       if (detail?.conversationId) {
         // direct open by conversation id
@@ -207,7 +210,11 @@ export default function FloatingChatWidget() {
   }, [loadMessages]);
 
   function handleFabClick() {
-    setOpen((prev) => !prev);
+    setOpen((prev) => {
+      const next = !prev;
+      if (next) setInitialized(true);
+      return next;
+    });
   }
 
   function openConv(c: Conversation) {

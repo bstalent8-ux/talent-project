@@ -7,8 +7,8 @@ import NotificationDropdown from "./NotificationDropdown";
 
 export default function NotificationBell() {
   const { dark } = useSite();
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
   const [open, setOpen] = useState(false);
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications(open);
 
   const badgeCount = unreadCount > 99 ? "99+" : unreadCount;
 
