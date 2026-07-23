@@ -189,14 +189,14 @@ FROM public.talent_profiles tp
 JOIN public.categories c
   ON c.role_type = 'talent'
  AND c.id = CASE
-    WHEN lower(coalesce(tp.category, '')) LIKE '%ugc%' THEN 'ugc'
-    WHEN lower(coalesce(tp.category, '')) LIKE '%fashion%' THEN 'fashion'
-    WHEN lower(coalesce(tp.category, '')) LIKE '%influencer%' THEN 'influencer'
-    WHEN lower(coalesce(tp.category, '')) LIKE '%food%review%' THEN 'food_reviewer'
-    WHEN lower(coalesce(tp.category, '')) LIKE '%tech%review%' THEN 'tech_reviewer'
-    WHEN lower(coalesce(tp.category, '')) LIKE '%unbox%' THEN 'unboxing'
-    WHEN lower(coalesce(tp.category, '')) LIKE '%host%' THEN 'host'
-    ELSE lower(coalesce(tp.category, ''))
+    WHEN lower(coalesce(tp.category::text, '')) LIKE '%ugc%' THEN 'ugc'
+    WHEN lower(coalesce(tp.category::text, '')) LIKE '%fashion%' THEN 'fashion'
+    WHEN lower(coalesce(tp.category::text, '')) LIKE '%influencer%' THEN 'influencer'
+    WHEN lower(coalesce(tp.category::text, '')) LIKE '%food%review%' THEN 'food_reviewer'
+    WHEN lower(coalesce(tp.category::text, '')) LIKE '%tech%review%' THEN 'tech_reviewer'
+    WHEN lower(coalesce(tp.category::text, '')) LIKE '%unbox%' THEN 'unboxing'
+    WHEN lower(coalesce(tp.category::text, '')) LIKE '%host%' THEN 'host'
+    ELSE lower(coalesce(tp.category::text, ''))
   END
 ON CONFLICT (profile_id, category_id) DO NOTHING;
 
@@ -213,7 +213,7 @@ SELECT p.id,
         ELSE 'brand_fashion'
        END,
        p.full_name,
-       coalesce(p.brand_status, 'pending'),
+       coalesce(p.brand_status::text, 'pending'),
        p.brand_approved_at
 FROM public.profiles p
 WHERE p.role = 'brand'

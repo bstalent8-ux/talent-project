@@ -16,9 +16,6 @@ import type {
 
 const PACKAGE_SELECT = `
   id, name, description, is_active, created_at, updated_at,
-  package_targets (
-    id, package_id, target_type, target_id
-  ),
   package_categories (
     id, package_id, category_id,
     categories (id, role_type, label_ar, label_en, description, is_active, sort_order)
@@ -399,7 +396,6 @@ export async function createActiveSubscription(input: {
       id, package_id, duration_months, price, currency, is_active,
       packages (
         id, is_active,
-        package_targets (id, target_type, target_id),
         package_categories (id, category_id, categories(role_type))
       )
     `)
