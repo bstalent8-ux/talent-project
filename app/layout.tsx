@@ -18,6 +18,19 @@ const INIT_SCRIPT = `(function(){try{
   document.documentElement.setAttribute('data-theme',m);
   document.documentElement.setAttribute('lang',l);
   document.documentElement.setAttribute('dir',l==='ar'?'rtl':'ltr');
+  var raw=localStorage.getItem('talents_system_design');
+  if(raw){
+    var d=JSON.parse(raw);
+    var theme=d.theme||{};
+    var vars={
+      '--color-primary':theme.primary,
+      '--color-secondary':theme.secondary,
+      '--color-accent':theme.accent,
+      '--font-sans':theme.fontSans?('\''+theme.fontSans+'\', system-ui, sans-serif'):null,
+      '--font-display':theme.fontDisplay?('\''+theme.fontDisplay+'\', system-ui, sans-serif'):null
+    };
+    Object.keys(vars).forEach(function(k){ if(vars[k]) document.documentElement.style.setProperty(k,vars[k]); });
+  }
 }catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

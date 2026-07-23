@@ -1,0 +1,244 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-21T00:00:00.000Z",
+  "title": "Design System: Talents",
+  "extensions": {
+    "colorMeta": {
+      "action-green": {
+        "role": "primary",
+        "displayName": "Stage Green",
+        "canonical": "oklch(0.75 0.20 152)",
+        "tonalRamp": [
+          "oklch(0.15 0.05 152)",
+          "oklch(0.26 0.08 152)",
+          "oklch(0.37 0.12 152)",
+          "oklch(0.48 0.16 152)",
+          "oklch(0.60 0.19 152)",
+          "oklch(0.75 0.20 152)",
+          "oklch(0.85 0.14 152)",
+          "oklch(0.95 0.05 152)"
+        ]
+      },
+      "action-green-dim": {
+        "role": "primary",
+        "displayName": "Stage Green Dim",
+        "canonical": "oklch(0.63 0.17 152)"
+      },
+      "signal-gold": {
+        "role": "secondary",
+        "displayName": "Verified Gold",
+        "canonical": "oklch(0.82 0.17 82)",
+        "tonalRamp": [
+          "oklch(0.15 0.04 82)",
+          "oklch(0.27 0.07 82)",
+          "oklch(0.39 0.10 82)",
+          "oklch(0.51 0.13 82)",
+          "oklch(0.64 0.15 82)",
+          "oklch(0.82 0.17 82)",
+          "oklch(0.89 0.11 82)",
+          "oklch(0.96 0.04 82)"
+        ]
+      },
+      "signal-gold-soft": {
+        "role": "secondary",
+        "displayName": "Warm Gold",
+        "canonical": "oklch(0.81 0.14 79)"
+      },
+      "alert-red": {
+        "role": "tertiary",
+        "displayName": "Alert Red",
+        "canonical": "oklch(0.64 0.21 25)",
+        "tonalRamp": [
+          "oklch(0.15 0.06 25)",
+          "oklch(0.26 0.10 25)",
+          "oklch(0.37 0.14 25)",
+          "oklch(0.48 0.18 25)",
+          "oklch(0.64 0.21 25)",
+          "oklch(0.75 0.16 25)",
+          "oklch(0.86 0.09 25)",
+          "oklch(0.95 0.03 25)"
+        ]
+      },
+      "info-blue": {
+        "role": "tertiary",
+        "displayName": "Info Blue",
+        "canonical": "oklch(0.72 0.13 254)"
+      },
+      "premium-violet": {
+        "role": "tertiary",
+        "displayName": "Premium Violet",
+        "canonical": "oklch(0.72 0.14 292)"
+      },
+      "ink-base": {
+        "role": "neutral",
+        "displayName": "Stage Black",
+        "canonical": "oklch(0.13 0.017 254)",
+        "tonalRamp": [
+          "oklch(0.13 0.017 254)",
+          "oklch(0.18 0.020 254)",
+          "oklch(0.22 0.024 254)",
+          "oklch(0.27 0.030 254)",
+          "oklch(0.35 0.032 254)",
+          "oklch(0.52 0.030 254)",
+          "oklch(0.78 0.020 254)",
+          "oklch(0.96 0.006 254)"
+        ]
+      },
+      "ink-surface": { "role": "neutral", "displayName": "Stage Surface", "canonical": "oklch(0.17 0.020 254)" },
+      "ink-card": { "role": "neutral", "displayName": "Stage Card", "canonical": "oklch(0.20 0.024 254)" },
+      "ink-elevated": { "role": "neutral", "displayName": "Stage Elevated", "canonical": "oklch(0.25 0.045 264)" },
+      "ink-border": { "role": "neutral", "displayName": "Stage Border", "canonical": "oklch(0.29 0.033 254)" },
+      "ink-text": { "role": "neutral", "displayName": "Stage Ink", "canonical": "oklch(0.97 0.006 254)" },
+      "ink-text-muted": { "role": "neutral", "displayName": "Stage Ink Muted", "canonical": "oklch(0.76 0.020 254)" },
+      "ink-divider": { "role": "neutral", "displayName": "Divider Slate", "canonical": "oklch(0.45 0.033 254)" },
+      "paper-base": { "role": "neutral", "displayName": "Paper Base", "canonical": "oklch(0.97 0.006 254)" },
+      "paper-surface": { "role": "neutral", "displayName": "Paper Surface", "canonical": "oklch(1.00 0 0)" },
+      "paper-elevated": { "role": "neutral", "displayName": "Paper Elevated", "canonical": "oklch(0.92 0.011 254)" },
+      "paper-border": { "role": "neutral", "displayName": "Paper Border", "canonical": "oklch(0.87 0.019 254)" },
+      "paper-text": { "role": "neutral", "displayName": "Paper Ink", "canonical": "oklch(0.21 0.034 265)" },
+      "paper-text-muted": { "role": "neutral", "displayName": "Paper Ink Muted", "canonical": "oklch(0.55 0.033 257)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Marketing hero headlines only (/home, /become-talent, /brands). Changa. Never inside the authenticated product." },
+      "headline": { "displayName": "Headline", "purpose": "Page-level titles: auth headings, profile names, section openers. Fixed size, never fluid." },
+      "title": { "displayName": "Title", "purpose": "Section and card-group headings. The workhorse heading of the app." },
+      "body": { "displayName": "Body", "purpose": "Default copy, form values, chat messages. Prose capped at 65-75ch." },
+      "label": { "displayName": "Label", "purpose": "Field labels, button text, nav items, tab labels." },
+      "meta": { "displayName": "Meta", "purpose": "Timestamps, counts, helper text, card sub-lines." },
+      "numeric": { "displayName": "Numeric", "purpose": "Prices, follower counts, IDs, analytics figures, aligned digit columns." }
+    },
+    "shadows": [
+      { "name": "card-lift", "value": "0 8px 32px rgba(0,210,106,0.12)", "purpose": "Hover on a talent or content card in dark mode, paired with translateY(-4px)." },
+      { "name": "card-lift-light", "value": "0 8px 24px rgba(0,0,0,0.10)", "purpose": "The light-mode equivalent of card-lift, with the hue dropped." },
+      { "name": "panel-float", "value": "0 20px 40px -12px rgba(0,0,0,0.45)", "purpose": "Dropdowns, menus, and modals: surfaces that genuinely sit above the page." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(0,210,106,0.35)", "purpose": "Standard focus treatment on every interactive element. Always paired with a border shift." },
+      { "name": "focus-ring-danger", "value": "0 0 0 3px rgba(239,68,68,0.35)", "purpose": "Focus treatment on destructive controls and errored fields." }
+    ],
+    "motion": [
+      { "name": "ease-state", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for in-product state transitions. 150-250ms." },
+      { "name": "ease-reveal", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Exponential ease-out for scroll reveals and entrances. 0.7s." },
+      { "name": "duration-state", "value": "180ms", "purpose": "Hover, focus, and active changes on controls." },
+      { "name": "duration-surface", "value": "300ms", "purpose": "Theme swap, background and color transitions on large surfaces." },
+      { "name": "duration-reveal", "value": "700ms", "purpose": "Scroll reveal and page-entrance sequences on marketing surfaces." },
+      { "name": "stagger-grid", "value": "50ms", "purpose": "Per-item delay across a grid of cards." },
+      { "name": "stagger-list", "value": "100ms", "purpose": "Per-item delay down a vertical list." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single action per view. Stage Green fill, black label, reads as a pressable key.",
+      "html": "<button class=\"ds-btn-primary\">إرسال البريف</button>",
+      "css": ".ds-btn-primary { background: #00D26A; color: #000; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 800; padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; transition: background 180ms cubic-bezier(0.4,0,0.2,1), box-shadow 180ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: #00E878; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(0,210,106,0.35); } .ds-btn-primary:active { background: #00A554; } .ds-btn-primary:disabled { background: #00A554; opacity: 0.6; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Gold outline. The second-choice action standing beside a green primary.",
+      "html": "<button class=\"ds-btn-secondary\">عرض الملف</button>",
+      "css": ".ds-btn-secondary { background: transparent; color: #F4B740; font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 800; padding: 8px 16px; border: 1.5px solid #F4B740; border-radius: 10px; cursor: pointer; transition: background 180ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-secondary:hover { background: rgba(244,183,64,0.08); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(244,183,64,0.35); } .ds-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Recessed well, one step down from the card it sits on. Green border and ring on focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">البريد الإلكتروني</span><input class=\"ds-input\" type=\"email\" placeholder=\"you@example.com\" dir=\"ltr\" /></label>",
+      "css": ".ds-field { display: block; font-family: 'Cairo', sans-serif; } .ds-field-label { display: block; color: #A8B3C2; font-size: 13px; font-weight: 600; margin-bottom: 6px; } .ds-input { width: 100%; box-sizing: border-box; padding: 11px 14px; background: #0A121C; color: #F1F5F9; font-family: 'Cairo', sans-serif; font-size: 14px; border: 1px solid #1E293B; border-radius: 8px; outline: none; transition: border-color 180ms cubic-bezier(0.4,0,0.2,1), box-shadow 180ms cubic-bezier(0.4,0,0.2,1); } .ds-input::placeholder { color: #7C8899; } .ds-input:focus { border-color: #00D26A; box-shadow: 0 0 0 3px rgba(0,210,106,0.35); } .ds-input:disabled { opacity: 0.6; cursor: not-allowed; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-status",
+      "description": "One formula, four colours. Always carries a word, never colour alone.",
+      "html": "<span class=\"ds-badge ds-badge-approved\">موافق عليه</span> <span class=\"ds-badge ds-badge-pending\">قيد الانتظار</span> <span class=\"ds-badge ds-badge-rejected\">مرفوض</span> <span class=\"ds-badge ds-badge-suspended\">موقوف</span>",
+      "css": ".ds-badge { display: inline-block; font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; } .ds-badge-approved { background: rgba(0,210,106,0.12); color: #00D26A; border: 1px solid rgba(0,210,106,0.33); } .ds-badge-pending { background: rgba(244,183,64,0.12); color: #F4B740; border: 1px solid rgba(244,183,64,0.33); } .ds-badge-rejected { background: rgba(239,68,68,0.12); color: #EF4444; border: 1px solid rgba(239,68,68,0.33); } .ds-badge-suspended { background: rgba(148,163,184,0.15); color: #94A3B8; border: 1px solid rgba(148,163,184,0.33); }"
+    },
+    {
+      "name": "Talent Card",
+      "kind": "card",
+      "refersTo": "card-talent",
+      "description": "The signature component. Photograph first at full width, price last. Inverting that order turns it into the bid-board this system rejects.",
+      "html": "<article class=\"ds-talent-card\" dir=\"rtl\"><div class=\"ds-talent-media\"><span class=\"ds-talent-flag\">مميّز</span><span class=\"ds-talent-rating\">★ 4.9 <em>(23)</em></span></div><div class=\"ds-talent-body\"><h3 class=\"ds-talent-name\">نور عبد الرحمن</h3><span class=\"ds-talent-cat\">صانعة محتوى UGC</span><p class=\"ds-talent-loc\">القاهرة</p><div class=\"ds-talent-foot\"><div><p class=\"ds-talent-pricelabel\">يبدأ من</p><p class=\"ds-talent-price\">١٬٥٠٠ ج.م</p></div><span class=\"ds-talent-cta\">إرسال بريف</span></div></div></article>",
+      "css": ".ds-talent-card { width: 260px; background: #0D1623; border: 1px solid rgba(0,255,163,0.15); border-radius: 16px; overflow: hidden; font-family: 'Cairo', sans-serif; transition: transform 450ms cubic-bezier(0.4,0,0.2,1), box-shadow 450ms cubic-bezier(0.4,0,0.2,1); } .ds-talent-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,210,106,0.12); } .ds-talent-media { position: relative; padding-top: 100%; background: linear-gradient(150deg, #16233A 0%, #0A121C 100%); } .ds-talent-flag { position: absolute; top: 10px; inset-inline-start: 10px; background: rgba(244,183,64,0.9); color: #000; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; } .ds-talent-rating { position: absolute; bottom: 10px; inset-inline-start: 10px; background: rgba(0,0,0,0.75); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 8px; } .ds-talent-rating em { color: #A8B3C2; font-size: 10px; font-style: normal; } .ds-talent-body { padding: 14px 14px 16px; } .ds-talent-name { color: #F1F5F9; font-size: 14px; font-weight: 800; margin: 0 0 8px; } .ds-talent-cat { display: inline-block; background: rgba(0,210,106,0.08); color: #00D26A; border: 1px solid rgba(0,210,106,0.2); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 600; } .ds-talent-loc { color: #A8B3C2; font-size: 11px; margin: 8px 0 0; } .ds-talent-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #1E293B; } .ds-talent-pricelabel { color: #A8B3C2; font-size: 10px; margin: 0; } .ds-talent-price { color: #00D26A; font-size: 16px; font-weight: 900; margin: 0; } .ds-talent-cta { background: #00D26A; color: #000; font-size: 12px; font-weight: 800; padding: 8px 14px; border-radius: 10px; }"
+    },
+    {
+      "name": "Navbar",
+      "kind": "nav",
+      "refersTo": "navbar",
+      "description": "60px sticky bar with blur. One of only two places backdrop-filter is permitted.",
+      "html": "<nav class=\"ds-nav\" dir=\"rtl\"><span class=\"ds-nav-brand\">Talents</span><a class=\"ds-nav-item ds-nav-active\" href=\"#\">استكشف</a><a class=\"ds-nav-item\" href=\"#\">الوظائف</a><a class=\"ds-nav-item\" href=\"#\">المجتمع</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 22px; height: 60px; padding: 0 24px; background: rgba(5,11,18,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid #1E293B; font-family: 'Cairo', sans-serif; } .ds-nav-brand { color: #F1F5F9; font-size: 16px; font-weight: 800; letter-spacing: 0.02em; } .ds-nav-item { position: relative; color: #A8B3C2; font-size: 14px; font-weight: 500; text-decoration: none; padding: 20px 0; transition: color 180ms cubic-bezier(0.4,0,0.2,1); } .ds-nav-item:hover { color: #F1F5F9; } .ds-nav-item:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(0,210,106,0.35); border-radius: 4px; } .ds-nav-active { color: #F1F5F9; font-weight: 700; } .ds-nav-active::after { content: ''; position: absolute; left: 0; right: 0; bottom: 14px; height: 2px; background: #FFB800; border-radius: 2px; }"
+    },
+    {
+      "name": "Empty State",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Never a blank region. Teaches what would appear here and offers the action that fills it.",
+      "html": "<div class=\"ds-empty\"><span class=\"ds-empty-icon\">🔍</span><p class=\"ds-empty-title\">لا توجد نتائج مطابقة</p><p class=\"ds-empty-hint\">جرّب توسيع الفلاتر أو البحث بفئة أخرى</p><button class=\"ds-empty-cta\">إعادة ضبط الفلاتر</button></div>",
+      "css": ".ds-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 64px 24px; text-align: center; font-family: 'Cairo', sans-serif; } .ds-empty-icon { font-size: 40px; line-height: 1; } .ds-empty-title { color: #F1F5F9; font-size: 16px; font-weight: 700; margin: 0; } .ds-empty-hint { color: #A8B3C2; font-size: 13px; margin: 0; } .ds-empty-cta { margin-top: 6px; background: transparent; color: #F4B740; border: 1.5px solid #F4B740; border-radius: 10px; padding: 8px 16px; font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 800; cursor: pointer; transition: background 180ms cubic-bezier(0.4,0,0.2,1); } .ds-empty-cta:hover { background: rgba(244,183,64,0.08); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Green Room",
+    "overview": "A green room is the space backstage where talent waits before going on: dark, warm-lit, unmistakably professional, and arranged entirely around the person in it. Nobody decorates a green room. Everything in it either helps the performer get ready or gets out of the way. That is the whole brief for this interface. Surfaces are deep and quiet, the chrome recedes, and the brightest things on any screen are a person's face, their work, and the one action they can take next.\n\nThe system is dark by default and light by daylight — both modes are designed, never auto-inverted. Depth comes from tinted borders and background steps rather than from stacked shadows, and colour is spent, not sprinkled: a single neon green carries every action, a gold marks everything the platform itself has verified or scored, and nothing else earns saturation. The one deliberate exception is photography, which is allowed to be as loud as it wants.\n\nThis system explicitly rejects the four shapes named in PRODUCT.md. It is not the freelance bid-board — no dense listing rows, no haggling chrome, no creator flattened to a rate. It is not the playful consumer social app — no mascots, no sticker energy, no bouncing. It is not the generic SaaS template landing — no gradient hero, no three identical icon cards, no tracked uppercase eyebrow over every section. And it is not the casting-agency portfolio site — no thin serif minimalism, no mostly-white gallery, because this is a place you transact, not a place you enquire.",
+    "keyCharacteristics": [
+      "Dark near-black stage (#050B12), lit surfaces stepping up to #0D1623, photography as the light source",
+      "One neon green for action, one gold for earned status, and a strict ban on anything else being saturated",
+      "Cairo carries almost everything; hierarchy is built from weight, not from a zoo of fonts",
+      "Flat at rest; shadow and glow are responses to state, never decoration",
+      "8-16px radii, dense but breathable padding, RTL as the native reading direction",
+      "Every interactive element ships all seven states or it isn't finished"
+    ],
+    "rules": [
+      { "name": "The One Action Rule", "body": "Exactly one Stage Green fill per view. If a screen shows two green buttons, one of them is not the primary action — demote it to the gold outline or the ghost variant. Green is the answer to 'what do I do here', and a second answer is a broken question.", "section": "colors" },
+      { "name": "The Earned Gold Rule", "body": "Gold marks what the platform asserts — a rating we computed, an identity we verified, a placement we granted. It never marks what we want the user to click. Selling the look of verification is the same failure as selling the badge.", "section": "colors" },
+      { "name": "The Green-On-White Prohibition", "body": "Stage Green as text on a white or #F1F5F9 surface measures 2.0:1 and is forbidden at any size. In light mode, green appears as a fill with black text, or as a border, or not at all. This is the single most likely contrast bug in this codebase.", "section": "colors" },
+      { "name": "The Colour-Plus-Label Rule", "body": "Booking status, moderation state, and verification never communicate through hue alone. Every coloured chip carries a word or an icon, in both languages. The palette leans green/gold/orange/red — precisely the band that collapses for red-green colour blindness.", "section": "colors" },
+      { "name": "The Weight-Not-Size Rule", "body": "Emphasis is 600 → 700 → 800 at the same size before it is ever a larger size. The scale between adjacent steps is deliberately tight (roughly 1.15-1.25); a product this dense cannot afford dramatic type contrast without turning into noise.", "section": "typography" },
+      { "name": "The One Family Rule", "body": "Cairo carries headings, buttons, labels, body, and data. Reaching for a second family inside the product surface is prohibited — including Changa. If a screen feels flat, the fix is weight, spacing, or colour, never a new font.", "section": "typography" },
+      { "name": "The Balanced Head Rule", "body": "Every h1-h3 sets text-wrap: balance; long prose sets text-wrap: pretty. Arabic headlines break badly by default and this is not optional.", "section": "typography" },
+      { "name": "The Flat-At-Rest Rule", "body": "Surfaces are flat until the user touches them. Any box-shadow in a default (non-hover, non-focus, non-overlay) style is a bug.", "section": "elevation" },
+      { "name": "The Glass Is Rare Rule", "body": "backdrop-filter is permitted on exactly two things: the sticky navbar and true modal backdrops. The .glass-panel utility in globals.css is currently unused — leave it that way. Decorative glass on content cards costs real GPU on the phones this audience actually uses, and glassmorphism-by-default is the tell of a template.", "section": "elevation" },
+      { "name": "The Two-Step Rule", "body": "No surface sits more than two background steps above its parent. Nested cards are always wrong; if content needs its own container inside a card, use a divider or a background tint, not another card.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use #00D26A for every primary action, and exactly one per view.",
+      "Do put black text on green fills (10.4:1) and black text on gold fills (12.1:1). These are the system's two highest-contrast pairings and they read as physical keys.",
+      "Do use #A8B3C2 for muted text on dark and #64748B for muted text on light. These are the only two approved muted text values.",
+      "Do reserve #475569 for borders, dividers, and disabled icons — it fails body-text contrast at 2.4:1 on #0D1623.",
+      "Do ship all seven states for every interactive element: default, hover, focus, active, disabled, loading, error. Half a component is not a component.",
+      "Do keep transitions in the 150-250ms band inside the product. Users are mid-task.",
+      "Do pair every coloured status with a word or an icon, in both ar and en.",
+      "Do give every animation a prefers-reduced-motion alternative. There are currently zero occurrences of prefers-reduced-motion in the codebase against 34 files using framer-motion — this is the largest open accessibility gap in the system.",
+      "Do let scroll reveals enhance already-visible content. Content must never be invisible until a transition fires.",
+      "Do use skeletons that mirror the real layout for loading, not a centred spinner in a content well.",
+      "Do branch on ar for anything directional. Logical properties or an explicit branch — never a hardcoded left/right."
+    ],
+    "donts": [
+      "Don't ship the freelance bid-board. No dense listing rows, no bid-and-haggle framing, no talent card that leads with a rate instead of a face and a body of work.",
+      "Don't ship the playful consumer social app. No mascots, no sticker energy, no bouncing or elastic easing, no emoji in chrome. Emoji stay confined to pipeline system messages (📋 💳 ✅ ❌) where they act as scannable state markers.",
+      "Don't ship the generic SaaS template landing. No gradient hero, no three identical icon cards, no big-number stat row, no tiny uppercase tracked eyebrow above every section, no 01 / 02 / 03 numbered scaffolding. This trap lives on /home and /become-talent.",
+      "Don't ship the casting-agency portfolio site. No thin serif display, no mostly-white gallery, no oversized editorial whitespace. This is a marketplace, not an agency.",
+      "Don't use #00D26A as text on white or #F1F5F9 — it measures 2.0:1. Fill or border only in light mode.",
+      "Don't use background-clip: text with a gradient. .text-gradient in globals.css is an unused legacy utility; delete it rather than reach for it.",
+      "Don't revive the dead utility layer in globals.css. .glass-panel, .btn-primary, .btn-cta, .btn-premium, .badge-teal/gold/purple, .card-hover, .brand-gradient, .text-gradient, every .sr-* scroll-reveal, and every .ld-* loading class have zero usages outside that file. The live system is inline styles plus framer-motion. Delete the block; don't extend it, and don't reach for a class that renders nowhere.",
+      "Don't apply a border-left or border-right wider than 1px as a coloured accent stripe on cards, list items, or alerts. Use a full border, a background tint, or nothing.",
+      "Don't nest a card inside a card. Use a divider or a background tint.",
+      "Don't use .glass-panel decoratively. Blur belongs to the navbar and modal backdrops, nowhere else.",
+      "Don't introduce #00C9B1 teal. It is the deprecated token primary, and the .btn-primary / .badge-teal utilities it feeds render nowhere.",
+      "Don't use gold as an action colour outside the /login and /register auth theme. Gold means earned, not clickable.",
+      "Don't extend the #talents-app-root.light-mode override block in globals.css. It predates data-theme, force-recolours Tailwind slate classes with !important, and is applied to nothing. New components read dark from useSite() and style both modes directly.",
+      "Don't animate layout properties. Transform and opacity, plus blur/mask/clip-path where they materially improve an effect.",
+      "Don't loop any animation except .pulse-glow on a live status indicator.",
+      "Don't add a fourth accent colour. If a screen seems to need one, the screen's hierarchy is wrong, not the palette.",
+      "Don't let a heading overflow its container. Test hero and card headings at 360px, 768px, and 1440px in both Arabic and English — Arabic strings run materially longer."
+    ]
+  }
+}
