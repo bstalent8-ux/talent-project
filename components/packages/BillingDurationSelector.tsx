@@ -5,8 +5,6 @@ import styles from "./PackagePricing.module.css";
 
 const DURATIONS = [
   { value: 1, ar: "شهري", en: "Monthly" },
-  { value: 3, ar: "3 شهور", en: "3 months" },
-  { value: 6, ar: "6 شهور", en: "6 months" },
   { value: 12, ar: "سنوي", en: "Yearly" },
 ] as const;
 

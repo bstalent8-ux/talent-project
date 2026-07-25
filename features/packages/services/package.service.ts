@@ -201,6 +201,27 @@ export async function fetchPublicPackagesByTalentType(
   return fetchPublicPackagesByAudience(talentType, limit);
 }
 
+export async function fetchPublicPackages(limit?: number): Promise<MarketplacePackage[]> {
+  let query = adminClient
+    .from("packages")
+    .select(PACKAGE_SELECT)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  return (data ?? [])
+    .map((row) => mapPackage(row as Record<string, unknown>))
+    .map((pkg) => ({
+      ...pkg,
+      plans: pkg.plans.filter((plan) => plan.is_active),
+    }))
+    .filter((pkg) => pkg.plans.length > 0);
+}
+
 export async function fetchPublicPackagesByAudience(
   value: string,
   limit?: number,

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -15,11 +15,6 @@ import {
   Star,
 } from "lucide-react";
 import type { TalentCard as ServerTalentCard } from "../../../explore/page";
-import PackageCard from "@/components/packages/PackageCard";
-import PackageSkeleton from "@/components/packages/PackageSkeleton";
-import packageStyles from "@/components/packages/PackagePricing.module.css";
-import type { MarketplacePackage, TalentType } from "@/features/packages/types";
-import type { MarketplaceCategory } from "@/features/categories/types";
 import styles from "./LandingPage.module.css";
 import {
   brandMoments,
@@ -44,10 +39,6 @@ type Props = {
   lang: LandingLang;
   talents: ServerTalentCard[];
   totalTalents: number;
-  talentTypes: TalentType[];
-  categories: MarketplaceCategory[];
-  pricingPackages: MarketplacePackage[];
-  initialPricingTalentType: string;
 };
 
 type DesignMedia = {
@@ -192,7 +183,7 @@ function formatRealTalents(talents: ServerTalentCard[], lang: LandingLang): Disp
       city: talent.location || localize(demo.city, lang),
       rating: (talent.rating || Number(demo.rating)).toFixed(1),
       price: talent.starting_price
-        ? `${lang === "ar" ? "من" : "From"} ${talent.starting_price.toLocaleString()} EGP`
+        ? `${lang === "ar" ? "Ù…Ù†" : "From"} ${talent.starting_price.toLocaleString()} EGP`
         : localize(demo.price, lang),
       image: talent.avatar_url || demo.image,
       portfolio: demo.portfolio,
@@ -322,7 +313,7 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
           >
             {lang === "ar" ? (
               <>
-                احجز المواهب المناسبة <em>لحملتك في دقائق</em>
+                Ø§Ø­Ø¬Ø² Ø§Ù„Ù…ÙˆØ§Ù‡Ø¨ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø© <em>Ù„Ø­Ù…Ù„ØªÙƒ ÙÙŠ Ø¯Ù‚Ø§Ø¦Ù‚</em>
               </>
             ) : (
               <>
@@ -378,7 +369,7 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
           </form>
         </div>
 
-        <div className={styles.statsStrip} aria-label={lang === "ar" ? "إحصائيات المنصة" : "Platform statistics"}>
+        <div className={styles.statsStrip} aria-label={lang === "ar" ? "Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø§Ù„Ù…Ù†ØµØ©" : "Platform statistics"}>
           {localizedStats.map((item) => (
             <div className={styles.stat} key={item.label.en}>
               <div className={styles.statValue}>{item.value}</div>
@@ -389,7 +380,7 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
 
         <div className={styles.trusted}>
           <span>{t.trustedBy}</span>
-          <div className={styles.brandList} aria-label={lang === "ar" ? "براندات مميزة" : "Featured brands"}>
+          <div className={styles.brandList} aria-label={lang === "ar" ? "Ø¨Ø±Ø§Ù†Ø¯Ø§Øª Ù…Ù…ÙŠØ²Ø©" : "Featured brands"}>
             {trustedBrands.map((brand) => (
               <span className={styles.brandPill} key={brand}>
                 {brand}
@@ -411,10 +402,10 @@ function CategoriesSection({ lang }: { lang: LandingLang }) {
         <SectionHeader
           id="landing-categories"
           kicker={t.categories}
-          title={lang === "ar" ? "كل فئة لها طريقة عرض تناسب طبيعتها" : "Every category gets the right kind of evidence"}
+          title={lang === "ar" ? "ÙƒÙ„ ÙØ¦Ø© Ù„Ù‡Ø§ Ø·Ø±ÙŠÙ‚Ø© Ø¹Ø±Ø¶ ØªÙ†Ø§Ø³Ø¨ Ø·Ø¨ÙŠØ¹ØªÙ‡Ø§" : "Every category gets the right kind of evidence"}
           description={
             lang === "ar"
-              ? "صور، فيديو، تقييمات وباقات تظهر الفارق بين موهبة وأخرى بدون إرباك."
+              ? "ØµÙˆØ±ØŒ ÙÙŠØ¯ÙŠÙˆØŒ ØªÙ‚ÙŠÙŠÙ…Ø§Øª ÙˆØ¨Ø§Ù‚Ø§Øª ØªØ¸Ù‡Ø± Ø§Ù„ÙØ§Ø±Ù‚ Ø¨ÙŠÙ† Ù…ÙˆÙ‡Ø¨Ø© ÙˆØ£Ø®Ø±Ù‰ Ø¨Ø¯ÙˆÙ† Ø¥Ø±Ø¨Ø§Ùƒ."
               : "Photos, video, ratings and packages make talent comparison clearer without visual clutter."
           }
         />
@@ -431,7 +422,7 @@ function CategoriesSection({ lang }: { lang: LandingLang }) {
                   </span>
                   <h3 className={styles.categoryTitle}>{localize(category.title, lang)}</h3>
                   <p className={styles.categoryMeta}>{localize(category.description, lang)}</p>
-                  <p className={styles.categoryMeta}>{category.count} {lang === "ar" ? "موهبة" : "talents"}</p>
+                  <p className={styles.categoryMeta}>{category.count} {lang === "ar" ? "Ù…ÙˆÙ‡Ø¨Ø©" : "talents"}</p>
                 </div>
               </Link>
             );
@@ -468,7 +459,7 @@ function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang
             {talent.rating}
           </span>
         </h3>
-        <p className={styles.talentMeta}>{talent.profession} · {talent.city}</p>
+        <p className={styles.talentMeta}>{talent.profession} Â· {talent.city}</p>
         <div className={styles.portfolioStrip}>
           {talent.portfolio.map((image) => (
             <img src={image} alt="" loading="lazy" key={image} />
@@ -477,7 +468,7 @@ function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang
         <div className={styles.talentFooter}>
           <span>{talent.price}</span>
           <Link href={talent.href}>
-            {lang === "ar" ? "عرض الملف" : "View profile"}
+            {lang === "ar" ? "Ø¹Ø±Ø¶ Ø§Ù„Ù…Ù„Ù" : "View profile"}
           </Link>
         </div>
       </div>
@@ -494,15 +485,15 @@ function FeaturedTalentsSection({ lang, talents }: { lang: LandingLang; talents:
         <SectionHeader
           id="featured-talents"
           kicker={t.featuredTalents}
-          title={lang === "ar" ? "كروت مواهب مصممة للحجز وليس للعرض فقط" : "Talent cards built for booking, not just browsing"}
+          title={lang === "ar" ? "ÙƒØ±ÙˆØª Ù…ÙˆØ§Ù‡Ø¨ Ù…ØµÙ…Ù…Ø© Ù„Ù„Ø­Ø¬Ø² ÙˆÙ„ÙŠØ³ Ù„Ù„Ø¹Ø±Ø¶ ÙÙ‚Ø·" : "Talent cards built for booking, not just browsing"}
           description={
             lang === "ar"
-              ? "كل كارت يوضح الصورة، التخصص، التقييم، السعر، ولمحة من البورتفوليو."
+              ? "ÙƒÙ„ ÙƒØ§Ø±Øª ÙŠÙˆØ¶Ø­ Ø§Ù„ØµÙˆØ±Ø©ØŒ Ø§Ù„ØªØ®ØµØµØŒ Ø§Ù„ØªÙ‚ÙŠÙŠÙ…ØŒ Ø§Ù„Ø³Ø¹Ø±ØŒ ÙˆÙ„Ù…Ø­Ø© Ù…Ù† Ø§Ù„Ø¨ÙˆØ±ØªÙÙˆÙ„ÙŠÙˆ."
               : "Each card surfaces portrait, specialty, rating, price and portfolio evidence."
           }
           action={
             <ButtonLink href="/explore" variant="quiet">
-              {lang === "ar" ? "عرض كل المواهب" : "View all talents"}
+              {lang === "ar" ? "Ø¹Ø±Ø¶ ÙƒÙ„ Ø§Ù„Ù…ÙˆØ§Ù‡Ø¨" : "View all talents"}
               <ArrowIcon lang={lang} />
             </ButtonLink>
           }
@@ -526,10 +517,10 @@ function WorkflowSection({ lang }: { lang: LandingLang }) {
         <SectionHeader
           id="landing-workflow"
           kicker={t.howItWorks}
-          title={lang === "ar" ? "مسارين واضحين: براند يحجز، وموهبة تبني سمعتها" : "Two clear paths: brands book, talents grow"}
+          title={lang === "ar" ? "Ù…Ø³Ø§Ø±ÙŠÙ† ÙˆØ§Ø¶Ø­ÙŠÙ†: Ø¨Ø±Ø§Ù†Ø¯ ÙŠØ­Ø¬Ø²ØŒ ÙˆÙ…ÙˆÙ‡Ø¨Ø© ØªØ¨Ù†ÙŠ Ø³Ù…Ø¹ØªÙ‡Ø§" : "Two clear paths: brands book, talents grow"}
           description={
             lang === "ar"
-              ? "المنصة تقلل الاحتكاك من أول بحث حتى بداية التعاون."
+              ? "Ø§Ù„Ù…Ù†ØµØ© ØªÙ‚Ù„Ù„ Ø§Ù„Ø§Ø­ØªÙƒØ§Ùƒ Ù…Ù† Ø£ÙˆÙ„ Ø¨Ø­Ø« Ø­ØªÙ‰ Ø¨Ø¯Ø§ÙŠØ© Ø§Ù„ØªØ¹Ø§ÙˆÙ†."
               : "The platform reduces friction from first search to collaboration kickoff."
           }
         />
@@ -583,10 +574,10 @@ function CampaignSection({ lang }: { lang: LandingLang }) {
         <SectionHeader
           id="landing-campaigns"
           kicker={t.featuredBrands}
-          title={lang === "ar" ? "الصفحة تعرض نتائج ملموسة وليس وعود عامة" : "Show real campaign moments, not generic promises"}
+          title={lang === "ar" ? "Ø§Ù„ØµÙØ­Ø© ØªØ¹Ø±Ø¶ Ù†ØªØ§Ø¦Ø¬ Ù…Ù„Ù…ÙˆØ³Ø© ÙˆÙ„ÙŠØ³ ÙˆØ¹ÙˆØ¯ Ø¹Ø§Ù…Ø©" : "Show real campaign moments, not generic promises"}
           description={
             lang === "ar"
-              ? "استخدم صور حملات، shoots، وفيديوهات قصيرة عشان الزائر يحس إن المنصة نشطة وموثوقة."
+              ? "Ø§Ø³ØªØ®Ø¯Ù… ØµÙˆØ± Ø­Ù…Ù„Ø§ØªØŒ shootsØŒ ÙˆÙÙŠØ¯ÙŠÙˆÙ‡Ø§Øª Ù‚ØµÙŠØ±Ø© Ø¹Ø´Ø§Ù† Ø§Ù„Ø²Ø§Ø¦Ø± ÙŠØ­Ø³ Ø¥Ù† Ø§Ù„Ù…Ù†ØµØ© Ù†Ø´Ø·Ø© ÙˆÙ…ÙˆØ«ÙˆÙ‚Ø©."
               : "Campaign imagery, shoot moments and short video previews create immediate trust."
           }
         />
@@ -607,15 +598,15 @@ function CampaignSection({ lang }: { lang: LandingLang }) {
           <aside className={styles.darkCtaPanel}>
             <span className={styles.badge}>{pageCopy[lang].premium}</span>
             <h3 className={styles.sectionTitle}>
-              {lang === "ar" ? "انشر فرصة عمل واجذب المواهب المناسبة" : "Post a job and attract matching talent"}
+              {lang === "ar" ? "Ø§Ù†Ø´Ø± ÙØ±ØµØ© Ø¹Ù…Ù„ ÙˆØ§Ø¬Ø°Ø¨ Ø§Ù„Ù…ÙˆØ§Ù‡Ø¨ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©" : "Post a job and attract matching talent"}
             </h3>
             <p className={styles.heroSubtitle}>
               {lang === "ar"
-                ? "الـ landing يوجه البراندات من الإلهام إلى أول خطوة عملية: نشر brief واضح."
+                ? "Ø§Ù„Ù€ landing ÙŠÙˆØ¬Ù‡ Ø§Ù„Ø¨Ø±Ø§Ù†Ø¯Ø§Øª Ù…Ù† Ø§Ù„Ø¥Ù„Ù‡Ø§Ù… Ø¥Ù„Ù‰ Ø£ÙˆÙ„ Ø®Ø·ÙˆØ© Ø¹Ù…Ù„ÙŠØ©: Ù†Ø´Ø± brief ÙˆØ§Ø¶Ø­."
                 : "The landing page moves brands from inspiration to the first concrete action: a clear brief."}
             </p>
             <ButtonLink href="/jobs/create">
-              {lang === "ar" ? "انشر فرصة عمل" : "Post a job"}
+              {lang === "ar" ? "Ø§Ù†Ø´Ø± ÙØ±ØµØ© Ø¹Ù…Ù„" : "Post a job"}
               <ArrowIcon lang={lang} />
             </ButtonLink>
           </aside>
@@ -634,10 +625,10 @@ function FeatureSection({ lang }: { lang: LandingLang }) {
         <SectionHeader
           id="landing-features"
           kicker={t.features}
-          title={lang === "ar" ? "نظام Marketplace جاهز للنمو" : "A marketplace system ready to scale"}
+          title={lang === "ar" ? "Ù†Ø¸Ø§Ù… Marketplace Ø¬Ø§Ù‡Ø² Ù„Ù„Ù†Ù…Ùˆ" : "A marketplace system ready to scale"}
           description={
             lang === "ar"
-              ? "مكونات واضحة تخدم discovery، الثقة، التواصل، والحجز."
+              ? "Ù…ÙƒÙˆÙ†Ø§Øª ÙˆØ§Ø¶Ø­Ø© ØªØ®Ø¯Ù… discoveryØŒ Ø§Ù„Ø«Ù‚Ø©ØŒ Ø§Ù„ØªÙˆØ§ØµÙ„ØŒ ÙˆØ§Ù„Ø­Ø¬Ø²."
               : "Clear product pillars support discovery, trust, communication and booking."
           }
         />
@@ -669,7 +660,7 @@ function TestimonialsSection({ lang }: { lang: LandingLang }) {
         <SectionHeader
           id="landing-testimonials"
           kicker={t.testimonials}
-          title={lang === "ar" ? "ثقة مبنية على تجربة واضحة" : "Trust built from clear client experience"}
+          title={lang === "ar" ? "Ø«Ù‚Ø© Ù…Ø¨Ù†ÙŠØ© Ø¹Ù„Ù‰ ØªØ¬Ø±Ø¨Ø© ÙˆØ§Ø¶Ø­Ø©" : "Trust built from clear client experience"}
         />
         <div className={styles.testimonialGrid}>
           {testimonials.map((testimonial) => (
@@ -691,125 +682,6 @@ function TestimonialsSection({ lang }: { lang: LandingLang }) {
   );
 }
 
-type PricingTarget = Pick<TalentType, "id" | "label_ar" | "label_en">;
-
-const brandPricingTarget: PricingTarget = {
-  id: "brand",
-  label_ar: "باقات البراندات",
-  label_en: "Brand packages",
-};
-
-function typeLabel(type: PricingTarget, lang: LandingLang) {
-  return lang === "ar" ? type.label_ar : type.label_en;
-}
-
-function PricingPreview({
-  lang,
-  talentTypes,
-  categories,
-  initialPackages,
-  initialTalentType,
-}: {
-  lang: LandingLang;
-  talentTypes: TalentType[];
-  categories: MarketplaceCategory[];
-  initialPackages: MarketplacePackage[];
-  initialTalentType: string;
-}) {
-  const t = pageCopy[lang];
-  const [activeType, setActiveType] = useState(initialTalentType);
-  const [packages, setPackages] = useState(initialPackages);
-  const [selectedPackageId, setSelectedPackageId] = useState(initialPackages[0]?.id ?? null);
-  const [loading, setLoading] = useState(false);
-  const pricingTargets: PricingTarget[] = categories.length
-    ? categories.slice(0, 7).map((category) => ({
-      id: category.id,
-      label_ar: category.label_ar,
-      label_en: category.role_type === "brand" ? `${category.label_en} - Brand` : category.label_en,
-    }))
-    : [...talentTypes.slice(0, 5), brandPricingTarget];
-
-  async function loadPackages(type: string) {
-    setActiveType(type);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/packages?categoryId=${encodeURIComponent(type)}&limit=3`);
-      const data = await res.json();
-      const nextPackages = res.ok ? data.packages ?? [] : [];
-      setPackages(nextPackages);
-      setSelectedPackageId(nextPackages[0]?.id ?? null);
-    } catch {
-      setPackages([]);
-      setSelectedPackageId(null);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <section className={`${styles.section} ${styles.sectionLight}`} aria-labelledby="landing-pricing">
-      <div className={styles.container}>
-        <SectionHeader
-          id="landing-pricing"
-          kicker={t.pricing}
-          title={lang === "ar" ? "باقات ديناميكية للمواهب والبراندات" : "Dynamic packages for talents and brands"}
-          description={
-            lang === "ar"
-              ? "كل حساب يشاهد الباقات المناسبة له فقط، مع مدد وأسعار قابلة للإدارة من لوحة التحكم."
-              : "Each account sees only the packages that match its type, with durations and prices managed from admin."
-          }
-          action={
-            <ButtonLink href={`/packages?type=${activeType}`} variant="quiet">
-              {lang === "ar" ? "عرض كل الباقات" : "View all packages"}
-              <ArrowIcon lang={lang} />
-            </ButtonLink>
-          }
-        />
-        {pricingTargets.length ? (
-          <div className={packageStyles.typeTabs} role="tablist">
-            {pricingTargets.map((type) => (
-              <button
-                className={`${packageStyles.typeTab} ${activeType === type.id ? packageStyles.tabActive : ""}`}
-                key={type.id}
-                type="button"
-                role="tab"
-                aria-selected={activeType === type.id}
-                onClick={() => loadPackages(type.id)}
-              >
-                {typeLabel(type, lang)}
-              </button>
-            ))}
-          </div>
-        ) : null}
-
-        <div className={styles.pricingGrid}>
-          {loading ? (
-            <div className={styles.pricingWide}>
-              <PackageSkeleton />
-            </div>
-          ) : packages.length ? (
-            packages.slice(0, 3).map((item) => (
-              <PackageCard
-                compact
-                key={item.id}
-                pkg={item}
-                lang={lang}
-                selected={selectedPackageId === item.id}
-                onSelectPackage={(pkg) => setSelectedPackageId(pkg.id)}
-              />
-            ))
-          ) : (
-            <div className={`${packageStyles.emptyState} ${styles.pricingWide}`}>
-              <h3>{lang === "ar" ? "لا توجد باقات منشورة بعد" : "No published packages yet"}</h3>
-              <p>{lang === "ar" ? "أنشئ باقات من لوحة التحكم لتظهر هنا تلقائيًا." : "Create packages from admin and they will appear here automatically."}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function FAQSection({ lang }: { lang: LandingLang }) {
   const t = pageCopy[lang];
 
@@ -819,7 +691,7 @@ function FAQSection({ lang }: { lang: LandingLang }) {
         <SectionHeader
           id="landing-faq"
           kicker={t.faq}
-          title={lang === "ar" ? "إجابات قصيرة قبل التسجيل" : "Short answers before signup"}
+          title={lang === "ar" ? "Ø¥Ø¬Ø§Ø¨Ø§Øª Ù‚ØµÙŠØ±Ø© Ù‚Ø¨Ù„ Ø§Ù„ØªØ³Ø¬ÙŠÙ„" : "Short answers before signup"}
         />
         <div className={styles.faqGrid}>
           {faqs.map((faq, index) => (
@@ -862,10 +734,6 @@ export default function LandingPage({
   lang,
   talents,
   totalTalents,
-  talentTypes,
-  categories,
-  pricingPackages,
-  initialPricingTalentType,
 }: Props) {
   const displayedTalents = formatRealTalents(talents, lang);
   const filledTalents = displayedTalents.length >= 4 ? displayedTalents : fallbackTalents(lang);
@@ -880,13 +748,6 @@ export default function LandingPage({
       <CampaignSection lang={lang} />
       <FeatureSection lang={lang} />
       <TestimonialsSection lang={lang} />
-      <PricingPreview
-        lang={lang}
-        talentTypes={talentTypes}
-        categories={categories}
-        initialPackages={pricingPackages}
-        initialTalentType={initialPricingTalentType}
-      />
       <FAQSection lang={lang} />
       <FinalCTA lang={lang} />
     </div>

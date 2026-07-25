@@ -54,7 +54,10 @@ for (const category of categories) {
       is_active: true,
     });
     packageCategories.push({ package_id: packageId, category_id: category.id });
-    plans.push({ package_id: packageId, duration_months: 1, price, currency: "EGP", is_active: true });
+    plans.push(
+      { package_id: packageId, duration_months: 1, price, currency: "EGP", is_active: true },
+      { package_id: packageId, duration_months: 12, price: price * 10, currency: "EGP", is_active: true },
+    );
     features.push(
       { package_id: packageId, feature_key: "monthly_actions", feature_value: tier.actions },
       { package_id: packageId, feature_key: "priority_visibility", feature_value: tier.visibility },

@@ -1,10 +1,19 @@
 "use client";
 
 import { Check, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { LandingLang } from "@/app/(main)/home/_components/landing/content";
 import type { MarketplacePackage, PackagePlan } from "@/features/packages/types";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import styles from "./PackagePricing.module.css";
+
+// Premium ease-out-quint, mirrored from --ease-out-quint in globals.css.
+const EASE_OUT_QUINT = [0.22, 1, 0.36, 1] as const;
+// How much a selected card grows in both width and height.
+const SELECTED_SCALE = 1.08;
+// Hover lift for a non-selected card (grow) and vertical offset (both states).
+const HOVER_SCALE = 1.04;
+const HOVER_LIFT = -6;
 
 function formatDuration(months: number, lang: LandingLang) {
   const labels: Record<number, { ar: string; en: string }> = {
@@ -50,6 +59,7 @@ export default function PackageCard({
   onSelectPlan,
   onSubscribe,
   subscribing,
+  showPlanSelector = true,
   compact = false,
 }: {
   pkg: MarketplacePackage;
@@ -60,18 +70,41 @@ export default function PackageCard({
   onSelectPlan?: (plan: PackagePlan) => void;
   onSubscribe?: (plan: PackagePlan, pkg: MarketplacePackage) => void;
   subscribing?: boolean;
+  showPlanSelector?: boolean;
   compact?: boolean;
 }) {
   const plans = pkg.plans.filter((plan) => plan.is_active);
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? plans[0] ?? null;
 
+  const reduce = useReducedMotion();
+  const isMobile = useIsMobile(680); // matches the single-column grid breakpoint
+  // Grow the selected card in both width and height. Skip on mobile — the grid is
+  // single-column there, so a scaled card would overflow the viewport horizontally.
+  const grow = selected && !isMobile ? SELECTED_SCALE : 1;
+
   return (
     <motion.article
       className={`${styles.packageCard} ${selected ? styles.packageCardSelected : ""}`}
       onClick={() => onSelectPackage?.(pkg)}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.26 }}
+      initial={reduce ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0, scale: grow }}
+      // Hover is independent of selection: a selected card keeps its larger size and
+      // only lifts; a non-selected card grows to 1.04 and lifts. Colour/shadow are in CSS.
+      whileHover={
+        reduce || isMobile
+          ? undefined
+          : { y: HOVER_LIFT, scale: selected ? SELECTED_SCALE : HOVER_SCALE }
+      }
+      transition={
+        reduce
+          ? { duration: 0 }
+          : {
+              scale: { duration: 0.4, ease: EASE_OUT_QUINT },
+              y: { duration: 0.4, ease: EASE_OUT_QUINT },
+              opacity: { duration: 0.3, ease: EASE_OUT_QUINT },
+            }
+      }
+      style={{ transformOrigin: "center", zIndex: selected ? 3 : 1 }}
     >
       <div className={styles.packageHeader}>
         <span className={styles.packageEyebrow}>
@@ -91,7 +124,7 @@ export default function PackageCard({
         </div>
       ) : null}
 
-      {!compact && plans.length > 1 ? (
+      {showPlanSelector && !compact && plans.length > 1 ? (
         <div className={styles.durationTabs} role="radiogroup" aria-label={lang === "ar" ? "مدة الفوترة" : "Billing duration"}>
           {plans.map((plan) => {
             const active = selectedPlan?.id === plan.id;

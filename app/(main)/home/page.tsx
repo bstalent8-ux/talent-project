@@ -5,11 +5,6 @@ export const dynamic = "force-dynamic";
 import { adminClient } from "@/lib/supabase/admin";
 import HomeClient from "./_components/HomeClient";
 import type { TalentCard } from "../explore/page";
-import {
-  fetchPackageCategories,
-  fetchPublicPackagesByTalentType,
-  fetchTalentTypes,
-} from "@/features/packages/services/package.service";
 
 export default async function HomePage() {
   const { data } = await adminClient
@@ -48,29 +43,10 @@ export default async function HomePage() {
 
   const topTalents = [...talents].sort((a, b) => b.rating - a.rating).slice(0, 6);
 
-  let talentTypes = [];
-  let categories = [];
-  let packages = [];
-  try {
-    [talentTypes, categories] = await Promise.all([
-      fetchTalentTypes(true),
-      fetchPackageCategories(true),
-    ]);
-    packages = await fetchPublicPackagesByTalentType(talentTypes[0]?.id ?? "ugc", 3);
-  } catch {
-    talentTypes = [];
-    categories = [];
-    packages = [];
-  }
-
   return (
     <HomeClient
       topTalents={topTalents}
       totalTalents={talents.length}
-      talentTypes={talentTypes}
-      categories={categories}
-      pricingPackages={packages}
-      initialPricingTalentType={talentTypes[0]?.id ?? "ugc"}
     />
   );
 }

@@ -104,6 +104,39 @@ WITH package_seed AS (
     c.id AS category_id,
     c.role_type,
     tier.tier_key,
+    CASE
+      WHEN c.role_type = 'brand' THEN tier.brand_price
+      ELSE tier.talent_price
+    END AS monthly_price,
+    (
+      substr(md5('v1-demo-package:' || c.id || ':' || tier.tier_key), 1, 8) || '-' ||
+      substr(md5('v1-demo-package:' || c.id || ':' || tier.tier_key), 9, 4) || '-4' ||
+      substr(md5('v1-demo-package:' || c.id || ':' || tier.tier_key), 14, 3) || '-8' ||
+      substr(md5('v1-demo-package:' || c.id || ':' || tier.tier_key), 18, 3) || '-' ||
+      substr(md5('v1-demo-package:' || c.id || ':' || tier.tier_key), 21, 12)
+    )::uuid AS package_id
+  FROM public.categories c
+  CROSS JOIN (
+    VALUES
+      ('starter', 490::numeric, 1490::numeric),
+      ('pro', 990::numeric, 2990::numeric),
+      ('scale', 1890::numeric, 5490::numeric)
+  ) AS tier(tier_key, talent_price, brand_price)
+  WHERE c.is_active = true
+    AND c.role_type IN ('talent', 'brand')
+)
+INSERT INTO public.package_plans (package_id, duration_months, price, currency, is_active)
+SELECT package_id, 12, monthly_price * 10, 'EGP', true
+FROM package_seed
+ON CONFLICT (package_id, duration_months, currency) DO UPDATE SET
+  price = EXCLUDED.price,
+  is_active = EXCLUDED.is_active;
+
+WITH package_seed AS (
+  SELECT
+    c.id AS category_id,
+    c.role_type,
+    tier.tier_key,
     (
       substr(md5('v1-demo-package:' || c.id || ':' || tier.tier_key), 1, 8) || '-' ||
       substr(md5('v1-demo-package:' || c.id || ':' || tier.tier_key), 9, 4) || '-4' ||

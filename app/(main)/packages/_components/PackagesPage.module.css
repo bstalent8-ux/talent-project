@@ -90,15 +90,23 @@
   color: var(--text-primary);
 }
 
-.controls {
-  display: grid;
-  gap: 1rem;
-}
-
 .controlLabel {
   margin: 0;
   color: var(--text-primary);
   font-weight: 900;
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.billingControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
 }
 
 .status {
