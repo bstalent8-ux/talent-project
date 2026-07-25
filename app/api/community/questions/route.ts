@@ -34,7 +34,18 @@ export async function GET(request: NextRequest) {
           role,
           is_verified
         ),
-        community_answers (count)
+        community_answers (
+          id,
+          content,
+          created_at,
+          profiles:user_id (
+            id,
+            full_name,
+            avatar_url,
+            role,
+            is_verified
+          )
+        )
         `,
         { count: "exact" }
       );

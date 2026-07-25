@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Plus, Eye, ArrowRight, ArrowLeft, Check, Pin, MessagesSquare } from "lucide-react";
 import type { Question } from "./CommunityClient";
 import styles from "./CommunityPage.module.css";
+
+const PAGE_SIZE = 6;
 
 interface Props {
   lang: "ar" | "en";
@@ -29,6 +32,7 @@ const TX = {
     all: "كل الأسئلة", popular: "الأكثر تفاعلاً", search: "ابحث عن سؤال أو تاق...",
     ask: "اسأل سؤالاً", allTags: "كل الوسوم", comments: "تعليقات", views: "مشاهدة",
     brand: "براند", talent: "موهبة", pinned: "مثبّت", viewAll: "عرض الكل",
+    viewAnswers: "عرض الإجابات", hideAnswers: "إخفاء الإجابات", answers: "الإجابات", openQuestion: "فتح السؤال كاملاً",
     addComment: "أضف تعليقك...", loginToComment: "سجّل الدخول لإضافة تعليق",
     noQuestions: "لا توجد أسئلة مطابقة", noQuestionsSub: "جرّب تغيير البحث أو الوسم، أو كن أول من يسأل.",
   },
@@ -36,6 +40,7 @@ const TX = {
     all: "All questions", popular: "Most active", search: "Search a question or tag...",
     ask: "Ask a question", allTags: "All tags", comments: "comments", views: "views",
     brand: "Brand", talent: "Talent", pinned: "Pinned", viewAll: "View all",
+    viewAnswers: "View answers", hideAnswers: "Hide answers", answers: "Answers", openQuestion: "Open full question",
     addComment: "Add your comment...", loginToComment: "Log in to comment",
     noQuestions: "No matching questions", noQuestionsSub: "Try a different search or tag — or be the first to ask.",
   },
@@ -50,6 +55,23 @@ export default function CommunityFeed({
   const t = TX[lang];
   const ar = lang === "ar";
   const Arrow = ar ? ArrowLeft : ArrowRight;
+
+  const [page, setPage] = useState(1);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (id: string) => setExpanded((p) => ({ ...p, [id]: !p[id] }));
+
+  // Reset to the first page whenever the result set changes.
+  useEffect(() => { setPage(1); }, [activeTab, search, activeTag]);
+
+  const totalPages = Math.max(1, Math.ceil(questions.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageQuestions = questions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const goTo = (p: number) => {
+    setPage(p);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString(ar ? "ar-EG" : "en-US");
@@ -128,7 +150,7 @@ export default function CommunityFeed({
         </div>
       ) : (
         <div className={styles.feed}>
-          {questions.map((q) => {
+          {pageQuestions.map((q) => {
             const isBrand = q.profiles?.role === "brand";
             const answers = q.community_answers ?? [];
             return (
@@ -183,29 +205,54 @@ export default function CommunityFeed({
                 </div>
 
                 <div className={styles.qFooter}>
-                  {answers.slice(0, 2).map((c, cIdx) => (
-                    <div key={c.id ?? cIdx} className={styles.commentPreview}>
-                      <img
-                        src={c.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.profiles?.full_name}`}
-                        alt={c.profiles?.full_name}
-                        loading="lazy"
-                      />
-                      <div>
-                        <div className={styles.commentAuthor}>{c.profiles?.full_name}</div>
-                        <div className={styles.commentText}>{c.content}</div>
-                      </div>
-                    </div>
-                  ))}
+                  {(() => {
+                    const isOpen = !!expanded[q.id];
+                    const shown = isOpen ? answers : answers.slice(0, 2);
+                    return (
+                      <>
+                        {isOpen && answers.length > 0 && (
+                          <p className={styles.answersDivider}>{t.answers} ({answers.length})</p>
+                        )}
+                        {shown.map((c, cIdx) => (
+                          <div key={c.id ?? cIdx} className={styles.commentPreview}>
+                            <img
+                              src={c.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.profiles?.full_name}`}
+                              alt={c.profiles?.full_name}
+                              loading="lazy"
+                            />
+                            <div>
+                              <div className={styles.commentAuthor}>{c.profiles?.full_name}</div>
+                              <div className={isOpen ? styles.commentTextFull : styles.commentText}>{c.content}</div>
+                              {isOpen && c.created_at && (
+                                <div className={styles.commentDate}>{formatDate(c.created_at)}</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
 
-                  {answers.length > 2 && (
-                    <button
-                      type="button"
-                      className={styles.viewAll}
-                      onClick={() => router.push(`/community/question/${q.id}`)}
-                    >
-                      {t.viewAll} ({answers.length})
-                    </button>
-                  )}
+                        {answers.length > 2 && (
+                          <button
+                            type="button"
+                            className={styles.viewAll}
+                            onClick={() => toggleExpand(q.id)}
+                            aria-expanded={isOpen}
+                          >
+                            {isOpen ? t.hideAnswers : `${t.viewAnswers} (${answers.length})`}
+                          </button>
+                        )}
+
+                        {isOpen && (
+                          <button
+                            type="button"
+                            className={styles.viewAll}
+                            onClick={() => router.push(`/community/question/${q.id}`)}
+                          >
+                            {t.openQuestion} →
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
 
                   {user ? (
                     <div className={styles.commentBar}>
@@ -235,6 +282,37 @@ export default function CommunityFeed({
               </article>
             );
           })}
+
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                onClick={() => goTo(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                {ar ? "السابق" : "Prev"}
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`${styles.pageBtn} ${p === currentPage ? styles.pageBtnActive : ""}`}
+                  onClick={() => goTo(p)}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={styles.pageBtn}
+                onClick={() => goTo(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                {ar ? "التالي" : "Next"}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
