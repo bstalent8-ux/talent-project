@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { type PointerEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -256,14 +256,40 @@ function SectionHeader({
 }
 
 function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTalents: number; media: DesignMedia }) {
+  const heroRef = useRef<HTMLElement | null>(null);
   const t = pageCopy[lang];
   const localizedStats = stats.map((item, index) => ({
     ...item,
     value: index === 0 && totalTalents > 0 ? `+${Math.max(totalTalents, 30)}` : item.value,
   }));
 
+  function handlePointerMove(event: PointerEvent<HTMLElement>) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+
+    event.currentTarget.style.setProperty("--hero-mx", x.toFixed(3));
+    event.currentTarget.style.setProperty("--hero-my", y.toFixed(3));
+    event.currentTarget.style.setProperty("--hero-cursor-x", `${event.clientX - bounds.left}px`);
+    event.currentTarget.style.setProperty("--hero-cursor-y", `${event.clientY - bounds.top}px`);
+  }
+
+  function handlePointerLeave(event: PointerEvent<HTMLElement>) {
+    event.currentTarget.style.setProperty("--hero-mx", "0");
+    event.currentTarget.style.setProperty("--hero-my", "0");
+    event.currentTarget.style.setProperty("--hero-cursor-x", "50%");
+    event.currentTarget.style.setProperty("--hero-cursor-y", "34%");
+  }
+
   return (
-    <section className={styles.hero} aria-labelledby="landing-hero-title">
+    <section
+      ref={heroRef}
+      className={styles.hero}
+      aria-labelledby="landing-hero-title"
+      onPointerLeave={handlePointerLeave}
+      onPointerMove={handlePointerMove}
+    >
       <div className={styles.heroMedia} aria-hidden="true">
         {media.type === "youtube" ? (
           <iframe src={youtubeEmbedUrl(media.url)} title="" allow="autoplay; encrypted-media; picture-in-picture" />
@@ -274,6 +300,7 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
         )}
       </div>
       <div className={styles.heroOverlay} aria-hidden="true" />
+      <div className={styles.heroCursorGlow} aria-hidden="true" />
 
       {floatingChips.map((chip, index) => {
         const Icon = chip.icon;

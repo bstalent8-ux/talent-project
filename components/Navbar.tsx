@@ -33,15 +33,15 @@ const NAV_LINKS = {
   en: [
     { label: "Home", href: "/home" },
     { label: "Explore", href: "/explore" },
-    { label: "Pricing", href: "/packages" },
     { label: "Community", href: "/community" },
     { label: "Jobs", href: "/jobs" },
     { label: "Brands", href: "/brands" },
     { label: "Projects", href: "/bookings" },
+    { label: "Pricing", href: "/packages" },
   ],
 };
 
-NAV_LINKS.ar.splice(2, 0, { label: "الأسعار", href: "/packages" });
+NAV_LINKS.ar.push({ label: "الأسعار", href: "/packages" });
 
 const TX = {
   ar: {
