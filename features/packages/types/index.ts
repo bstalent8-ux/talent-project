@@ -56,6 +56,8 @@ export interface MarketplacePackage {
   categories: PackageCategory[];
   plans: PackagePlan[];
   features: PackageFeature[];
+  /** Number of users with an active subscription to this package. */
+  subscribers_count: number;
 }
 
 export interface PackageUpsertInput {

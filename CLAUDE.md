@@ -279,6 +279,26 @@ attributes (`height`, `weight`, `hair_color`, `shoe_size`, `age`, `languages`, `
 `trigger_sync_rating.sql` — `AFTER INSERT/UPDATE/DELETE ON reviews` recomputes
 `talent_profiles.avg_rating` and `total_reviews` (`SECURITY DEFINER`).
 
+`20260725_default_free_subscription_and_usage.sql` — introduces a **hidden Free
+package** (`packages.id = 00000000-…-000000000000`, `is_active=false`, so it never
+shows on the pricing UI) as every account's baseline membership, plus a **`user_usage`**
+table (1 row per user per month: `campaign_requests_used`, `portfolio_used`,
+`job_posts_used`, `chat_sessions_used`, all default 0; `UNIQUE(user_id, period_start)`).
+`provision_default_membership()` runs `AFTER INSERT ON public.profiles` (`SECURITY DEFINER`)
+— **not** `auth.users`, because `subscriptions.user_id` FK-references `profiles.id`, which
+the app creates after signup — attaching a Free `subscriptions` row (skipped if an active
+one exists, via the `one active per user` partial index) and seeding the current-period
+`user_usage` row. The migration also back-fills existing users. Note: usage counters are
+**not enforced anywhere yet** — the table is provisioned ahead of a future metering feature.
+Optional view `package_subscriber_counts` mirrors the TS `fetchPackageSubscriberCounts()`.
+
+Package **active subscriber counts** are computed in
+`features/packages/services/package.service.ts` (`fetchPackageSubscriberCounts()`, JS
+map over active `subscriptions` → `package_plans.package_id`) and surfaced as
+`MarketplacePackage.subscribers_count`, rendered as a "X users on this plan" badge on
+`PackageCard`. The hidden Free package is never displayed, so its large membership never
+inflates the visible paid cards.
+
 ---
 
 ## 8. Roles & Permissions

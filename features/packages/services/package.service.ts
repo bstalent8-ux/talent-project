@@ -166,7 +166,42 @@ function mapPackage(row: Record<string, unknown>): MarketplacePackage {
     categories,
     plans,
     features,
+    subscribers_count: 0,
   };
+}
+
+/**
+ * Returns a { package_id -> active subscriber count } map.
+ * Counted in JS (service role) to stay consistent with the rest of this layer,
+ * which avoids cross-table joins and builds lookup maps instead (see CLAUDE.md §11.10).
+ * Each active subscription belongs to exactly one plan -> one package, and the DB
+ * enforces one active subscription per user, so this equals active *users* per package.
+ */
+export async function fetchPackageSubscriberCounts(): Promise<Record<string, number>> {
+  const [{ data: subs, error: subsError }, { data: plans, error: plansError }] = await Promise.all([
+    adminClient.from("subscriptions").select("plan_id").eq("status", "active"),
+    adminClient.from("package_plans").select("id, package_id"),
+  ]);
+
+  if (subsError || plansError) return {};
+
+  const planToPackage = Object.fromEntries(
+    (plans ?? []).map((plan) => [String(plan.id), String(plan.package_id)]),
+  );
+
+  const counts: Record<string, number> = {};
+  for (const sub of subs ?? []) {
+    const packageId = planToPackage[String(sub.plan_id)];
+    if (packageId) counts[packageId] = (counts[packageId] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/** Attaches the active subscriber count to each package in a single extra round-trip. */
+async function withSubscriberCounts(packages: MarketplacePackage[]): Promise<MarketplacePackage[]> {
+  if (!packages.length) return packages;
+  const counts = await fetchPackageSubscriberCounts();
+  return packages.map((pkg) => ({ ...pkg, subscribers_count: counts[pkg.id] ?? 0 }));
 }
 
 export async function fetchTalentTypes(activeOnly = true): Promise<TalentType[]> {
@@ -191,7 +226,7 @@ export async function fetchAdminPackages(): Promise<MarketplacePackage[]> {
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map((row) => mapPackage(row as Record<string, unknown>));
+  return withSubscriberCounts((data ?? []).map((row) => mapPackage(row as Record<string, unknown>)));
 }
 
 export async function fetchPublicPackagesByTalentType(
@@ -213,13 +248,15 @@ export async function fetchPublicPackages(limit?: number): Promise<MarketplacePa
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  return (data ?? [])
-    .map((row) => mapPackage(row as Record<string, unknown>))
-    .map((pkg) => ({
-      ...pkg,
-      plans: pkg.plans.filter((plan) => plan.is_active),
-    }))
-    .filter((pkg) => pkg.plans.length > 0);
+  return withSubscriberCounts(
+    (data ?? [])
+      .map((row) => mapPackage(row as Record<string, unknown>))
+      .map((pkg) => ({
+        ...pkg,
+        plans: pkg.plans.filter((plan) => plan.is_active),
+      }))
+      .filter((pkg) => pkg.plans.length > 0),
+  );
 }
 
 export async function fetchPublicPackagesByAudience(
@@ -261,13 +298,15 @@ export async function fetchPublicPackagesByAudience(
     const { data, error } = await query;
     if (error) throw new Error(error.message);
 
-    return (data ?? [])
-      .map((row) => mapPackage(row as Record<string, unknown>))
-      .map((pkg) => ({
-        ...pkg,
-        plans: pkg.plans.filter((plan) => plan.is_active),
-      }))
-      .filter((pkg) => pkg.categories.some((category) => category.category_id === categoryId) && pkg.plans.length > 0);
+    return withSubscriberCounts(
+      (data ?? [])
+        .map((row) => mapPackage(row as Record<string, unknown>))
+        .map((pkg) => ({
+          ...pkg,
+          plans: pkg.plans.filter((plan) => plan.is_active),
+        }))
+        .filter((pkg) => pkg.categories.some((category) => category.category_id === categoryId) && pkg.plans.length > 0),
+    );
   }
 
   const talentType = audience === "talent" && normalized !== "all_talents" ? normalized : undefined;
@@ -299,13 +338,15 @@ export async function fetchPublicPackagesByAudience(
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  return (data ?? [])
-    .map((row) => mapPackage(row as Record<string, unknown>))
-    .map((pkg) => ({
-      ...pkg,
-      plans: pkg.plans.filter((plan) => plan.is_active),
-    }))
-    .filter((pkg) => pkg.targets.some((target) => targetMatchesAudience(target, audience, talentType)) && pkg.plans.length > 0);
+  return withSubscriberCounts(
+    (data ?? [])
+      .map((row) => mapPackage(row as Record<string, unknown>))
+      .map((pkg) => ({
+        ...pkg,
+        plans: pkg.plans.filter((plan) => plan.is_active),
+      }))
+      .filter((pkg) => pkg.targets.some((target) => targetMatchesAudience(target, audience, talentType)) && pkg.plans.length > 0),
+  );
 }
 
 export async function upsertAdminPackage(input: PackageUpsertInput, packageId?: string): Promise<MarketplacePackage> {

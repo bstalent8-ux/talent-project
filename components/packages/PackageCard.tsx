@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Users } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { LandingLang } from "@/app/(main)/home/_components/landing/content";
 import type { MarketplacePackage, PackagePlan } from "@/features/packages/types";
@@ -113,6 +113,14 @@ export default function PackageCard({
         </span>
         <h3 className={styles.packageTitle}>{pkg.name}</h3>
         {pkg.description ? <p className={styles.packageDescription}>{pkg.description}</p> : null}
+        {pkg.subscribers_count > 0 ? (
+          <span className={styles.subscribers}>
+            <Users size={13} />
+            {lang === "ar"
+              ? `${pkg.subscribers_count.toLocaleString("ar-EG")} مشترك في هذه الباقة`
+              : `${pkg.subscribers_count.toLocaleString("en-US")} ${pkg.subscribers_count === 1 ? "user" : "users"} on this plan`}
+          </span>
+        ) : null}
       </div>
 
       {selectedPlan ? (

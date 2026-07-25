@@ -118,6 +118,22 @@
   font-size: var(--text-sm);
 }
 
+/* Subtle "X users on this plan" counter */
+.subscribers {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  margin-top: 0.15rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 800;
+}
+
 .priceLine {
   display: flex;
   align-items: baseline;
