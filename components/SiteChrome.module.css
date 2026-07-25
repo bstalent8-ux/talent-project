@@ -356,6 +356,9 @@
   color: var(--footer-text);
   font-size: 0.86rem;
   font-weight: 950;
+  transition: color 0.2s ease-in-out;
+  cursor:pointer;
+  
 }
 
 .footerList {
@@ -386,7 +389,7 @@
 }
 
 .footerLink:hover {
-  color: var(--footer-text);
+  color:  var(--color-secondary);
   transform: translateX(-3px);
 }
 
