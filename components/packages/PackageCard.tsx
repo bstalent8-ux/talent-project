@@ -45,6 +45,8 @@ export default function PackageCard({
   pkg,
   lang,
   selectedPlanId,
+  selected = false,
+  onSelectPackage,
   onSelectPlan,
   onSubscribe,
   subscribing,
@@ -53,6 +55,8 @@ export default function PackageCard({
   pkg: MarketplacePackage;
   lang: LandingLang;
   selectedPlanId?: string | null;
+  selected?: boolean;
+  onSelectPackage?: (pkg: MarketplacePackage) => void;
   onSelectPlan?: (plan: PackagePlan) => void;
   onSubscribe?: (plan: PackagePlan, pkg: MarketplacePackage) => void;
   subscribing?: boolean;
@@ -63,7 +67,8 @@ export default function PackageCard({
 
   return (
     <motion.article
-      className={styles.packageCard}
+      className={`${styles.packageCard} ${selected ? styles.packageCardSelected : ""}`}
+      onClick={() => onSelectPackage?.(pkg)}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.26 }}
@@ -97,7 +102,11 @@ export default function PackageCard({
                 type="button"
                 role="radio"
                 aria-checked={active}
-                onClick={() => onSelectPlan?.(plan)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelectPackage?.(pkg);
+                  onSelectPlan?.(plan);
+                }}
               >
                 {formatDuration(plan.duration_months, lang)}
               </button>
@@ -121,7 +130,11 @@ export default function PackageCard({
             className={styles.primaryButton}
             type="button"
             disabled={subscribing}
-            onClick={() => onSubscribe(selectedPlan, pkg)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelectPackage?.(pkg);
+              onSubscribe(selectedPlan, pkg);
+            }}
           >
             {subscribing ? (lang === "ar" ? "جاري الاشتراك..." : "Subscribing...") : (lang === "ar" ? "اشترك الآن" : "Subscribe now")}
           </button>

@@ -719,6 +719,7 @@ function PricingPreview({
   const t = pageCopy[lang];
   const [activeType, setActiveType] = useState(initialTalentType);
   const [packages, setPackages] = useState(initialPackages);
+  const [selectedPackageId, setSelectedPackageId] = useState(initialPackages[0]?.id ?? null);
   const [loading, setLoading] = useState(false);
   const pricingTargets: PricingTarget[] = categories.length
     ? categories.slice(0, 7).map((category) => ({
@@ -734,9 +735,12 @@ function PricingPreview({
     try {
       const res = await fetch(`/api/packages?categoryId=${encodeURIComponent(type)}&limit=3`);
       const data = await res.json();
-      setPackages(res.ok ? data.packages ?? [] : []);
+      const nextPackages = res.ok ? data.packages ?? [] : [];
+      setPackages(nextPackages);
+      setSelectedPackageId(nextPackages[0]?.id ?? null);
     } catch {
       setPackages([]);
+      setSelectedPackageId(null);
     } finally {
       setLoading(false);
     }
@@ -784,8 +788,15 @@ function PricingPreview({
               <PackageSkeleton />
             </div>
           ) : packages.length ? (
-            packages.map((item) => (
-              <PackageCard compact key={item.id} pkg={item} lang={lang} />
+            packages.slice(0, 3).map((item) => (
+              <PackageCard
+                compact
+                key={item.id}
+                pkg={item}
+                lang={lang}
+                selected={selectedPackageId === item.id}
+                onSelectPackage={(pkg) => setSelectedPackageId(pkg.id)}
+              />
             ))
           ) : (
             <div className={`${packageStyles.emptyState} ${styles.pricingWide}`}>

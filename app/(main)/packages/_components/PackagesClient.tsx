@@ -41,6 +41,7 @@ export default function PackagesClient({
   const [duration, setDuration] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submittingPlan, setSubmittingPlan] = useState<string | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState(initialPackages[0]?.id ?? null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const audienceOptions = useMemo<PackageAudienceOption[]>(
@@ -58,6 +59,7 @@ export default function PackagesClient({
     () => [...new Set(packages.flatMap((pkg) => pkg.plans.filter((plan) => plan.is_active).map((plan) => plan.duration_months)))].sort((a, b) => a - b),
     [packages],
   );
+  const visiblePackages = useMemo(() => packages.slice(0, 3), [packages]);
 
   async function loadPackages(type: string) {
     setActiveType(type);
@@ -67,9 +69,11 @@ export default function PackagesClient({
       const res = await fetch(`/api/packages?categoryId=${encodeURIComponent(type)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load packages");
-      setPackages(data.packages ?? []);
+      const nextPackages = data.packages ?? [];
+      setPackages(nextPackages);
+      setSelectedPackageId(nextPackages[0]?.id ?? null);
       const nextDurations = [
-        ...new Set((data.packages ?? []).flatMap((pkg: MarketplacePackage) => pkg.plans.map((plan) => plan.duration_months))),
+        ...new Set(nextPackages.flatMap((pkg: MarketplacePackage) => pkg.plans.map((plan) => plan.duration_months))),
       ].sort((a, b) => Number(a) - Number(b));
       setDuration(Number(nextDurations[0] ?? 1));
     } catch (error) {
@@ -141,7 +145,7 @@ export default function PackagesClient({
             </div>
             <div className={styles.summaryItem}>
               <span>{lang === "ar" ? "الباقات المتاحة" : "Available packages"}</span>
-              <strong>{packages.length}</strong>
+              <strong>{visiblePackages.length}</strong>
             </div>
             <div className={styles.summaryItem}>
               <span>{lang === "ar" ? "التفعيل" : "Activation"}</span>
@@ -200,15 +204,18 @@ export default function PackagesClient({
 
           {loading ? (
             <PackageSkeleton />
-          ) : packages.length ? (
+          ) : visiblePackages.length ? (
             <div className={packageStyles.packageGrid}>
-              {packages.map((pkg) => {
+              {visiblePackages.map((pkg) => {
                 const selectedPlan = choosePlan(pkg, duration);
+                const selected = selectedPackageId === pkg.id;
                 return (
                   <PackageCard
                     key={pkg.id}
                     pkg={pkg}
                     lang={lang}
+                    selected={selected}
+                    onSelectPackage={(item) => setSelectedPackageId(item.id)}
                     selectedPlanId={selectedPlan?.id}
                     onSubscribe={subscribe}
                     subscribing={submittingPlan === selectedPlan?.id}
@@ -225,7 +232,7 @@ export default function PackagesClient({
           )}
         </section>
 
-        {packages.length ? (
+        {visiblePackages.length ? (
           <section className={styles.section} aria-labelledby="feature-comparison">
             <div className={styles.sectionHeader}>
               <div>
@@ -237,7 +244,7 @@ export default function PackagesClient({
                 {lang === "ar" ? "اشتراك آمن" : "Safe subscription"}
               </span>
             </div>
-            <FeatureComparison packages={packages} lang={lang} />
+            <FeatureComparison packages={visiblePackages} lang={lang} />
           </section>
         ) : null}
       </div>
