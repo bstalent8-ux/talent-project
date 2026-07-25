@@ -1,44 +1,60 @@
 .siteNav {
   position: fixed;
-  inset: 0 0 auto;
+  inset: 0.85rem clamp(0.85rem, 2.4vw, 1.6rem) auto;
   z-index: var(--z-sticky);
-  height: 64px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0 clamp(1rem, 3vw, 2rem);
-  border-bottom: 1px solid var(--nav-border);
+  padding: 0 0.65rem 0 0.95rem;
+  border: 1px solid var(--nav-border);
+  border-radius: 1.15rem;
   background: var(--nav-bg);
   color: var(--nav-text);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px) saturate(1.16);
   box-shadow: var(--nav-shadow);
   transition:
     background-color var(--duration-base) var(--ease-standard),
     border-color var(--duration-base) var(--ease-standard),
-    box-shadow var(--duration-base) var(--ease-standard);
+    box-shadow var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-emphasis);
 }
 
 .darkChrome {
-  --nav-bg: rgba(7, 11, 16, 0.78);
-  --nav-panel: rgba(255, 255, 255, 0.075);
-  --nav-panel-hover: rgba(255, 255, 255, 0.12);
-  --nav-border: rgba(255, 255, 255, 0.12);
+  --nav-bg: color-mix(in srgb, var(--color-primary) 20%, rgba(7, 11, 16, 0.78));
+  --nav-panel: rgba(255, 255, 255, 0.08);
+  --nav-panel-hover: rgba(255, 255, 255, 0.15);
+  --nav-border: rgba(255, 255, 255, 0.16);
   --nav-text: #f7fafc;
-  --nav-muted: #aeb8c3;
-  --nav-shadow: 0 18px 42px rgba(0, 0, 0, 0.2);
-  --nav-menu-bg: rgba(10, 16, 22, 0.97);
+  --nav-muted: rgba(247, 250, 252, 0.72);
+  --nav-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
+  --nav-menu-bg: color-mix(in srgb, var(--color-primary) 18%, rgba(10, 16, 22, 0.96));
 }
 
 .lightChrome {
-  --nav-bg: rgba(247, 248, 248, 0.84);
-  --nav-panel: rgba(255, 255, 255, 0.84);
-  --nav-panel-hover: rgba(255, 255, 255, 1);
-  --nav-border: rgba(16, 24, 32, 0.1);
+  --nav-bg: color-mix(in srgb, var(--color-primary) 9%, rgba(247, 248, 248, 0.78));
+  --nav-panel: rgba(255, 255, 255, 0.64);
+  --nav-panel-hover: rgba(255, 255, 255, 0.86);
+  --nav-border: rgba(15, 118, 110, 0.16);
   --nav-text: #101820;
-  --nav-muted: #667583;
-  --nav-shadow: 0 16px 36px rgba(16, 24, 32, 0.08);
-  --nav-menu-bg: rgba(247, 248, 248, 0.98);
+  --nav-muted: #536575;
+  --nav-shadow: 0 18px 38px rgba(16, 24, 32, 0.1);
+  --nav-menu-bg: color-mix(in srgb, var(--color-primary) 8%, rgba(247, 248, 248, 0.96));
+}
+
+.heroChrome {
+  --nav-bg: color-mix(in srgb, var(--color-primary) 34%, rgba(8, 16, 22, 0.36));
+  --nav-panel: rgba(255, 255, 255, 0.1);
+  --nav-panel-hover: rgba(255, 255, 255, 0.18);
+  --nav-border: rgba(255, 255, 255, 0.18);
+  --nav-text: #fff7e8;
+  --nav-muted: rgba(255, 247, 232, 0.78);
+  --nav-shadow: 0 20px 46px rgba(0, 0, 0, 0.12);
+  --nav-menu-bg: color-mix(in srgb, var(--color-primary) 24%, rgba(8, 16, 22, 0.92));
+  background:
+    linear-gradient(90deg, rgba(15, 118, 110, 0.24), rgba(215, 168, 79, 0.12)),
+    var(--nav-bg);
 }
 
 .brandWrap,
@@ -56,6 +72,9 @@
 .logoLink {
   display: inline-flex;
   align-items: center;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.1);
   transition: transform var(--duration-base) var(--ease-emphasis);
 }
 
@@ -66,7 +85,11 @@
 .navLinks {
   position: absolute;
   left: 50%;
-  gap: 0.45rem;
+  gap: 0.15rem;
+  padding: 0.22rem;
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--nav-panel) 64%, transparent);
   transform: translateX(-50%);
 }
 
@@ -74,8 +97,8 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 2.45rem;
-  padding: 0 0.85rem;
+  min-height: 2.2rem;
+  padding: 0 0.78rem;
   border-radius: var(--radius-pill);
   color: var(--nav-muted);
   font-size: 0.9rem;
@@ -88,22 +111,13 @@
 }
 
 .navLink::after {
-  content: "";
-  position: absolute;
-  inset-inline: 1rem;
-  bottom: 0.3rem;
-  height: 2px;
-  border-radius: var(--radius-pill);
-  background: var(--color-secondary);
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform var(--duration-base) var(--ease-emphasis);
+  display: none;
 }
 
 .navLink:hover,
 .navLinkActive {
-  color: var(--nav-text);
-  background: var(--nav-panel);
+  color: #151109;
+  background: linear-gradient(135deg, var(--color-secondary), #efc66d);
   transform: translateY(-1px);
 }
 
@@ -113,7 +127,7 @@
 }
 
 .navControls {
-  gap: 0.45rem;
+  gap: 0.38rem;
 }
 
 .iconButton,
@@ -123,7 +137,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--nav-border);
-  border-radius: var(--radius-sm);
+  border-radius: 0.85rem;
   background: var(--nav-panel);
   color: var(--nav-muted);
   cursor: pointer;
@@ -161,7 +175,7 @@
   gap: 0.45rem;
   min-height: 2.45rem;
   padding: 0 1rem;
-  border-radius: var(--radius-sm);
+  border-radius: 0.9rem;
   background: linear-gradient(135deg, var(--color-secondary), #efc66d);
   color: #151109;
   font-size: 0.9rem;
@@ -260,12 +274,13 @@
 
 .mobileMenu {
   position: fixed;
-  inset: 64px 0 auto;
+  inset: 5rem clamp(0.85rem, 2.4vw, 1.6rem) auto;
   z-index: calc(var(--z-sticky) - 1);
   display: grid;
   gap: 0.75rem;
   padding: 1rem;
-  border-bottom: 1px solid var(--nav-border);
+  border: 1px solid var(--nav-border);
+  border-radius: 1.1rem;
   background: var(--nav-menu-bg);
   color: var(--nav-text);
   box-shadow: var(--shadow-lg);
@@ -313,7 +328,11 @@
 }
 
 .navSpacer {
-  height: 64px;
+  height: 84px;
+}
+
+.navSpacerHero {
+  height: 0;
 }
 
 .footer {
@@ -528,16 +547,21 @@
   }
 
   .siteNav {
-    height: 60px;
+    inset: 0.7rem 0.85rem auto;
+    height: 58px;
     padding-inline: 0.85rem;
   }
 
   .mobileMenu {
-    inset-block-start: 60px;
+    inset: 4.75rem 0.85rem auto;
   }
 
   .navSpacer {
-    height: 60px;
+    height: 78px;
+  }
+
+  .navSpacerHero {
+    height: 0;
   }
 
   .footerTop {
@@ -548,8 +572,8 @@
 @media (max-width: 620px) {
   .siteNav {
     gap: 0.5rem;
-    width: 100vw;
-    max-width: 100vw;
+    inset-inline: 0.55rem;
+    max-width: calc(100vw - 1.1rem);
     box-sizing: border-box;
     overflow: visible;
     padding-inline: 0.7rem;
