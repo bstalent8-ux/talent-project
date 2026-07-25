@@ -7,7 +7,11 @@ import {
   ArrowLeft,
   ArrowRight,
   Bookmark,
+  Camera,
   ChevronDown,
+  CircleDollarSign,
+  Eye,
+  FileText,
   MapPin,
   Play,
   Search,
@@ -539,7 +543,21 @@ function WorkflowSection({ lang }: { lang: LandingLang }) {
   const t = pageCopy[lang];
 
   return (
-    <section className={`${styles.section} ${styles.sectionLight}`} aria-labelledby="landing-workflow">
+    <section className={`${styles.section} ${styles.sectionLight} ${styles.workflowSection}`} aria-labelledby="landing-workflow">
+      <div className={`${styles.workflowPath} ${styles.workflowPathLeft}`} aria-hidden="true">
+        <span><FileText size={18} /></span>
+        <span className={styles.cameraCluster}>
+          <Camera size={15} />
+          <Camera size={15} />
+          <Camera size={15} />
+        </span>
+        <span><Eye size={18} /></span>
+      </div>
+      <div className={`${styles.workflowPath} ${styles.workflowPathRight}`} aria-hidden="true">
+        <span><FileText size={18} /></span>
+        <span><Camera size={18} /></span>
+        <span><CircleDollarSign size={18} /></span>
+      </div>
       <div className={styles.container}>
         <SectionHeader
           id="landing-workflow"
