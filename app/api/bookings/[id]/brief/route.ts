@@ -71,9 +71,15 @@ export async function POST(
   // Move booking to brief_sent
   await adminClient.from("bookings").update({ status: "brief_sent" }).eq("id", id);
 
-  // Notify talent via chat
-  const { data: conv } = await adminClient
-    .from("conversations").select("id").eq("brand_id", user.id).maybeSingle();
+  // Notify talent via chat — must be scoped to THIS talent, otherwise the brand's
+  // other conversations match and the message lands in the wrong thread.
+  const { data: conv } = booking.talent_user_id
+    ? await adminClient
+        .from("conversations").select("id")
+        .eq("brand_id", user.id)
+        .eq("talent_id", booking.talent_user_id)
+        .maybeSingle()
+    : { data: null };
   if (conv) {
     await adminClient.from("messages").insert({
       conversation_id: conv.id,

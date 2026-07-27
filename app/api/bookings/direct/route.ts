@@ -26,25 +26,37 @@ export async function POST(req: NextRequest) {
   if (!tp) return NextResponse.json({ error: "Talent profile not found" }, { status: 404 });
 
   // Check if booking already exists between this brand and talent (prevent duplicates)
-  const { data: existing } = await adminClient
+  const { data: existingRows } = await adminClient
     .from("bookings")
-    .select("id")
+    .select("id, talent_user_id")
     .eq("brand_id", user.id)
     .eq("talent_id", tp.id)
     .not("status", "eq", "cancelled")
-    .maybeSingle();
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const existing = existingRows?.[0] ?? null;
 
   let bookingId: string;
 
   if (existing) {
     bookingId = existing.id;
+    // Backfill for bookings created before talent_user_id was written here —
+    // every downstream step (brief response, deliverables, payment) keys off it.
+    if (!existing.talent_user_id) {
+      await adminClient
+        .from("bookings")
+        .update({ talent_user_id: talent_user_id })
+        .eq("id", bookingId);
+    }
   } else {
     const { data: booking, error: bookErr } = await adminClient
       .from("bookings")
       .insert({
-        brand_id:  user.id,
-        talent_id: tp.id,
-        status:    "brief_sent",
+        brand_id:       user.id,
+        talent_id:      tp.id,
+        talent_user_id: talent_user_id,
+        status:         "brief_sent",
       })
       .select("id").single();
 

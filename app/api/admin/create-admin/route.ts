@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import { NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 const ADMINS = [
   { email: "admin@talents-platform.com", password: "Admin@2024!", full_name: "Admin One",   handle: "admin-1" },
@@ -9,6 +10,9 @@ const ADMINS = [
 ];
 
 export async function POST() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const results: Record<string, string> = {};
 
   for (const admin of ADMINS) {

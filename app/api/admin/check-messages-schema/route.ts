@@ -2,8 +2,12 @@ export const runtime = 'edge';
 
 import { NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   // Check actual columns via information_schema
   const { data: colData, error: colErr } = await adminClient
     .from("information_schema.columns" as never)

@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import { NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 const JOBS_POOL = [
   // UGC
@@ -85,6 +86,9 @@ const JOBS_POOL = [
 ];
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   // Get all brands
   const { data: brands, error: brandsErr } = await adminClient
     .from("profiles")

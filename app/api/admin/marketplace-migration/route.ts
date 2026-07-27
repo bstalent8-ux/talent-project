@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 const SQL = `
 -- ═══════════════════════════════════════════════════════════════════
@@ -132,5 +133,8 @@ SELECT 'Marketplace migration complete' AS result;
 `;
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   return new NextResponse(SQL, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
 }

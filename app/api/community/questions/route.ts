@@ -11,8 +11,9 @@ export async function GET(request: NextRequest) {
   const sort = searchParams.get("sort") || "recent"; // recent, popular
   const status = searchParams.get("status") || "all"; // all, open, pinned, closed
   const search = searchParams.get("search") || "";
-  const limit = parseInt(searchParams.get("limit") || "20");
-  const offset = parseInt(searchParams.get("offset") || "0");
+  // Clamp — NaN or a huge value here turns into a 400 from PostgREST / a full scan.
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "20") || 20, 1), 100);
+  const offset = Math.max(parseInt(searchParams.get("offset") || "0") || 0, 0);
 
   try {
     let query = supabase
@@ -55,11 +56,16 @@ export async function GET(request: NextRequest) {
       query = query.eq("status", status);
     }
 
-    // Apply search filter
+    // Apply search filter.
+    // The `or()` argument is a PostgREST filter expression, so raw user input
+    // could inject extra filters — strip the expression metacharacters first.
     if (search) {
-      query = query.or(
-        `title.ilike.%${search}%,content.ilike.%${search}%,tags.cs.{${search}}`
-      );
+      const safe = search.replace(/[,()"\\{}*%]/g, "").trim();
+      if (safe) {
+        query = query.or(
+          `title.ilike.%${safe}%,content.ilike.%${safe}%,tags.cs.{${safe}}`
+        );
+      }
     }
 
     // Apply sorting

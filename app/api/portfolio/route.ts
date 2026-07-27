@@ -36,6 +36,24 @@ export async function DELETE(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await req.json();
-  await adminClient.from("portfolio_items").delete().eq("id", id);
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  // Scope the delete to the caller's own talent profile — without this any
+  // signed-in user can delete any talent's portfolio item by id.
+  const { data: tp } = await adminClient
+    .from("talent_profiles")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!tp) return NextResponse.json({ error: "no talent profile" }, { status: 404 });
+
+  const { error } = await adminClient
+    .from("portfolio_items")
+    .delete()
+    .eq("id", id)
+    .eq("talent_id", tp.id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

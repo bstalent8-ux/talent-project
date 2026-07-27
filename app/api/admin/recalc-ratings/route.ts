@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 /**
  * POST /api/admin/recalc-ratings
@@ -13,6 +14,9 @@ import { revalidatePath } from "next/cache";
  * Returns a diff so you can see what changed.
  */
 export async function POST() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   // ── 1. Aggregate ratings per talent from reviews table ───────────────────
   const { data: agg, error: aggErr } = await adminClient
     .from("reviews")

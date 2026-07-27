@@ -22,9 +22,12 @@ export async function GET(req: NextRequest) {
     if (!profile) {
       const meta = user.user_metadata ?? {};
       const emailHandle = user.email?.split("@")[0]?.toLowerCase().replace(/[^a-z0-9-]/g, "-") ?? user.id.slice(0, 8);
+      // user_metadata is set client-side at signUp, so it is untrusted —
+      // never let it seed a privileged role here.
+      const safeRole = meta.role === "brand" ? "brand" : "talent";
       await adminClient.from("profiles").insert({
         id:        user.id,
-        role:      meta.role ?? "talent",
+        role:      safeRole,
         full_name: meta.full_name ?? emailHandle,
         handle:    emailHandle,
       });

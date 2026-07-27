@@ -2,8 +2,12 @@ export const runtime = 'edge';
 
 import { NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function GET(req: Request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email");
   const handle = searchParams.get("handle");

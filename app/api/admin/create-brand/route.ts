@@ -2,8 +2,12 @@ export const runtime = 'edge';
 
 import { NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function POST() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const brand = {
     email:     "brand@talents-platform.com",
     password:  "Brand@2024!",

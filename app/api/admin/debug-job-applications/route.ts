@@ -2,8 +2,12 @@ export const runtime = 'edge';
 
 import { NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   // Query information_schema to find what job_applications_job_id_fkey actually references
   const { data: fkInfo, error: fkErr } = await adminClient.rpc("get_fk_info" as never);
 

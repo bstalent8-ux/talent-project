@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET: Fetch a specific question with all its answers
@@ -58,8 +59,10 @@ export async function GET(
       );
     }
 
-    // Increment views
-    await supabase
+    // Increment views. Must use the service role: the RLS update policy on
+    // community_questions is author-only, so with the anon client this silently
+    // no-ops for every reader except the question's own author.
+    await adminClient
       .from("community_questions")
       .update({ views: (question.views || 0) + 1 })
       .eq("id", id);
@@ -109,12 +112,16 @@ export async function PATCH(
       );
     }
 
+    // Whitelist — spreading the raw body let an author rewrite user_id, views
+    // or status (self-pinning) on their own question.
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (typeof body.title === "string") updates.title = body.title;
+    if (typeof body.content === "string") updates.content = body.content;
+    if (Array.isArray(body.tags)) updates.tags = body.tags;
+
     const { data, error } = await supabase
       .from("community_questions")
-      .update({
-        ...body,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq("id", id)
       .select();
 

@@ -5,6 +5,15 @@ import { adminClient } from "@/lib/supabase/admin";
 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "hello@talents.com";
 
+// The contact form is public and unauthenticated — its values must never be
+// interpolated raw into the notification email's HTML body.
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, "&amp;")
+   .replace(/</g, "&lt;")
+   .replace(/>/g, "&gt;")
+   .replace(/"/g, "&quot;")
+   .replace(/'/g, "&#39;");
+
 export async function POST(req: NextRequest) {
   let body: Record<string, string>;
   try {
@@ -52,12 +61,12 @@ export async function POST(req: NextRequest) {
           subject: `[Contact] ${subject.trim()}`,
           html:    `
             <h2>New Contact Message</h2>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Type:</strong> ${safeType}</p>
-            <p><strong>Subject:</strong> ${subject}</p>
+            <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+            <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+            <p><strong>Type:</strong> ${escapeHtml(safeType)}</p>
+            <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
             <hr/>
-            <p>${message.replace(/\n/g, "<br/>")}</p>
+            <p>${escapeHtml(message).replace(/\n/g, "<br/>")}</p>
           `,
         }),
       });

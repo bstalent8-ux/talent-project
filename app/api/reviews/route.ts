@@ -11,10 +11,13 @@ export async function GET(req: NextRequest) {
   const talent_id = req.nextUrl.searchParams.get("talent_id");
   if (!talent_id) return NextResponse.json({ error: "talent_id required" }, { status: 400 });
 
+  // Public endpoint reading through the service role — must reapply the
+  // moderation filter that the reviews RLS policy would otherwise enforce.
   const { data, error } = await adminClient
     .from("reviews")
     .select("id, booking_id, talent_id, brand_id, rating, comment, created_at, profiles(full_name)")
     .eq("talent_id", talent_id)
+    .eq("status", "approved")
     .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

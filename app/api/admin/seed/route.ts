@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import { NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 const PASSWORD = "Test1234!";
 
@@ -218,6 +219,9 @@ const CLIENTS: { email: string; full_name: string; handle: string; city: string 
 ];
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const results: Record<string, string> = {};
 
   for (const t of TALENTS) {

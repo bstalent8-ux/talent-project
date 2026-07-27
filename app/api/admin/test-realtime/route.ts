@@ -2,11 +2,15 @@ export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 // POST /api/admin/test-realtime
 // Body: { conversation_id, sender_id, content }
 // Inserts a message bypassing auth — for realtime testing only
 export async function POST(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const { conversation_id, sender_id, content } = await req.json();
 
   if (!conversation_id || !sender_id || !content) {
