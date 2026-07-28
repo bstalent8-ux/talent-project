@@ -823,16 +823,43 @@
 }
 
 .darkCtaPanel {
+  --cta-stage: #050b12;
+  --cta-card: #0d1623;
+  --cta-ink: #f1f5f9;
+  --cta-muted: #a8b3c2;
+  --cta-green: #00d26a;
+  --cta-gold: #ffb800;
   display: grid;
   align-content: center;
   gap: 1rem;
   padding: 1.5rem;
   border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--cta-gold) 28%, transparent);
   background:
-    linear-gradient(135deg, rgba(8, 16, 22, 0.96), rgba(13, 31, 34, 0.92)),
+    linear-gradient(135deg, color-mix(in srgb, var(--cta-stage) 96%, transparent), color-mix(in srgb, var(--cta-card) 90%, transparent)),
     url("https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80") center / cover;
-  color: #fff;
+  color: var(--cta-ink);
   min-height: 100%;
+}
+
+.darkCtaPanel .badge {
+  border-color: color-mix(in srgb, var(--cta-gold) 32%, transparent);
+  background: color-mix(in srgb, var(--cta-gold) 13%, transparent);
+  color: var(--cta-gold);
+}
+
+.darkCtaPanel .sectionTitle {
+  color: var(--cta-ink);
+}
+
+.darkCtaPanel .heroSubtitle {
+  color: var(--cta-muted);
+}
+
+.darkCtaPanel .buttonPrimary {
+  background: var(--cta-green);
+  color: var(--cta-stage);
+  box-shadow: none;
 }
 
 .featureGrid {
