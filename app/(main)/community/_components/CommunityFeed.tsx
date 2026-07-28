@@ -6,7 +6,7 @@ import { Search, Plus, Eye, ArrowRight, ArrowLeft, Check, Pin, MessagesSquare } 
 import type { Question } from "./CommunityClient";
 import styles from "./CommunityPage.module.css";
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 3;
 
 interface Props {
   lang: "ar" | "en";
