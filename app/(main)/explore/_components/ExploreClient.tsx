@@ -1,6 +1,5 @@
 "use client";
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   SlidersHorizontal, Camera, UsersRound, Mic2, Sparkles, Clapperboard, LayoutGrid,
@@ -52,7 +51,6 @@ interface Props { talents: TalentCard[] }
 export default function ExploreClient({ talents }: Props) {
   const { lang, dark } = useSite();
   const ar = lang === "ar";
-  const router = useRouter();
 
   const [search,   setSearch]   = useState("");
   const [type,     setType]     = useState("all");
@@ -354,7 +352,7 @@ export default function ExploreClient({ talents }: Props) {
           talentCategory={briefTarget.category}
           dark={dark} lang={lang}
           onClose={() => setBriefTarget(null)}
-          onSuccess={(bookingId) => { setBriefTarget(null); router.push(`/bookings/${bookingId}`); }}
+          onSuccess={() => { setBriefTarget(null); }}
         />
       )}
     </div>

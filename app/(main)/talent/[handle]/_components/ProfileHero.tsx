@@ -1,9 +1,11 @@
 "use client";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Star, Eye, Shield, Zap, Crown, Heart, Share2, MessageCircle, Calendar } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { TalentData } from "@/features/talent-profile/types";
+import DirectBriefModal from "@/components/DirectBriefModal";
 
 const btn: React.CSSProperties = {
   cursor: "pointer", fontFamily: "'Cairo',sans-serif",
@@ -11,6 +13,7 @@ const btn: React.CSSProperties = {
 };
 
 export default function ProfileHero({ talent }: { talent: TalentData }) {
+  const [showBooking, setShowBooking] = useState(false);
   const isMobile = useIsMobile();
   const { dark, lang } = useSite();
   const ar = lang === "ar";
@@ -55,6 +58,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
   ].filter(Boolean) as { icon: React.ReactNode; label: string }[];
 
   return (
+    <>
     <div style={{
       backgroundColor: CARD, border: `1px solid ${BORDER}`,
       borderRadius: 16, padding: isMobile ? 16 : 24,
@@ -76,8 +80,8 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
             borderRadius: 14,
             overflow: "hidden",
             background: dark
-              ? "linear-gradient(160deg,#1e3a5f,#0d2137,#050B12)"
-              : "linear-gradient(160deg,#dbeafe,#bfdbfe,#93c5fd)",
+              ? "linear-gradient(160deg,#111C35,#0D1623,#050B12)"
+              : "linear-gradient(160deg,#FFFFFF,#E2E8F0,#CBD5E1)",
             display: "flex", alignItems: "center", justifyContent: "center",
             position: "relative",
             border: `1px solid ${BORDER}`,
@@ -197,9 +201,9 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
               }}>
               <MessageCircle size={14} color={GREEN} />{t.message}
             </motion.button>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{
+            <motion.button onClick={() => setShowBooking(true)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{
               ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              backgroundColor: GREEN, color: "#000",
+              backgroundColor: GREEN, color: "#050B12",
               borderRadius: 12, padding: "11px 0",
               fontSize: 13, fontWeight: 900,
             }}>
@@ -244,7 +248,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
                     border: i === 0 ? "none" : "1px solid rgba(0,210,106,0.3)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 11, fontWeight: 700,
-                    color: i === 0 ? "#000" : GREEN,
+                    color: i === 0 ? "#050B12" : GREEN,
                   }}>
                     {i + 1}
                   </div>
@@ -262,5 +266,18 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
 
       </div>
     </div>
+    {showBooking && (
+      <DirectBriefModal
+        talentUserId={talent.id}
+        talentName={talent.name ?? ""}
+        talentAvatar={talent.avatarUrl ?? null}
+        talentCategory={talent.category ?? null}
+        dark={dark}
+        lang={lang}
+        onClose={() => setShowBooking(false)}
+        onSuccess={() => setShowBooking(false)}
+      />
+    )}
+    </>
   );
 }

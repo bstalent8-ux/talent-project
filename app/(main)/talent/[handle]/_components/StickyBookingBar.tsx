@@ -69,7 +69,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
       style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100, backgroundColor: dark ? "#0A121C" : "#FFFFFF", borderTop: `1px solid ${BORDER}`, backdropFilter: "blur(16px)", height: 90, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Cairo',sans-serif", direction: "rtl" }}>
       {/* Avatar + info */}
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg,#1e3a5f,#0d2137)", border: "2px solid rgba(0,210,106,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>👩</div>
+        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg,#111C35,#0D1623)", border: "2px solid rgba(0,210,106,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>👩</div>
         <div>
           <p style={{ color: dark ? "#fff" : "#0F172A", fontSize: 14, fontWeight: 800, margin: 0 }}>{talent?.name ?? "Maya Khaled"}</p>
           <p style={{ color: MUTED, fontSize: 11, margin: 0 }}>{pkgLabel}</p>
@@ -117,7 +117,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
           </motion.button>
         )}
 
-        {/* Send Brief — brands only */}
+        {/* Booking request — brands only */}
         {userRole === "brand" && (
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -134,11 +134,11 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
             }}
           >
             <Send size={15} />
-            {ar ? "إرسال ملخص" : "Send Brief"}
+            {ar ? "طلب حجز" : "Booking Request"}
           </motion.button>
         )}
 
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 12, padding: "0 28px", height: 44, fontSize: 15, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif", boxShadow: "0 0 24px rgba(0,210,106,0.35)" }}>
+        <motion.button onClick={() => userRole === "brand" ? setShowBrief(true) : router.push("/login")} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 12, padding: "0 28px", height: 44, fontSize: 15, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif", boxShadow: "0 0 24px rgba(0,210,106,0.35)" }}>
           <Calendar size={16} />{ar ? "احجز الآن" : "Book Now"}
         </motion.button>
       </div>
@@ -153,7 +153,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
         dark={dark}
         lang={lang}
         onClose={() => setShowBrief(false)}
-        onSuccess={(bookingId) => { setShowBrief(false); router.push(`/bookings/${bookingId}`); }}
+        onSuccess={() => { setShowBrief(false); }}
       />
     )}
     </>

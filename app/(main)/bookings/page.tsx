@@ -19,7 +19,7 @@ export default async function BookingsPage() {
   if (profile?.role === "brand") {
     const { data } = await adminClient
       .from("bookings")
-      .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, job_id, talent_id")
+      .select("id, status, amount, budget_type, budget_amount, start_date, duration, deadline, negotiation_message, created_at, updated_at, service_type, brand_id, talent_user_id, job_id, talent_id")
       .eq("brand_id", user.id)
       .order("created_at", { ascending: false });
     bookings = (data ?? []) as Record<string, unknown>[];
@@ -29,7 +29,7 @@ export default async function BookingsPage() {
     if (tp) {
       const { data } = await adminClient
         .from("bookings")
-        .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, job_id, talent_id")
+        .select("id, status, amount, budget_type, budget_amount, start_date, duration, deadline, negotiation_message, created_at, updated_at, service_type, brand_id, talent_user_id, job_id, talent_id")
         .eq("talent_id", tp.id)
         .order("created_at", { ascending: false });
       bookings = (data ?? []) as Record<string, unknown>[];
@@ -46,7 +46,7 @@ export default async function BookingsPage() {
       jobIds.length ? adminClient.from("jobs").select("id,title").in("id", jobIds) : { data: [] },
       brandIds.length ? adminClient.from("profiles").select("id,full_name,handle,avatar_url").in("id", brandIds) : { data: [] },
       talentIds.length ? adminClient.from("profiles").select("id,full_name,handle,avatar_url").in("id", talentIds) : { data: [] },
-      bookingIds.length ? adminClient.from("booking_briefs").select("booking_id,id,title,status").in("booking_id", bookingIds) : { data: [] },
+      bookingIds.length ? adminClient.from("booking_briefs").select("booking_id,id,title,status,deadline").in("booking_id", bookingIds) : { data: [] },
     ]);
 
     const jobMap    = Object.fromEntries((jobsRes.data ?? []).map((j) => [j.id, j]));
@@ -63,5 +63,5 @@ export default async function BookingsPage() {
     }));
   }
 
-  return <BookingsClient bookings={bookings} myRole={profile?.role ?? "talent"} myId={user.id} />;
+  return <BookingsClient bookings={bookings as unknown as Parameters<typeof BookingsClient>[0]["bookings"]} myRole={profile?.role ?? "talent"} myId={user.id} />;
 }

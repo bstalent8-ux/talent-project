@@ -18,7 +18,7 @@ export async function GET() {
   if (profile?.role === "brand") {
     const { data, error } = await adminClient
       .from("bookings")
-      .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, job_id, talent_id")
+      .select("id, status, amount, budget_type, budget_amount, start_date, duration, deadline, negotiation_message, created_at, updated_at, service_type, brand_id, talent_user_id, job_id, talent_id")
       .eq("brand_id", user.id)
       .order("created_at", { ascending: false });
     bookings = (data ?? []) as Record<string, unknown>[];
@@ -29,7 +29,7 @@ export async function GET() {
     if (!tp) return NextResponse.json({ bookings: [] });
     const { data, error } = await adminClient
       .from("bookings")
-      .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, job_id, talent_id")
+      .select("id, status, amount, budget_type, budget_amount, start_date, duration, deadline, negotiation_message, created_at, updated_at, service_type, brand_id, talent_user_id, job_id, talent_id")
       .eq("talent_id", tp.id)
       .order("created_at", { ascending: false });
     bookings = (data ?? []) as Record<string, unknown>[];

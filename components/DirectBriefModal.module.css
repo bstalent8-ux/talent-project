@@ -1,0 +1,353 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, #050b12 72%, transparent);
+  font-family: var(--font-sans);
+}
+
+.dark {
+  --modal-card: #0d1623;
+  --modal-surface: #0a121c;
+  --modal-border: rgba(0, 255, 163, 0.15);
+  --modal-strong-border: rgba(0, 210, 106, 0.36);
+  --modal-text: #f1f5f9;
+  --modal-muted: #a8b3c2;
+  --modal-input: #050b12;
+  --modal-green: #00d26a;
+  --modal-gold: #ffb800;
+  --modal-error: #ef4444;
+}
+
+.light {
+  --modal-card: #ffffff;
+  --modal-surface: #f8fafc;
+  --modal-border: #e2e8f0;
+  --modal-strong-border: rgba(0, 210, 106, 0.42);
+  --modal-text: #0f172a;
+  --modal-muted: #64748b;
+  --modal-input: #ffffff;
+  --modal-green: #00d26a;
+  --modal-gold: #ffb800;
+  --modal-error: #dc2626;
+}
+
+.dialog {
+  width: min(620px, 100%);
+  max-height: min(92vh, 780px);
+  overflow: auto;
+  border: 1px solid var(--modal-border);
+  border-radius: 16px;
+  background: var(--modal-card);
+  color: var(--modal-text);
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid var(--modal-border);
+  background: var(--modal-card);
+}
+
+.talentBlock {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid var(--modal-border);
+  background: var(--modal-surface);
+  color: var(--modal-muted);
+  font-weight: 900;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.header h2,
+.success h3 {
+  margin: 0;
+  color: var(--modal-text);
+  font-size: var(--text-base);
+  font-weight: 900;
+}
+
+.header p,
+.subtitle,
+.success p {
+  margin: 0.25rem 0 0;
+  color: var(--modal-muted);
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
+.iconButton {
+  width: 2.35rem;
+  height: 2.35rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--modal-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--modal-muted);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  color: var(--modal-text);
+  border-color: var(--modal-strong-border);
+}
+
+.form,
+.success {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fieldset legend,
+.field span {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--modal-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.segmentButton {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid var(--modal-border);
+  border-radius: 10px;
+  background: var(--modal-surface);
+  color: var(--modal-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.segmentButtonActive {
+  border-color: var(--modal-strong-border);
+  background: rgba(0, 210, 106, 0.1);
+  color: var(--modal-green);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.field input,
+.field textarea,
+.moneyInput {
+  width: 100%;
+  border: 1px solid var(--modal-border);
+  border-radius: 10px;
+  background: var(--modal-input);
+  color: var(--modal-text);
+  font: inherit;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.field input {
+  min-height: 2.85rem;
+  padding: 0 0.8rem;
+}
+
+.field textarea {
+  min-height: 8.25rem;
+  padding: 0.8rem;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus,
+.moneyInput:focus-within,
+.segmentButton:focus-visible,
+.iconButton:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: none;
+  border-color: var(--modal-green);
+  box-shadow: 0 0 0 3px rgba(0, 210, 106, 0.28);
+}
+
+.field textarea::placeholder {
+  color: var(--modal-muted);
+  opacity: 1;
+}
+
+.moneyInput {
+  min-height: 2.85rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0 0.8rem;
+}
+
+.moneyInput input {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  direction: ltr;
+}
+
+.moneyInput input:focus {
+  box-shadow: none;
+}
+
+.moneyInput svg,
+.moneyInput b {
+  color: var(--modal-gold);
+}
+
+.error {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--modal-error);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+.primaryButton,
+.secondaryButton {
+  min-height: 2.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 10px;
+  padding: 0 1.1rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 900;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.primaryButton {
+  border: 1px solid var(--modal-green);
+  background: var(--modal-green);
+  color: #050b12;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.secondaryButton {
+  border: 1px solid var(--modal-border);
+  background: transparent;
+  color: var(--modal-muted);
+}
+
+.success {
+  place-items: center;
+  text-align: center;
+  padding-block: 2.5rem;
+}
+
+.successIcon {
+  width: 3.2rem;
+  height: 3.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(0, 210, 106, 0.12);
+  color: var(--modal-green);
+}
+
+@media (max-width: 680px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .dialog {
+    width: 100%;
+    max-height: 94vh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .grid,
+  .segmented {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmentButton,
+  .iconButton,
+  .primaryButton,
+  .secondaryButton {
+    transition: none;
+  }
+}

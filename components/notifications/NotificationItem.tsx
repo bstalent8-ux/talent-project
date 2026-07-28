@@ -27,6 +27,7 @@ const TYPE_ICONS: Record<string, string> = {
   job_application: "📋",
   brief:           "📄",
   booking:         "📅",
+  booking_request: "📅",
   payment:         "💳",
   review:          "⭐",
   system:          "🔔",
@@ -37,6 +38,7 @@ const TYPE_COLOR: Record<string, string> = {
   job_application: "#8B5CF6",
   brief:           "#F59E0B",
   booking:         "#10B981",
+  booking_request: "#10B981",
   payment:         "#EC4899",
   review:          "#F97316",
   system:          "#6B7280",
@@ -48,6 +50,7 @@ function buildHref(n: Notification): string | null {
     case "job_application": return n.reference_id ? `/jobs/${n.reference_id}/applications` : "/jobs";
     case "brief":           return n.reference_id ? `/bookings/${n.reference_id}` : "/bookings";
     case "booking":         return n.reference_id ? `/bookings/${n.reference_id}` : "/bookings";
+    case "booking_request": return n.reference_id ? `/bookings/${n.reference_id}` : "/bookings";
     case "payment":         return n.reference_id ? `/bookings/${n.reference_id}` : "/bookings";
     case "review":          return "/profile";
     case "system":          return null;

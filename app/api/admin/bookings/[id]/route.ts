@@ -6,6 +6,8 @@ import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
 const PIPELINE = [
+  "pending",
+  "changes_requested",
   "contacting",
   "brief_sent",
   "accepted",
@@ -15,11 +17,12 @@ const PIPELINE = [
   "paid",
 ] as const;
 
-type BookingStatus = typeof PIPELINE[number] | "cancelled";
+type BookingStatus = typeof PIPELINE[number] | "rejected" | "cancelled";
 
 // Valid transitions: admin can move forward, backward one step, or cancel from anywhere
 function isValidTransition(from: string, to: string): boolean {
   if (to === "cancelled") return from !== "paid";
+  if (to === "rejected") return !["paid", "completed"].includes(from);
   const fi = PIPELINE.indexOf(from as typeof PIPELINE[number]);
   const ti = PIPELINE.indexOf(to   as typeof PIPELINE[number]);
   if (fi === -1 || ti === -1) return false;

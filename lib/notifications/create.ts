@@ -5,6 +5,7 @@ export type NotificationType =
   | "job_application"
   | "brief"
   | "booking"
+  | "booking_request"
   | "payment"
   | "review"
   | "system";

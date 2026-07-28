@@ -254,12 +254,16 @@ Tables referenced by application code (frequency of use in parentheses):
 attributes (`height`, `weight`, `hair_color`, `shoe_size`, `age`, `languages`, `dialect`).
 
 ### Marketplace
-- **`bookings`** (~34) — the project pipeline. `brand_id` → `profiles.id`,
+- **`bookings`** (~34) — the project pipeline and MVP booking request record. `brand_id` → `profiles.id`,
   `talent_id` → **`talent_profiles.id`**, `talent_user_id` → `profiles.id` (denormalized),
-  `job_id`, `service_type`, `amount`, `notes`, `brief_url`, `paid_at`, `completed_at`.
-  Status: `contacting → brief_sent → accepted → payment_pending → in_progress → completed → paid`, plus `cancelled`.
+  `job_id`, `service_type`, `budget_type`, `budget_amount`, `start_date`, `duration`, `deadline`,
+  `negotiation_message`, `amount`, `notes`, `brief_url`, `paid_at`, `completed_at`, `updated_at`.
+  Booking requests start at `pending`, can become `accepted`, `rejected`, or `changes_requested`,
+  then continue through `payment_pending → in_progress → completed → paid`, plus legacy
+  `contacting`, `brief_sent`, and `cancelled`.
 - **`booking_briefs`** (8) — one per booking (`UNIQUE(booking_id)`): `title`, `description`,
-  `requirements`, `attachments`, `deadline`, `status` (`pending|accepted|rejected`), `reject_reason`, `responded_at`.
+  `requirements`, `attachments`, `deadline`, `status` (`pending|accepted|rejected|changes_requested`),
+  `reject_reason`, `responded_at`.
 - **`deliverables`** (6) · **`payments`** (3) · **`booking_history`** (1, audit trail).
 - **`reviews`** (~26) — `booking_id` UNIQUE, `talent_id` → `talent_profiles.id`, `brand_id`,
   `rating` 1–5, `comment`, moderation `status` (`pending|approved|rejected`), `proof_link`,
@@ -272,6 +276,7 @@ attributes (`height`, `weight`, `hair_color`, `shoe_size`, `age`, `languages`, `
 - **`conversations`** (20) — `UNIQUE(brand_id, talent_id)`, optional `booking_id`, `last_message_at`.
 - **`messages`** (15) — `conversation_id`, `sender_id`, `content`, `message_type`, `is_read`.
 - **`notifications`** (4) — Realtime-enabled; `type`, `title`, `message`, `reference_id/type`, `is_read`.
+  Booking requests use `type = 'booking_request'`.
 - **`community_questions`** (12) + **`community_answers`** (8).
 - **`contact_messages`** (1) — public contact form, insert-only via service role.
 
@@ -340,14 +345,18 @@ Treat any new route without an explicit ownership check as a security bug.
 ### 10.1 Booking pipeline (the core flow)
 ```
 Brand opens /talent/[handle]
-  → DirectBriefModal  →  POST /api/bookings/direct
-       • creates (or reuses) a booking with status "brief_sent"
+  → Booking Request modal  →  POST /api/bookings/direct
+       • creates a booking with status "pending"
+       • stores service_type, budget_type, budget_amount, start_date, duration/deadline, and brief
        • upserts booking_briefs
        • upserts a conversation (UNIQUE brand_id+talent_id)
        • posts a bilingual system message into the chat
-  → Talent: PATCH /api/bookings/[id]/brief/respond  { action: accept|reject }
-       • accept → booking "accepted"   • reject → back to "contacting"
-       • system chat message + notification to the brand
+       • sends a booking_request notification to the talent
+  → Talent reviews at /bookings or /bookings/[id]
+       • PATCH /api/bookings/[id]/brief/respond  { action: accept|reject|request_changes }
+       • accept → booking "accepted"
+       • reject → booking "rejected"
+       • request_changes → booking "changes_requested", stores latest negotiation_message, notifies brand
   → Brand: POST /api/bookings/[id]/payment   (manual confirmation — NO payment gateway)
        • inserts a payments row (status "paid"), booking → "in_progress", sets paid_at
   → Talent: POST /api/bookings/[id]/deliverables

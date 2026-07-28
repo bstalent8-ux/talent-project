@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 export interface Notification {
   id: string;
   user_id: string;
-  type: "message" | "job_application" | "brief" | "booking" | "payment" | "review" | "system";
+  type: "message" | "job_application" | "brief" | "booking" | "booking_request" | "payment" | "review" | "system";
   title: string;
   message: string;
   reference_id: string | null;

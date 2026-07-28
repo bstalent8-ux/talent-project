@@ -15,7 +15,7 @@ export async function GET(
 
   const { data: booking, error } = await adminClient
     .from("bookings")
-    .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, talent_id, job_id, job_application_id, paid_at, completed_at, notes")
+    .select("id, status, amount, budget_type, budget_amount, start_date, duration, deadline, negotiation_message, negotiation_requested_at, created_at, updated_at, service_type, brand_id, talent_user_id, talent_id, job_id, job_application_id, paid_at, completed_at, notes")
     .eq("id", id)
     .single();
 

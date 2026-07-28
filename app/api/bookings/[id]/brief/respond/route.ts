@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 
-// PATCH — talent accepts or rejects the brief
+// PATCH — talent accepts, rejects, or requests changes on a booking request.
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -24,18 +24,23 @@ export async function PATCH(
   // Must be the talent
   const isTalent = booking.talent_user_id === user.id;
   if (!isTalent) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  if (booking.status !== "brief_sent")
-    return NextResponse.json({ error: "No pending brief" }, { status: 400 });
+  if (!["pending", "brief_sent", "changes_requested"].includes(booking.status))
+    return NextResponse.json({ error: "no pending booking request" }, { status: 400 });
 
-  const { action, reject_reason } = await req.json();
-  if (!["accept", "reject"].includes(action))
-    return NextResponse.json({ error: "action must be accept or reject" }, { status: 400 });
+  const { action, reject_reason, message } = await req.json();
+  if (!["accept", "reject", "request_changes"].includes(action))
+    return NextResponse.json({ error: "action must be accept, reject, or request_changes" }, { status: 400 });
+  if (action === "request_changes" && !message?.trim())
+    return NextResponse.json({ error: "message required" }, { status: 400 });
+
+  const now = new Date().toISOString();
 
   const briefUpdate: Record<string, unknown> = {
-    status:       action === "accept" ? "accepted" : "rejected",
-    responded_at: new Date().toISOString(),
+    status:       action === "accept" ? "accepted" : action === "reject" ? "rejected" : "changes_requested",
+    responded_at: now,
   };
   if (action === "reject" && reject_reason) briefUpdate.reject_reason = reject_reason;
+  if (action === "request_changes") briefUpdate.reject_reason = message.trim();
 
   const { error: briefErr } = await adminClient
     .from("booking_briefs")
@@ -44,8 +49,17 @@ export async function PATCH(
   if (briefErr) return NextResponse.json({ error: briefErr.message }, { status: 500 });
 
   // Update booking status
-  const newStatus = action === "accept" ? "accepted" : "contacting";
-  await adminClient.from("bookings").update({ status: newStatus }).eq("id", id);
+  const newStatus = action === "accept" ? "accepted" : action === "reject" ? "rejected" : "changes_requested";
+  const bookingUpdate: Record<string, unknown> = {
+    status:     newStatus,
+    updated_at: now,
+  };
+  if (action === "request_changes") {
+    bookingUpdate.negotiation_message = message.trim();
+    bookingUpdate.negotiation_requested_at = now;
+  }
+  const { error: bookingErr } = await adminClient.from("bookings").update(bookingUpdate).eq("id", id);
+  if (bookingErr) return NextResponse.json({ error: bookingErr.message }, { status: 500 });
 
   // Send system message in chat
   const { data: conv } = await adminClient
@@ -56,8 +70,10 @@ export async function PATCH(
     .maybeSingle();
   if (conv) {
     const msg = action === "accept"
-      ? "✅ قبلت الموهبة ملخص المشروع. المرحلة التالية: الدفع.\n✅ Talent accepted the brief. Next: payment."
-      : `❌ رفضت الموهبة الملخص${reject_reason ? `: ${reject_reason}` : ""}.\n❌ Talent rejected the brief${reject_reason ? `: ${reject_reason}` : ""}.`;
+      ? "قبلت الموهبة طلب الحجز. المرحلة التالية: الدفع.\nTalent accepted the booking request. Next: payment."
+      : action === "reject"
+        ? `رفضت الموهبة طلب الحجز${reject_reason ? `: ${reject_reason}` : ""}.\nTalent rejected the booking request${reject_reason ? `: ${reject_reason}` : ""}.`
+        : `طلبت الموهبة تعديلات: ${message.trim()}\nTalent requested changes: ${message.trim()}`;
     await adminClient.from("messages").insert({
       conversation_id: conv.id,
       sender_id: user.id,
@@ -67,13 +83,19 @@ export async function PATCH(
   }
 
   // Notify brand of talent's response
-  const notifTitle  = action === "accept" ? "قبلت الموهبة الملخص ✅" : "رفضت الموهبة الملخص ❌";
-  const notifMsg    = action === "accept"
-    ? "قبلت الموهبة ملخص المشروع، يمكنك المتابعة للدفع."
-    : `رفضت الموهبة الملخص${reject_reason ? `: ${reject_reason}` : ""}`;
+  const notifTitle = action === "accept"
+    ? "تم قبول طلب الحجز"
+    : action === "reject"
+      ? "تم رفض طلب الحجز"
+      : "طلبت الموهبة تعديلات";
+  const notifMsg = action === "accept"
+    ? "Talent accepted the booking request. You can continue to payment."
+    : action === "reject"
+      ? `Talent rejected the booking request${reject_reason ? `: ${reject_reason}` : ""}.`
+      : message.trim();
   await createNotification({
     userId:        booking.brand_id,
-    type:          "brief",
+    type:          "booking_request",
     title:         notifTitle,
     message:       notifMsg,
     referenceId:   id,

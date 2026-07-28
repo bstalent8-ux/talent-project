@@ -11,7 +11,7 @@ import { MessageSquare, ArrowLeft, CreditCard, Send } from "lucide-react";
 
 interface Profile { id: string; full_name: string | null; handle: string | null; avatar_url: string | null; is_verified?: boolean }
 interface Job     { id: string; title: string; description?: string | null; category?: string | null }
-interface Brief   { id: string; title: string; description: string | null; requirements: string | null; attachments: string[] | null; deadline: string | null; status: "pending"|"accepted"|"rejected"; reject_reason: string | null }
+interface Brief   { id: string; title: string; description: string | null; requirements: string | null; attachments: string[] | null; deadline: string | null; status: "pending"|"accepted"|"rejected"|"changes_requested"; reject_reason: string | null }
 interface Deliverable { id: string; files: string[] | null; links: string[] | null; notes: string | null; status: "submitted"|"approved"|"revision_requested"; feedback: string | null; created_at: string }
 interface Payment { id: string; amount: number; status: string; paid_at: string | null }
 interface Review  { id: string; rating: number; comment: string | null; status: string }
@@ -20,7 +20,15 @@ interface BookingData {
   id: string;
   status: string;
   amount: number | null;
+  budget_type: string | null;
+  budget_amount: number | null;
+  start_date: string | null;
+  duration: number | null;
+  deadline: string | null;
+  negotiation_message: string | null;
+  negotiation_requested_at: string | null;
   created_at: string;
+  updated_at: string | null;
   service_type: string | null;
   brand_id: string;
   talent_user_id: string | null;
@@ -41,9 +49,12 @@ interface BookingData {
 interface Props { booking: BookingData; myRole: "brand" | "talent" }
 
 const STATUS_META: Record<string, { ar: string; en: string; color: string }> = {
+  pending:         { ar: "قيد المراجعة",      en: "Pending Review",   color: "#FFB800" },
   contacting:      { ar: "تواصل",          en: "Contacting",      color: "#64748b" },
-  brief_sent:      { ar: "تم إرسال الملخص", en: "Brief Sent",      color: "#3b82f6" },
-  accepted:        { ar: "تم القبول",       en: "Brief Accepted",  color: "#8b5cf6" },
+  brief_sent:      { ar: "تم إرسال الملخص", en: "Brief Sent",      color: "#60A5FA" },
+  changes_requested:{ ar: "تعديلات مطلوبة",  en: "Changes Requested", color: "#FFB800" },
+  accepted:        { ar: "تم القبول",       en: "Brief Accepted",  color: "#A78BFA" },
+  rejected:        { ar: "مرفوض",           en: "Rejected",        color: "#ef4444" },
   in_progress:     { ar: "جاري التنفيذ",   en: "In Progress",     color: "#FFB800" },
   completed:       { ar: "بانتظار الموافقة","en": "Awaiting Approval", color: "#00D26A" },
   paid:            { ar: "مكتمل",          en: "Completed & Paid", color: "#00D26A" },
@@ -55,11 +66,21 @@ const TX = {
     back:        "العودة للمشاريع",
     project:     "تفاصيل المشروع",
     amount:      "المبلغ المتفق عليه",
+    budget:      "الميزانية",
     service:     "نوع الخدمة",
     started:     "تاريخ البدء",
+    deadline:    "الموعد النهائي",
+    duration:    "المدة",
+    hours:       "ساعة",
+    days:        "يوم",
+    requestInfo: "تفاصيل طلب الحجز",
     chat:        "فتح المحادثة",
     sendBrief:   "إرسال ملخص المشروع",
     waitBrief:   "انتظار البراند لإرسال الملخص…",
+    waitRequest: "طلب الحجز قيد مراجعة الموهبة.",
+    waitTalent:  "راجع الطلب واختر قبول أو رفض أو طلب تعديلات.",
+    rejectedInfo:"تم رفض طلب الحجز.",
+    proposal:    "آخر اقتراح من الموهبة",
     confirmPay:  "تأكيد الدفع وبدء العمل",
     waitPay:     "في انتظار تأكيد الدفع من البراند…",
     paying:      "جاري معالجة الدفع…",
@@ -74,11 +95,21 @@ const TX = {
     back:        "Back to Projects",
     project:     "Project Details",
     amount:      "Agreed Amount",
+    budget:      "Budget",
     service:     "Service Type",
     started:     "Started",
+    deadline:    "Deadline",
+    duration:    "Duration",
+    hours:       "hours",
+    days:        "days",
+    requestInfo: "Booking Request Details",
     chat:        "Open Chat",
     sendBrief:   "Send Project Brief",
     waitBrief:   "Waiting for brand to send the brief…",
+    waitRequest: "The booking request is waiting for the talent's response.",
+    waitTalent:  "Review the request and accept, reject, or request changes.",
+    rejectedInfo:"This booking request was rejected.",
+    proposal:    "Latest talent proposal",
     confirmPay:  "Confirm Payment & Start Work",
     waitPay:     "Waiting for brand to confirm payment…",
     paying:      "Processing payment…",
@@ -136,12 +167,20 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
     if (res.ok) refresh();
   }
 
-  const other = myRole === "brand" ? booking.talent : booking.brand;
-  const otherLabel = myRole === "brand" ? t.talent : t.brand;
-
   // Action panel logic
   const isBrand  = myRole === "brand";
   const st       = booking.status;
+  const budgetAmount = booking.budget_amount ?? booking.amount;
+  const serviceLabel =
+    booking.service_type === "hourly" ? (ar ? "بالساعة" : "Hourly") :
+    booking.service_type === "daily" ? (ar ? "باليوم" : "Daily") :
+    booking.service_type === "fixed_project" ? (ar ? "مشروع ثابت" : "Fixed Project") :
+    (ar ? "طلب مباشر" : "Direct");
+  const durationLabel = booking.duration
+    ? `${booking.duration} ${booking.service_type === "hourly" ? t.hours : t.days}`
+    : booking.deadline
+      ? new Date(booking.deadline).toLocaleDateString(ar ? "ar-EG" : "en-GB", { day: "numeric", month: "long", year: "numeric" })
+      : "—";
 
   const section = (title: string, children: React.ReactNode) => (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 24px", marginBottom: 16 }}>
@@ -210,10 +249,44 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
           </button>
         </div>
 
+        {section(t.requestInfo,
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
+            {[
+              { label: t.service, value: serviceLabel },
+              { label: t.budget, value: budgetAmount ? `${budgetAmount.toLocaleString()} EGP` : "—" },
+              { label: t.started, value: booking.start_date ? new Date(booking.start_date).toLocaleDateString(ar ? "ar-EG" : "en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—" },
+              { label: booking.service_type === "fixed_project" ? t.deadline : t.duration, value: durationLabel },
+            ].map((item) => (
+              <div key={item.label} style={{ backgroundColor: dark ? "#0A121C" : "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 12px" }}>
+                <p style={{ color: MUTED, fontSize: 11, fontWeight: 700, margin: "0 0 4px" }}>{item.label}</p>
+                <p style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: 0 }}>{item.value}</p>
+              </div>
+            ))}
+            {booking.negotiation_message && (
+              <div style={{ gridColumn: "1 / -1", backgroundColor: "rgba(255,184,0,0.08)", border: `1px solid ${GOLD}33`, borderRadius: 10, padding: "10px 12px" }}>
+                <p style={{ color: GOLD, fontSize: 11, fontWeight: 800, margin: "0 0 4px" }}>{t.proposal}</p>
+                <p style={{ color: TEXT, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{booking.negotiation_message}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Action panel ── */}
+        {["pending", "changes_requested", "brief_sent"].includes(st) && isBrand && section(t.brief,
+          <p style={{ color: MUTED, fontSize: 13, margin: 0 }}>{t.waitRequest}</p>
+        )}
+
+        {["pending", "changes_requested", "brief_sent"].includes(st) && !isBrand && section(t.brief,
+          <p style={{ color: MUTED, fontSize: 13, margin: 0 }}>{t.waitTalent}</p>
+        )}
+
+        {st === "rejected" && section(t.brief,
+          <p style={{ color: MUTED, fontSize: 13, margin: 0 }}>{t.rejectedInfo}</p>
+        )}
+
         {st === "contacting" && isBrand && section(t.sendBrief,
           <button onClick={() => setShowBrief(true)}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'Cairo',sans-serif" }}>
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'Cairo',sans-serif" }}>
             <Send size={14} /> {t.sendBrief}
           </button>
         )}
@@ -224,7 +297,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
 
         {st === "accepted" && isBrand && section(t.confirmPay,
           <button onClick={handlePayment} disabled={paying}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: paying ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 10, cursor: paying ? "default" : "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'Cairo',sans-serif" }}>
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: paying ? "rgba(0,210,106,0.5)" : GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: paying ? "default" : "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'Cairo',sans-serif" }}>
             <CreditCard size={14} /> {paying ? t.paying : t.confirmPay}
           </button>
         )}
@@ -239,6 +312,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
             <BriefView
               brief={booking.brief}
               bookingId={booking.id}
+              bookingStatus={booking.status}
               myRole={myRole}
               dark={dark}
               lang={lang}

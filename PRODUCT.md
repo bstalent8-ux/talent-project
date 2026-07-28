@@ -100,9 +100,10 @@ commented out). Profile building happens entirely on `/profile/me`.
 ```
 /register as "براند / شركة"  →  /explore  (filter, browse talent cards)
   → open /talent/[handle]  (portfolio, packages, reviews, past brands, performance)
-  → "Send brief" (DirectBriefModal): title, description, requirements, attachments, deadline
-  → chat thread opens automatically with a system message
-  → talent accepts  →  brand confirms payment  →  work in progress
+  → "Book Talent" opens a booking request modal without leaving the profile
+  → choose hourly, daily, or fixed project; add schedule, budget, and brief
+  → talent receives a notification and can accept, reject, or request changes
+  → accepted request  →  brand confirms payment  →  work in progress
   → talent submits deliverables  →  brand approves  →  brand leaves a review
 ```
 
