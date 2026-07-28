@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "pages:build": "npx @cloudflare/next-on-pages@1",
-    "deploy": "npm run pages:build && wrangler pages deploy"
+    "pages:deploy": "wrangler pages deploy .vercel/output/static --project-name=talents-platform --branch=main",
+    "deploy": "npm run pages:build && npm run pages:deploy"
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.16",
