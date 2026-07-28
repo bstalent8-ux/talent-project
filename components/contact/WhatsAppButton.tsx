@@ -2,7 +2,7 @@
 
 import { useSite } from "@/contexts/SiteContext";
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "966500000000";
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "201070681357";
 
 const TX = {
   ar: { label: "تواصل عبر واتساب", message: "مرحبًا فريق Talents، أحتاج للمساعدة." },
@@ -14,7 +14,10 @@ export default function WhatsAppButton() {
   const t  = TX[lang];
   const ar = lang === "ar";
 
-  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t.message)}`;
+const cleanNumber = WHATSAPP_NUMBER.replace(/\D/g, ""); 
+
+// إنشاء الرابط
+const href = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(t.message)}`;
 
   return (
     <a
