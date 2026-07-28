@@ -6,7 +6,11 @@
 
 **/.classpath
 **/.dockerignore
+# `**/.env` alone does NOT match .env.local — without the glob the service-role
+# key gets baked into the image by `COPY . .`.
 **/.env
+**/.env.*
+!**/.env.example
 **/.git
 **/.gitignore
 **/.project
