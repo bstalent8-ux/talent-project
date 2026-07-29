@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useSite } from "@/contexts/SiteContext";
 import type { TalentData } from "@/features/talent-profile/types";
+import { cdnImage } from "@/lib/images";
 
 const TABS_AR = [
   { key: "about",      label: "نبذة عامة",        sectionId: "section-about" },
@@ -148,7 +149,7 @@ export default function TabsNavigation({
               >
                 {talent.avatarUrl ? (
                   <img
-                    src={talent.avatarUrl}
+                    src={cdnImage(talent.avatarUrl, 128)}
                     alt={displayName}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />

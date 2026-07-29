@@ -11,7 +11,7 @@ import ExploreHero from "./ExploreHero";
 import ExploreFilters from "./ExploreFilters";
 import ExploreGrid from "./ExploreGrid";
 import { useSite } from "@/contexts/SiteContext";
-import { createClient } from "@/lib/supabase/client";
+import { categoryMatchRank, MATCH_RANK_NONE } from "@/features/categories/matching";
 import DirectBriefModal from "@/components/DirectBriefModal";
 import styles from "./ExplorePage.module.css";
 
@@ -46,9 +46,13 @@ function matchesType(talent: TalentCard, type: string): boolean {
   return false;
 }
 
-interface Props { talents: TalentCard[] }
+interface Props {
+  talents: TalentCard[];
+  /** Category of the viewing brand, or null (guest / talent / no category set). */
+  viewerBrandCategory?: string | null;
+}
 
-export default function ExploreClient({ talents }: Props) {
+export default function ExploreClient({ talents, viewerBrandCategory = null }: Props) {
   const { lang, dark } = useSite();
   const ar = lang === "ar";
 
@@ -70,15 +74,26 @@ export default function ExploreClient({ talents }: Props) {
 
   useEffect(() => {
     (async () => {
-      const { data } = await createClient().auth.getUser();
-      if (!data.user) return;
-      setMyId(data.user.id);
+      // /api/me/role returns both id and role, so this is one request instead of
+      // an auth.getUser() round trip followed by the role lookup.
       const res = await fetch("/api/me/role");
-      if (res.ok) { const d = await res.json(); setMyRole(d.role); }
+      if (!res.ok) return;
+      const d = await res.json();
+      setMyId(d.id ?? null);
+      setMyRole(d.role);
     })();
   }, []);
 
   useEffect(() => { setPage(1); }, [search, type, sort, minPrice, maxPrice, verified, sex]);
+
+  // ── Personalized ranking key ──────────────────────────
+  // A brand sees talents in its own category first. This is a ranking bucket
+  // only — nobody is filtered out, and a null category leaves every talent at
+  // the same rank, which makes the sort below collapse to its previous form.
+  const matchRankById = useMemo(() => {
+    if (!viewerBrandCategory) return null;
+    return new Map(talents.map((t) => [t.id, categoryMatchRank(viewerBrandCategory, t.category)]));
+  }, [talents, viewerBrandCategory]);
 
   const filtered = useMemo(() => {
     let list = talents.filter((t) => {
@@ -96,6 +111,11 @@ export default function ExploreClient({ talents }: Props) {
     });
 
     list = [...list].sort((a, b) => {
+      // Category affinity is the primary key; the chosen sort breaks ties.
+      if (matchRankById) {
+        const rankDiff = (matchRankById.get(a.id) ?? MATCH_RANK_NONE) - (matchRankById.get(b.id) ?? MATCH_RANK_NONE);
+        if (rankDiff !== 0) return rankDiff;
+      }
       if (sort === "price_asc")  return (a.starting_price ?? 99999) - (b.starting_price ?? 99999);
       if (sort === "price_desc") return (b.starting_price ?? 0)     - (a.starting_price ?? 0);
       if (sort === "rating")     return b.rating - a.rating;
@@ -103,7 +123,7 @@ export default function ExploreClient({ talents }: Props) {
     });
 
     return list;
-  }, [talents, search, type, sort, minPrice, maxPrice, verified, sex]);
+  }, [talents, search, type, sort, minPrice, maxPrice, verified, sex, matchRankById]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);

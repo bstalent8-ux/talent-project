@@ -1,7 +1,7 @@
 export const runtime = 'edge';
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getCachedUser } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import ChatWindow from "../_components/ChatWindow";
 import type { Conversation } from "@/features/chat/types";
@@ -15,8 +15,7 @@ interface Props {
 export default async function ChatPage({ params }: Props) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
   if (!user) redirect("/login");
 
   // Fetch conversation + other user info server-side for instant render

@@ -1,5 +1,10 @@
 import { adminClient } from "@/lib/supabase/admin";
 import type { CategoryRoleType, CategoryUpsertInput, MarketplaceCategory } from "../types";
+import { normalizeCategoryId } from "../matching";
+
+// Re-exported for existing callers; the implementation lives in ../matching so
+// client components can use it without pulling in adminClient.
+export { normalizeCategoryId };
 
 export const fallbackCategories: MarketplaceCategory[] = [
   { id: "ugc", role_type: "talent", label_ar: "UGC Creator", label_en: "UGC Creator", description: null, is_active: true, sort_order: 10 },
@@ -17,28 +22,6 @@ export const fallbackCategories: MarketplaceCategory[] = [
   { id: "brand_fashion", role_type: "brand", label_ar: "Fashion Brand", label_en: "Fashion Brand", description: null, is_active: true, sort_order: 160 },
   { id: "brand_food", role_type: "brand", label_ar: "Food Brand", label_en: "Food Brand", description: null, is_active: true, sort_order: 170 },
 ];
-
-export function normalizeCategoryId(value: string | null | undefined): string {
-  const raw = (value ?? "").trim().toLowerCase();
-  if (!raw) return "";
-  if (raw === "brand_fashion" || raw === "brand-fashion") return "brand_fashion";
-  if (raw === "brand_food" || raw === "brand-food") return "brand_food";
-  if (raw === "technology") return "technology";
-  if (raw.includes("ugc") || raw.includes("content")) return "ugc";
-  if (raw.includes("influencer")) return "influencer";
-  if (raw.includes("fashion") || raw.includes("style")) return "fashion";
-  if (raw.includes("food reviewer") || raw.includes("food-reviewer") || raw.includes("food_reviewer") || (raw.includes("food") && raw.includes("review"))) return "food_reviewer";
-  if (raw.includes("tech reviewer") || raw.includes("tech-reviewer") || raw.includes("tech_reviewer")) return "tech_reviewer";
-  if (raw.includes("unbox")) return "unboxing";
-  if (raw.includes("host") || raw.includes("presenter")) return "host";
-  if (raw.includes("restaurant")) return "restaurant";
-  if (raw.includes("cafe")) return "cafe";
-  if (raw.includes("event")) return "events";
-  if (raw.includes("technology") || raw === "tech") return "technology";
-  if (raw.includes("real estate") || raw.includes("real-estate") || raw.includes("real_estate")) return "real_estate";
-  if (raw === "food") return "brand_food";
-  return raw.replace(/[^a-z0-9\u0600-\u06ff]+/g, "_").replace(/^_+|_+$/g, "");
-}
 
 export async function fetchCategories(roleType?: CategoryRoleType, activeOnly = true): Promise<MarketplaceCategory[]> {
   let query = adminClient

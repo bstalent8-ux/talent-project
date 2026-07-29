@@ -2,14 +2,13 @@ export const runtime = 'edge';
 
 export const dynamic = "force-dynamic";
 import { redirect, notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getCachedUser } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import BookingDetail from "./_components/BookingDetail";
 
 export default async function BookingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
   if (!user) redirect("/login");
 
   const { data: booking, error } = await adminClient

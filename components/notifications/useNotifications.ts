@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, getBrowserUser } from "@/lib/supabase/client";
 
 export interface Notification {
   id: string;
@@ -28,14 +28,14 @@ export function useNotifications() {
     const supabase = createClient();
 
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getBrowserUser();
       if (cancelled || !user) { setLoading(false); return; }
 
       setUserId(user.id);
 
       const { data } = await supabase
         .from("notifications")
-        .select("*")
+        .select("id, user_id, type, title, message, reference_id, reference_type, is_read, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20);

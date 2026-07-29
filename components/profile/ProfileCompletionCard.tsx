@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
 import { calculateCompletion, COMPLETION_THRESHOLDS } from "@/lib/profile-completion";
+import { cdnImage } from "@/lib/images";
 
 /* ─── translations ───────────────────────────────────────── */
 const TX = {
@@ -594,7 +595,7 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
                     {item.media_type === "video" ? (
                       <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} muted />
                     ) : (
-                      <img src={item.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <img src={cdnImage(item.url, 320)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     )}
                     <button
                       onClick={() => handleDeletePortfolio(item.id)}

@@ -204,6 +204,18 @@ async function withSubscriberCounts(packages: MarketplacePackage[]): Promise<Mar
   return packages.map((pkg) => ({ ...pkg, subscribers_count: counts[pkg.id] ?? 0 }));
 }
 
+/**
+ * Same as `withSubscriberCounts`, but for callers that can start the count
+ * queries before the package rows have arrived. The two are independent, so
+ * awaiting them together removes a serial round trip from the page render.
+ */
+function attachSubscriberCounts(
+  packages: MarketplacePackage[],
+  counts: Record<string, number>,
+): MarketplacePackage[] {
+  return packages.map((pkg) => ({ ...pkg, subscribers_count: counts[pkg.id] ?? 0 }));
+}
+
 export async function fetchTalentTypes(activeOnly = true): Promise<TalentType[]> {
   const categories = await fetchCategories("talent", activeOnly);
   return categories.map((category) => ({
@@ -245,10 +257,12 @@ export async function fetchPublicPackages(limit?: number): Promise<MarketplacePa
 
   if (limit) query = query.limit(limit);
 
-  const { data, error } = await query;
+  // The subscriber counts do not depend on which packages come back, so they
+  // are fetched alongside instead of after — one round trip instead of two.
+  const [{ data, error }, counts] = await Promise.all([query, fetchPackageSubscriberCounts()]);
   if (error) throw new Error(error.message);
 
-  return withSubscriberCounts(
+  return attachSubscriberCounts(
     (data ?? [])
       .map((row) => mapPackage(row as Record<string, unknown>))
       .map((pkg) => ({
@@ -256,6 +270,7 @@ export async function fetchPublicPackages(limit?: number): Promise<MarketplacePa
         plans: pkg.plans.filter((plan) => plan.is_active),
       }))
       .filter((pkg) => pkg.plans.length > 0),
+    counts,
   );
 }
 

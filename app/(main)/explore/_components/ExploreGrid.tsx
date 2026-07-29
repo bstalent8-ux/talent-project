@@ -2,6 +2,7 @@
 import { Star, MapPin, BadgeCheck, Zap, Crown, Send, SearchX } from "lucide-react";
 import Link from "next/link";
 import type { TalentCard } from "../page";
+import { cdnImage } from "@/lib/images";
 import styles from "./ExplorePage.module.css";
 
 interface Props {
@@ -27,7 +28,7 @@ function TalentCardItem({
       {/* Media */}
       <div className={styles.talentMedia}>
         {talent.avatar_url ? (
-          <img src={talent.avatar_url} alt={talent.name} loading="lazy" />
+          <img src={cdnImage(talent.avatar_url, 400)} alt={talent.name} loading="lazy" />
         ) : (
           <div className={styles.talentInitial}>{initial}</div>
         )}

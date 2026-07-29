@@ -9,7 +9,7 @@ export async function GET() {
   const { data: { user }, error } = await supabase.auth.getUser();
 
   if (error || !user) {
-    return NextResponse.json({ role: null }, { status: 401 });
+    return NextResponse.json({ role: null, id: null }, { status: 401 });
   }
 
   // adminClient bypasses RLS — works regardless of policies on profiles table
@@ -19,5 +19,7 @@ export async function GET() {
     .eq("id", user.id)
     .single();
 
-  return NextResponse.json({ role: data?.role ?? null });
+  // `id` is returned alongside the role so callers that need both do not have to
+  // pay for a second `auth.getUser()` network round trip from the browser.
+  return NextResponse.json({ role: data?.role ?? null, id: user.id });
 }

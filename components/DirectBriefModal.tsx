@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, CheckCircle2, Clock, FileText, WalletCards, X } from "lucide-react";
+import { cdnImage } from "@/lib/images";
 import styles from "./DirectBriefModal.module.css";
 
 type ServiceType = "hourly" | "daily" | "fixed_project";
@@ -201,7 +202,7 @@ export default function DirectBriefModal({
         <header className={styles.header}>
           <div className={styles.talentBlock}>
             <span className={styles.avatar}>
-              {talentAvatar ? <img src={talentAvatar} alt="" /> : talentName.charAt(0)}
+              {talentAvatar ? <img src={cdnImage(talentAvatar, 128)} alt="" /> : talentName.charAt(0)}
             </span>
             <span>
               <h2 id="booking-request-title">{t.title}</h2>

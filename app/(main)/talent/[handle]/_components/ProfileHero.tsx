@@ -5,6 +5,7 @@ import { MapPin, Star, Eye, Shield, Zap, Crown, Heart, Share2, MessageCircle, Ca
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { TalentData } from "@/features/talent-profile/types";
+import { cdnImage } from "@/lib/images";
 import DirectBriefModal from "@/components/DirectBriefModal";
 
 const btn: React.CSSProperties = {
@@ -88,7 +89,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
           }}>
             {talent.avatarUrl ? (
               <img
-                src={talent.avatarUrl}
+                src={cdnImage(talent.avatarUrl, 320)}
                 alt={displayName}
                 style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
               />

@@ -18,6 +18,7 @@ import {
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { cdnImage } from "@/lib/images";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./SiteChrome.module.css";
 
@@ -212,7 +213,7 @@ export default function Navbar({
               {avatarUrl && (
                 <img
                   className={styles.avatarImage}
-                  src={avatarUrl}
+                  src={cdnImage(avatarUrl, 96)}
                   alt={_initialFullName || "avatar"}
                   onLoad={() => setAvatarLoaded(true)}
                   onError={() => setAvatarLoaded(true)}
@@ -235,8 +236,10 @@ export default function Navbar({
             )}
           </div>
 
+          {/* Target is /explore, not /book: /book has never had a route, so the
+              CTA 404'd and Next prefetched that 404 on every page render. */}
           {!isMobile && (
-            <Link className={styles.bookButton} href="/book">
+            <Link className={styles.bookButton} href="/explore">
               <CalendarCheck size={17} />
               {t.book}
             </Link>
@@ -277,7 +280,7 @@ export default function Navbar({
             );
           })}
 
-          <Link className={styles.bookButton} href="/book">
+          <Link className={styles.bookButton} href="/explore">
             <CalendarCheck size={17} />
             {t.book}
           </Link>

@@ -1,13 +1,13 @@
 export const runtime = 'edge';
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCachedUser } from "@/lib/supabase/server";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GlobalChat from "@/components/chat/GlobalChat";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCachedUser();
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
   let initialAvatarUrl: string | null = null;
   let initialFullName: string | null = null;
@@ -27,7 +27,15 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   return (
     <>
-      <Navbar initialAvatarUrl={initialAvatarUrl} initialFullName={initialFullName} />
+      {/* `initialProfileLoaded` tells Navbar the profile question is already
+          settled server-side, so it does not re-fetch /api/me on mount. Without
+          it, every guest page load — and every logged-in user with no avatar and
+          no display name — fired an extra /api/me round trip per navigation. */}
+      <Navbar
+        initialAvatarUrl={initialAvatarUrl}
+        initialFullName={initialFullName}
+        initialProfileLoaded
+      />
       <main style={{ flex: 1 }}>{children}</main>
       <Footer />
       <GlobalChat />

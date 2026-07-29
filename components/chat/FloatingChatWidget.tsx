@@ -3,7 +3,8 @@ import {
   useState, useEffect, useRef, useCallback,
   type KeyboardEvent,
 } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { cdnImage } from "@/lib/images";
+import { createClient, getBrowserUser } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import type { Conversation, Message } from "@/features/chat/types";
 
@@ -65,7 +66,7 @@ export default function FloatingChatWidget() {
 
   // ─── get own id ──────────────────────────────────────────────────────────
   useEffect(() => {
-    createClient().auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null));
+    getBrowserUser().then(({ data }) => setMyId(data.user?.id ?? null));
   }, []);
 
   // ─── load conversations ──────────────────────────────────────────────────
@@ -306,7 +307,7 @@ export default function FloatingChatWidget() {
                   fontSize: 13, fontWeight: 700, color: MUTED,
                 }}>
                   {activeOther.avatar_url
-                    ? <img src={activeOther.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ? <img src={cdnImage(activeOther.avatar_url, 96)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     : initials(activeOther.full_name)}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -363,7 +364,7 @@ export default function FloatingChatWidget() {
                         border: hasUnread ? `2px solid ${GOLD}` : "2px solid transparent",
                       }}>
                         {c.other_user?.avatar_url
-                          ? <img src={c.other_user.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          ? <img src={cdnImage(c.other_user.avatar_url, 96)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           : initials(c.other_user?.full_name ?? null)}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>

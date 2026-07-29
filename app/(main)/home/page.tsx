@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { adminClient } from "@/lib/supabase/admin";
 import HomeClient from "./_components/HomeClient";
 import type { TalentCard } from "../explore/page";
+import { parsePrice } from "@/lib/price";
 
 export default async function HomePage() {
   const { data } = await adminClient
@@ -25,9 +26,8 @@ export default async function HomePage() {
     if (!tp) return [];
     const sl = (tp.social_links ?? {}) as Record<string, unknown>;
     const pkgs = Array.isArray(tp.packages) ? tp.packages as Array<Record<string, unknown>> : [];
-    const startingPrice = pkgs.length > 0
-      ? Math.min(...pkgs.map(pk => parseInt(String(pk.price ?? "0").replace(/[^\d]/g, ""), 10) || 0).filter(n => n > 0))
-      : null;
+    const prices = pkgs.map(pk => parsePrice(pk.price)).filter(n => n > 0);
+    const startingPrice = prices.length > 0 ? Math.min(...prices) : null;
     return [{
       id: p.id, handle: p.handle!, name: p.full_name ?? "—",
       avatar_url: p.avatar_url ?? null, location: p.city ?? null,
