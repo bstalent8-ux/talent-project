@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { normalizeCategoryId, setProfileCategories } from "@/features/categories/services/category.service";
+import { invalidateBrand, invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 
 // ─── Mass-assignment guards ──────────────────────────────────────────────────
 // This route writes through the service role (RLS bypassed), so the caller must
@@ -39,14 +40,14 @@ export async function POST(req: NextRequest) {
     // ── 1. Authenticate ──────────────────────────────────────────────────────
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
     const body = await req.json();
     const { userId, role, profileData, talentProfileData, categoryIds, brandProfileData } = body;
 
     // A caller may only ever write its own profile.
     if (userId && userId !== user.id) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
     }
     const targetId = user.id;
 
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
     // stored role wins so nobody can promote themselves.
     const { data: existing } = await adminClient
       .from("profiles")
-      .select("role")
+      .select("role, handle")
       .eq("id", targetId)
       .maybeSingle();
 
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
       effectiveRole = existing.role;
     } else {
       if (!ALLOWED_ROLES.includes(role)) {
-        return NextResponse.json({ error: "role must be talent or brand" }, { status: 400 });
+        return NextResponse.json({ error: "role must be talent or brand" }, { status: 400, headers: privateNoStoreHeaders() });
       }
       effectiveRole = role;
     }
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
       .upsert({ ...pick(profileData, PROFILE_FIELDS), id: targetId, role: effectiveRole });
 
     if (profileErr) {
-      return NextResponse.json({ error: `profiles: ${profileErr.message}` }, { status: 500 });
+      return NextResponse.json({ error: `profiles: ${profileErr.message}` }, { status: 500, headers: privateNoStoreHeaders() });
     }
 
     // talent_profiles columns: user_id, category, specialties, social_links, bio, packages, availability
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
         .upsert({ ...pick(talentProfileData, TALENT_FIELDS), user_id: targetId }, { onConflict: "user_id" });
 
       if (talentErr) {
-        return NextResponse.json({ error: `talent_profiles: ${talentErr.message}` }, { status: 500 });
+        return NextResponse.json({ error: `talent_profiles: ${talentErr.message}` }, { status: 500, headers: privateNoStoreHeaders() });
       }
     }
 
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
       } catch (categoryErr) {
         return NextResponse.json(
           { error: `profile_categories: ${categoryErr instanceof Error ? categoryErr.message : "save failed"}` },
-          { status: 500 },
+          { status: 500, headers: privateNoStoreHeaders() },
         );
       }
     }
@@ -130,12 +131,18 @@ export async function POST(req: NextRequest) {
         }, { onConflict: "user_id" });
 
       if (brandErr) {
-        return NextResponse.json({ error: `brand_profiles: ${brandErr.message}` }, { status: 500 });
+        return NextResponse.json({ error: `brand_profiles: ${brandErr.message}` }, { status: 500, headers: privateNoStoreHeaders() });
       }
     }
 
-    return NextResponse.json({ success: true });
+    if (effectiveRole === "talent") {
+      invalidateTalent(profileData?.handle ?? existing?.handle ?? targetId);
+    } else if (effectiveRole === "brand") {
+      invalidateBrand(profileData?.handle ?? existing?.handle ?? targetId);
+    }
+
+    return NextResponse.json({ success: true }, { headers: privateNoStoreHeaders() });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500, headers: privateNoStoreHeaders() });
   }
 }

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { canPerformAction } from "@/lib/permissions";
+import { invalidateCommunity, privateNoStoreHeaders, publicCacheHeaders } from "@/lib/cache";
 
 // GET: Fetch all questions with optional filters
 export async function GET(request: NextRequest) {
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 400 }
+        { status: 400, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -94,11 +95,11 @@ export async function GET(request: NextRequest) {
       total: count || 0,
       limit,
       offset,
-    });
+    }, { headers: publicCacheHeaders() });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers: privateNoStoreHeaders() }
     );
   }
 }
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { error: "Unauthorized" },
-        { status: 401 }
+        { status: 401, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -129,14 +130,14 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
     if (!canPerformAction("create_community_question", profile).allowed) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
     }
 
     // Validate input
     if (!title || !content) {
       return NextResponse.json(
         { error: "Title and content are required" },
-        { status: 400 }
+        { status: 400, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -155,15 +156,17 @@ export async function POST(request: NextRequest) {
       console.error("Supabase error in POST /api/community/questions:", error);
       return NextResponse.json(
         { error: error.message, details: error },
-        { status: 400 }
+        { status: 400, headers: privateNoStoreHeaders() }
       );
     }
 
-    return NextResponse.json(data[0], { status: 201 });
+    invalidateCommunity(data[0]?.id ?? null);
+
+    return NextResponse.json(data[0], { status: 201, headers: privateNoStoreHeaders() });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers: privateNoStoreHeaders() }
     );
   }
 }

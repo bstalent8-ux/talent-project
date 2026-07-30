@@ -8,6 +8,7 @@ import {
   setPackageActive,
   upsertAdminPackage,
 } from "@/features/packages/services/package.service";
+import { invalidatePackages, privateNoStoreHeaders } from "@/lib/cache";
 
 const planSchema = z.object({
   duration_months: z.coerce.number().int().positive(),
@@ -54,7 +55,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   const { id } = await params;
 
@@ -63,19 +64,21 @@ export async function PATCH(
     const active = activeSchema.safeParse(body);
     if (active.success) {
       await setPackageActive(id, active.data.is_active);
-      return NextResponse.json({ ok: true });
+      invalidatePackages();
+      return NextResponse.json({ ok: true }, { headers: privateNoStoreHeaders() });
     }
 
     const input = packageSchema.parse(body);
     const pkg = await upsertAdminPackage(input, id);
-    return NextResponse.json({ package: pkg });
+    invalidatePackages();
+    return NextResponse.json({ package: pkg }, { headers: privateNoStoreHeaders() });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid package", issues: error.issues }, { status: 400 });
+      return NextResponse.json({ error: "Invalid package", issues: error.issues }, { status: 400, headers: privateNoStoreHeaders() });
     }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to update package" },
-      { status: 500 },
+      { status: 500, headers: privateNoStoreHeaders() },
     );
   }
 }

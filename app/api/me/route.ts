@@ -3,13 +3,14 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { privateNoStoreHeaders } from "@/lib/cache";
 
 export async function GET(req: NextRequest) {
   try {
     // Validate the user's session using the server client
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
     // Use admin client to bypass RLS
     let { data: profile } = await adminClient
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
       profile = retried;
     }
 
-    if (!profile) return NextResponse.json({ error: "profile not found" }, { status: 404 });
+    if (!profile) return NextResponse.json({ error: "profile not found" }, { status: 404, headers: privateNoStoreHeaders() });
 
     // Talent profile
     const { data: talentProfile } = await adminClient
@@ -59,8 +60,8 @@ export async function GET(req: NextRequest) {
       portfolioItems = items ?? [];
     }
 
-    return NextResponse.json({ profile, talentProfile: talentProfile ?? null, portfolioItems });
+    return NextResponse.json({ profile, talentProfile: talentProfile ?? null, portfolioItems }, { headers: privateNoStoreHeaders() });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500, headers: privateNoStoreHeaders() });
   }
 }

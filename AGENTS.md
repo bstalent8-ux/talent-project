@@ -172,6 +172,15 @@ check. RLS will not save you. See §8.
 - **Always `supabase.auth.getUser()`**, never `getSession()`, for authorization — `getUser()`
   revalidates the JWT against Supabase.
 
+### Public caching
+- `lib/cache.ts` centralizes public cache tags, cache durations, HTTP cache headers, and invalidation
+  helpers. Public marketplace reads may use `unstable_cache()` only after filtering to approved,
+  non-suspended public rows.
+- Never cache auth state, roles, permissions, dashboards, profile editing, bookings, chat,
+  notifications, payments, or admin data. Use `Cache-Control: private, no-store` and/or
+  `dynamic = "force-dynamic"` for those surfaces.
+- See `docs/caching-architecture.md` for the page/API matrix and invalidation rules.
+
 ### Middleware (`middleware.ts`)
 Runs on all non-static paths. Skips `/_next`, `/favicon`, `/assets`, `/api/auth`, and always allows
 `/blocked`, `/login`, `/register`, `/forgot-password`.

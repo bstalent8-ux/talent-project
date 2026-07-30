@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyJobApplicationReceived } from "@/lib/notifications/events";
 import { canApplyJob } from "@/lib/permissions";
+import { privateNoStoreHeaders } from "@/lib/cache";
 
 // POST /api/jobs/[id]/apply — talent submits a proposal
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
   const { data: profile } = await adminClient
     .from("profiles")
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .eq("id", user.id)
     .single();
 
-  if (!profile) return NextResponse.json({ error: "profile not found" }, { status: 404 });
+  if (!profile) return NextResponse.json({ error: "profile not found" }, { status: 404, headers: privateNoStoreHeaders() });
 
   const talentProfiles = Array.isArray(profile.talent_profiles)
     ? profile?.talent_profiles
@@ -31,14 +32,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     ...profile,
     talent_status: talentProfiles[0]?.status ?? null,
   });
-  if (!permission.allowed) return NextResponse.json({ error: permission.reason === "role" ? "only talents can apply" : "forbidden" }, { status: 403 });
+  if (!permission.allowed) return NextResponse.json({ error: permission.reason === "role" ? "only talents can apply" : "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   const { data: job } = await adminClient
     .from("jobs").select("id, status, brand_id, title").eq("id", jobId).single();
 
-  if (!job) return NextResponse.json({ error: "job not found" }, { status: 404 });
-  if (job.status !== "open") return NextResponse.json({ error: "job is not open" }, { status: 400 });
-  if (job.brand_id === user.id) return NextResponse.json({ error: "cannot apply to your own job" }, { status: 400 });
+  if (!job) return NextResponse.json({ error: "job not found" }, { status: 404, headers: privateNoStoreHeaders() });
+  if (job.status !== "open") return NextResponse.json({ error: "job is not open" }, { status: 400, headers: privateNoStoreHeaders() });
+  if (job.brand_id === user.id) return NextResponse.json({ error: "cannot apply to your own job" }, { status: 400, headers: privateNoStoreHeaders() });
 
   // Check for duplicate application
   const { data: existing } = await adminClient
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .select("id, status, proposed_price, delivery_days, message")
     .eq("job_id", jobId).eq("talent_id", user.id).maybeSingle();
 
-  if (existing) return NextResponse.json({ application: existing, already_applied: true });
+  if (existing) return NextResponse.json({ application: existing, already_applied: true }, { headers: privateNoStoreHeaders() });
 
   const body = await req.json().catch(() => ({}));
   const { message, proposed_price, delivery_days, portfolio_links } = body;
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
 
   // Notify the brand that someone applied
   const { data: talent } = await adminClient
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     message,
   });
 
-  return NextResponse.json({ application }, { status: 201 });
+  return NextResponse.json({ application }, { status: 201, headers: privateNoStoreHeaders() });
 }
 
 // GET /api/jobs/[id]/apply — check if current user already applied
@@ -89,12 +90,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { id: jobId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ applied: false });
+  if (!user) return NextResponse.json({ applied: false }, { headers: privateNoStoreHeaders() });
 
   const { data } = await adminClient
     .from("job_applications")
     .select("id, status, proposed_price, delivery_days, message")
     .eq("job_id", jobId).eq("talent_id", user.id).maybeSingle();
 
-  return NextResponse.json({ applied: !!data, application: data ?? null });
+  return NextResponse.json({ applied: !!data, application: data ?? null }, { headers: privateNoStoreHeaders() });
 }

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 
 /**
  * POST /api/admin/recalc-ratings
@@ -24,7 +25,7 @@ export async function POST() {
     .eq("status", "approved");
 
   if (aggErr) {
-    return NextResponse.json({ error: aggErr.message }, { status: 500 });
+    return NextResponse.json({ error: aggErr.message }, { status: 500, headers: privateNoStoreHeaders() });
   }
 
   // Build a map: talent_profile_id → { sum, count }
@@ -42,7 +43,7 @@ export async function POST() {
     .select("id, avg_rating, total_reviews, profiles(handle)");
 
   if (profErr) {
-    return NextResponse.json({ error: profErr.message }, { status: 500 });
+    return NextResponse.json({ error: profErr.message }, { status: 500, headers: privateNoStoreHeaders() });
   }
 
   // ── 3. Update each profile and collect diff ───────────────────────────────
@@ -82,6 +83,7 @@ export async function POST() {
         console.error(`[backfill] failed for ${tp.id}:`, updateErr.message);
       } else {
         if (handle) revalidatePath(`/talent/${handle}`);
+        invalidateTalent(handle ?? tp.id);
       }
     }
 
@@ -97,6 +99,7 @@ export async function POST() {
   }
 
   revalidatePath("/explore");
+  invalidateTalent();
 
   const changed = results.filter(r => r.changed);
   console.log(`[backfill] updated ${changed.length} / ${results.length} talent profiles`);
@@ -105,5 +108,5 @@ export async function POST() {
     total: results.length,
     updated: changed.length,
     results,
-  });
+  }, { headers: privateNoStoreHeaders() });
 }

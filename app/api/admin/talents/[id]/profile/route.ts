@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -18,7 +19,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   const { id } = await params; // talent_profiles.id
   const body = await req.json() as {
@@ -43,7 +44,7 @@ export async function PATCH(
       .from("talent_profiles")
       .update(tpFields)
       .eq("id", id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
   }
 
   // Update profiles if profile fields provided
@@ -57,13 +58,14 @@ export async function PATCH(
       .from("profiles")
       .update(profileUpdate)
       .eq("id", profile_user_id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
   }
 
   // Revalidate
   if (handle) revalidatePath(`/talent/${handle}`);
   revalidatePath("/explore");
   revalidatePath("/admin/talents");
+  invalidateTalent(handle ?? profile_user_id ?? id);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true }, { headers: privateNoStoreHeaders() });
 }

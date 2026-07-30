@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { listNotifications } from "@/lib/notifications/service";
 import { isNotificationType } from "@/lib/notifications/types";
+import { privateNoStoreHeaders } from "@/lib/cache";
 
 // GET /api/notifications?page=1&pageSize=20&unread=1&type=CHAT_MESSAGE
 // Paginated, newest first, scoped to the caller. Never returns another user's
@@ -11,7 +12,7 @@ import { isNotificationType } from "@/lib/notifications/types";
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
   const url      = new URL(req.url);
   const page     = Number(url.searchParams.get("page") ?? 1);
@@ -26,5 +27,5 @@ export async function GET(req: NextRequest) {
     type:       isNotificationType(rawType) ? rawType : undefined,
   });
 
-  return NextResponse.json(result);
+  return NextResponse.json(result, { headers: privateNoStoreHeaders() });
 }

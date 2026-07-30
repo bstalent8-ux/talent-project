@@ -4,25 +4,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { canPerformAction } from "@/lib/permissions";
+import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 
 // PATCH /api/profile/complete
 export async function PATCH(req: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
     const { data: profile } = await adminClient
       .from("profiles")
-      .select("id, role, account_status, is_suspended")
+      .select("id, role, handle, account_status, is_suspended")
       .eq("id", user.id)
       .single();
     if (!canPerformAction("access_profile_management", profile).allowed) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
     }
 
     const { section, data } = await req.json();
-    if (!section || !data) return NextResponse.json({ error: "section and data required" }, { status: 400 });
+    if (!section || !data) return NextResponse.json({ error: "section and data required" }, { status: 400, headers: privateNoStoreHeaders() });
 
     const uid = user.id;
 
@@ -37,8 +38,9 @@ export async function PATCH(req: NextRequest) {
         Object.entries(data).filter(([k]) => allowed[section].includes(k)),
       );
       const { error } = await adminClient.from("profiles").update(update).eq("id", uid);
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json({ success: true });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
+      invalidateTalent(profile?.handle ?? uid);
+      return NextResponse.json({ success: true }, { headers: privateNoStoreHeaders() });
     }
 
     // ── talent_profiles table ─────────────────────────────
@@ -117,11 +119,12 @@ export async function PATCH(req: NextRequest) {
           .insert({ user_id: uid, social_links: merged });
       }
     } else {
-      return NextResponse.json({ error: "unknown section" }, { status: 400 });
+      return NextResponse.json({ error: "unknown section" }, { status: 400, headers: privateNoStoreHeaders() });
     }
 
-    return NextResponse.json({ success: true });
+    invalidateTalent(profile?.handle ?? uid);
+    return NextResponse.json({ success: true }, { headers: privateNoStoreHeaders() });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500, headers: privateNoStoreHeaders() });
   }
 }

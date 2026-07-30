@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+import { invalidateCommunity, privateNoStoreHeaders } from "@/lib/cache";
 
 // GET: Fetch a specific question with all its answers
 export async function GET(
@@ -55,7 +56,7 @@ export async function GET(
     if (qError) {
       return NextResponse.json(
         { error: "Question not found" },
-        { status: 404 }
+        { status: 404, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -67,11 +68,11 @@ export async function GET(
       .update({ views: (question.views || 0) + 1 })
       .eq("id", id);
 
-    return NextResponse.json(question);
+    return NextResponse.json(question, { headers: privateNoStoreHeaders() });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers: privateNoStoreHeaders() }
     );
   }
 }
@@ -92,7 +93,7 @@ export async function PATCH(
     if (!user) {
       return NextResponse.json(
         { error: "Unauthorized" },
-        { status: 401 }
+        { status: 401, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -108,7 +109,7 @@ export async function PATCH(
     if (!question || question.user_id !== user.id) {
       return NextResponse.json(
         { error: "Forbidden" },
-        { status: 403 }
+        { status: 403, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -128,15 +129,16 @@ export async function PATCH(
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 400 }
+        { status: 400, headers: privateNoStoreHeaders() }
       );
     }
 
-    return NextResponse.json(data[0]);
+    invalidateCommunity(id);
+    return NextResponse.json(data[0], { headers: privateNoStoreHeaders() });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers: privateNoStoreHeaders() }
     );
   }
 }
@@ -157,7 +159,7 @@ export async function DELETE(
     if (!user) {
       return NextResponse.json(
         { error: "Unauthorized" },
-        { status: 401 }
+        { status: 401, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -171,7 +173,7 @@ export async function DELETE(
     if (!question || question.user_id !== user.id) {
       return NextResponse.json(
         { error: "Forbidden" },
-        { status: 403 }
+        { status: 403, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -183,15 +185,16 @@ export async function DELETE(
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 400 }
+        { status: 400, headers: privateNoStoreHeaders() }
       );
     }
 
-    return NextResponse.json({ success: true });
+    invalidateCommunity(id);
+    return NextResponse.json({ success: true }, { headers: privateNoStoreHeaders() });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers: privateNoStoreHeaders() }
     );
   }
 }

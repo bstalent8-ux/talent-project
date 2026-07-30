@@ -1,7 +1,7 @@
 export const runtime = 'edge';
 
-export const dynamic = "force-dynamic";
 import { adminClient } from "@/lib/supabase/admin";
+import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import JobsClient from "./_components/JobsClient";
 
 export interface JobPost {
@@ -22,15 +22,34 @@ export interface JobPost {
 }
 
 export default async function JobsPage() {
-  // Check if table exists first
-  const { data: jobs, error } = await adminClient
-    .from("jobs")
-    .select("id, brand_id, title, description, category, budget_min, budget_max, currency, start_date, end_date, slots, status, created_at")
-    .eq("status", "open")
-    .order("created_at", { ascending: false })
-    .limit(100);
+  const result = await cachedPublic(
+    ["jobs-open-list"],
+    [CACHE_TAGS.jobs.list],
+    CACHE_SECONDS.fiveMinutes,
+    async () => {
+      const { data: jobs, error } = await adminClient
+        .from("jobs")
+        .select("id, brand_id, title, description, category, budget_min, budget_max, currency, start_date, end_date, slots, status, created_at")
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(100);
 
-  if (error) {
+      if (error) return { jobs: [] as JobPost[], error: error.message };
+
+      const brandIds = [...new Set((jobs ?? []).map((j) => j.brand_id))];
+      const { data: profiles } = brandIds.length
+        ? await adminClient.from("profiles").select("id, full_name, handle, avatar_url, city").in("id", brandIds)
+        : { data: [] };
+
+      const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
+      return {
+        jobs: (jobs ?? []).map((j) => ({ ...j, currency: j.currency ?? "EGP", brand: profileMap[j.brand_id] ?? null })) as JobPost[],
+        error: null as string | null,
+      };
+    },
+  );
+
+  if (result.error) {
     // Table doesn't exist yet — show setup message
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Cairo',sans-serif", backgroundColor: "#050B12" }}>
@@ -44,13 +63,5 @@ export default async function JobsPage() {
     );
   }
 
-  const brandIds = [...new Set((jobs ?? []).map((j) => j.brand_id))];
-  const { data: profiles } = brandIds.length
-    ? await adminClient.from("profiles").select("id, full_name, handle, avatar_url, city").in("id", brandIds)
-    : { data: [] };
-
-  const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
-  const enriched: JobPost[] = (jobs ?? []).map((j) => ({ ...j, currency: j.currency ?? "EGP", brand: profileMap[j.brand_id] ?? null }));
-
-  return <JobsClient jobs={enriched} />;
+  return <JobsClient jobs={result.jobs} />;
 }

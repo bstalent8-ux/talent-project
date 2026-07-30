@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { notifyProfileApproved, notifyProfileRejected } from "@/lib/notifications/events";
+import { invalidateBrand, privateNoStoreHeaders } from "@/lib/cache";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -19,7 +20,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   const { id } = await params;
   const { action, reason } = await req.json() as {
@@ -47,7 +48,7 @@ export async function PATCH(
       updates.brand_rejection_reason   = null;
       break;
     default:
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid action" }, { status: 400, headers: privateNoStoreHeaders() });
   }
 
   const { error } = await adminClient
@@ -56,7 +57,7 @@ export async function PATCH(
     .eq("id", id)
     .eq("role", "brand");
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
 
   // `reset` puts the brand back into review — no notification for that.
   if (action === "approve") {
@@ -66,5 +67,6 @@ export async function PATCH(
   }
 
   revalidatePath("/admin/brands");
-  return NextResponse.json({ ok: true });
+  invalidateBrand(id);
+  return NextResponse.json({ ok: true }, { headers: privateNoStoreHeaders() });
 }

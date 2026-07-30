@@ -6,6 +6,7 @@ import {
   fetchTalentTypes,
   normalizeTalentTypeId,
 } from "@/features/packages/services/package.service";
+import { CACHE_SECONDS, CACHE_TAGS, cachedPublic, publicCacheHeaders } from "@/lib/cache";
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,12 +21,23 @@ export async function GET(req: NextRequest) {
     const talentType = normalizeTalentTypeId(searchParams.get("talentType") || categoryId || "ugc");
     const limit = Number(searchParams.get("limit") || "0") || undefined;
 
-    const [talentTypes, packages] = await Promise.all([
-      fetchTalentTypes(true),
-      fetchPublicPackagesByAudience(categoryId, limit),
-    ]);
+    const { talentTypes, packages } = await cachedPublic(
+      ["packages-api", categoryId, String(limit ?? "all")],
+      [CACHE_TAGS.packages.list],
+      CACHE_SECONDS.oneHour,
+      async () => {
+        const [talentTypes, packages] = await Promise.all([
+          fetchTalentTypes(true),
+          fetchPublicPackagesByAudience(categoryId, limit),
+        ]);
+        return { talentTypes, packages };
+      },
+    );
 
-    return NextResponse.json({ talentTypes, packages, talentType, audience, categoryId });
+    return NextResponse.json(
+      { talentTypes, packages, talentType, audience, categoryId },
+      { headers: publicCacheHeaders(CACHE_SECONDS.oneHour) },
+    );
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to load packages" },

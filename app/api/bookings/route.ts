@@ -3,11 +3,12 @@ export const runtime = 'edge';
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { privateNoStoreHeaders } from "@/lib/cache";
 
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
   const { data: profile } = await adminClient
     .from("profiles").select("role").eq("id", user.id).single();
@@ -26,7 +27,7 @@ export async function GET() {
   } else {
     const { data: tp } = await adminClient
       .from("talent_profiles").select("id").eq("user_id", user.id).maybeSingle();
-    if (!tp) return NextResponse.json({ bookings: [] });
+    if (!tp) return NextResponse.json({ bookings: [] }, { headers: privateNoStoreHeaders() });
     const { data, error } = await adminClient
       .from("bookings")
       .select("id, status, amount, budget_type, budget_amount, start_date, duration, deadline, negotiation_message, created_at, updated_at, service_type, brand_id, talent_user_id, job_id, talent_id")
@@ -36,8 +37,8 @@ export async function GET() {
     err = error;
   }
 
-  if (err) return NextResponse.json({ error: err.message }, { status: 500 });
-  if (!bookings.length) return NextResponse.json({ bookings: [] });
+  if (err) return NextResponse.json({ error: err.message }, { status: 500, headers: privateNoStoreHeaders() });
+  if (!bookings.length) return NextResponse.json({ bookings: [] }, { headers: privateNoStoreHeaders() });
 
   // Enrich with related data
   const jobIds   = [...new Set(bookings.map((b) => b.job_id).filter(Boolean))] as string[];
@@ -65,5 +66,5 @@ export async function GET() {
     brief:  briefMap[b.id as string]                           ?? null,
   }));
 
-  return NextResponse.json({ bookings: enriched });
+  return NextResponse.json({ bookings: enriched }, { headers: privateNoStoreHeaders() });
 }

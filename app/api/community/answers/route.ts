@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { canPerformAction } from "@/lib/permissions";
+import { invalidateCommunity, privateNoStoreHeaders, publicCacheHeaders } from "@/lib/cache";
 
 // GET: Fetch answers for a specific question
 export async function GET(request: NextRequest) {
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   if (!questionId) {
     return NextResponse.json(
       { error: "question_id is required" },
-      { status: 400 }
+      { status: 400, headers: privateNoStoreHeaders() }
     );
   }
 
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 400 }
+        { status: 400, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -57,11 +58,11 @@ export async function GET(request: NextRequest) {
       total: count || 0,
       limit,
       offset,
-    });
+    }, { headers: publicCacheHeaders() });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers: privateNoStoreHeaders() }
     );
   }
 }
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { error: "Unauthorized" },
-        { status: 401 }
+        { status: 401, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -92,14 +93,14 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
     if (!canPerformAction("create_community_answer", profile).allowed) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
     }
 
     // Validate input
     if (!question_id || !content) {
       return NextResponse.json(
         { error: "question_id and content are required" },
-        { status: 400 }
+        { status: 400, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
     if (qError || !question) {
       return NextResponse.json(
         { error: "Question not found" },
-        { status: 404 }
+        { status: 404, headers: privateNoStoreHeaders() }
       );
     }
 
@@ -143,15 +144,17 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 400 }
+        { status: 400, headers: privateNoStoreHeaders() }
       );
     }
 
-    return NextResponse.json(data[0], { status: 201 });
+    invalidateCommunity(question_id);
+
+    return NextResponse.json(data[0], { status: 201, headers: privateNoStoreHeaders() });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: 500 }
+      { status: 500, headers: privateNoStoreHeaders() }
     );
   }
 }

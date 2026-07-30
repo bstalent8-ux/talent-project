@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyApplicationAccepted, notifyApplicationRejected } from "@/lib/notifications/events";
+import { privateNoStoreHeaders } from "@/lib/cache";
 
 // PATCH /api/jobs/[id]/applications/[appId]
 // body: { action: "accept" | "reject", reject_reason?: string }
@@ -14,19 +15,19 @@ export async function PATCH(
   const { id: jobId, appId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
   // Verify caller owns the job
   const { data: job } = await adminClient
     .from("jobs").select("id, brand_id, currency, title").eq("id", jobId).single();
-  if (!job) return NextResponse.json({ error: "job not found" }, { status: 404 });
-  if (job.brand_id !== user.id) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!job) return NextResponse.json({ error: "job not found" }, { status: 404, headers: privateNoStoreHeaders() });
+  if (job.brand_id !== user.id) return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   const { data: app } = await adminClient
     .from("job_applications")
     .select("id, talent_id, proposed_price, status")
     .eq("id", appId).eq("job_id", jobId).single();
-  if (!app) return NextResponse.json({ error: "application not found" }, { status: 404 });
+  if (!app) return NextResponse.json({ error: "application not found" }, { status: 404, headers: privateNoStoreHeaders() });
 
   const { action, reject_reason } = await req.json();
 
@@ -36,7 +37,7 @@ export async function PATCH(
       .from("job_applications")
       .update({ status: "rejected", reject_reason: reject_reason ?? null })
       .eq("id", appId);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
 
     await notifyApplicationRejected({
       jobId,
@@ -47,7 +48,7 @@ export async function PATCH(
       reason:        reject_reason ?? null,
     });
 
-    return NextResponse.json({ success: true, status: "rejected" });
+    return NextResponse.json({ success: true, status: "rejected" }, { headers: privateNoStoreHeaders() });
   }
 
   // ─── ACCEPT ─────────────────────────────────────────────────────────────────
@@ -57,7 +58,7 @@ export async function PATCH(
       .from("job_applications")
       .update({ status: "accepted" })
       .eq("id", appId);
-    if (appErr) return NextResponse.json({ error: appErr.message }, { status: 500 });
+    if (appErr) return NextResponse.json({ error: appErr.message }, { status: 500, headers: privateNoStoreHeaders() });
 
     // 2. Try to find talent_profiles row (bookings FK references talent_profiles.id)
     const { data: talentProfile } = await adminClient
@@ -102,7 +103,7 @@ export async function PATCH(
       .select("id")
       .single();
 
-    if (convErr) return NextResponse.json({ error: convErr.message }, { status: 500 });
+    if (convErr) return NextResponse.json({ error: convErr.message }, { status: 500, headers: privateNoStoreHeaders() });
 
     // 5. Send system message in conversation
     await adminClient.from("messages").insert({
@@ -126,8 +127,8 @@ export async function PATCH(
       status: "accepted",
       conversation_id: conversation.id,
       booking_id: bookingId,
-    });
+    }, { headers: privateNoStoreHeaders() });
   }
 
-  return NextResponse.json({ error: "invalid action" }, { status: 400 });
+  return NextResponse.json({ error: "invalid action" }, { status: 400, headers: privateNoStoreHeaders() });
 }

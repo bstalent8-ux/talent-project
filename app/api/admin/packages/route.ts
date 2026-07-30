@@ -9,6 +9,7 @@ import {
   fetchPackageCategories,
   upsertAdminPackage,
 } from "@/features/packages/services/package.service";
+import { invalidatePackages, privateNoStoreHeaders } from "@/lib/cache";
 
 const planSchema = z.object({
   duration_months: z.coerce.number().int().positive(),
@@ -47,37 +48,38 @@ async function requireAdmin() {
 
 export async function GET() {
   const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   try {
     const [packages, talentTypes] = await Promise.all([
       fetchAdminPackages(),
       fetchPackageCategories(false),
     ]);
-    return NextResponse.json({ packages, talentTypes });
+    return NextResponse.json({ packages, talentTypes }, { headers: privateNoStoreHeaders() });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to load admin packages" },
-      { status: 500 },
+      { status: 500, headers: privateNoStoreHeaders() },
     );
   }
 }
 
 export async function POST(req: NextRequest) {
   const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   try {
     const input = packageSchema.parse(await req.json());
     const pkg = await upsertAdminPackage(input);
-    return NextResponse.json({ package: pkg }, { status: 201 });
+    invalidatePackages();
+    return NextResponse.json({ package: pkg }, { status: 201, headers: privateNoStoreHeaders() });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid package", issues: error.issues }, { status: 400 });
+      return NextResponse.json({ error: "Invalid package", issues: error.issues }, { status: 400, headers: privateNoStoreHeaders() });
     }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create package" },
-      { status: 500 },
+      { status: 500, headers: privateNoStoreHeaders() },
     );
   }
 }

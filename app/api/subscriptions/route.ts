@@ -7,6 +7,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { createActiveSubscription } from "@/features/packages/services/package.service";
 import { notifySubscriptionUpdated } from "@/lib/notifications/events";
 import { canPerformAction } from "@/lib/permissions";
+import { privateNoStoreHeaders } from "@/lib/cache";
 
 const subscriptionSchema = z.object({
   planId: z.string().uuid(),
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
     }
 
     const { data: profile } = await adminClient
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
       .single();
     if (!canPerformAction("subscribe", profile).allowed) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
     }
 
     const body = subscriptionSchema.parse(await req.json());
@@ -56,14 +57,14 @@ export async function POST(req: NextRequest) {
       subscriptionId: (subscription as { id?: string } | null)?.id ?? null,
     });
 
-    return NextResponse.json({ subscription });
+    return NextResponse.json({ subscription }, { headers: privateNoStoreHeaders() });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid subscription request", issues: error.issues }, { status: 400 });
+      return NextResponse.json({ error: "Invalid subscription request", issues: error.issues }, { status: 400, headers: privateNoStoreHeaders() });
     }
 
     const message = error instanceof Error ? error.message : "Subscription failed";
     const status = message.includes("Only ") || message.includes("not available") ? 403 : 400;
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({ error: message }, { status, headers: privateNoStoreHeaders() });
   }
 }

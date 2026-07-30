@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { notifyProfileApproved, notifyProfileRejected } from "@/lib/notifications/events";
+import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -26,7 +27,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   const { id } = await params;
   const body = await req.json() as { action: string; reason?: string };
@@ -53,7 +54,7 @@ export async function PATCH(
       updates.status = "approved";
       break;
     default:
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid action" }, { status: 400, headers: privateNoStoreHeaders() });
   }
 
   const { data: updated, error } = await adminClient
@@ -63,7 +64,7 @@ export async function PATCH(
     .select("user_id")
     .maybeSingle();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
 
   // Tell the talent what the moderator decided.
   if (updated?.user_id) {
@@ -81,8 +82,9 @@ export async function PATCH(
 
   revalidatePath("/admin/talents");
   revalidatePath("/explore");
+  invalidateTalent(updated?.user_id ?? id);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true }, { headers: privateNoStoreHeaders() });
 }
 
 export async function DELETE(
@@ -90,7 +92,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   const { id } = await params;
 
@@ -99,10 +101,11 @@ export async function DELETE(
     .delete()
     .eq("id", id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
 
   revalidatePath("/admin/talents");
   revalidatePath("/explore");
+  invalidateTalent(id);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true }, { headers: privateNoStoreHeaders() });
 }

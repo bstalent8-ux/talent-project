@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyJobCreated } from "@/lib/notifications/events";
 import { canCreateJob } from "@/lib/permissions";
+import { invalidateJobs, privateNoStoreHeaders, publicCacheHeaders } from "@/lib/cache";
 
 // GET /api/jobs?status=open&category=&limit=50
 export async function GET(req: NextRequest) {
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
   if (category && category !== "all") query = query.eq("category", category);
 
   const { data: jobs, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
 
   // Fetch brand profiles in one go
   const brandIds = [...new Set((jobs ?? []).map((j) => j.brand_id))];
@@ -34,14 +35,14 @@ export async function GET(req: NextRequest) {
   const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
   const enriched = (jobs ?? []).map((j) => ({ ...j, brand: profileMap[j.brand_id] ?? null }));
 
-  return NextResponse.json({ jobs: enriched });
+  return NextResponse.json({ jobs: enriched }, { headers: publicCacheHeaders() });
 }
 
 // POST /api/jobs — brand creates a job
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
   // Verify brand role
   const { data: profile } = await adminClient
@@ -50,12 +51,12 @@ export async function POST(req: NextRequest) {
     .eq("id", user.id)
     .single();
   const permission = canCreateJob(profile);
-  if (!permission.allowed) return NextResponse.json({ error: permission.reason === "role" ? "brands only" : "forbidden" }, { status: 403 });
+  if (!permission.allowed) return NextResponse.json({ error: permission.reason === "role" ? "brands only" : "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   const body = await req.json();
   const { title, description, category, budget_min, budget_max, currency = "EGP", start_date, end_date, slots = 1 } = body;
 
-  if (!title?.trim()) return NextResponse.json({ error: "title required" }, { status: 400 });
+  if (!title?.trim()) return NextResponse.json({ error: "title required" }, { status: 400, headers: privateNoStoreHeaders() });
 
   const { data: job, error } = await adminClient
     .from("jobs")
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
 
   // Fan out to matching talents. Passing the job's category narrows the blast
   // to talents in that category; with no category it reaches every talent.
@@ -90,5 +91,7 @@ export async function POST(req: NextRequest) {
     categoryIds: job.category ? [job.category] : undefined,
   });
 
-  return NextResponse.json({ job }, { status: 201 });
+  invalidateJobs(job.id);
+
+  return NextResponse.json({ job }, { status: 201, headers: privateNoStoreHeaders() });
 }

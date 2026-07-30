@@ -1,4 +1,5 @@
 export const runtime = 'edge';
+export const dynamic = "force-dynamic";
 
 import type { ReactNode } from "react";
 import ConversationList from "./_components/ConversationList";
