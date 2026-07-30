@@ -17,7 +17,7 @@ This project does not currently have TanStack Query or Zustand installed or wire
 `lib/cache.ts` defines:
 
 - `CACHE_SECONDS`: 5 minutes, 10 minutes, 30 minutes, 1 hour.
-- `CACHE_TAGS`: stable invalidation tags for talents, brands, jobs, packages, community, and home.
+- `CACHE_TAGS`: stable invalidation tags for talents, brands, trusted homepage brands, jobs, packages, community, and home.
 - `cachedPublic()`: wrapper around `unstable_cache()`.
 - `publicCacheHeaders()`: `public, max-age=N, stale-while-revalidate=2N`.
 - `privateNoStoreHeaders()`: `private, no-store`.
@@ -29,6 +29,7 @@ This project does not currently have TanStack Query or Zustand installed or wire
 |---|---|---:|---:|---|---:|
 | `/` | Redirect to `/home` | Server redirect | 0 DB | No cache needed | n/a |
 | `/home` | `profiles` + `talent_profiles` via public talent service | Server Component | 1 public cached read | `unstable_cache`, public talent/home tags | 10 min |
+| homepage Trusted By marquee | `trusted_brands` via `/api/public/trusted-brands` | Client fetch | 1 public API read | `unstable_cache`, `trusted-brands` tag | 1 hour |
 | `/explore` | `profiles` + `talent_profiles`; optional viewer category | Server Component | 1 public cached read + optional viewer lookup | Public list cached; viewer role/category uncached | 5 min |
 | `/talents` | Redirect to `/explore` | Server redirect | 0 DB | No cache needed | n/a |
 | `/talent/[handle]` | `profiles`, `talent_profiles`, `portfolio_items`, `reviews`, `talent_brands`, `bookings` | Server Component | Parallel public reads after profile lookup | `unstable_cache`, talent detail/list tags | 10 min |
@@ -54,6 +55,7 @@ Public GET APIs:
 
 - `/api/jobs`: `public, max-age=300, stale-while-revalidate=600`.
 - `/api/packages`: `public, max-age=3600, stale-while-revalidate=7200`.
+- `/api/public/trusted-brands`: `public, max-age=3600, stale-while-revalidate=7200`.
 - `/api/community/questions`: `public, max-age=300, stale-while-revalidate=600`.
 - `/api/community/answers`: `public, max-age=300, stale-while-revalidate=600`.
 - `/api/v1/talents`: `public, max-age=300, stale-while-revalidate=600`.
@@ -72,6 +74,7 @@ The following mutation paths invalidate public cache tags:
 - Admin brand moderation or profile update: `brands:list`, brand detail tag when id/handle is known.
 - New job: `jobs:list`, new job detail tag, `/jobs`.
 - Package create/update/active-state change: `packages:list`, `/packages`, `/pricing`.
+- Trusted brand create/update/delete/reorder/active-state change: `trusted-brands`, `/home`.
 - Community question/answer create/update/delete: `community:list`, question detail tag when known.
 
 ## Client Cache Strategy

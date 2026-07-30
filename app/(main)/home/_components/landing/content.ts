@@ -107,7 +107,7 @@ export const pageCopy = {
     finalCtaText:
       "ابدأ بالبحث عن المواهب، راجع البورتفوليو، واحجز التعاون المناسب في تجربة واحدة سلسة.",
     finalCtaPrimary: "ابدأ الآن",
-    finalCtaSecondary: "تصفح المواهب",
+    finalCtaSecondary: "ابدأ كموهوب",
   },
   en: {
     heroBadge: "Trusted talent and brand marketplace",
@@ -140,7 +140,7 @@ export const pageCopy = {
     finalCtaText:
       "Search talent, review portfolios, and book the right collaboration from one focused experience.",
     finalCtaPrimary: "Start now",
-    finalCtaSecondary: "Browse talents",
+    finalCtaSecondary: "Join as talent",
   },
 } as const;
 
@@ -150,8 +150,6 @@ export const stats = [
   { value: "98%", label: { ar: "معدل رضا العملاء", en: "Client satisfaction" } },
   { value: "24/7", label: { ar: "دعم على مدار الساعة", en: "Support coverage" } },
 ];
-
-export const trustedBrands = ["Nexa", "Aurora", "Cairo Lab", "Studio 9", "Misk", "Pulse"];
 
 export const categories: CategoryItem[] = [
   {
@@ -211,7 +209,7 @@ export const demoTalents: DemoTalent[] = [
     profession: { ar: "عارضة أزياء", en: "Fashion model" },
     city: { ar: "الرياض", en: "Riyadh" },
     rating: "4.9",
-    price: { ar: "من 6,500 ر.س", en: "From SAR 6,500" },
+    price: { ar: "من 6,500 ج.م", en: "From EGP 6,500" },
     image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80",
     portfolio: [
       "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=400&q=75",
@@ -224,7 +222,7 @@ export const demoTalents: DemoTalent[] = [
     profession: { ar: "مخرج محتوى", en: "Content director" },
     city: { ar: "دبي", en: "Dubai" },
     rating: "4.8",
-    price: { ar: "من 2,800 ر.س", en: "From SAR 2,800" },
+    price: { ar: "من 2,800 ج.م", en: "From EGP 2,800" },
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
     portfolio: [
       "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=400&q=75",
@@ -237,7 +235,7 @@ export const demoTalents: DemoTalent[] = [
     profession: { ar: "مؤثرة جمال", en: "Beauty creator" },
     city: { ar: "جدة", en: "Jeddah" },
     rating: "5.0",
-    price: { ar: "من 4,000 ر.س", en: "From SAR 4,000" },
+    price: { ar: "من 4,000 ج.م", en: "From EGP 4,000" },
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80",
     portfolio: [
       "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=75",
@@ -250,7 +248,7 @@ export const demoTalents: DemoTalent[] = [
     profession: { ar: "مصمم ومصور", en: "Designer and photographer" },
     city: { ar: "القاهرة", en: "Cairo" },
     rating: "4.9",
-    price: { ar: "من 3,200 ر.س", en: "From SAR 3,200" },
+    price: { ar: "من 3,200 ج.م", en: "From EGP 3,200" },
     image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=900&q=80",
     portfolio: [
       "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=400&q=75",

@@ -32,6 +32,9 @@ export const CACHE_TAGS = {
     list: "community:list",
     question: (id: string) => `community:question:${id}`,
   },
+  trustedBrands: {
+    list: "trusted-brands",
+  },
 } as const;
 
 export const PUBLIC_CACHE_CONTROL = "public, max-age=300, stale-while-revalidate=600";
@@ -89,4 +92,9 @@ export function invalidateCommunity(questionId?: string | null) {
   if (questionId) revalidateTag(CACHE_TAGS.community.question(questionId));
   revalidatePath("/community");
   if (questionId) revalidatePath(`/community/question/${questionId}`);
+}
+
+export function invalidateTrustedBrands() {
+  revalidateTag(CACHE_TAGS.trustedBrands.list);
+  revalidatePath("/home");
 }

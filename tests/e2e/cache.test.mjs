@@ -31,6 +31,12 @@ assert.equal(packages.status, 200, `/api/packages should return 200 for guests, 
 assert.ok(cacheControl(packages).includes("public"), "/api/packages should be publicly cacheable");
 assert.ok(cacheControl(packages).includes("max-age=3600"), "/api/packages should use a 1 hour public cache");
 
+const trustedBrands = await request("/api/public/trusted-brands");
+assert.equal(trustedBrands.status, 200, `/api/public/trusted-brands should return 200 for guests, got ${trustedBrands.status}`);
+assert.ok(cacheControl(trustedBrands).includes("public"), "/api/public/trusted-brands should be publicly cacheable");
+assert.ok(cacheControl(trustedBrands).includes("max-age=3600"), "/api/public/trusted-brands should use a 1 hour public cache");
+assert.ok(Array.isArray(await trustedBrands.json()), "/api/public/trusted-brands should return an array");
+
 const bookings = await request("/api/bookings");
 assert.equal(bookings.status, 401, `/api/bookings should reject guests with 401, got ${bookings.status}`);
 assert.ok(cacheControl(bookings).includes("no-store"), "/api/bookings must not be shared-cacheable");

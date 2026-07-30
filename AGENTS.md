@@ -175,7 +175,7 @@ check. RLS will not save you. See §8.
 ### Public caching
 - `lib/cache.ts` centralizes public cache tags, cache durations, HTTP cache headers, and invalidation
   helpers. Public marketplace reads may use `unstable_cache()` only after filtering to approved,
-  non-suspended public rows.
+  non-suspended public rows. Trusted homepage brands use the `trusted-brands` tag with a one-hour TTL.
 - Never cache auth state, roles, permissions, dashboards, profile editing, bookings, chat,
   notifications, payments, or admin data. Use `Cache-Control: private, no-store` and/or
   `dynamic = "force-dynamic"` for those surfaces.
@@ -295,6 +295,8 @@ attributes (`height`, `weight`, `hair_color`, `shoe_size`, `age`, `languages`, `
 - **`conversation_presence`** — per-thread heartbeat used to suppress chat notifications while
   the receiver is actively reading the conversation.
 - **`community_questions`** (12) + **`community_answers`** (8).
+- **`trusted_brands`** — homepage "Trusted By" marquee entries managed from `/admin/trusted-brands`.
+  Public reads expose active rows only and order by `display_order`.
 - **`contact_messages`** (1) — public contact form, insert-only via service role.
 
 ### DB-side logic

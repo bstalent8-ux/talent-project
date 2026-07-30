@@ -5,9 +5,10 @@ import { Bell } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import { useNotifications } from "@/hooks/notifications";
 import NotificationDropdown from "./NotificationDropdown";
+import styles from "@/components/SiteChrome.module.css";
 
 export default function NotificationBell() {
-  const { dark, lang } = useSite();
+  const { lang } = useSite();
   const {
     notifications,
     unreadCount,
@@ -36,52 +37,13 @@ export default function NotificationBell() {
         onClick={() => setOpen((o) => !o)}
         aria-label={label}
         aria-expanded={open}
-        style={{
-          position:       "relative",
-          background:     "none",
-          border:         "none",
-          cursor:         "pointer",
-          width:          "40px",
-          height:         "40px",
-          padding:        0,
-          borderRadius:   "10px",
-          display:        "flex",
-          alignItems:     "center",
-          justifyContent: "center",
-          transition:     "background 0.2s",
-          color:          dark ? "#CBD5E1" : "#475569",
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = dark
-            ? "rgba(255,255,255,0.08)"
-            : "rgba(0,0,0,0.06)";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = "none";
-        }}
+        className={styles.notificationButton}
       >
-        <Bell size={22} aria-hidden="true" />
+        <Bell size={18} aria-hidden="true" />
 
         {/* Badge */}
         {unreadCount > 0 && (
-          <span style={{
-            position:       "absolute",
-            top:            "2px",
-            right:          "2px",
-            minWidth:       "16px",
-            height:         "16px",
-            background:     "#EF4444",
-            color:          "#fff",
-            fontSize:       "11px",
-            fontWeight:     700,
-            borderRadius:   "20px",
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-            padding:        "0 3px",
-            lineHeight:     1,
-            boxShadow:      "0 0 0 2px " + (dark ? "#0F172A" : "#FFFFFF"),
-          }}>
+          <span className={styles.notificationBadge}>
             {badgeCount}
           </span>
         )}

@@ -147,6 +147,7 @@ commented out). Profile building happens entirely on `/profile/me`.
 | 6 | Reviews & auto-computed ratings (DB trigger) | ✅ Shipped | P1 |
 | 7 | Realtime notifications | ✅ Shipped | P1 |
 | 8 | Admin back-office (talents, brands, bookings, reviews, verifications) | ✅ Shipped | P1 |
+| 8a | Homepage Trusted By marquee managed from admin | ✅ Shipped | P2 |
 | 9 | Profile-completion scoring + gating thresholds | ⚠️ Scoring shipped, **gating not enforced** | P1 |
 | 10 | Community Q&A | ✅ Shipped | P2 |
 | 11 | Talent verification (ID + selfie + social proof) | ✅ Shipped | P1 |

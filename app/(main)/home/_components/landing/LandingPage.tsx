@@ -19,6 +19,7 @@ import {
   Star,
 } from "lucide-react";
 import type { TalentCard as ServerTalentCard } from "../../../explore/page";
+import TrustedBrands from "@/components/home/TrustedBrands";
 import styles from "./LandingPage.module.css";
 import {
   brandMoments,
@@ -35,7 +36,6 @@ import {
   stats,
   talentSteps,
   testimonials,
-  trustedBrands,
   type LandingLang,
 } from "./content";
 
@@ -409,16 +409,10 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
           ))}
         </div>
 
-        <div className={styles.trusted}>
-          <span>{t.trustedBy}</span>
-          <div className={styles.brandList} aria-label={lang === "ar" ? "براندات مميزة" : "Featured brands"}>
-            {trustedBrands.map((brand) => (
-              <span className={styles.brandPill} key={brand}>
-                {brand}
-              </span>
-            ))}
-          </div>
-        </div>
+        <TrustedBrands
+          label={t.trustedBy}
+          ariaLabel={lang === "ar" ? "براندات مميزة" : "Featured brands"}
+        />
       </div>
     </section>
   );
@@ -428,7 +422,7 @@ function CategoriesSection({ lang }: { lang: LandingLang }) {
   const t = pageCopy[lang];
 
   return (
-    <section className={`${styles.section} ${styles.sectionLight}`} aria-labelledby="landing-categories">
+    <section className={`${styles.section} ${styles.sectionMuted}`} aria-labelledby="landing-categories">
       <div className={styles.container}>
         <SectionHeader
           id="landing-categories"
@@ -465,6 +459,11 @@ function CategoriesSection({ lang }: { lang: LandingLang }) {
 }
 
 function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang }) {
+  const availability = lang === "ar" ? "\u0645\u062a\u0627\u062d \u0627\u0644\u0622\u0646" : "Available now";
+  const profileLabel = lang === "ar" ? "\u0639\u0631\u0636 \u0627\u0644\u0645\u0644\u0641" : "View profile";
+  const priceLabel = lang === "ar" ? "\u064a\u0628\u062f\u0623 \u0645\u0646" : "Starts at";
+  const displayPrice = talent.price.replace(/^From\s+/i, "").replace(/^\u0645\u0646\s+/u, "");
+
   return (
     <article className={styles.talentCard}>
       <div className={styles.talentMedia}>
@@ -490,16 +489,28 @@ function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang
             {talent.rating}
           </span>
         </h3>
-        <p className={styles.talentMeta}>{talent.profession} · {talent.city}</p>
+        <div className={styles.talentMetaRow}>
+          <span className={styles.talentCategory}>{talent.profession}</span>
+          <span className={styles.talentLocation}>
+            <MapPin size={14} aria-hidden="true" />
+            {talent.city}
+          </span>
+        </div>
+        <div className={styles.talentPills}>
+          <span>{availability}</span>
+        </div>
         <div className={styles.portfolioStrip}>
           {talent.portfolio.map((image) => (
             <img src={image} alt="" loading="lazy" key={image} />
           ))}
         </div>
         <div className={styles.talentFooter}>
-          <span>{talent.price}</span>
-          <Link href={talent.href}>
-            {lang === "ar" ? "عرض الملف" : "View profile"}
+          <span className={styles.talentPrice}>
+            <small>{priceLabel}</small>
+            {displayPrice}
+          </span>
+          <Link className={styles.talentCta} href={talent.href}>
+            {profileLabel}
           </Link>
         </div>
       </div>
@@ -511,7 +522,7 @@ function FeaturedTalentsSection({ lang, talents }: { lang: LandingLang; talents:
   const t = pageCopy[lang];
 
   return (
-    <section className={`${styles.section} ${styles.sectionLight}`} aria-labelledby="featured-talents">
+    <section className={`${styles.section} ${styles.sectionWhite}`} aria-labelledby="featured-talents">
       <div className={styles.container}>
         <SectionHeader
           id="featured-talents"
@@ -543,7 +554,7 @@ function WorkflowSection({ lang }: { lang: LandingLang }) {
   const t = pageCopy[lang];
 
   return (
-    <section className={`${styles.section} ${styles.sectionLight} ${styles.workflowSection}`} aria-labelledby="landing-workflow">
+    <section className={`${styles.section} ${styles.sectionMuted} ${styles.workflowSection}`} aria-labelledby="landing-workflow">
       <div className={`${styles.workflowPath} ${styles.workflowPathLeft}`} aria-hidden="true">
         <span><FileText size={18} /></span>
         <span className={styles.cameraCluster}>
@@ -614,7 +625,7 @@ function CampaignSection({ lang }: { lang: LandingLang }) {
   const t = pageCopy[lang];
 
   return (
-    <section className={`${styles.section} ${styles.sectionLight}`} aria-labelledby="landing-campaigns">
+    <section className={`${styles.section} ${styles.sectionWhite}`} aria-labelledby="landing-campaigns">
       <div className={styles.container}>
         <SectionHeader
           id="landing-campaigns"
@@ -665,7 +676,7 @@ function FeatureSection({ lang }: { lang: LandingLang }) {
   const t = pageCopy[lang];
 
   return (
-    <section className={`${styles.section} ${styles.sectionLight}`} aria-labelledby="landing-features">
+    <section className={`${styles.section} ${styles.sectionMuted}`} aria-labelledby="landing-features">
       <div className={styles.container}>
         <SectionHeader
           id="landing-features"
@@ -700,7 +711,7 @@ function TestimonialsSection({ lang }: { lang: LandingLang }) {
   const t = pageCopy[lang];
 
   return (
-    <section className={`${styles.section} ${styles.sectionLight}`} aria-labelledby="landing-testimonials">
+    <section className={`${styles.section} ${styles.sectionWhite}`} aria-labelledby="landing-testimonials">
       <div className={styles.container}>
         <SectionHeader
           id="landing-testimonials"
@@ -731,7 +742,7 @@ function FAQSection({ lang }: { lang: LandingLang }) {
   const t = pageCopy[lang];
 
   return (
-    <section className={`${styles.section} ${styles.sectionLight}`} aria-labelledby="landing-faq">
+    <section className={`${styles.section} ${styles.sectionMuted}`} aria-labelledby="landing-faq">
       <div className={styles.container}>
         <SectionHeader
           id="landing-faq"
@@ -765,7 +776,7 @@ function FinalCTA({ lang }: { lang: LandingLang }) {
               {t.finalCtaPrimary}
               <ArrowIcon lang={lang} />
             </ButtonLink>
-            <ButtonLink href="/explore" variant="secondary">
+            <ButtonLink href="/become-talent" variant="secondary">
               {t.finalCtaSecondary}
             </ButtonLink>
           </div>

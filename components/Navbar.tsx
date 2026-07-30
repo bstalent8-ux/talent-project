@@ -6,12 +6,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   CalendarCheck,
+  LayoutDashboard,
   Languages,
   LogIn,
   LogOut,
   Menu,
   Moon,
   Search,
+  ShieldCheck,
   Sun,
   UserRoundPlus,
   UserPen,
@@ -93,7 +95,7 @@ export default function Navbar({
   const router = useRouter();
   const isMobile = useIsMobile(980);
   const { lang, toggleLang, dark, toggleMode } = useSite();
-  const { isGuest } = useGuestGuard();
+  const { loading: authLoading, isGuest, user } = useGuestGuard();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(_initialAvatarUrl ?? null);
@@ -104,6 +106,18 @@ export default function Navbar({
   const dir = lang === "ar" ? "rtl" : "ltr";
   const t = TX[lang];
   const links = NAV_LINKS[lang];
+  const dashboardLabel = lang === "ar" ? "\u0645\u0644\u0641\u064a" : "My Profile";
+  const adminPanelLabel = lang === "ar" ? "\u0644\u0648\u062d\u0629 \u0627\u0644\u0625\u062f\u0627\u0631\u0629" : "Admin Panel";
+  const role = user?.role ?? null;
+  const cta = authLoading
+    ? null
+    : role === "admin"
+      ? { href: "/admin", label: adminPanelLabel, Icon: ShieldCheck }
+      : role === "talent"
+        ? { href: "/profile/me", label: dashboardLabel, Icon: LayoutDashboard }
+        : role === "brand" || role === "client"
+          ? { href: "/explore", label: t.book, Icon: CalendarCheck }
+          : { href: "/register", label: t.register, Icon: UserRoundPlus };
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -211,19 +225,10 @@ export default function Navbar({
 
           {!isGuest && <NotificationBell />}
 
-          {isGuest ? (
-            <>
-              <Link className={styles.iconButton} href="/login">
-                <LogIn size={15} />
-                {t.login}
-              </Link>
-              {!isMobile && (
-                <Link className={styles.bookButton} href="/register">
-                  <UserRoundPlus size={16} />
-                  {t.register}
-                </Link>
-              )}
-            </>
+          {authLoading ? null : isGuest ? (
+            <Link className={styles.iconButton} href="/login" aria-label={t.login}>
+              <LogIn size={16} aria-hidden="true" />
+            </Link>
           ) : (
             <div className={styles.avatarWrap} ref={dropdownRef}>
               <button
@@ -263,12 +268,10 @@ export default function Navbar({
             </div>
           )}
 
-          {/* Target is /explore, not /book: /book has never had a route, so the
-              CTA 404'd and Next prefetched that 404 on every page render. */}
-          {!isMobile && (
-            <Link className={styles.bookButton} href="/explore">
-              <CalendarCheck size={17} />
-              {t.book}
+          {!isMobile && cta && (
+            <Link className={styles.bookButton} href={cta.href} aria-label={cta.label}>
+              <cta.Icon size={17} aria-hidden="true" />
+              {cta.label}
             </Link>
           )}
 
@@ -310,17 +313,12 @@ export default function Navbar({
               : link;
           })}
 
-          {isGuest && (
-            <Link className={styles.mobileLink} href="/register">
-              <UserRoundPlus size={16} />
-              {t.register}
+          {cta && (
+            <Link className={styles.bookButton} href={cta.href} aria-label={cta.label}>
+              <cta.Icon size={17} aria-hidden="true" />
+              {cta.label}
             </Link>
           )}
-
-          <Link className={styles.bookButton} href="/explore">
-            <CalendarCheck size={17} />
-            {t.book}
-          </Link>
         </div>
       )}
 

@@ -10,6 +10,7 @@ import {
   CalendarCheck,
   ChevronLeft,
   ChevronRight,
+  Handshake,
   LayoutDashboard,
   ListTree,
   LogOut,
@@ -45,6 +46,7 @@ const TX = {
     verifications: "Verifications",
     packages: "Packages",
     categories: "Categories",
+    trustedBrands: "Trusted Brands",
     notifications: "Notifications",
     settings: "Settings",
     logout: "Logout",
@@ -60,6 +62,7 @@ const NAV_ITEMS = [
   { key: "verifications", href: "/admin/verifications", icon: ShieldCheck },
   { key: "categories", href: "/admin/categories", icon: ListTree },
   { key: "packages", href: "/admin/packages", icon: PackageIcon },
+  { key: "trustedBrands", href: "/admin/trusted-brands", icon: Handshake, fallback: "براندات موثوقة" },
   { key: "notifications", href: "/admin/notifications", icon: Bell },
   { key: "settings", href: "/admin/settings", icon: Settings },
 ] as const;
@@ -244,14 +247,17 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
         </div>
 
         <nav style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 8px" }}>
-          {NAV_ITEMS.map(({ key, href, icon: Icon }) => {
+          {NAV_ITEMS.map((item) => {
+            const { key, href, icon: Icon } = item;
+            const fallback = "fallback" in item ? item.fallback : undefined;
             const active = isActive(href);
+            const label = (t as Record<string, string>)[key] ?? fallback ?? key;
             return (
               <Link
                 key={key}
                 href={href}
                 onClick={onClose}
-                title={collapsed ? t[key] : undefined}
+                title={collapsed ? label : undefined}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -276,7 +282,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
                 }}
               >
                 <Icon size={18} style={{ flexShrink: 0 }} />
-                {!collapsed && <span style={{ opacity: 1, transition: "opacity 0.2s" }}>{t[key]}</span>}
+                {!collapsed && <span style={{ opacity: 1, transition: "opacity 0.2s" }}>{label}</span>}
               </Link>
             );
           })}
