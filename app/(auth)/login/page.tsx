@@ -4,12 +4,11 @@ export const runtime = 'edge';
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useIsMobile } from "@/hooks/useIsMobile";
-
-type Lang = "ar" | "en";
-type Mode = "dark" | "light";
+import { Eye, EyeOff, Languages, Moon, Sun } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useSite } from "@/contexts/SiteContext";
+import styles from "../auth.module.css";
 
 const tx = {
   ar: {
@@ -26,6 +25,10 @@ const tx = {
     register:   "سجّل مجاناً",
     loading:    "جاري...",
     error:      "الإيميل أو كلمة المرور غلط",
+    showPass:   "إظهار كلمة المرور",
+    hidePass:   "إخفاء كلمة المرور",
+    langBtn:    "تغيير اللغة",
+    themeBtn:   "تغيير الوضع",
     brand:          "منصة المواهب",
     brandHighlight: "العربية.",
     brandDesc:      "موديلز، UGC Creators، وإنفلونسرز — كلهم في مكان واحد. براندات موثقة. تعاون حقيقي.",
@@ -47,6 +50,10 @@ const tx = {
     register:   "Sign up free",
     loading:    "Loading...",
     error:      "Wrong email or password",
+    showPass:   "Show password",
+    hidePass:   "Hide password",
+    langBtn:    "Toggle language",
+    themeBtn:   "Toggle theme",
     brand:          "Arab Talent",
     brandHighlight: "Platform.",
     brandDesc:      "Models, UGC Creators, and Influencers — all in one place. Verified brands. Real collaboration.",
@@ -56,36 +63,27 @@ const tx = {
   },
 };
 
+// Accent classes come from the design tokens, not literal hex values.
 const floatingTalents = [
-  { name: "سارة أحمد", sub: "Fashion · 8.4k", color: "#00C9B1" },
-  { name: "عمر خالد",  sub: "UGC · 12k",      color: "#FFB800" },
-  { name: "مي حسين",   sub: "Model · 5.2k",   color: "#8B2FC9" },
+  { name: "سارة أحمد", sub: "Fashion · 8.4k", accent: styles.accentTeal },
+  { name: "عمر خالد",  sub: "UGC · 12k",      accent: styles.accentGold },
+  { name: "مي حسين",   sub: "Model · 5.2k",   accent: styles.accentPurple },
 ];
 
 export default function LoginPage() {
-  const router    = useRouter();
-  const supabase  = createClient();
-  const isMobile  = useIsMobile();
+  const router   = useRouter();
+  const supabase = createClient();
 
-  const [lang,     setLang]     = useState<Lang>("ar");
-  const [mode,     setMode]     = useState<Mode>("dark");
+  // Same provider the rest of the site uses — no local theme/lang state.
+  const { lang, dark, toggleLang, toggleMode } = useSite();
+
   const [showPass, setShowPass] = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState("");
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
 
-  const t   = tx[lang];
-  const dir = lang === "ar" ? "rtl" : "ltr";
-  const dark = mode === "dark";
-
-  const bg    = dark ? "#0a0a0a" : "#f5f5f0";
-  const card  = dark ? "#111111" : "#ffffff";
-  const text  = dark ? "#f1f5f9" : "#0f172a";
-  const muted = dark ? "#6b7280" : "#64748b";
-  const inp   = dark ? "#1a1a1a" : "#f8fafc";
-  const bord  = dark ? "#2a2a2a" : "#e2e8f0";
-  const gold  = "#FFB800";
+  const t = tx[lang];
 
   async function handleLogin() {
     if (!email || !password) { setError(t.error); return; }
@@ -111,211 +109,145 @@ export default function LoginPage() {
 
     const res = await fetch("/api/me/role");
     const { role } = await res.json();
-    if (role === "admin") {
-      router.push("/admin");
-    } else {
-      router.push("/explore");
-    }
+    router.push(role === "admin" ? "/admin" : "/explore");
   }
 
   return (
-    <div style={{
-      minHeight: "100vh", display: "flex", flexDirection: "row",
-      backgroundColor: bg, fontFamily: "'Cairo', sans-serif", direction: dir,
-    }}>
+    <div className={styles.authPage}>
 
       {/* ── FORM SIDE ── */}
-      <div style={{
-        width: isMobile ? "100%" : "42%",
-        minWidth: isMobile ? "unset" : "380px",
-        display: "flex", flexDirection: "column", justifyContent: "center",
-        padding: isMobile ? "32px 24px" : "48px 56px", position: "relative",
-        backgroundColor: card,
-      }}>
-
-        {/* Controls top */}
-        <div style={{
-          position: "absolute", top: "24px",
-          [lang === "ar" ? "right" : "left"]: "24px",
-          display: "flex", gap: "8px",
-        }}>
-          <button onClick={() => setLang(lang === "ar" ? "en" : "ar")} style={{
-            background: inp, border: "none", borderRadius: "6px",
-            padding: "4px 10px", cursor: "pointer",
-            color: muted, fontSize: "12px", fontWeight: 600, fontFamily: "'Cairo', sans-serif",
-          }}>
+      <div className={styles.formPane}>
+        <div className={styles.controls}>
+          <button
+            type="button"
+            className={styles.controlButton}
+            onClick={toggleLang}
+            aria-label={t.langBtn}
+          >
+            <Languages size={14} aria-hidden="true" />
             {lang === "ar" ? "EN" : "ع"}
           </button>
-          <button onClick={() => setMode(dark ? "light" : "dark")} style={{
-            background: inp, border: "none", borderRadius: "6px",
-            padding: "4px 10px", cursor: "pointer", fontSize: "13px",
-          }}>
-            {dark ? "☀️" : "🌙"}
+          <button
+            type="button"
+            className={styles.controlButton}
+            onClick={toggleMode}
+            aria-label={t.themeBtn}
+          >
+            {dark ? <Sun size={14} aria-hidden="true" /> : <Moon size={14} aria-hidden="true" />}
           </button>
         </div>
 
-        {/* Heading */}
-        <p style={{ color: gold, fontSize: "11px", fontWeight: 700, letterSpacing: "3px", marginBottom: "8px" }}>
-          {t.eyebrow}
-        </p>
-        <h1 style={{ color: text, fontSize: "32px", fontWeight: 800, margin: "0 0 6px" }}>
-          {t.heading}
-        </h1>
-        <p style={{ color: muted, fontSize: "14px", marginBottom: "36px" }}>
-          {t.sub}
-        </p>
+        <div className={styles.formInner}>
+          <p className={styles.eyebrow}>{t.eyebrow}</p>
+          <h1 className={styles.heading}>{t.heading}</h1>
+          <p className={styles.subheading}>{t.sub}</p>
 
-        {/* Email */}
-        <div style={{ marginBottom: "16px" }}>
-          <label style={{ color: muted, fontSize: "13px", display: "block", marginBottom: "6px" }}>
-            {t.email}
-          </label>
-          <input
-            type="email" placeholder={t.emailPH} value={email}
-            onChange={e => setEmail(e.target.value)}
-            style={{
-              width: "100%", padding: "11px 14px",
-              backgroundColor: inp, border: `1px solid ${bord}`,
-              borderRadius: "8px", color: text, fontSize: "14px",
-              outline: "none", boxSizing: "border-box", direction: "ltr",
-              fontFamily: "'Cairo', sans-serif",
-            }}
+          {/* Email */}
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="login-email">{t.email}</label>
+            <input
+              id="login-email"
+              className={`${styles.input} ${styles.inputLtr}`}
+              type="email"
+              placeholder={t.emailPH}
+              value={email}
+              autoComplete="username"
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          {/* Password */}
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="login-password">{t.password}</label>
+            <div className={styles.inputWrap}>
+              <input
+                id="login-password"
+                className={`${styles.input} ${styles.inputLtr} ${styles.inputWithAffix}`}
+                type={showPass ? "text" : "password"}
+                placeholder={t.passwordPH}
+                value={password}
+                autoComplete="current-password"
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              />
+              <button
+                type="button"
+                className={styles.revealButton}
+                onClick={() => setShowPass(!showPass)}
+                aria-label={showPass ? t.hidePass : t.showPass}
+              >
+                {showPass ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.forgotRow}>
+            <Link className={styles.textLink} href="/forgot-password">{t.forgot}</Link>
+          </div>
+
+          {error && <p className={styles.errorText} role="alert">{error}</p>}
+
+          <button
+            type="button"
+            className={styles.submitButton}
+            onClick={handleLogin}
+            disabled={loading}
+          >
+            {loading ? t.loading : t.loginBtn}
+          </button>
+
+          <p className={styles.footNote}>
+            {t.noAccount}{" "}
+            <Link className={styles.textLink} href="/register">{t.register}</Link>
+          </p>
+        </div>
+      </div>
+
+      {/* ── BRANDING SIDE — hidden under 768px by the stylesheet ── */}
+      <div className={styles.brandPane}>
+        <div className={styles.brandTop}>
+          <Image
+            className={styles.brandLogo}
+            src={dark ? "/assets/logo-dark.png" : "/assets/logo-light.png"}
+            alt="Talents"
+            width={110}
+            height={32}
           />
         </div>
 
-        {/* Password */}
-        <div style={{ marginBottom: "10px" }}>
-          <label style={{ color: muted, fontSize: "13px", display: "block", marginBottom: "6px" }}>
-            {t.password}
-          </label>
-          <div style={{ position: "relative" }}>
-            <input
-              type={showPass ? "text" : "password"}
-              placeholder={t.passwordPH} value={password}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleLogin()}
-              style={{
-                width: "100%", padding: "11px 42px 11px 14px",
-                backgroundColor: inp, border: `1px solid ${bord}`,
-                borderRadius: "8px", color: text, fontSize: "14px",
-                outline: "none", boxSizing: "border-box", direction: "ltr",
-                fontFamily: "'Cairo', sans-serif",
-              }}
-            />
-            <button onClick={() => setShowPass(!showPass)} style={{
-              position: "absolute", top: "50%",
-              [lang === "ar" ? "right" : "left"]: "12px",
-              transform: "translateY(-50%)",
-              background: "none", border: "none", cursor: "pointer",
-              color: muted, fontSize: "14px",
-            }}>
-              {showPass ? "🙈" : "👁"}
-            </button>
-          </div>
-        </div>
-
-        {/* Forgot */}
-        <div style={{ textAlign: lang === "ar" ? "left" : "right", marginBottom: "24px" }}>
-          <Link href="/forgot-password" style={{ color: gold, fontSize: "12px", textDecoration: "none" }}>
-            {t.forgot}
-          </Link>
-        </div>
-
-        {error && (
-          <p style={{ color: "#ef4444", fontSize: "13px", textAlign: "center", marginBottom: "12px" }}>
-            {error}
-          </p>
-        )}
-
-        {/* Login button */}
-        <button onClick={handleLogin} disabled={loading} style={{
-          backgroundColor: gold, color: "#000", border: "none",
-          borderRadius: "10px", padding: "14px",
-          fontSize: "15px", fontWeight: 800, cursor: loading ? "wait" : "pointer",
-          fontFamily: "'Cairo', sans-serif", opacity: loading ? 0.7 : 1,
-          marginBottom: "20px",
-        }}>
-          {loading ? t.loading : t.loginBtn}
-        </button>
-
-        {/* Register link */}
-        <p style={{ textAlign: "center", color: muted, fontSize: "13px", margin: 0 }}>
-          {t.noAccount}{" "}
-          <Link href="/register" style={{ color: gold, fontWeight: 700, textDecoration: "none" }}>
-            {t.register}
-          </Link>
-        </p>
-      </div>
-
-      {/* ── BRANDING SIDE — desktop only ── */}
-      {!isMobile && (
-      <div style={{
-        flex: 1, position: "relative", overflow: "hidden",
-        backgroundColor: "#0a0a0a",
-        backgroundImage: "radial-gradient(ellipse at 30% 60%, rgba(255,184,0,0.08) 0%, transparent 60%)",
-        display: "flex", flexDirection: "column", justifyContent: "space-between",
-        padding: "32px 48px",
-      }}>
-        <div style={{ textAlign: lang === "ar" ? "right" : "left" }}>
-          <Image src="/assets/logo.png" alt="Talents" width={110} height={32}
-            style={{ height: "32px", width: "auto" }} />
-        </div>
-
-        {/* Floating cards */}
-        <div style={{
-          position: "absolute", left: "48px", top: "50%",
-          transform: "translateY(-60%)",
-          display: "flex", flexDirection: "column", gap: "12px",
-        }}>
-          {floatingTalents.map((tl, i) => (
-            <div key={i} style={{
-              display: "flex", alignItems: "center", gap: "10px",
-              backgroundColor: "rgba(255,255,255,0.05)",
-              backdropFilter: "blur(8px)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "12px", padding: "10px 14px",
-            }}>
-              <div style={{
-                width: "36px", height: "36px", borderRadius: "50%",
-                backgroundColor: tl.color + "33",
-                border: `2px solid ${tl.color}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "14px", fontWeight: 700, color: tl.color,
-              }}>
-                {tl.name[0]}
-              </div>
+        <div className={styles.floatingStack}>
+          {floatingTalents.map((tl) => (
+            <div key={tl.name} className={styles.floatingCard}>
+              <div className={`${styles.floatingAvatar} ${tl.accent}`}>{tl.name[0]}</div>
               <div>
-                <p style={{ color: "#f1f5f9", fontSize: "13px", fontWeight: 700, margin: 0 }}>{tl.name}</p>
-                <p style={{ color: "#6b7280", fontSize: "11px", margin: 0 }}>{tl.sub}</p>
+                <p className={styles.floatingName}>{tl.name}</p>
+                <p className={styles.floatingSub}>{tl.sub}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Headline */}
-        <div style={{ textAlign: lang === "ar" ? "right" : "left" }}>
-          <h2 style={{ color: "#f1f5f9", fontSize: "52px", fontWeight: 900, lineHeight: 1.15, margin: "0 0 16px" }}>
+        <div className={styles.brandBottom}>
+          <h2 className={styles.brandHeadline}>
             {t.brand}<br />
-            <span style={{ color: gold, fontStyle: "italic" }}>{t.brandHighlight}</span>
+            <span className={styles.brandHighlight}>{t.brandHighlight}</span>
           </h2>
-          <p style={{ color: "#6b7280", fontSize: "15px", lineHeight: 1.7, maxWidth: "320px", margin: lang === "ar" ? "0 0 0 auto" : "0 auto 0 0" }}>
-            {t.brandDesc}
-          </p>
-          <div style={{ display: "flex", gap: "40px", marginTop: "40px", justifyContent: lang === "ar" ? "flex-end" : "flex-start" }}>
+          <p className={styles.brandDesc}>{t.brandDesc}</p>
+
+          <div className={styles.statRow}>
             {[
-              { val: "4.9", label: t.stat1 },
-              { val: "83",  label: t.stat2 },
-              { val: "+247",label: t.stat3 },
-            ].map((s, i) => (
-              <div key={i} style={{ textAlign: lang === "ar" ? "right" : "left" }}>
-                <p style={{ color: gold, fontSize: "22px", fontWeight: 900, margin: 0 }}>{s.val}</p>
-                <p style={{ color: "#6b7280", fontSize: "12px", margin: "2px 0 0" }}>{s.label}</p>
+              { val: "4.9",  label: t.stat1 },
+              { val: "83",   label: t.stat2 },
+              { val: "+247", label: t.stat3 },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className={styles.statValue}>{s.val}</p>
+                <p className={styles.statLabel}>{s.label}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
-      )}
     </div>
   );
 }

@@ -1,0 +1,555 @@
+/* ─── Shared auth chrome ─────────────────────────────────────────────────────
+   Login and register render the same split layout, so the styling lives here
+   once instead of being duplicated as inline objects on both pages.
+
+   Every value resolves to a token from app/globals.css. There are no literal
+   colours, no literal fonts, and no `dark ? a : b` ternaries — the pages react
+   to `[data-theme]` on <html> exactly like the rest of the site, so switching
+   the theme anywhere switches these too.
+
+   RTL comes from the `dir` attribute the SiteProvider sets on <html>; this file
+   uses logical properties throughout, so there is no left/right branching.
+   ------------------------------------------------------------------------- */
+
+.authPage {
+  /* Text colour that sits on the gold CTA. Mirrors --nav-on-gold in
+     SiteChrome.module.css rather than inventing a second convention:
+     --text-inverse flips to white in light mode, which is unreadable on gold. */
+  --auth-on-gold: var(--bg-page);
+
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+:global([data-theme="light"]) .authPage {
+  --auth-on-gold: var(--text-primary);
+}
+
+/* ─── Form column ─────────────────────────────────────────────────────────── */
+
+.formPane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 42%;
+  min-width: 380px;
+  padding: var(--space-12) 3.5rem;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border-inline-end: 1px solid var(--border-subtle);
+}
+
+.formPaneWide {
+  width: 48%;
+  min-width: 400px;
+  padding: var(--space-10) 3.25rem;
+}
+
+.formInner {
+  width: 100%;
+  max-width: 440px;
+  margin-inline: auto;
+}
+
+/* ─── Top-right controls ──────────────────────────────────────────────────── */
+
+.controls {
+  position: absolute;
+  top: var(--space-6);
+  inset-inline-start: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.controlButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: var(--bg-card-muted);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-emphasis);
+}
+
+.controlButton:hover {
+  color: var(--text-primary);
+  background: var(--bg-muted);
+  transform: translateY(-1px);
+}
+
+.controlButton:active {
+  transform: translateY(0);
+}
+
+.controlLink {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  margin-inline-start: var(--space-1);
+}
+
+.controlLinkAccent {
+  color: var(--color-secondary);
+  font-weight: 700;
+}
+
+/* ─── Headings ────────────────────────────────────────────────────────────── */
+
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--color-secondary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+}
+
+.heading {
+  margin: 0 0 var(--space-2);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.subheading {
+  margin: 0 0 var(--space-8);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ─── Fields ──────────────────────────────────────────────────────────────── */
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.field {
+  margin-bottom: var(--space-4);
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.7rem var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-muted);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  outline: none;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:hover,
+.select:hover {
+  border-color: var(--border-strong);
+}
+
+.input:focus-visible,
+.select:focus-visible {
+  border-color: var(--color-secondary);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Latin-only fields (email, phone, password) stay LTR even in an RTL page. */
+.inputLtr {
+  direction: ltr;
+  text-align: start;
+}
+
+.inputValid {
+  border-color: var(--color-success);
+}
+
+.inputInvalid {
+  border-color: var(--color-error);
+}
+
+.select {
+  cursor: pointer;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 1rem) 50%, calc(100% - 0.625rem) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+:global([dir="rtl"]) .select {
+  background-position: 1rem 50%, 0.625rem 50%;
+}
+
+.inputWrap {
+  position: relative;
+}
+
+/* Room for the reveal toggle, on whichever side the text ends. */
+.inputWithAffix {
+  padding-inline-end: 2.6rem;
+}
+
+.revealButton {
+  position: absolute;
+  inset-inline-end: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--duration-base) var(--ease-standard);
+}
+
+.revealButton:hover {
+  color: var(--text-primary);
+}
+
+.revealButton:focus-visible,
+.controlButton:focus-visible,
+.submitButton:focus-visible,
+.roleButton:focus-visible,
+.textLink:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* ─── Password strength ───────────────────────────────────────────────────── */
+
+.strengthTrack {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.strengthSegment {
+  flex: 1;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--border-subtle);
+  transition: background-color var(--duration-base) var(--ease-standard);
+}
+
+.strengthWeak   { background: var(--color-error); }
+.strengthFair   { background: var(--color-warning); }
+.strengthGood   { background: var(--color-secondary); }
+.strengthStrong { background: var(--color-success); }
+
+/* ─── Role toggle ─────────────────────────────────────────────────────────── */
+
+.roleRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.roleButton {
+  flex: 1;
+  padding: 0.625rem 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-muted);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard);
+}
+
+.roleButton:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.roleButtonActive,
+.roleButtonActive:hover {
+  background: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: var(--auth-on-gold);
+}
+
+/* ─── Feedback ────────────────────────────────────────────────────────────── */
+
+.errorBanner {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+  font-size: var(--text-xs);
+}
+
+.errorText {
+  margin: 0 0 var(--space-3);
+  color: var(--color-error);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+/* ─── Actions ─────────────────────────────────────────────────────────────── */
+
+.submitButton {
+  width: 100%;
+  padding: 0.875rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-secondary);
+  color: var(--auth-on-gold);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-emphasis),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.submitButton:hover:not(:disabled) {
+  background: var(--color-secondary-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.forgotRow {
+  margin-bottom: var(--space-6);
+  text-align: end;
+}
+
+.textLink {
+  color: var(--color-secondary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  border-radius: var(--radius-xs);
+  transition: color var(--duration-base) var(--ease-standard);
+}
+
+.textLink:hover {
+  color: var(--color-secondary-strong);
+}
+
+.footNote {
+  margin: var(--space-5) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+.termsRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  cursor: pointer;
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  accent-color: var(--color-secondary);
+  cursor: pointer;
+}
+
+.termsText {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+}
+
+/* ─── Branding column ─────────────────────────────────────────────────────── */
+
+.brandPane {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-8) var(--space-12);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 30% 60%, var(--color-secondary-soft) 0%, transparent 60%),
+    var(--bg-page-subtle);
+}
+
+.brandTop {
+  text-align: start;
+}
+
+.brandLogo {
+  width: auto;
+  height: 32px;
+}
+
+.floatingStack {
+  position: absolute;
+  inset-inline-start: var(--space-12);
+  top: 50%;
+  transform: translateY(-60%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.floatingCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.floatingAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  border: 2px solid currentColor;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.accentTeal   { color: var(--color-accent); }
+.accentGold   { color: var(--color-secondary); }
+.accentPurple { color: var(--color-purple); }
+
+.floatingName {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.floatingSub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.brandBottom {
+  text-align: start;
+}
+
+.brandHeadline {
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.brandHighlight {
+  color: var(--color-secondary);
+  font-style: italic;
+}
+
+.brandDesc {
+  max-width: 20rem;
+  margin: 0;
+  margin-inline-end: auto;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+.statRow {
+  display: flex;
+  gap: var(--space-10);
+  margin-top: var(--space-10);
+}
+
+.statValue {
+  margin: 0;
+  color: var(--color-secondary);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 900;
+}
+
+.statLabel {
+  margin: var(--space-1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .brandPane {
+    display: none;
+  }
+
+  .formPane,
+  .formPaneWide {
+    width: 100%;
+    min-width: 0;
+    padding: var(--space-16) var(--space-6) var(--space-8);
+    border-inline-end: none;
+  }
+
+  .controls {
+    inset-inline-start: var(--space-4);
+    top: var(--space-4);
+  }
+}
