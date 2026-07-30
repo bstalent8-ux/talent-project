@@ -3,6 +3,8 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { notifyJobCreated } from "@/lib/notifications/events";
+import { canCreateJob } from "@/lib/permissions";
 
 // GET /api/jobs?status=open&category=&limit=50
 export async function GET(req: NextRequest) {
@@ -42,8 +44,13 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   // Verify brand role
-  const { data: profile } = await adminClient.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "brand") return NextResponse.json({ error: "brands only" }, { status: 403 });
+  const { data: profile } = await adminClient
+    .from("profiles")
+    .select("id, role, account_status, brand_status, is_suspended")
+    .eq("id", user.id)
+    .single();
+  const permission = canCreateJob(profile);
+  if (!permission.allowed) return NextResponse.json({ error: permission.reason === "role" ? "brands only" : "forbidden" }, { status: 403 });
 
   const body = await req.json();
   const { title, description, category, budget_min, budget_max, currency = "EGP", start_date, end_date, slots = 1 } = body;
@@ -69,5 +76,19 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Fan out to matching talents. Passing the job's category narrows the blast
+  // to talents in that category; with no category it reaches every talent.
+  const { data: brand } = await adminClient
+    .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+
+  await notifyJobCreated({
+    jobId:       job.id,
+    jobTitle:    job.title,
+    brandId:     user.id,
+    brandName:   brand?.full_name ?? null,
+    categoryIds: job.category ? [job.category] : undefined,
+  });
+
   return NextResponse.json({ job }, { status: 201 });
 }

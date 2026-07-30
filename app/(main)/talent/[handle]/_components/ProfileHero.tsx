@@ -7,6 +7,7 @@ import { useSite } from "@/contexts/SiteContext";
 import type { TalentData } from "@/features/talent-profile/types";
 import { cdnImage } from "@/lib/images";
 import DirectBriefModal from "@/components/DirectBriefModal";
+import ProtectedAction from "@/components/auth/ProtectedAction";
 
 const btn: React.CSSProperties = {
   cursor: "pointer", fontFamily: "'Cairo',sans-serif",
@@ -191,35 +192,41 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {/* CTA buttons */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <motion.button
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => window.dispatchEvent(new CustomEvent("open-chat-widget", { detail: { otherUserId: talent.id } }))}
-              style={{
+            <ProtectedAction action="start_conversation">
+              <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                onClick={() => window.dispatchEvent(new CustomEvent("open-chat-widget", { detail: { otherUserId: talent.id } }))}
+                style={{
+                  ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+                  color: TEXT, borderRadius: 12, padding: "11px 0",
+                  fontSize: 13, fontWeight: 600,
+                }}>
+                <MessageCircle size={14} color={GREEN} />{t.message}
+              </motion.button>
+            </ProtectedAction>
+            <ProtectedAction action="create_booking">
+              <motion.button onClick={() => setShowBooking(true)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{
                 ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
-                color: TEXT, borderRadius: 12, padding: "11px 0",
-                fontSize: 13, fontWeight: 600,
+                backgroundColor: GREEN, color: "#050B12",
+                borderRadius: 12, padding: "11px 0",
+                fontSize: 13, fontWeight: 900,
               }}>
-              <MessageCircle size={14} color={GREEN} />{t.message}
-            </motion.button>
-            <motion.button onClick={() => setShowBooking(true)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{
-              ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              backgroundColor: GREEN, color: "#050B12",
-              borderRadius: 12, padding: "11px 0",
-              fontSize: 13, fontWeight: 900,
-            }}>
-              <Calendar size={14} />{t.bookNow}
-            </motion.button>
+                <Calendar size={14} />{t.bookNow}
+              </motion.button>
+            </ProtectedAction>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <motion.button whileHover={{ scale: 1.02 }} style={{
-              ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-              backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
-              color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13,
-            }}>
-              <Heart size={13} />{t.favorite}
-            </motion.button>
+            <ProtectedAction action="favorite_talent">
+              <motion.button whileHover={{ scale: 1.02 }} style={{
+                ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+                color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13,
+              }}>
+                <Heart size={13} />{t.favorite}
+              </motion.button>
+            </ProtectedAction>
             <motion.button whileHover={{ scale: 1.02 }} style={{
               ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
               backgroundColor: SURFACE, border: `1px solid ${BORDER}`,

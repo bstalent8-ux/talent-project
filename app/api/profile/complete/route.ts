@@ -3,6 +3,7 @@ export const runtime = "edge";
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { canPerformAction } from "@/lib/permissions";
 
 // PATCH /api/profile/complete
 export async function PATCH(req: NextRequest) {
@@ -10,6 +11,15 @@ export async function PATCH(req: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("id, role, account_status, is_suspended")
+      .eq("id", user.id)
+      .single();
+    if (!canPerformAction("access_profile_management", profile).allowed) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
 
     const { section, data } = await req.json();
     if (!section || !data) return NextResponse.json({ error: "section and data required" }, { status: 400 });

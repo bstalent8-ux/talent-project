@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { recalcRating } from "@/lib/recalcRating";
-import { createNotification } from "@/lib/notifications/create";
+import { notifyNewReview } from "@/lib/notifications/events";
 
 // GET /api/reviews?talent_id=xxx
 export async function GET(req: NextRequest) {
@@ -99,13 +99,16 @@ export async function POST(req: NextRequest) {
       .eq("id", booking.talent_id)
       .maybeSingle();
     if (talentProfile?.user_id) {
-      await createNotification({
-        userId:        talentProfile.user_id,
-        type:          "review",
-        title:         `تقييم جديد ⭐ ${rating}/5`,
-        message:       comment?.trim() || "حصلت على تقييم جديد من أحد العملاء.",
-        referenceId:   null,
-        referenceType: "review",
+      const { data: brand } = await adminClient
+        .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+
+      await notifyNewReview({
+        reviewId:    review.id,
+        recipientId: talentProfile.user_id,
+        senderId:    user.id,
+        brandName:   brand?.full_name ?? null,
+        rating:      Number(rating),
+        comment:     comment?.trim() || null,
       });
     }
 

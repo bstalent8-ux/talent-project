@@ -2,6 +2,8 @@ export const runtime = 'edge';
 
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { adminClient } from "@/lib/supabase/admin";
+import { canPerformAction } from "@/lib/permissions";
 
 // GET: Fetch all questions with optional filters
 export async function GET(request: NextRequest) {
@@ -119,6 +121,15 @@ export async function POST(request: NextRequest) {
         { error: "Unauthorized" },
         { status: 401 }
       );
+    }
+
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("id, role, account_status, is_suspended")
+      .eq("id", user.id)
+      .single();
+    if (!canPerformAction("create_community_question", profile).allowed) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
     // Validate input

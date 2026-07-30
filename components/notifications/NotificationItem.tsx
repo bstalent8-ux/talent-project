@@ -1,11 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
-import type { Notification } from "./useNotifications";
+import type { Notification } from "@/lib/notifications/types";
+import {
+  PRIORITY_COLOR,
+  TYPE_COLOR,
+  TYPE_ICON,
+  fallbackActionUrl,
+  readI18n,
+} from "@/lib/notifications/templates";
 
 function timeAgo(dateStr: string, lang: "ar" | "en"): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  const diff  = Date.now() - new Date(dateStr).getTime();
   const mins  = Math.floor(diff / 60_000);
   const hours = Math.floor(diff / 3_600_000);
   const days  = Math.floor(diff / 86_400_000);
@@ -22,78 +30,68 @@ function timeAgo(dateStr: string, lang: "ar" | "en"): string {
   return `${days}d ago`;
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  message:         "💬",
-  job_application: "📋",
-  brief:           "📄",
-  booking:         "📅",
-  booking_request: "📅",
-  payment:         "💳",
-  review:          "⭐",
-  system:          "🔔",
-};
-
-const TYPE_COLOR: Record<string, string> = {
-  message:         "#0EA5E9",
-  job_application: "#8B5CF6",
-  brief:           "#F59E0B",
-  booking:         "#10B981",
-  booking_request: "#10B981",
-  payment:         "#EC4899",
-  review:          "#F97316",
-  system:          "#6B7280",
-};
-
-function buildHref(n: Notification): string | null {
-  switch (n.type) {
-    case "message":         return n.reference_id ? `/chat?conversation=${n.reference_id}` : "/chat";
-    case "job_application": return n.reference_id ? `/jobs/${n.reference_id}/applications` : "/jobs";
-    case "brief":           return n.reference_id ? `/bookings/${n.reference_id}` : "/bookings";
-    case "booking":         return n.reference_id ? `/bookings/${n.reference_id}` : "/bookings";
-    case "booking_request": return n.reference_id ? `/bookings/${n.reference_id}` : "/bookings";
-    case "payment":         return n.reference_id ? `/bookings/${n.reference_id}` : "/bookings";
-    case "review":          return "/profile";
-    case "system":          return null;
-    default:                return null;
-  }
-}
-
 interface Props {
   notification: Notification;
-  onRead: (id: string) => void;
+  onRead:       (id: string) => void;
+  onDelete?:    (id: string) => void;
+  onNavigate?:  () => void;
+  /** Roomier layout for the dedicated /notifications page. */
+  compact?:     boolean;
 }
 
-export default function NotificationItem({ notification: n, onRead }: Props) {
+export default function NotificationItem({
+  notification: n,
+  onRead,
+  onDelete,
+  onNavigate,
+  compact = true,
+}: Props) {
   const { lang, dark } = useSite();
   const router = useRouter();
-  const isRTL = lang === "ar";
+  const isRTL  = lang === "ar";
 
   const accent = TYPE_COLOR[n.type] ?? "#6B7280";
-  const icon   = TYPE_ICONS[n.type] ?? "🔔";
+  const icon   = TYPE_ICON[n.type]  ?? "🔔";
   const time   = timeAgo(n.created_at, lang);
-  const href   = buildHref(n);
+  const href   = n.action_url ?? fallbackActionUrl(n.type, n.metadata);
+  const { title, message } = readI18n(n, lang);
+
+  const unreadBg = dark ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.05)";
 
   function handleClick() {
     if (!n.is_read) onRead(n.id);
-    if (href) router.push(href);
+    if (href) {
+      onNavigate?.();
+      router.push(href);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (!href) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleClick();
+    }
   }
 
   return (
     <div
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role={href ? "button" : undefined}
+      tabIndex={href ? 0 : undefined}
+      aria-label={title}
       dir={isRTL ? "rtl" : "ltr"}
       style={{
-        display:         "flex",
-        alignItems:      "flex-start",
-        gap:             "12px",
-        padding:         "12px 16px",
-        cursor:          href ? "pointer" : "default",
-        background:      n.is_read
-          ? "transparent"
-          : dark ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.05)",
-        borderBottom:    dark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)",
-        transition:      "background 0.15s",
-        position:        "relative",
+        display:      "flex",
+        alignItems:   "flex-start",
+        gap:          "12px",
+        padding:      compact ? "12px 16px" : "16px 18px",
+        cursor:       href ? "pointer" : "default",
+        background:   n.is_read ? "transparent" : unreadBg,
+        borderBottom: dark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)",
+        transition:   "background 0.15s",
+        position:     "relative",
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.background = dark
@@ -101,38 +99,33 @@ export default function NotificationItem({ notification: n, onRead }: Props) {
           : "rgba(0,0,0,0.03)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.background = n.is_read
-          ? "transparent"
-          : dark ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.05)";
+        (e.currentTarget as HTMLDivElement).style.background = n.is_read ? "transparent" : unreadBg;
       }}
     >
-      {/* Unread dot */}
-      {!n.is_read && (
+      {/* Priority rail — only drawn when it carries information */}
+      {(n.priority === "high" || n.priority === "urgent") && (
         <div style={{
-          position:     "absolute",
-          top:          "50%",
-          [isRTL ? "left" : "right"]: "12px",
-          transform:    "translateY(-50%)",
-          width:        "6px",
-          height:       "6px",
-          borderRadius: "50%",
-          background:   accent,
-          flexShrink:   0,
+          position: "absolute",
+          top:      0,
+          bottom:   0,
+          [isRTL ? "right" : "left"]: 0,
+          width:    "3px",
+          background: PRIORITY_COLOR[n.priority],
         }} />
       )}
 
       {/* Icon circle */}
       <div style={{
-        width:        "36px",
-        height:       "36px",
-        borderRadius: "50%",
-        background:   `${accent}20`,
-        border:       `1.5px solid ${accent}40`,
-        display:      "flex",
-        alignItems:   "center",
+        width:          compact ? "36px" : "42px",
+        height:         compact ? "36px" : "42px",
+        borderRadius:   "50%",
+        background:     `${accent}20`,
+        border:         `1.5px solid ${accent}40`,
+        display:        "flex",
+        alignItems:     "center",
         justifyContent: "center",
-        fontSize:     "16px",
-        flexShrink:   0,
+        fontSize:       compact ? "16px" : "19px",
+        flexShrink:     0,
       }}>
         {icon}
       </div>
@@ -140,25 +133,25 @@ export default function NotificationItem({ notification: n, onRead }: Props) {
       {/* Text */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontSize:   "13px",
-          fontWeight: n.is_read ? 400 : 600,
-          color:      dark ? "#F1F5F9" : "#0F172A",
-          whiteSpace: "nowrap",
-          overflow:   "hidden",
+          fontSize:     compact ? "13px" : "14px",
+          fontWeight:   n.is_read ? 400 : 600,
+          color:        dark ? "#F1F5F9" : "#0F172A",
+          whiteSpace:   "nowrap",
+          overflow:     "hidden",
           textOverflow: "ellipsis",
         }}>
-          {n.title}
+          {title}
         </div>
         <div style={{
-          fontSize:   "12px",
-          color:      dark ? "#94A3B8" : "#64748B",
-          marginTop:  "2px",
-          overflow:   "hidden",
-          display:    "-webkit-box",
-          WebkitLineClamp: 2,
+          fontSize:        compact ? "12px" : "13px",
+          color:           dark ? "#A8B3C2" : "#64748B",
+          marginTop:       "2px",
+          overflow:        "hidden",
+          display:         "-webkit-box",
+          WebkitLineClamp: compact ? 2 : 3,
           WebkitBoxOrient: "vertical",
         }}>
-          {n.message}
+          {message}
         </div>
         <div style={{
           fontSize:   "11px",
@@ -168,6 +161,38 @@ export default function NotificationItem({ notification: n, onRead }: Props) {
         }}>
           {time}
         </div>
+      </div>
+
+      {/* Trailing controls */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+        {!n.is_read && (
+          <div style={{
+            width:        "7px",
+            height:       "7px",
+            borderRadius: "50%",
+            background:   accent,
+          }} />
+        )}
+
+        {onDelete && (
+          <button
+            aria-label={isRTL ? "حذف الإشعار" : "Delete notification"}
+            onClick={(e) => { e.stopPropagation(); onDelete(n.id); }}
+            style={{
+              background:   "none",
+              border:       "none",
+              cursor:       "pointer",
+              padding:      "4px",
+              borderRadius: "6px",
+              color:        dark ? "#A8B3C2" : "#64748B",
+              display:      "flex",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = dark ? "#A8B3C2" : "#64748B"; }}
+          >
+            <Trash2 size={15} />
+          </button>
+        )}
       </div>
     </div>
   );

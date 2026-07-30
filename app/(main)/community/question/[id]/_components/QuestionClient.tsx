@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
-import { createClient } from "@/lib/supabase/client";
+import { useGuestGuard } from "@/contexts/GuestGuard";
+import { canPerformAction } from "@/lib/permissions";
 
 const TX = {
   ar: {
@@ -34,13 +35,12 @@ export default function QuestionClient() {
   const { id } = useParams();
   const router = useRouter();
   const { dark, lang } = useSite();
+  const { user, requestAuth } = useGuestGuard();
   const [question, setQuestion] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [newAnswer, setNewAnswer] = useState("");
-  const [user, setUser] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const supabase = createClient();
   const t = TX[lang];
   const ar = lang === "ar";
   const TEAL = "#00D26A";
@@ -54,13 +54,7 @@ export default function QuestionClient() {
 
   useEffect(() => {
     fetchQuestion();
-    checkUser();
   }, [id]);
-
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
 
   const fetchQuestion = async () => {
     try {
@@ -82,10 +76,8 @@ export default function QuestionClient() {
     e.preventDefault();
     if (!newAnswer.trim()) return;
 
-    // If no user, we could potentially allow guest comments if the backend supports it.
-    // For now, let's redirect to login if not authenticated, or show a message.
-    if (!user) {
-      router.push("/login");
+    if (!canPerformAction("create_community_answer", user).allowed) {
+      requestAuth("create_community_answer");
       return;
     }
 
@@ -216,7 +208,7 @@ export default function QuestionClient() {
         </div>
 
         {/* Add Answer Form */}
-        {user ? (
+        {user?.id ? (
           <div style={{
             backgroundColor: CARD,
             border: `1px solid ${BORDER}`,
@@ -271,7 +263,7 @@ export default function QuestionClient() {
             color: MUTED
           }}>
             <button 
-              onClick={() => router.push("/login")}
+              onClick={() => requestAuth("create_community_answer")}
               style={{ color: TEAL, fontWeight: 700, background: "none", border: "none", cursor: "pointer" }}
             >
               {t.loginToAnswer}

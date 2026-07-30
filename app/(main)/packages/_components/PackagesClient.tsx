@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { CreditCard, ShieldCheck, Sparkles } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import { useGuestGuard } from "@/contexts/GuestGuard";
+import { canPerformAction } from "@/lib/permissions";
 import type { MarketplacePackage, PackagePlan } from "@/features/packages/types";
 import PackageCard from "@/components/packages/PackageCard";
 import BillingDurationSelector from "@/components/packages/BillingDurationSelector";
@@ -31,6 +33,7 @@ export default function PackagesClient({
   initialPackages: MarketplacePackage[];
 }) {
   const { lang } = useSite();
+  const { user, requestAuth } = useGuestGuard();
   const [duration, setDuration] = useState(1);
   const [submittingPlan, setSubmittingPlan] = useState<string | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState(initialPackages[0]?.id ?? null);
@@ -52,6 +55,11 @@ export default function PackagesClient({
   const selectedDuration = availableDurations.includes(duration) ? duration : availableDurations[0] ?? 1;
 
   async function subscribe(plan: PackagePlan, pkg: MarketplacePackage) {
+    if (!canPerformAction("subscribe", user).allowed) {
+      requestAuth("subscribe");
+      return;
+    }
+
     setSubmittingPlan(plan.id);
     setMessage(null);
     const audience = packageAudience(pkg);

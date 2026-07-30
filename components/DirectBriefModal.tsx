@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, CheckCircle2, Clock, FileText, WalletCards, X } from "lucide-react";
 import { cdnImage } from "@/lib/images";
+import { useGuestGuard } from "@/contexts/GuestGuard";
+import { canCreateBooking } from "@/lib/permissions";
 import styles from "./DirectBriefModal.module.css";
 
 type ServiceType = "hourly" | "daily" | "fixed_project";
@@ -114,6 +116,7 @@ export default function DirectBriefModal({
 }: Props) {
   const ar = lang === "ar";
   const t = TX[lang];
+  const { user, requestAuth } = useGuestGuard();
 
   const [serviceType, setServiceType] = useState<ServiceType>("fixed_project");
   const [startDate, setStartDate] = useState(todayValue());
@@ -146,6 +149,12 @@ export default function DirectBriefModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!canCreateBooking(user).allowed) {
+      onClose();
+      requestAuth("create_booking");
+      return;
+    }
+
     const validationError = validate();
     if (validationError) {
       setError(validationError);

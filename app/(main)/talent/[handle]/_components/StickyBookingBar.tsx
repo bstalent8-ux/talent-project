@@ -1,12 +1,14 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Heart, Calendar, ShieldCheck, MessageCircle, Send } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
-import { createClient } from "@/lib/supabase/client";
+import { useGuestGuard } from "@/contexts/GuestGuard";
+import { canCreateBooking, canPerformAction, isBrand } from "@/lib/permissions";
 import type { TalentData, PackageItem } from "@/features/talent-profile/types";
 import DirectBriefModal from "@/components/DirectBriefModal";
+import ProtectedAction from "@/components/auth/ProtectedAction";
 
 interface Props {
   talent: TalentData;
@@ -16,6 +18,7 @@ interface Props {
 export default function StickyBookingBar({ talent, selectedPackage }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
+  const { user, requestAuth } = useGuestGuard();
   const ar = lang === "ar";
   const GREEN = "#00D26A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
@@ -23,27 +26,19 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
   const pkgLabel = selectedPackage ? `${selectedPackage.name} — ${selectedPackage.price} EGP` : (ar ? "اختر باقة" : "Choose Package");
   const price = selectedPackage?.price ?? "—";
 
-  const [userRole, setUserRole] = useState<string | null>(null);
   const [contactLoading, setContactLoading] = useState(false);
   const [showBrief, setShowBrief] = useState(false);
 
-  useEffect(() => {
-    createClient().auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      const { data: profile } = await createClient()
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .single();
-      setUserRole(profile?.role ?? null);
-    });
-  }, []);
+  const canBook = canCreateBooking(user).allowed;
+  const canChat = canPerformAction("start_conversation", user).allowed;
+  const brandUser = isBrand(user);
 
   async function handleContact() {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/login"); return; }
-    if (userRole !== "brand") return;
+    if (!canChat) {
+      requestAuth("start_conversation");
+      return;
+    }
+    if (!brandUser) return;
 
     setContactLoading(true);
     try {
@@ -52,7 +47,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ other_user_id: talent.id }),
       });
-      if (res.status === 401) { router.push("/login"); return; }
+      if (res.status === 401) { requestAuth("start_conversation"); return; }
       const { conversation } = await res.json();
       if (conversation?.id) {
         // Open the floating chat widget on this conversation
@@ -90,12 +85,14 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
 
       {/* Action buttons */}
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <motion.button whileHover={{ scale: 1.05 }} style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: "rgba(0,210,106,0.08)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-          <Heart size={18} color={MUTED} />
-        </motion.button>
+        <ProtectedAction action="favorite_talent">
+          <motion.button whileHover={{ scale: 1.05 }} style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: "rgba(0,210,106,0.08)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <Heart size={18} color={MUTED} />
+          </motion.button>
+        </ProtectedAction>
 
         {/* Contact button — only for brands */}
-        {userRole === "brand" && (
+        {brandUser && canChat && (
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
@@ -118,7 +115,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
         )}
 
         {/* Booking request — brands only */}
-        {userRole === "brand" && (
+        {brandUser && canBook && (
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
@@ -138,9 +135,11 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
           </motion.button>
         )}
 
-        <motion.button onClick={() => userRole === "brand" ? setShowBrief(true) : router.push("/login")} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 12, padding: "0 28px", height: 44, fontSize: 15, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif", boxShadow: "0 0 24px rgba(0,210,106,0.35)" }}>
-          <Calendar size={16} />{ar ? "احجز الآن" : "Book Now"}
-        </motion.button>
+        <ProtectedAction action="create_booking">
+          <motion.button onClick={() => canBook ? setShowBrief(true) : router.push("/explore")} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 12, padding: "0 28px", height: 44, fontSize: 15, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif", boxShadow: "0 0 24px rgba(0,210,106,0.35)" }}>
+            <Calendar size={16} />{ar ? "احجز الآن" : "Book Now"}
+          </motion.button>
+        </ProtectedAction>
       </div>
     </motion.div>
 

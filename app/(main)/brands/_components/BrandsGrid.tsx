@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { MapPin, BadgeCheck, Users, MessageCircle } from "lucide-react";
 import type { BrandCard } from "../page";
+import ProtectedAction from "@/components/auth/ProtectedAction";
 
 const GRAD_COLORS = [
   ["#1e3a5f", "#0d2137"],
@@ -59,7 +60,7 @@ function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: b
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.3 }}
-      whileHover={{ y: -4, boxShadow: dark ? "0 8px 32px rgba(0,210,106,0.12)" : "0 8px 24px rgba(0,0,0,0.1)" }}
+      whileHover={{ y: -4, boxShadow: dark ? "0 8px 32px rgba(0,210,106,0.12)" : "0 8px 24px rgba(0,210,106,0.08)" }}
       style={{
         backgroundColor: CARD,
         border: `1px solid ${BORDER}`,
@@ -100,7 +101,7 @@ function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: b
             position: "absolute", top: 10,
             ...(ar ? { right: 10 } : { left: 10 }),
             display: "flex", alignItems: "center", gap: 4,
-            backgroundColor: "rgba(0,210,106,0.9)", color: "#000",
+            backgroundColor: "rgba(0,210,106,0.9)", color: "#050B12",
             fontSize: 10, fontWeight: 800, padding: "3px 8px",
             borderRadius: 6,
           }}>
@@ -174,6 +175,7 @@ function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: b
           </div>
 
           {/* Message CTA */}
+          <ProtectedAction action="start_conversation">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -194,6 +196,7 @@ function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: b
             <MessageCircle size={12} color={GREEN} />
             {ar ? "تواصل" : "Message"}
           </button>
+          </ProtectedAction>
         </div>
       </div>
     </motion.div>

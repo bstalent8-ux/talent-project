@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { createNotification } from "@/lib/notifications/create";
+import { notifyPaymentSuccess } from "@/lib/notifications/events";
 
 // POST — brand confirms payment → moves booking to in_progress
 export async function POST(
@@ -52,13 +52,11 @@ export async function POST(
 
   // Notify talent that payment was confirmed
   if (booking.talent_user_id) {
-    await createNotification({
-      userId:        booking.talent_user_id,
-      type:          "payment",
-      title:         "تم تأكيد الدفع 💳",
-      message:       "تم استلام الدفع. يمكنك البدء في العمل الآن!",
-      referenceId:   id,
-      referenceType: "booking",
+    await notifyPaymentSuccess({
+      bookingId:   id,
+      recipientId: booking.talent_user_id,
+      senderId:    user.id,
+      amount:      booking.amount ?? null,
     });
   }
 

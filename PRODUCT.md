@@ -78,6 +78,12 @@ monitors the booking pipeline, and blocks bad actors.
 Community participants (talents asking/answering questions in `/community`) and guests browsing
 public profiles before signing up.
 
+### Guest Access
+Guests can browse public discovery, approved talent profiles, approved brand profiles, open jobs,
+community questions/answers, and active packages. Applying, booking, messaging, posting, profile
+management, notifications, payments, subscriptions, and dashboard access require an account; protected
+clicks open a signup/login modal instead of showing an error.
+
 ---
 
 ## 3. Main User Journeys

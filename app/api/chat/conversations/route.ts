@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { canSendMessage, isBrand, isTalent } from "@/lib/permissions";
 
 // GET /api/chat/conversations — list all conversations for current user
 export async function GET() {
@@ -89,13 +90,13 @@ export async function POST(req: NextRequest) {
   // Determine who is brand and who is talent
   const { data: currentProfile } = await adminClient
     .from("profiles")
-    .select("role")
+    .select("id, role, account_status, brand_status, is_suspended, talent_profiles(status)")
     .eq("id", user.id)
     .single();
 
   const { data: otherProfile } = await adminClient
     .from("profiles")
-    .select("role")
+    .select("id, role, account_status, brand_status, is_suspended, talent_profiles(status)")
     .eq("id", other_user_id)
     .single();
 
@@ -103,9 +104,46 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "profiles not found" }, { status: 404 });
   }
 
+  const currentTalentProfiles = Array.isArray(currentProfile.talent_profiles)
+    ? currentProfile.talent_profiles
+    : currentProfile.talent_profiles
+      ? [currentProfile.talent_profiles]
+      : [];
+  const otherTalentProfiles = Array.isArray(otherProfile.talent_profiles)
+    ? otherProfile.talent_profiles
+    : otherProfile.talent_profiles
+      ? [otherProfile.talent_profiles]
+      : [];
+
+  const currentUser = {
+    ...currentProfile,
+    talent_status: currentTalentProfiles[0]?.status ?? null,
+  };
+  const otherUser = {
+    ...otherProfile,
+    talent_status: otherTalentProfiles[0]?.status ?? null,
+  };
+
+  if (!canSendMessage(currentUser).allowed || !canSendMessage(otherUser).allowed) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  const currentIsBrand = isBrand(currentUser);
+  const currentIsTalent = isTalent(currentUser);
+  const otherIsBrand = isBrand(otherUser);
+  const otherIsTalent = isTalent(otherUser);
+
+  if (!((currentIsBrand && otherIsTalent) || (currentIsTalent && otherIsBrand))) {
+    return NextResponse.json({ error: "brand and talent accounts only" }, { status: 403 });
+  }
+
+  if (otherUser.talent_status && otherUser.talent_status !== "approved") {
+    return NextResponse.json({ error: "talent profile is not available" }, { status: 403 });
+  }
+
   // brand_id is always the brand user, talent_id is always the talent user
   let brand_id: string, talent_id: string;
-  if (currentProfile.role === "brand") {
+  if (currentIsBrand) {
     brand_id = user.id;
     talent_id = other_user_id;
   } else {

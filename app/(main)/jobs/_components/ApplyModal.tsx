@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { X, Banknote, Clock, FileText, Link as LinkIcon, Send } from "lucide-react";
+import { useGuestGuard } from "@/contexts/GuestGuard";
+import { canApplyJob } from "@/lib/permissions";
 import type { JobPost } from "../page";
 
 interface Props {
@@ -55,6 +57,7 @@ const TX = {
 export default function ApplyModal({ job, dark, lang, onClose, onSuccess }: Props) {
   const t  = TX[lang];
   const ar = lang === "ar";
+  const { user, requestAuth } = useGuestGuard();
   const GREEN  = "#00D26A";
   const GOLD   = "#FFB800";
   const BG     = dark ? "#0D1623" : "#FFFFFF";
@@ -79,6 +82,12 @@ export default function ApplyModal({ job, dark, lang, onClose, onSuccess }: Prop
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!canApplyJob(user).allowed) {
+      onClose();
+      requestAuth("apply_job");
+      return;
+    }
+
     if (!price || !message.trim()) { setError(t.required); return; }
 
     setSending(true);
@@ -209,7 +218,7 @@ export default function ApplyModal({ job, dark, lang, onClose, onSuccess }: Prop
               style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 backgroundColor: sending ? "rgba(0,210,106,0.5)" : GREEN,
-                color: "#000", border: "none", borderRadius: 12, padding: "12px 0",
+                color: "#050B12", border: "none", borderRadius: 12, padding: "12px 0",
                 fontSize: 14, fontWeight: 900, cursor: sending ? "default" : "pointer",
                 fontFamily: "'Cairo',sans-serif",
               }}

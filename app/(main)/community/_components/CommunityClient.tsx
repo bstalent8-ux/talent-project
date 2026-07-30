@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, MessagesSquare, Handshake, Lightbulb, X, type LucideIcon } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
-import { createClient } from "@/lib/supabase/client";
+import { useGuestGuard } from "@/contexts/GuestGuard";
+import { canPerformAction } from "@/lib/permissions";
 import CommunityHero from "./CommunityHero";
 import CommunityFeed from "./CommunityFeed";
 import styles from "./CommunityPage.module.css";
@@ -72,16 +72,13 @@ export default function CommunityClient() {
   const { lang } = useSite();
   const ar = lang === "ar";
   const t = TX[lang];
-  const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
+  const { user, requestAuth } = useGuestGuard();
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "popular">("all");
   const [search, setSearch] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [user, setUser] = useState<{ id: string } | null>(null);
-
   const [showModal, setShowModal] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ title: "", content: "", tags: "" });
   const [commentInput, setCommentInput] = useState<Record<string, string>>({});
@@ -105,20 +102,20 @@ export default function CommunityClient() {
     }
   }, [activeTab, search]);
 
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user ? { id: user.id } : null);
-    })();
-  }, [supabase]);
-
   useEffect(() => { fetchQuestions(); }, [fetchQuestions]);
 
-  const openAsk = () => (user ? setShowModal(true) : router.push("/login"));
+  const openAsk = () => (
+    canPerformAction("create_community_question", user).allowed
+      ? setShowModal(true)
+      : requestAuth("create_community_question")
+  );
 
   const handleSubmitQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) { router.push("/login"); return; }
+    if (!canPerformAction("create_community_question", user).allowed) {
+      requestAuth("create_community_question");
+      return;
+    }
     try {
       const res = await fetch("/api/community/questions", {
         method: "POST",
@@ -145,7 +142,10 @@ export default function CommunityClient() {
   const handleSubmitComment = async (questionId: string) => {
     const content = commentInput[questionId]?.trim();
     if (!content) return;
-    if (!user) { router.push("/login"); return; }
+    if (!canPerformAction("create_community_answer", user).allowed) {
+      requestAuth("create_community_answer");
+      return;
+    }
     setSubmittingComment((p) => ({ ...p, [questionId]: true }));
     try {
       const res = await fetch("/api/community/answers", {
@@ -233,12 +233,13 @@ export default function CommunityClient() {
             popularTags={popularTags}
             activeTag={activeTag}
             onTagChange={setActiveTag}
-            user={user}
+            user={user?.id ? { id: user.id } : null}
             commentInput={commentInput}
             onCommentInput={(id, v) => setCommentInput((p) => ({ ...p, [id]: v }))}
             submittingComment={submittingComment}
             onSubmitComment={handleSubmitComment}
             onAsk={openAsk}
+            onRequireAuth={() => requestAuth("create_community_answer")}
           />
         </div>
       </section>

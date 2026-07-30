@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { createNotification } from "@/lib/notifications/create";
+import { notifyApplicationAccepted, notifyApplicationRejected } from "@/lib/notifications/events";
 
 // PATCH /api/jobs/[id]/applications/[appId]
 // body: { action: "accept" | "reject", reject_reason?: string }
@@ -18,7 +18,7 @@ export async function PATCH(
 
   // Verify caller owns the job
   const { data: job } = await adminClient
-    .from("jobs").select("id, brand_id, currency").eq("id", jobId).single();
+    .from("jobs").select("id, brand_id, currency, title").eq("id", jobId).single();
   if (!job) return NextResponse.json({ error: "job not found" }, { status: 404 });
   if (job.brand_id !== user.id) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
@@ -38,13 +38,13 @@ export async function PATCH(
       .eq("id", appId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    await createNotification({
-      userId:        app.talent_id,
-      type:          "job_application",
-      title:         "تم رفض طلبك",
-      message:       reject_reason ?? "للأسف لم يتم قبول طلبك على هذه الوظيفة",
-      referenceId:   jobId,
-      referenceType: "job",
+    await notifyApplicationRejected({
+      jobId,
+      jobTitle:      job.title,
+      applicationId: appId,
+      talentId:      app.talent_id,
+      brandId:       user.id,
+      reason:        reject_reason ?? null,
     });
 
     return NextResponse.json({ success: true, status: "rejected" });
@@ -112,13 +112,13 @@ export async function PATCH(
       message_type: "text",
     });
 
-    await createNotification({
-      userId:        app.talent_id,
-      type:          "booking",
-      title:         "تم قبول طلبك! 🎉",
-      message:       "تهانينا! تم قبول عرضك وتم إنشاء مشروع جديد.",
-      referenceId:   bookingId,
-      referenceType: "booking",
+    await notifyApplicationAccepted({
+      jobId,
+      jobTitle:      job.title,
+      applicationId: appId,
+      talentId:      app.talent_id,
+      brandId:       user.id,
+      bookingId,
     });
 
     return NextResponse.json({

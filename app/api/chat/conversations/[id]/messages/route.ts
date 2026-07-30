@@ -3,7 +3,8 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { createNotification } from "@/lib/notifications/create";
+import { notifyChatMessage } from "@/lib/notifications/events";
+import { canSendMessage } from "@/lib/permissions";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -12,6 +13,15 @@ export async function GET(req: NextRequest, { params }: Params) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const { data: profile } = await adminClient
+    .from("profiles")
+    .select("id, role, account_status, is_suspended")
+    .eq("id", user.id)
+    .single();
+  if (!canSendMessage(profile).allowed) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   const { id } = await params;
   const url = new URL(req.url);
@@ -56,6 +66,15 @@ export async function POST(req: NextRequest, { params }: Params) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+  const { data: profile } = await adminClient
+    .from("profiles")
+    .select("id, role, account_status, is_suspended")
+    .eq("id", user.id)
+    .single();
+  if (!canSendMessage(profile).allowed) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   const { id } = await params;
   const { content, message_type = "text" } = await req.json();
 
@@ -94,15 +113,18 @@ export async function POST(req: NextRequest, { params }: Params) {
     .update({ last_message_at: message.created_at })
     .eq("id", id);
 
-  // Notify the other participant
+  // Notify the other participant — skipped when they are already reading this
+  // thread, and collapsed onto an existing unread entry for the same thread.
   const receiverId = conv.brand_id === user.id ? conv.talent_id : conv.brand_id;
-  await createNotification({
-    userId:        receiverId,
-    type:          "message",
-    title:         "رسالة جديدة",
-    message:       content.trim().slice(0, 80),
-    referenceId:   id,
-    referenceType: "chat",
+  const { data: sender } = await adminClient
+    .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+
+  await notifyChatMessage({
+    conversationId: id,
+    recipientId:    receiverId,
+    senderId:       user.id,
+    senderName:     sender?.full_name ?? null,
+    preview:        content.trim(),
   });
 
   return NextResponse.json({ message }, { status: 201 });

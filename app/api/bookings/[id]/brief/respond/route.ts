@@ -3,7 +3,11 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { createNotification } from "@/lib/notifications/create";
+import {
+  notifyBookingAccepted,
+  notifyBookingDeclined,
+  notifyBookingUpdated,
+} from "@/lib/notifications/events";
 
 // PATCH — talent accepts, rejects, or requests changes on a booking request.
 export async function PATCH(
@@ -83,24 +87,36 @@ export async function PATCH(
   }
 
   // Notify brand of talent's response
-  const notifTitle = action === "accept"
-    ? "تم قبول طلب الحجز"
-    : action === "reject"
-      ? "تم رفض طلب الحجز"
-      : "طلبت الموهبة تعديلات";
-  const notifMsg = action === "accept"
-    ? "Talent accepted the booking request. You can continue to payment."
-    : action === "reject"
-      ? `Talent rejected the booking request${reject_reason ? `: ${reject_reason}` : ""}.`
-      : message.trim();
-  await createNotification({
-    userId:        booking.brand_id,
-    type:          "booking_request",
-    title:         notifTitle,
-    message:       notifMsg,
-    referenceId:   id,
-    referenceType: "booking",
-  });
+  const { data: talent } = await adminClient
+    .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+  const talentName = talent?.full_name ?? null;
+
+  if (action === "accept") {
+    await notifyBookingAccepted({
+      bookingId:   id,
+      recipientId: booking.brand_id,
+      senderId:    user.id,
+      senderName:  talentName,
+    });
+  } else if (action === "reject") {
+    await notifyBookingDeclined({
+      bookingId:   id,
+      recipientId: booking.brand_id,
+      senderId:    user.id,
+      senderName:  talentName,
+      reason:      reject_reason ?? null,
+    });
+  } else {
+    await notifyBookingUpdated({
+      bookingId:   id,
+      recipientId: booking.brand_id,
+      senderId:    user.id,
+      titleAr:     "طلبت الموهبة تعديلات",
+      titleEn:     "Talent requested changes",
+      messageAr:   message.trim(),
+      messageEn:   message.trim(),
+    });
+  }
 
   return NextResponse.json({ success: true, status: newStatus });
 }

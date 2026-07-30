@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { notifyProfileApproved, notifyProfileRejected } from "@/lib/notifications/events";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -55,12 +56,28 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   }
 
-  const { error } = await adminClient
+  const { data: updated, error } = await adminClient
     .from("talent_profiles")
     .update(updates)
-    .eq("id", id);
+    .eq("id", id)
+    .select("user_id")
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Tell the talent what the moderator decided.
+  if (updated?.user_id) {
+    if (body.action === "approve" || body.action === "restore") {
+      await notifyProfileApproved({ recipientId: updated.user_id, adminId: admin.id, kind: "talent" });
+    } else if (body.action === "reject" || body.action === "suspend") {
+      await notifyProfileRejected({
+        recipientId: updated.user_id,
+        adminId:     admin.id,
+        reason:      body.reason ?? null,
+        kind:        "talent",
+      });
+    }
+  }
 
   revalidatePath("/admin/talents");
   revalidatePath("/explore");

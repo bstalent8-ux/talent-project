@@ -25,6 +25,7 @@ interface Props {
   submittingComment: Record<string, boolean>;
   onSubmitComment: (id: string) => void;
   onAsk: () => void;
+  onRequireAuth: () => void;
 }
 
 const TX = {
@@ -49,7 +50,7 @@ const TX = {
 export default function CommunityFeed({
   lang, questions, loading, activeTab, onTabChange, search, onSearch,
   popularTags, activeTag, onTagChange, user,
-  commentInput, onCommentInput, submittingComment, onSubmitComment, onAsk,
+  commentInput, onCommentInput, submittingComment, onSubmitComment, onAsk, onRequireAuth,
 }: Props) {
   const router = useRouter();
   const t = TX[lang];
@@ -274,7 +275,7 @@ export default function CommunityFeed({
                       </button>
                     </div>
                   ) : (
-                    <button type="button" className={styles.loginPrompt} onClick={() => router.push("/login")}>
+                    <button type="button" className={styles.loginPrompt} onClick={onRequireAuth}>
                       {t.loginToComment}
                     </button>
                   )}

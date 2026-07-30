@@ -37,12 +37,16 @@ function detectIndustry(name: string, bio: string | null): string | null {
 export default async function BrandsPage() {
   const { data } = await adminClient
     .from("profiles")
-    .select("id, handle, full_name, avatar_url, city, bio, brand_category, is_verified, is_approved")
+    .select("id, handle, full_name, avatar_url, city, bio, brand_category, brand_status, account_status, is_verified, is_approved")
     .eq("role", "brand")
     .not("handle", "is", null);
 
   // Count completed bookings per brand
-  const brandIds = (data ?? []).map((b) => b.id);
+  const publicRows = (data ?? []).filter((b) => (
+    !["blocked", "suspended", "rejected"].includes(b.account_status ?? "active")
+    && (!b.brand_status || b.brand_status === "approved")
+  ));
+  const brandIds = publicRows.map((b) => b.id);
   let collabMap: Record<string, number> = {};
   if (brandIds.length > 0) {
     const { data: bookings } = await adminClient
@@ -55,7 +59,7 @@ export default async function BrandsPage() {
     }
   }
 
-  const brands: BrandCard[] = (data ?? []).map((p) => ({
+  const brands: BrandCard[] = publicRows.map((p) => ({
     id: p.id,
     handle: p.handle!,
     name: p.full_name ?? "—",

@@ -17,6 +17,7 @@ export async function fetchPortfolioByTalentId(talentProfileId: string): Promise
     .from("portfolio_items")
     .select("id, url, media_type, caption, sort_order, is_approved")
     .eq("talent_id", talentProfileId)
+    .eq("is_approved", true)
     .order("sort_order", { ascending: true });
 
   return (data ?? []) as RawPortfolioItem[];

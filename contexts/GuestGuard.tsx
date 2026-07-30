@@ -1,0 +1,275 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { useRouter } from "next/navigation";
+import { LogIn, UserRoundPlus, X } from "lucide-react";
+import { createClient, getBrowserUser } from "@/lib/supabase/client";
+import {
+  canPerformAction,
+  getAuthModalMessage,
+  type PermissionAction,
+  type PermissionUser,
+} from "@/lib/permissions";
+import { useSite } from "./SiteContext";
+
+interface GuestGuardValue {
+  loading: boolean;
+  user: PermissionUser | null;
+  isGuest: boolean;
+  can: (action: PermissionAction) => boolean;
+  requestAuth: (action: PermissionAction, message?: string) => void;
+  closeAuthModal: () => void;
+}
+
+const GuestGuardContext = createContext<GuestGuardValue | null>(null);
+
+const TX = {
+  ar: {
+    title: "أنشئ حساباً للمتابعة",
+    talent: "متابعة كموهبة",
+    brand: "متابعة كبراند",
+    login: "تسجيل الدخول",
+    close: "إغلاق",
+  },
+  en: {
+    title: "Create an account to continue",
+    talent: "Continue as Talent",
+    brand: "Continue as Brand",
+    login: "Login",
+    close: "Close",
+  },
+} as const;
+
+export function GuestGuard({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const { dark, lang } = useSite();
+  const t = TX[lang];
+
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<PermissionUser | null>(null);
+  const [modal, setModal] = useState<{ action: PermissionAction; message?: string } | null>(null);
+
+  const loadUser = useCallback(async () => {
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setUser(null);
+        return;
+      }
+
+      const { data: { user: authUser } } = await getBrowserUser();
+      if (!authUser) {
+        setUser(null);
+        return;
+      }
+
+      const res = await fetch("/api/me/role", { credentials: "include" });
+      if (!res.ok) {
+        setUser({ id: authUser.id });
+        return;
+      }
+
+      const profile = await res.json();
+      setUser({
+        id:             authUser.id,
+        role:           profile.role ?? null,
+        account_status: profile.account_status ?? null,
+        brand_status:   profile.brand_status ?? null,
+        talent_status:  profile.talent_status ?? null,
+        is_suspended:   profile.is_suspended ?? null,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUser();
+    const { data: { subscription } } = createClient().auth.onAuthStateChange(() => {
+      loadUser();
+    });
+    return () => subscription.unsubscribe();
+  }, [loadUser]);
+
+  useEffect(() => {
+    if (!modal) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setModal(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [modal]);
+
+  const value = useMemo<GuestGuardValue>(() => ({
+    loading,
+    user,
+    isGuest: !user?.id,
+    can: (action) => canPerformAction(action, user).allowed,
+    requestAuth: (action, message) => setModal({ action, message }),
+    closeAuthModal: () => setModal(null),
+  }), [loading, user]);
+
+  const message = modal ? (modal.message ?? getAuthModalMessage(modal.action, lang)) : "";
+  const surface = dark ? "#0D1623" : "#FFFFFF";
+  const border = dark ? "rgba(0,255,163,0.18)" : "#E2E8F0";
+  const text = dark ? "#F8FAFC" : "#0F172A";
+  const muted = dark ? "#A8B3C2" : "#64748B";
+  const green = "#00D26A";
+
+  function go(path: string) {
+    setModal(null);
+    router.push(path);
+  }
+
+  return (
+    <GuestGuardContext.Provider value={value}>
+      {children}
+      {modal && (
+        <div
+          role="presentation"
+          onClick={() => setModal(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10000,
+            backgroundColor: "rgba(2,6,23,0.68)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            fontFamily: "'Cairo',sans-serif",
+            direction: lang === "ar" ? "rtl" : "ltr",
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="guest-auth-title"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(100%, 420px)",
+              backgroundColor: surface,
+              border: `1px solid ${border}`,
+              borderRadius: 14,
+              boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+              padding: 22,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", gap: 14 }}>
+              <div>
+                <h2 id="guest-auth-title" style={{ color: text, fontSize: 20, fontWeight: 900, margin: "0 0 8px" }}>
+                  {t.title}
+                </h2>
+                <p style={{ color: muted, fontSize: 14, lineHeight: 1.7, margin: 0 }}>
+                  {message}
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label={t.close}
+                onClick={() => setModal(null)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  border: `1px solid ${border}`,
+                  backgroundColor: dark ? "#0A121C" : "#F8FAFC",
+                  color: muted,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={17} />
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gap: 10, marginTop: 22 }}>
+              <button
+                type="button"
+                onClick={() => go("/register?role=talent")}
+                style={{
+                  height: 44,
+                  borderRadius: 10,
+                  border: "none",
+                  backgroundColor: green,
+                  color: "#050B12",
+                  fontWeight: 900,
+                  fontFamily: "'Cairo',sans-serif",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <UserRoundPlus size={17} />
+                {t.talent}
+              </button>
+              <button
+                type="button"
+                onClick={() => go("/register?role=brand")}
+                style={{
+                  height: 44,
+                  borderRadius: 10,
+                  border: `1px solid ${green}`,
+                  backgroundColor: dark ? "rgba(0,210,106,0.08)" : "#ECFDF5",
+                  color: green,
+                  fontWeight: 900,
+                  fontFamily: "'Cairo',sans-serif",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <UserRoundPlus size={17} />
+                {t.brand}
+              </button>
+              <button
+                type="button"
+                onClick={() => go("/login")}
+                style={{
+                  height: 42,
+                  borderRadius: 10,
+                  border: `1px solid ${border}`,
+                  backgroundColor: "transparent",
+                  color: text,
+                  fontWeight: 800,
+                  fontFamily: "'Cairo',sans-serif",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <LogIn size={16} />
+                {t.login}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+    </GuestGuardContext.Provider>
+  );
+}
+
+export function useGuestGuard(): GuestGuardValue {
+  const ctx = useContext(GuestGuardContext);
+  if (!ctx) throw new Error("useGuestGuard must be used inside GuestGuard");
+  return ctx;
+}

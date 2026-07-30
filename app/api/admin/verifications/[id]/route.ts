@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { notifyProfileApproved, notifyProfileRejected } from "@/lib/notifications/events";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -73,6 +74,21 @@ export async function PATCH(
       .from("profiles")
       .update({ is_verified: false })
       .eq("id", verification.talent_id);
+  }
+
+  if (action === "approve") {
+    await notifyProfileApproved({
+      recipientId: verification.talent_id,
+      adminId:     admin.id,
+      kind:        "verification",
+    });
+  } else {
+    await notifyProfileRejected({
+      recipientId: verification.talent_id,
+      adminId:     admin.id,
+      reason:      reason ?? null,
+      kind:        "verification",
+    });
   }
 
   revalidatePath("/admin/verifications");

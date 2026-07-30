@@ -28,6 +28,8 @@ export default async function TalentPage({
     : profile.talent_profiles;
 
   if (!tp) notFound();
+  if ((profile as any).account_status && ["blocked", "suspended", "rejected"].includes((profile as any).account_status)) notFound();
+  if (tp.status && tp.status !== "approved") notFound();
 
   const [rawPortfolio, rawReviews, bookingStats, dbBrands] = await Promise.all([
     tp?.id ? fetchPortfolioByTalentId(tp.id)        : Promise.resolve([]),

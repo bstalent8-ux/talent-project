@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import {
+  Bell,
   Building2,
   CalendarCheck,
   ChevronLeft,
@@ -31,6 +32,7 @@ const TX = {
     verifications: "طلبات التحقق",
     categories: "التصنيفات",
     packages: "الباقات",
+    notifications: "الإشعارات",
     settings: "الإعدادات",
     logout: "تسجيل الخروج",
   },
@@ -43,6 +45,7 @@ const TX = {
     verifications: "Verifications",
     packages: "Packages",
     categories: "Categories",
+    notifications: "Notifications",
     settings: "Settings",
     logout: "Logout",
   },
@@ -57,6 +60,7 @@ const NAV_ITEMS = [
   { key: "verifications", href: "/admin/verifications", icon: ShieldCheck },
   { key: "categories", href: "/admin/categories", icon: ListTree },
   { key: "packages", href: "/admin/packages", icon: PackageIcon },
+  { key: "notifications", href: "/admin/notifications", icon: Bell },
   { key: "settings", href: "/admin/settings", icon: Settings },
 ] as const;
 
@@ -129,7 +133,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
           position: "sticky",
           top: 0,
           flexShrink: 0,
-          transition: "width 0.28s cubic-bezier(0.4,0,0.2,1), transform 0.28s cubic-bezier(0.4,0,0.2,1)",
+          transition: "transform 0.2s ease-out",
           zIndex: 40,
           overflowX: "hidden",
           overflowY: "auto",
@@ -141,7 +145,6 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
             display: "flex",
             justifyContent: collapsed ? "center" : "space-between",
             alignItems: "center",
-            transition: "padding 0.28s",
           }}
         >
           <div

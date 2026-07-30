@@ -124,7 +124,7 @@ check. RLS will not save you. See §8.
 │   ├── Navbar.tsx  Footer.tsx  DirectBriefModal.tsx
 │   ├── admin/      AdminShell, AdminSidebar, StatusBadge, Pagination, ConfirmationModal…
 │   ├── chat/       GlobalChat, FloatingChatWidget
-│   ├── notifications/  NotificationBell, NotificationDropdown, useNotifications
+│   ├── notifications/  NotificationBell, NotificationDropdown, NotificationItem
 │   ├── profile/    ProfileClient, ProfileCompletionCard, ProfileHero
 │   └── legal/ blog/ contact/
 │
@@ -134,9 +134,10 @@ check. RLS will not save you. See §8.
 │   ├── admin/                  admin.service.ts + admin types
 │   └── chat/types
 ├── hooks/useIsMobile.ts        Viewport breakpoint hook used by nearly every component
+├── hooks/notifications/        Singleton notification store + Realtime subscription hooks
 ├── lib/
 │   ├── supabase/{server,client,admin}.ts
-│   ├── notifications/create.ts createNotification() — service-role insert, errors swallowed
+│   ├── notifications/          service, event helpers, templates, validation + v1 compatibility shim
 │   ├── profile-completion.ts   Weighted profile-completion scoring + feature thresholds
 │   ├── recalcRating.ts
 │   └── utils.ts                cn()
@@ -271,7 +272,15 @@ attributes (`height`, `weight`, `hair_color`, `shoe_size`, `age`, `languages`, `
 ### Communication
 - **`conversations`** (20) — `UNIQUE(brand_id, talent_id)`, optional `booking_id`, `last_message_at`.
 - **`messages`** (15) — `conversation_id`, `sender_id`, `content`, `message_type`, `is_read`.
-- **`notifications`** (4) — Realtime-enabled; `type`, `title`, `message`, `reference_id/type`, `is_read`.
+- **`notification_types`** — canonical notification type registry (`JOB_CREATED`,
+  `BOOKING_REQUEST`, `CHAT_MESSAGE`, `ADMIN_MESSAGE`, etc.) with default priority.
+- **`notifications`** — Realtime-enabled user feed. v2 shape: `recipient_id`, `sender_id`,
+  `type`, `title`, `message`, `action_url`, `metadata jsonb`, `priority`, `is_read`,
+  `read_at`, `expires_at`, `broadcast_id`, `created_at`.
+- **`notification_broadcasts`** — admin announcement audit log with audience filter and
+  recipient count.
+- **`conversation_presence`** — per-thread heartbeat used to suppress chat notifications while
+  the receiver is actively reading the conversation.
 - **`community_questions`** (12) + **`community_answers`** (8).
 - **`contact_messages`** (1) — public contact form, insert-only via service role.
 
@@ -304,6 +313,20 @@ inflates the visible paid cards.
 ## 8. Roles & Permissions
 
 Roles live in `profiles.role` (Postgres enum `user_role`).
+
+### Guest privilege layer
+Guests are visitors with no Supabase session and no `auth.uid()`. They can browse public marketplace
+content only: `/`, `/home`, `/explore`, `/talents`, `/talent/[handle]`, `/brands`, `/brand/[id]`,
+`/jobs`, `/jobs/[id]`, `/campaigns`, `/community`, `/community/question/[id]`, `/packages`, and
+`/pricing`. Public server pages that use `adminClient` must reapply public filters in code because
+RLS is bypassed: approved/active talents only, approved/active brands only, open jobs only, and
+active packages only.
+
+Protected action checks are centralized in `lib/permissions.ts`. Frontend controls use
+`contexts/GuestGuard.tsx` and `components/auth/ProtectedAction.tsx` to show the auth modal instead
+of redirecting guests on clicks. Direct URL access is handled in `middleware.ts` for `/dashboard`,
+`/profile`, `/messages`, `/chat`, `/bookings`, `/notifications`, `/settings`, `/payments`,
+`/jobs/create`, and `/jobs/[id]/applications`.
 
 | Role | Notes |
 |---|---|
@@ -343,7 +366,10 @@ Representative policies:
 - `profiles` — user may SELECT/UPDATE/INSERT only `auth.uid() = id`.
 - `bookings` — SELECT if `brand_id = auth.uid()` **or** `talent_id ∈ (SELECT id FROM talent_profiles WHERE user_id = auth.uid())`; INSERT only with `brand_id = auth.uid()`.
 - `reviews` — public SELECT restricted to `status = 'approved'`; INSERT only by the booking's brand.
-- `notifications` — SELECT/UPDATE own rows only; **no INSERT policy** (service role only).
+- `notifications` — SELECT own unexpired rows; UPDATE/DELETE own rows only. Authenticated users
+  have no general INSERT policy; writes go through service-role app code, with an admin-only
+  insert policy as defence in depth.
+- `notification_broadcasts` — SELECT admin only; writes go through service-role app code.
 - `community_*` — public read; insert/update/delete only by the author.
 - `talent_brands` / `talent_verifications` — public or self read; writes scoped to the owning talent.
 - `contact_messages` — no RLS; insert-only through the service role.
@@ -387,9 +413,19 @@ site-wide `GlobalChat` / `FloatingChatWidget` mounted in the `(main)` layout. Pi
 bilingual system messages into the thread.
 
 ### 10.4 Notifications
-`lib/notifications/create.ts` → service-role insert. Types: `message`, `job_application`, `brief`,
-`booking`, `payment`, `review`, `system`. The table is in the `supabase_realtime` publication;
-`components/notifications/useNotifications.ts` subscribes and drives the navbar bell.
+`lib/notifications/events.ts` is the event API used by feature routes. It writes through
+`lib/notifications/service.ts` using the service role; `lib/notifications/create.ts` is only a v1
+compatibility shim. Canonical types are uppercase (`JOB_CREATED`, `JOB_APPLICATION_RECEIVED`,
+`APPLICATION_ACCEPTED`, `BOOKING_REQUEST`, `CHAT_MESSAGE`, `PAYMENT_SUCCESS`, `ADMIN_MESSAGE`,
+etc.) and bilingual copy is stored in `metadata.i18n`.
+
+The table is in the `supabase_realtime` publication with `REPLICA IDENTITY FULL`. The browser uses
+`hooks/notifications/store.ts` as a module singleton so the bell, dropdown and `/notifications`
+page share one initial fetch and one Realtime channel. Chat notifications collapse by
+conversation, and `conversation_presence` suppresses chat-message notifications while the receiver
+is inside that thread. Admin announcements are sent from `/admin/notifications` via
+`/api/admin/notifications` and logged in `notification_broadcasts`.
+
 Failures are logged and swallowed — a notification must never break the calling flow.
 
 ### 10.5 Profile completion

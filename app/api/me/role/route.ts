@@ -15,11 +15,24 @@ export async function GET() {
   // adminClient bypasses RLS — works regardless of policies on profiles table
   const { data } = await adminClient
     .from("profiles")
-    .select("role")
+    .select("role, account_status, brand_status, is_suspended, talent_profiles(status)")
     .eq("id", user.id)
     .single();
 
   // `id` is returned alongside the role so callers that need both do not have to
   // pay for a second `auth.getUser()` network round trip from the browser.
-  return NextResponse.json({ role: data?.role ?? null, id: user.id });
+  const talentProfiles = Array.isArray(data?.talent_profiles)
+    ? data?.talent_profiles
+    : data?.talent_profiles
+      ? [data.talent_profiles]
+      : [];
+
+  return NextResponse.json({
+    role:           data?.role ?? null,
+    id:             user.id,
+    account_status: data?.account_status ?? null,
+    brand_status:   data?.brand_status ?? null,
+    is_suspended:   data?.is_suspended ?? null,
+    talent_status:  talentProfiles[0]?.status ?? null,
+  });
 }

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
+import { useConversationPresence } from "@/hooks/notifications/useConversationPresence";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import type { Message, Conversation } from "@/features/chat/types";
@@ -21,6 +22,9 @@ export default function ChatWindow({ conversationId, conversation, currentUserId
   const [loadingMore, setLoadingMore] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // Suppresses chat-message notifications while this thread is on screen.
+  useConversationPresence(conversationId);
 
   const BORDER = dark ? "#1e293b"  : "#E2E8F0";
   const BG     = dark ? "#060d18"  : "#F8FAFC";

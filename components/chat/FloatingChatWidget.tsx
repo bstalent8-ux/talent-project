@@ -6,6 +6,7 @@ import {
 import { cdnImage } from "@/lib/images";
 import { createClient, getBrowserUser } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
+import { useConversationPresence } from "@/hooks/notifications/useConversationPresence";
 import type { Conversation, Message } from "@/features/chat/types";
 
 // ─── tiny helpers ─────────────────────────────────────────────────────────────
@@ -36,6 +37,9 @@ export default function FloatingChatWidget() {
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [activeOther, setActiveOther]   = useState<Conversation["other_user"] | null>(null);
 
+  // Only counts as "reading" when the widget is open on the chat view.
+  useConversationPresence(open && view === "chat" ? activeConvId : null);
+
   // ─── data ────────────────────────────────────────────────────────────────
   const [myId, setMyId]             = useState<string | null>(null);
   const [convs, setConvs]           = useState<Conversation[]>([]);
@@ -51,6 +55,7 @@ export default function FloatingChatWidget() {
   const inputRef   = useRef<HTMLTextAreaElement>(null);
   const realtimeCh = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
   const globalCh   = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
+  const activeConvRef = useRef<string | null>(null);
 
   // ─── colours ─────────────────────────────────────────────────────────────
   const GOLD   = "#FFB800";
@@ -87,6 +92,10 @@ export default function FloatingChatWidget() {
     if (open) loadConvs();
   }, [open, loadConvs]);
 
+  useEffect(() => {
+    activeConvRef.current = open && view === "chat" ? activeConvId : null;
+  }, [activeConvId, open, view]);
+
   // ─── global realtime: listen to ALL my messages for list-view notifications ─
   useEffect(() => {
     if (!myId) return;
@@ -98,7 +107,7 @@ export default function FloatingChatWidget() {
       }, (p) => {
         const m = p.new as Message;
         if (m.sender_id === myId) return;
-        if (m.conversation_id === activeConvId) return;
+        if (m.conversation_id === activeConvRef.current) return;
         // Read latest convs snapshot outside updater to avoid calling side-effects inside setState
         setConvs((prev) => {
           const idx = prev.findIndex((c) => c.id === m.conversation_id);

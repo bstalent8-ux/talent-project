@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSite } from "@/contexts/SiteContext";
 import Link from "next/link";
+import ProtectedAction from "@/components/auth/ProtectedAction";
 
 const PAGE_SIZE = 12;
 import type { JobPost } from "../page";
@@ -87,9 +88,10 @@ export default function JobsClient({ jobs }: Props) {
               </p>
             </div>
             {/* Post a job CTA — visible to brands */}
+            <ProtectedAction action="create_job">
             <Link href="/jobs/create" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
-              backgroundColor: GOLD, color: "#000",
+              backgroundColor: GOLD, color: "#050B12",
               padding: "10px 20px", borderRadius: 12,
               fontWeight: 800, fontSize: 14,
               textDecoration: "none", fontFamily: "'Cairo',sans-serif",
@@ -97,6 +99,7 @@ export default function JobsClient({ jobs }: Props) {
             }}>
               + {ar ? "نشر وظيفة" : "Post a Job"}
             </Link>
+            </ProtectedAction>
           </div>
 
           {/* Search */}
@@ -193,7 +196,7 @@ export default function JobsClient({ jobs }: Props) {
                     width: 36, height: 36, borderRadius: 8,
                     border: `1px solid ${p === page ? GREEN : BORDER}`,
                     backgroundColor: p === page ? GREEN : "transparent",
-                    color: p === page ? "#000" : (dark ? "#94a3b8" : "#64748b"),
+                    color: p === page ? "#050B12" : (dark ? "#94a3b8" : "#64748b"),
                     fontSize: 13, fontWeight: p === page ? 900 : 400,
                     cursor: "pointer", fontFamily: "'Cairo',sans-serif",
                     display: "flex", alignItems: "center", justifyContent: "center",

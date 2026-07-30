@@ -7,17 +7,22 @@ import { useEffect, useRef, useState } from "react";
 import {
   CalendarCheck,
   Languages,
+  LogIn,
   LogOut,
   Menu,
   Moon,
   Search,
   Sun,
+  UserRoundPlus,
   UserPen,
   X,
 } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import ProtectedAction from "@/components/auth/ProtectedAction";
+import { useGuestGuard } from "@/contexts/GuestGuard";
 import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { resetNotificationStore } from "@/hooks/notifications";
 import { cdnImage } from "@/lib/images";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./SiteChrome.module.css";
@@ -50,6 +55,8 @@ const TX = {
     book: "احجز الآن",
     editProfile: "تعديل الملف الشخصي",
     logout: "تسجيل الخروج",
+    login: "دخول",
+    register: "حساب جديد",
     lang: "Ar",
     menu: "فتح القائمة",
     close: "إغلاق القائمة",
@@ -60,6 +67,8 @@ const TX = {
     book: "Book Now",
     editProfile: "Edit Profile",
     logout: "Log Out",
+    login: "Login",
+    register: "Register",
     lang: "En",
     menu: "Open menu",
     close: "Close menu",
@@ -84,6 +93,7 @@ export default function Navbar({
   const router = useRouter();
   const isMobile = useIsMobile(980);
   const { lang, toggleLang, dark, toggleMode } = useSite();
+  const { isGuest } = useGuestGuard();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(_initialAvatarUrl ?? null);
@@ -143,6 +153,7 @@ export default function Navbar({
   }, [pathname]);
 
   async function handleLogout() {
+    resetNotificationStore();
     await createClient().auth.signOut();
     router.push("/login");
   }
@@ -171,7 +182,7 @@ export default function Navbar({
           <div className={styles.navLinks}>
             {links.map((item) => {
               const isActive = pathname === item.href;
-              return (
+              const link = (
                 <Link
                   className={cx(styles.navLink, isActive && styles.navLinkActive)}
                   href={item.href}
@@ -181,6 +192,9 @@ export default function Navbar({
                   {item.label}
                 </Link>
               );
+              return item.href.startsWith("/bookings")
+                ? <ProtectedAction key={item.href} action="access_dashboard">{link}</ProtectedAction>
+                : link;
             })}
           </div>
         )}
@@ -195,46 +209,59 @@ export default function Navbar({
             {dark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          {!isMobile && (
-            <span className={styles.desktopOnly}>
-              <NotificationBell />
-            </span>
-          )}
+          {!isGuest && <NotificationBell />}
 
-          <div className={styles.avatarWrap} ref={dropdownRef}>
-            <button
-              className={styles.avatarButton}
-              type="button"
-              onClick={() => setDropdownOpen((open) => !open)}
-              aria-label={_initialFullName || "Profile"}
-              aria-expanded={dropdownOpen}
-            >
-              {!avatarLoaded && <span className={styles.spinner} aria-hidden="true" />}
-              {avatarUrl && (
-                <img
-                  className={styles.avatarImage}
-                  src={cdnImage(avatarUrl, 96)}
-                  alt={_initialFullName || "avatar"}
-                  onLoad={() => setAvatarLoaded(true)}
-                  onError={() => setAvatarLoaded(true)}
-                />
-              )}
-              {avatarLoaded && !avatarUrl && <UserPen size={16} aria-hidden="true" />}
-            </button>
-
-            {dropdownOpen && (
-              <div className={styles.dropdown}>
-                <Link className={styles.dropdownItem} href="/profile/me">
-                  <UserPen size={16} />
-                  {t.editProfile}
+          {isGuest ? (
+            <>
+              <Link className={styles.iconButton} href="/login">
+                <LogIn size={15} />
+                {t.login}
+              </Link>
+              {!isMobile && (
+                <Link className={styles.bookButton} href="/register">
+                  <UserRoundPlus size={16} />
+                  {t.register}
                 </Link>
-                <button className={cx(styles.dropdownItem, styles.dangerItem)} onClick={handleLogout} type="button">
-                  <LogOut size={16} />
-                  {t.logout}
-                </button>
-              </div>
-            )}
-          </div>
+              )}
+            </>
+          ) : (
+            <div className={styles.avatarWrap} ref={dropdownRef}>
+              <button
+                className={styles.avatarButton}
+                type="button"
+                onClick={() => setDropdownOpen((open) => !open)}
+                aria-label={_initialFullName || "Profile"}
+                aria-expanded={dropdownOpen}
+              >
+                {!avatarLoaded && <span className={styles.spinner} aria-hidden="true" />}
+                {avatarUrl && (
+                  <img
+                    className={styles.avatarImage}
+                    src={cdnImage(avatarUrl, 96)}
+                    alt={_initialFullName || "avatar"}
+                    onLoad={() => setAvatarLoaded(true)}
+                    onError={() => setAvatarLoaded(true)}
+                  />
+                )}
+                {avatarLoaded && !avatarUrl && <UserPen size={16} aria-hidden="true" />}
+              </button>
+
+              {dropdownOpen && (
+                <div className={styles.dropdown}>
+                  <ProtectedAction action="access_profile_management">
+                    <Link className={styles.dropdownItem} href="/profile/me">
+                      <UserPen size={16} />
+                      {t.editProfile}
+                    </Link>
+                  </ProtectedAction>
+                  <button className={cx(styles.dropdownItem, styles.dangerItem)} onClick={handleLogout} type="button">
+                    <LogOut size={16} />
+                    {t.logout}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Target is /explore, not /book: /book has never had a route, so the
               CTA 404'd and Next prefetched that 404 on every page render. */}
@@ -268,7 +295,7 @@ export default function Navbar({
 
           {links.map((item) => {
             const isActive = pathname === item.href;
-            return (
+            const link = (
               <Link
                 className={cx(styles.mobileLink, isActive && styles.mobileLinkActive)}
                 href={item.href}
@@ -278,7 +305,17 @@ export default function Navbar({
                 {item.label}
               </Link>
             );
+            return item.href.startsWith("/bookings")
+              ? <ProtectedAction key={item.href} action="access_dashboard">{link}</ProtectedAction>
+              : link;
           })}
+
+          {isGuest && (
+            <Link className={styles.mobileLink} href="/register">
+              <UserRoundPlus size={16} />
+              {t.register}
+            </Link>
+          )}
 
           <Link className={styles.bookButton} href="/explore">
             <CalendarCheck size={17} />

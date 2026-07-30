@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SiteProvider } from "@/contexts/SiteContext";
+import { GuestGuard } from "@/contexts/GuestGuard";
 
 export const metadata: Metadata = {
   title: "Talents - منصة المواهب العربية",
@@ -48,7 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: INIT_SCRIPT }} />
       </head>
       <body suppressHydrationWarning>
-        <SiteProvider>{children}</SiteProvider>
+        <SiteProvider>
+          <GuestGuard>{children}</GuestGuard>
+        </SiteProvider>
       </body>
     </html>
   );

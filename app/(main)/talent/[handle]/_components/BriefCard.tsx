@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FileText } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import DirectBriefModal from "@/components/DirectBriefModal";
+import ProtectedAction from "@/components/auth/ProtectedAction";
 
 interface Props {
   talentUserId: string;
@@ -30,13 +31,15 @@ export default function BriefCard({ talentUserId, talentName, talentAvatar, tale
         </div>
         <h3 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 15, fontWeight: 800, marginBottom: 6 }}>{ar ? "احجز الموهبة" : "Book Talent"}</h3>
         <p style={{ color: MUTED, fontSize: 12, marginBottom: 16 }}>{ar ? "شارك تفاصيل حملتك وسيصل طلب الحجز للموهبة فوراً" : "Share your campaign details and send a booking request instantly."}</p>
-        <motion.button
-          whileHover={{ scale: 1.02, translateY: -2 }}
-          onClick={() => setShowModal(true)}
-          style={{ backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", width: "100%", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
-        >
-          {ar ? "طلب حجز" : "Book Talent"}
-        </motion.button>
+        <ProtectedAction action="create_booking">
+          <motion.button
+            whileHover={{ scale: 1.02, translateY: -2 }}
+            onClick={() => setShowModal(true)}
+            style={{ backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", width: "100%", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+          >
+            {ar ? "طلب حجز" : "Book Talent"}
+          </motion.button>
+        </ProtectedAction>
       </div>
 
       {showModal && (

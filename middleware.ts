@@ -10,6 +10,26 @@ const SKIP_PREFIXES = ["/_next", "/favicon", "/assets", "/api/auth"];
 
 const BLOCKED_STATUSES = ["blocked", "suspended", "rejected"];
 
+const PROTECTED_PREFIXES = [
+  "/admin",
+  "/dashboard",
+  "/profile",
+  "/messages",
+  "/chat",
+  "/bookings",
+  "/notifications",
+  "/settings",
+  "/payments",
+];
+
+const PROTECTED_EXACT_PATHS = ["/jobs/create"];
+
+function isProtectedPath(pathname: string) {
+  if (PROTECTED_EXACT_PATHS.includes(pathname)) return true;
+  if (/^\/jobs\/[^/]+\/applications(?:\/|$)/.test(pathname)) return true;
+  return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -46,8 +66,16 @@ export async function middleware(request: NextRequest) {
   // getUser() validates the JWT — more secure than getSession()
   const { data: { user } } = await supabase.auth.getUser();
 
-  // No session → let the page/layout handle auth redirects
-  if (!user) return response;
+  // No session: public browsing is allowed; protected app surfaces redirect.
+  if (!user) {
+    if (isProtectedPath(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(url);
+    }
+    return response;
+  }
 
   // Check account_status using service role to bypass RLS
   const admin = createClient(

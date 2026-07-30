@@ -3,7 +3,11 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { createNotification } from "@/lib/notifications/create";
+import {
+  notifyBookingUpdated,
+  notifyDeliverableSubmitted,
+  notifyPaymentSuccess,
+} from "@/lib/notifications/events";
 
 // GET — list deliverables for booking
 export async function GET(
@@ -70,13 +74,14 @@ export async function POST(
   }
 
   // Notify brand that deliverables were submitted
-  await createNotification({
-    userId:        booking.brand_id,
-    type:          "booking",
-    title:         "تم تسليم العمل 📦",
-    message:       "قدّمت الموهبة العمل. يرجى المراجعة والموافقة.",
-    referenceId:   id,
-    referenceType: "booking",
+  const { data: talent } = await adminClient
+    .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+
+  await notifyDeliverableSubmitted({
+    bookingId:   id,
+    recipientId: booking.brand_id,
+    senderId:    user.id,
+    senderName:  talent?.full_name ?? null,
   });
 
   return NextResponse.json({ deliverable, status: "completed" });
@@ -114,13 +119,11 @@ export async function PATCH(
     }
     await adminClient.from("bookings").update({ status: "paid" }).eq("id", id);
     if (booking.talent_user_id) {
-      await createNotification({
-        userId:        booking.talent_user_id,
-        type:          "payment",
-        title:         "تمت الموافقة على عملك ✅",
-        message:       "تم الموافقة على العمل المسلّم وتحرير المبلغ.",
-        referenceId:   id,
-        referenceType: "booking",
+      await notifyPaymentSuccess({
+        bookingId:   id,
+        recipientId: booking.talent_user_id,
+        senderId:    user.id,
+        amount:      booking.amount ?? null,
       });
     }
     return NextResponse.json({ success: true, status: "paid" });
@@ -132,13 +135,14 @@ export async function PATCH(
     }
     await adminClient.from("bookings").update({ status: "in_progress" }).eq("id", id);
     if (booking.talent_user_id) {
-      await createNotification({
-        userId:        booking.talent_user_id,
-        type:          "booking",
-        title:         "طُلب تعديل على العمل 🔄",
-        message:       feedback ?? "طلب العميل إجراء تعديلات على العمل المسلّم.",
-        referenceId:   id,
-        referenceType: "booking",
+      await notifyBookingUpdated({
+        bookingId:   id,
+        recipientId: booking.talent_user_id,
+        senderId:    user.id,
+        titleAr:     "طُلب تعديل على العمل 🔄",
+        titleEn:     "Revision requested 🔄",
+        messageAr:   feedback ?? "طلب العميل إجراء تعديلات على العمل المسلّم.",
+        messageEn:   feedback ?? "The brand requested changes to your submitted work.",
       });
     }
     const { data: conv } = await adminClient

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { notifyProfileApproved, notifyProfileRejected } from "@/lib/notifications/events";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -56,6 +57,13 @@ export async function PATCH(
     .eq("role", "brand");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // `reset` puts the brand back into review — no notification for that.
+  if (action === "approve") {
+    await notifyProfileApproved({ recipientId: id, adminId: admin.id, kind: "brand" });
+  } else if (action === "reject") {
+    await notifyProfileRejected({ recipientId: id, adminId: admin.id, reason: reason ?? null, kind: "brand" });
+  }
 
   revalidatePath("/admin/brands");
   return NextResponse.json({ ok: true });

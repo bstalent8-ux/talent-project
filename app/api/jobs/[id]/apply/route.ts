@@ -3,7 +3,8 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { createNotification } from "@/lib/notifications/create";
+import { notifyJobApplicationReceived } from "@/lib/notifications/events";
+import { canApplyJob } from "@/lib/permissions";
 
 // POST /api/jobs/[id]/apply — talent submits a proposal
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -14,14 +15,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { data: profile } = await adminClient
-    .from("profiles").select("role").eq("id", user.id).single();
+    .from("profiles")
+    .select("id, role, account_status, is_suspended, talent_profiles(status)")
+    .eq("id", user.id)
+    .single();
 
-  const allowedRoles = ["talent", "freelancer", "ugc"];
-  if (!profile || !allowedRoles.includes(profile.role))
-    return NextResponse.json({ error: "only talents can apply" }, { status: 403 });
+  if (!profile) return NextResponse.json({ error: "profile not found" }, { status: 404 });
+
+  const talentProfiles = Array.isArray(profile.talent_profiles)
+    ? profile?.talent_profiles
+    : profile.talent_profiles
+      ? [profile.talent_profiles]
+      : [];
+  const permission = canApplyJob({
+    ...profile,
+    talent_status: talentProfiles[0]?.status ?? null,
+  });
+  if (!permission.allowed) return NextResponse.json({ error: permission.reason === "role" ? "only talents can apply" : "forbidden" }, { status: 403 });
 
   const { data: job } = await adminClient
-    .from("jobs").select("id, status, brand_id").eq("id", jobId).single();
+    .from("jobs").select("id, status, brand_id, title").eq("id", jobId).single();
 
   if (!job) return NextResponse.json({ error: "job not found" }, { status: 404 });
   if (job.status !== "open") return NextResponse.json({ error: "job is not open" }, { status: 400 });
@@ -55,13 +68,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Notify the brand that someone applied
-  await createNotification({
-    userId:        job.brand_id,
-    type:          "job_application",
-    title:         "طلب تقديم جديد",
-    message:       message ?? "تقدّم أحد المواهب على وظيفتك",
-    referenceId:   jobId,
-    referenceType: "job",
+  const { data: talent } = await adminClient
+    .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+
+  await notifyJobApplicationReceived({
+    jobId,
+    jobTitle:      job.title,
+    applicationId: application.id,
+    brandId:       job.brand_id,
+    talentId:      user.id,
+    talentName:    talent?.full_name ?? null,
+    message,
   });
 
   return NextResponse.json({ application }, { status: 201 });

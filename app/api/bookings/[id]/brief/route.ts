@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { createNotification } from "@/lib/notifications/create";
+import { notifyBookingRequest } from "@/lib/notifications/events";
 
 // GET — get brief for booking
 export async function GET(
@@ -91,13 +91,15 @@ export async function POST(
 
   // Notify talent about new brief
   if (booking.talent_user_id) {
-    await createNotification({
-      userId:        booking.talent_user_id,
-      type:          "brief",
-      title:         "تم إرسال ملخص المشروع 📋",
-      message:       `"${title}" — يرجى مراجعة الملخص والرد عليه`,
-      referenceId:   id,
-      referenceType: "booking",
+    const { data: brand } = await adminClient
+      .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+
+    await notifyBookingRequest({
+      bookingId:   id,
+      recipientId: booking.talent_user_id,
+      senderId:    user.id,
+      senderName:  brand?.full_name ?? null,
+      title,
     });
   }
 

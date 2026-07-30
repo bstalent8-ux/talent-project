@@ -25,6 +25,115 @@ export interface TalentCard {
   gender?: string | null;
 }
 
+type ExploreTalentProfileRow = {
+  id: string;
+  category: string | null;
+  specialties: string[] | null;
+  avg_rating: number | null;
+  total_reviews: number | null;
+  packages: unknown;
+  social_links: unknown;
+  status?: string | null;
+};
+
+type ExploreProfileRow = {
+  id: string;
+  handle: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  city: string | null;
+  account_status?: string | null;
+  is_verified?: boolean | null;
+  is_suspended?: boolean | null;
+  talent_profiles: ExploreTalentProfileRow | ExploreTalentProfileRow[] | null;
+};
+
+const EXPLORE_DEBUG = process.env.DEBUG_EXPLORE === "1" || process.env.NODE_ENV === "development";
+
+const EXPLORE_QUERY_ATTEMPTS = [
+  {
+    label: "profiles_with_account_status",
+    select: `
+      id, handle, full_name, avatar_url, city, account_status, is_verified, is_suspended,
+      talent_profiles!inner (
+        id, category, specialties, avg_rating, total_reviews,
+        packages, social_links, status
+      )
+    `,
+    filterSuspended: true,
+  },
+  {
+    label: "profiles_legacy_status",
+    select: `
+      id, handle, full_name, avatar_url, city, is_verified, is_suspended,
+      talent_profiles!inner (
+        id, category, specialties, avg_rating, total_reviews,
+        packages, social_links, status
+      )
+    `,
+    filterSuspended: true,
+  },
+  {
+    label: "profiles_minimal_status",
+    select: `
+      id, handle, full_name, avatar_url, city, is_verified,
+      talent_profiles!inner (
+        id, category, specialties, avg_rating, total_reviews,
+        packages, social_links, status
+      )
+    `,
+    filterSuspended: false,
+  },
+] as const;
+
+async function fetchExploreProfiles(): Promise<ExploreProfileRow[]> {
+  let lastError: unknown = null;
+
+  for (const attempt of EXPLORE_QUERY_ATTEMPTS) {
+    let query = adminClient
+      .from("profiles")
+      .select(attempt.select)
+      .eq("role", "talent")
+      .not("handle", "is", null)
+      .eq("talent_profiles.status", "approved");
+
+    if (attempt.filterSuspended) {
+      query = query.eq("is_suspended", false);
+    }
+
+    const { data, error } = await query;
+
+    if (EXPLORE_DEBUG) {
+      console.info("[explore] query", {
+        attempt: attempt.label,
+        table: "profiles",
+        embed: "talent_profiles!inner",
+        filters: {
+          role: "talent",
+          handle: "not null",
+          talent_profile_status: "approved",
+          is_suspended: attempt.filterSuspended ? false : "not applied",
+        },
+        returned_count: data?.length ?? 0,
+        error: error ? { code: error.code, message: error.message } : null,
+      });
+    }
+
+    if (!error) {
+      return (data ?? []) as unknown as ExploreProfileRow[];
+    }
+
+    lastError = error;
+
+    // Keep Explore compatible with live MVP databases that have not received
+    // every idempotent status migration yet.
+    if (error.code !== "42703") break;
+  }
+
+  console.error("[explore] failed to fetch talents", lastError);
+  return [];
+}
+
 /**
  * Category of the brand currently viewing Explore, normalized to a category id.
  * Returns null for guests, talents, admins, and brands with no category set —
@@ -61,27 +170,18 @@ async function getViewerBrandCategory(): Promise<string | null> {
 
 export default async function ExplorePage() {
   // Independent queries — resolved together so personalization costs no extra TTFB.
-  const [viewerBrandCategory, { data }] = await Promise.all([
+  const [viewerBrandCategory, rows] = await Promise.all([
     getViewerBrandCategory(),
-    adminClient
-      .from("profiles")
-      .select(`
-        id, handle, full_name, avatar_url, city, is_verified, is_suspended,
-        talent_profiles (
-          id, category, specialties, avg_rating, total_reviews,
-          packages, social_links
-        )
-      `)
-      .eq("role", "talent")
-      .eq("is_suspended", false)
-      .not("handle", "is", null),
+    fetchExploreProfiles(),
   ]);
 
-  const talents: TalentCard[] = (data ?? []).flatMap((p) => {
+  const talents: TalentCard[] = rows.flatMap((p) => {
     const tp = Array.isArray(p.talent_profiles)
       ? p.talent_profiles[0]
       : p.talent_profiles;
     if (!tp) return [];
+    if (p.account_status && ["blocked", "suspended", "rejected"].includes(p.account_status)) return [];
+    if (tp.status && tp.status !== "approved") return [];
 
     const sl = (tp.social_links ?? {}) as Record<string, unknown>;
     const pkgs = Array.isArray(tp.packages) ? tp.packages as Array<Record<string, unknown>> : [];

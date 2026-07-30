@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { MapPin, Users, Calendar, Banknote, CheckCircle2, ClipboardList } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useGuestGuard } from "@/contexts/GuestGuard";
+import { canApplyJob, isBrand, isGuestUser, type PermissionUser } from "@/lib/permissions";
 import ApplyModal from "./ApplyModal";
 import type { JobPost } from "../page";
 
@@ -22,16 +23,15 @@ const CAT_LABELS: Record<string, { ar: string; en: string }> = {
 
 interface Props { dark: boolean; lang: "ar" | "en"; jobs: JobPost[] }
 
-interface UserInfo { id: string; role: string }
-
 function JobCard({
   job, dark, lang, index, userInfo, onApplySuccess,
 }: {
   job: JobPost; dark: boolean; lang: "ar" | "en"; index: number;
-  userInfo: UserInfo | null;
+  userInfo: PermissionUser | null;
   onApplySuccess: (jobId: string) => void;
 }) {
   const router = useRouter();
+  const { requestAuth } = useGuestGuard();
   const ar     = lang === "ar";
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
@@ -59,10 +59,10 @@ function JobCard({
   const daysAgo  = Math.floor((Date.now() - new Date(job.created_at).getTime()) / 86400000);
   const timeLabel = daysAgo === 0 ? (ar ? "اليوم" : "Today") : daysAgo === 1 ? (ar ? "أمس" : "Yesterday") : ar ? `منذ ${daysAgo} أيام` : `${daysAgo}d ago`;
 
-  const talentRoles = ["talent", "freelancer", "ugc"];
-  const canApply    = !!userInfo && talentRoles.includes(userInfo.role);
-  const isBrand     = userInfo?.role === "brand";
-  const isOwnJob    = isBrand && job.brand_id === userInfo?.id;
+  const canApply    = canApplyJob(userInfo).allowed;
+  const guest       = isGuestUser(userInfo);
+  const brandUser   = isBrand(userInfo);
+  const isOwnJob    = brandUser && job.brand_id === userInfo?.id;
 
   const [applied,     setApplied]     = useState(false);
   const [showModal,   setShowModal]   = useState(false);
@@ -78,7 +78,10 @@ function JobCard({
   }, [canApply, job.id]);
 
   function handleApplyClick() {
-    if (!userInfo) { router.push("/login"); return; }
+    if (guest) {
+      requestAuth("apply_job");
+      return;
+    }
     setShowModal(true);
   }
 
@@ -89,7 +92,7 @@ function JobCard({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.04, duration: 0.3 }}
-        whileHover={{ y: -3, boxShadow: dark ? "0 8px 32px rgba(0,210,106,0.1)" : "0 8px 24px rgba(0,0,0,0.08)" }}
+        whileHover={{ y: -3, boxShadow: dark ? "0 8px 32px rgba(0,210,106,0.1)" : "0 8px 24px rgba(0,210,106,0.08)" }}
         style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", transition: "box-shadow 0.2s" }}
       >
         {/* Brand bar */}
@@ -158,7 +161,7 @@ function JobCard({
               <ClipboardList size={14} />
               {ar ? "عرض الطلبات" : "View Applications"}
             </button>
-          ) : canApply ? (
+          ) : canApply || guest ? (
             applied ? (
               <button disabled style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "rgba(0,210,106,0.1)", color: GREEN, border: `1.5px solid ${GREEN}`, borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 900, cursor: "default", fontFamily: "'Cairo',sans-serif" }}>
                 <CheckCircle2 size={14} /> {ar ? "تم الإرسال ✓" : "Proposal Sent ✓"}
@@ -166,7 +169,7 @@ function JobCard({
             ) : (
               <button
                 onClick={handleApplyClick}
-                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
               >
                 {ar ? "قدّم عرضك" : "Submit Proposal"}
               </button>
@@ -199,17 +202,8 @@ export default function JobsGrid({ dark, lang, jobs }: Props) {
   const MUTED = dark ? "#A8B3C2" : "#64748B";
   const GREEN = "#00D26A";
 
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const { user: userInfo } = useGuestGuard();
   const [successToast, setSuccessToast] = useState<string | null>(null);
-
-  useEffect(() => {
-    createClient().auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      const { data: profile } = await createClient()
-        .from("profiles").select("role").eq("id", data.user.id).single();
-      if (profile) setUserInfo({ id: data.user.id, role: profile.role });
-    });
-  }, []);
 
   function handleApplySuccess(jobId: string) {
     const toastMsg = lang === "ar" ? "تم إرسال عرضك بنجاح ✓" : "Proposal submitted successfully ✓";
@@ -231,7 +225,7 @@ export default function JobsGrid({ dark, lang, jobs }: Props) {
     <>
       {/* Success toast */}
       {successToast && (
-        <div style={{ position: "fixed", bottom: 100, left: "50%", transform: "translateX(-50%)", zIndex: 2000, backgroundColor: "#00D26A", color: "#000", padding: "12px 24px", borderRadius: 12, fontWeight: 800, fontSize: 14, fontFamily: "'Cairo',sans-serif", boxShadow: "0 8px 24px rgba(0,210,106,0.4)" }}>
+        <div style={{ position: "fixed", bottom: 100, left: "50%", transform: "translateX(-50%)", zIndex: 2000, backgroundColor: "#00D26A", color: "#050B12", padding: "12px 24px", borderRadius: 12, fontWeight: 800, fontSize: 14, fontFamily: "'Cairo',sans-serif", boxShadow: "0 8px 24px rgba(0,210,106,0.4)" }}>
           {successToast}
         </div>
       )}

@@ -3,7 +3,8 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { createNotification } from "@/lib/notifications/create";
+import { notifyBookingRequest } from "@/lib/notifications/events";
+import { canCreateBooking } from "@/lib/permissions";
 
 const ACTIVE_BOOKING_STATUSES = [
   "pending",
@@ -46,9 +47,13 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { data: profile } = await adminClient
-    .from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "brand")
-    return NextResponse.json({ error: "Only brands can send briefs" }, { status: 403 });
+    .from("profiles")
+    .select("id, role, account_status, brand_status, is_suspended")
+    .eq("id", user.id)
+    .single();
+  const permission = canCreateBooking(profile);
+  if (!permission.allowed)
+    return NextResponse.json({ error: permission.reason === "role" ? "Only brands can send briefs" : "forbidden" }, { status: 403 });
 
   const body = await req.json();
   const {
@@ -86,8 +91,9 @@ export async function POST(req: NextRequest) {
 
   // Get talent_profiles row (booking FK requires talent_profiles.id)
   const { data: tp } = await adminClient
-    .from("talent_profiles").select("id, category").eq("user_id", talent_user_id).maybeSingle();
+    .from("talent_profiles").select("id, category, status").eq("user_id", talent_user_id).maybeSingle();
   if (!tp) return NextResponse.json({ error: "Talent profile not found" }, { status: 404 });
+  if (tp.status && tp.status !== "approved") return NextResponse.json({ error: "Talent profile is not available" }, { status: 403 });
 
   // Prevent duplicate active requests between this brand and talent.
   const { data: existingRows } = await adminClient
@@ -176,13 +182,15 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  await createNotification({
-    userId:        talent_user_id,
-    type:          "booking_request",
-    title:         "طلب حجز جديد",
-    message:       "You received a new booking request.",
-    referenceId:   bookingId,
-    referenceType: "booking",
+  const { data: brand } = await adminClient
+    .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+
+  await notifyBookingRequest({
+    bookingId,
+    recipientId: talent_user_id,
+    senderId:    user.id,
+    senderName:  brand?.full_name ?? null,
+    title:       brief?.title ?? null,
   });
 
   return NextResponse.json({ booking_id: bookingId, brief, status: "pending" }, { status: 201 });

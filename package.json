@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "node tests/e2e/explore.test.mjs && node tests/e2e/guest-permissions.test.mjs",
+    "test:e2e:guest": "node tests/e2e/guest-permissions.test.mjs",
     "pages:build": "npx @cloudflare/next-on-pages@1",
     "pages:deploy": "wrangler pages deploy .vercel/output/static --project-name=talents-platform --branch=main",
     "deploy": "npm run pages:build && npm run pages:deploy"
