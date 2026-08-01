@@ -15,7 +15,9 @@ export async function GET(req: NextRequest) {
   // moderation filter that the reviews RLS policy would otherwise enforce.
   const { data, error } = await adminClient
     .from("reviews")
-    .select("id, booking_id, talent_id, brand_id, rating, comment, created_at, profiles(full_name)")
+    // `profiles` is reachable from `reviews` through both brand_id and talent_id,
+    // so the embed must name the FK column or PostgREST rejects it as ambiguous.
+    .select("id, booking_id, talent_id, brand_id, rating, comment, created_at, profiles!brand_id(full_name)")
     .eq("talent_id", talent_id)
     .eq("status", "approved")
     .order("created_at", { ascending: false });

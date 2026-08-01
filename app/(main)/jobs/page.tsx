@@ -38,12 +38,22 @@ export default async function JobsPage() {
 
       const brandIds = [...new Set((jobs ?? []).map((j) => j.brand_id))];
       const { data: profiles } = brandIds.length
-        ? await adminClient.from("profiles").select("id, full_name, handle, avatar_url, city").in("id", brandIds)
+        ? await adminClient.from("profiles").select("id, full_name, handle, avatar_url, city, brand_status").in("id", brandIds)
         : { data: [] };
 
       const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
       return {
-        jobs: (jobs ?? []).map((j) => ({ ...j, currency: j.currency ?? "EGP", brand: profileMap[j.brand_id] ?? null })) as JobPost[],
+        // Reapply the same brand visibility rule the detail page enforces —
+        // otherwise a listed job whose brand is pending/rejected 404s on click.
+        jobs: (jobs ?? [])
+          .filter((j) => {
+            const brand = profileMap[j.brand_id];
+            return brand && (!brand.brand_status || brand.brand_status === "approved");
+          })
+          .map((j) => {
+            const { brand_status: _ignored, ...brand } = profileMap[j.brand_id];
+            return { ...j, currency: j.currency ?? "EGP", brand };
+          }) as JobPost[],
         error: null as string | null,
       };
     },
