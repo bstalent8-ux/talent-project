@@ -3,11 +3,15 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (error || !user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { data } = await adminClient
     .from("profiles")
@@ -21,7 +25,7 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (error || !user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   // Verify admin role
   const { data: profile } = await adminClient
@@ -29,7 +33,7 @@ export async function PATCH(req: NextRequest) {
     .select("role")
     .eq("id", user.id)
     .single();
-  if (profile?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (profile?.role !== "admin") return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const body = await req.json() as Record<string, unknown>;
   const allowed = ["full_name", "handle", "city", "bio", "avatar_url"];

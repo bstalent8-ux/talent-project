@@ -9,6 +9,10 @@ import {
   notifyBookingUpdated,
 } from "@/lib/notifications/events";
 
+function isNoRows(error: { code?: string } | null): boolean {
+  return error?.code === "PGRST116";
+}
+
 // PATCH — talent accepts, rejects, or requests changes on a booking request.
 export async function PATCH(
   req: NextRequest,
@@ -19,10 +23,14 @@ export async function PATCH(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { data: booking } = await adminClient
+  const { data: booking, error: bookingError } = await adminClient
     .from("bookings")
     .select("brand_id,talent_user_id,talent_id,status")
     .eq("id", id).single();
+  if (bookingError) {
+    const status = isNoRows(bookingError) ? 404 : 500;
+    return NextResponse.json({ error: status === 404 ? "not found" : bookingError.message }, { status });
+  }
   if (!booking) return NextResponse.json({ error: "not found" }, { status: 404 });
 
   // Must be the talent
@@ -66,29 +74,34 @@ export async function PATCH(
   if (bookingErr) return NextResponse.json({ error: bookingErr.message }, { status: 500 });
 
   // Send system message in chat
-  const { data: conv } = await adminClient
+  const { data: conv, error: convError } = await adminClient
     .from("conversations")
     .select("id")
     .eq("brand_id", booking.brand_id)
     .eq("talent_id", user.id)
     .maybeSingle();
+  if (convError) return NextResponse.json({ error: convError.message }, { status: 500 });
   if (conv) {
     const msg = action === "accept"
       ? "قبلت الموهبة طلب الحجز. المرحلة التالية: الدفع.\nTalent accepted the booking request. Next: payment."
       : action === "reject"
         ? `رفضت الموهبة طلب الحجز${reject_reason ? `: ${reject_reason}` : ""}.\nTalent rejected the booking request${reject_reason ? `: ${reject_reason}` : ""}.`
         : `طلبت الموهبة تعديلات: ${message.trim()}\nTalent requested changes: ${message.trim()}`;
-    await adminClient.from("messages").insert({
+    const { error: messageError } = await adminClient.from("messages").insert({
       conversation_id: conv.id,
       sender_id: user.id,
       content: msg,
       message_type: "text",
     });
+    if (messageError) return NextResponse.json({ error: messageError.message }, { status: 500 });
   }
 
   // Notify brand of talent's response
-  const { data: talent } = await adminClient
+  const { data: talent, error: talentError } = await adminClient
     .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+  if (talentError) {
+    console.error("Failed to load talent name for booking response notification:", talentError.message);
+  }
   const talentName = talent?.full_name ?? null;
 
   if (action === "accept") {

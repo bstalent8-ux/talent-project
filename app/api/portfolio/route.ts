@@ -11,11 +11,12 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
-  const { data: profile } = await adminClient
+  const { data: profile, error: profileError } = await adminClient
     .from("profiles")
     .select("id, role, handle, account_status, is_suspended")
     .eq("id", user.id)
     .single();
+  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500, headers: privateNoStoreHeaders() });
   if (!canPerformAction("upload_portfolio", profile).allowed) {
     return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
   }
@@ -23,12 +24,13 @@ export async function POST(req: NextRequest) {
   const { url, media_type, caption } = await req.json();
 
   // Get talent_profile id
-  const { data: tp } = await adminClient
+  const { data: tp, error: tpError } = await adminClient
     .from("talent_profiles")
     .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
 
+  if (tpError) return NextResponse.json({ error: tpError.message }, { status: 500, headers: privateNoStoreHeaders() });
   if (!tp) return NextResponse.json({ error: "no talent profile" }, { status: 404, headers: privateNoStoreHeaders() });
 
   const { data, error } = await adminClient
@@ -47,11 +49,12 @@ export async function DELETE(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
-  const { data: profile } = await adminClient
+  const { data: profile, error: profileError } = await adminClient
     .from("profiles")
     .select("id, role, handle, account_status, is_suspended")
     .eq("id", user.id)
     .single();
+  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500, headers: privateNoStoreHeaders() });
   if (!canPerformAction("upload_portfolio", profile).allowed) {
     return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
   }
@@ -61,12 +64,13 @@ export async function DELETE(req: NextRequest) {
 
   // Scope the delete to the caller's own talent profile — without this any
   // signed-in user can delete any talent's portfolio item by id.
-  const { data: tp } = await adminClient
+  const { data: tp, error: tpError } = await adminClient
     .from("talent_profiles")
     .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
 
+  if (tpError) return NextResponse.json({ error: tpError.message }, { status: 500, headers: privateNoStoreHeaders() });
   if (!tp) return NextResponse.json({ error: "no talent profile" }, { status: 404, headers: privateNoStoreHeaders() });
 
   const { error } = await adminClient

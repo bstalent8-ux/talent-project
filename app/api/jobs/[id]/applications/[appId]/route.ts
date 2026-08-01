@@ -18,15 +18,23 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
   // Verify caller owns the job
-  const { data: job } = await adminClient
+  const { data: job, error: jobError } = await adminClient
     .from("jobs").select("id, brand_id, currency, title").eq("id", jobId).single();
+  if (jobError) {
+    const status = jobError.code === "PGRST116" ? 404 : 500;
+    return NextResponse.json({ error: status === 404 ? "job not found" : jobError.message }, { status, headers: privateNoStoreHeaders() });
+  }
   if (!job) return NextResponse.json({ error: "job not found" }, { status: 404, headers: privateNoStoreHeaders() });
   if (job.brand_id !== user.id) return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
-  const { data: app } = await adminClient
+  const { data: app, error: appError } = await adminClient
     .from("job_applications")
     .select("id, talent_id, proposed_price, status")
     .eq("id", appId).eq("job_id", jobId).single();
+  if (appError) {
+    const status = appError.code === "PGRST116" ? 404 : 500;
+    return NextResponse.json({ error: status === 404 ? "application not found" : appError.message }, { status, headers: privateNoStoreHeaders() });
+  }
   if (!app) return NextResponse.json({ error: "application not found" }, { status: 404, headers: privateNoStoreHeaders() });
 
   const { action, reject_reason } = await req.json();
@@ -61,37 +69,40 @@ export async function PATCH(
     if (appErr) return NextResponse.json({ error: appErr.message }, { status: 500, headers: privateNoStoreHeaders() });
 
     // 2. Try to find talent_profiles row (bookings FK references talent_profiles.id)
-    const { data: talentProfile } = await adminClient
+    const { data: talentProfile, error: talentProfileError } = await adminClient
       .from("talent_profiles")
       .select("id")
       .eq("user_id", app.talent_id)
       .maybeSingle();
+    if (talentProfileError) return NextResponse.json({ error: talentProfileError.message }, { status: 500, headers: privateNoStoreHeaders() });
+    if (!talentProfile) return NextResponse.json({ error: "talent profile not found" }, { status: 404, headers: privateNoStoreHeaders() });
 
     // 3. Determine service_type from job category
-    const { data: fullJob } = await adminClient
+    const { data: fullJob, error: fullJobError } = await adminClient
       .from("jobs").select("category").eq("id", jobId).single();
+    if (fullJobError) return NextResponse.json({ error: fullJobError.message }, { status: 500, headers: privateNoStoreHeaders() });
     const service_type = fullJob?.category ?? null;
 
     // 4. Create booking
-    let bookingId: string | null = null;
-    if (talentProfile) {
-      const { data: booking, error: bookErr } = await adminClient
-        .from("bookings")
-        .insert({
-          brand_id:           user.id,
-          talent_id:          talentProfile.id,
-          talent_user_id:     app.talent_id,
-          job_id:             jobId,
-          job_application_id: appId,
-          service_type,
-          status:             "contacting",
-          amount:             app.proposed_price ?? null,
-        })
-        .select("id")
-        .single();
+    const { data: booking, error: bookErr } = await adminClient
+      .from("bookings")
+      .insert({
+        brand_id:           user.id,
+        talent_id:          talentProfile.id,
+        talent_user_id:     app.talent_id,
+        job_id:             jobId,
+        job_application_id: appId,
+        service_type,
+        status:             "contacting",
+        amount:             app.proposed_price ?? null,
+      })
+      .select("id")
+      .single();
 
-      if (!bookErr && booking) bookingId = booking.id;
+    if (bookErr || !booking) {
+      return NextResponse.json({ error: bookErr?.message ?? "booking creation failed" }, { status: 500, headers: privateNoStoreHeaders() });
     }
+    const bookingId = booking.id;
 
     // 4. Create / get conversation between brand and talent
     const { data: conversation, error: convErr } = await adminClient
@@ -106,12 +117,15 @@ export async function PATCH(
     if (convErr) return NextResponse.json({ error: convErr.message }, { status: 500, headers: privateNoStoreHeaders() });
 
     // 5. Send system message in conversation
-    await adminClient.from("messages").insert({
+    const messageInsert = await adminClient.from("messages").insert({
       conversation_id: conversation.id,
       sender_id: user.id,
       content: `✅ تم قبول عرضك للوظيفة. دعنا نبدأ!\n✅ Your proposal was accepted. Let's get started!`,
       message_type: "text",
     });
+    if (messageInsert.error) {
+      return NextResponse.json({ error: messageInsert.error.message }, { status: 500, headers: privateNoStoreHeaders() });
+    }
 
     await notifyApplicationAccepted({
       jobId,

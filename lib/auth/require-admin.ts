@@ -18,11 +18,13 @@ export async function requireAdmin(): Promise<NextResponse | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { data: profile } = await adminClient
+  const { data: profile, error } = await adminClient
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (profile?.role !== "admin") {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });

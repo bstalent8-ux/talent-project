@@ -87,11 +87,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: profile } = await adminClient
+    const { data: profile, error: profileError } = await adminClient
       .from("profiles")
       .select("id, role, account_status, is_suspended")
       .eq("id", user.id)
       .single();
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 500, headers: privateNoStoreHeaders() });
+    }
     if (!canPerformAction("create_community_answer", profile).allowed) {
       return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
     }
@@ -111,9 +114,17 @@ export async function POST(request: NextRequest) {
       .eq("id", question_id)
       .single();
 
-    if (qError || !question) {
+    if (qError) {
+      const status = qError.code === "PGRST116" ? 404 : 500;
       return NextResponse.json(
-        { error: "Question not found" },
+        { error: status === 404 ? "question not found" : qError.message },
+        { status, headers: privateNoStoreHeaders() }
+      );
+    }
+
+    if (!question) {
+      return NextResponse.json(
+        { error: "question not found" },
         { status: 404, headers: privateNoStoreHeaders() }
       );
     }

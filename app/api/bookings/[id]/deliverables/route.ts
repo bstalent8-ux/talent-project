@@ -9,6 +9,10 @@ import {
   notifyPaymentSuccess,
 } from "@/lib/notifications/events";
 
+function isNoRows(error: { code?: string } | null): boolean {
+  return error?.code === "PGRST116";
+}
+
 // GET — list deliverables for booking
 export async function GET(
   _req: NextRequest,
@@ -19,14 +23,19 @@ export async function GET(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { data: booking } = await adminClient
+  const { data: booking, error: bookingError } = await adminClient
     .from("bookings").select("brand_id,talent_user_id").eq("id", id).single();
+  if (bookingError) {
+    const status = isNoRows(bookingError) ? 404 : 500;
+    return NextResponse.json({ error: status === 404 ? "not found" : bookingError.message }, { status });
+  }
   if (!booking) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (booking.brand_id !== user.id && booking.talent_user_id !== user.id)
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  const { data } = await adminClient
+  const { data, error } = await adminClient
     .from("deliverables").select("*").eq("booking_id", id).order("created_at", { ascending: false });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ deliverables: data ?? [] });
 }
@@ -41,8 +50,12 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { data: booking } = await adminClient
+  const { data: booking, error: bookingError } = await adminClient
     .from("bookings").select("brand_id,talent_user_id,status").eq("id", id).single();
+  if (bookingError) {
+    const status = isNoRows(bookingError) ? 404 : 500;
+    return NextResponse.json({ error: status === 404 ? "not found" : bookingError.message }, { status });
+  }
   if (!booking) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (booking.talent_user_id !== user.id) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   if (booking.status !== "in_progress")
@@ -59,23 +72,29 @@ export async function POST(
 
   if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 });
 
-  await adminClient.from("bookings").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
+  const { error: bookingUpdateError } = await adminClient.from("bookings").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
+  if (bookingUpdateError) return NextResponse.json({ error: bookingUpdateError.message }, { status: 500 });
 
   // Notify brand
-  const { data: conv } = await adminClient
+  const { data: conv, error: convError } = await adminClient
     .from("conversations").select("id").eq("brand_id", booking.brand_id).eq("talent_id", user.id).maybeSingle();
+  if (convError) return NextResponse.json({ error: convError.message }, { status: 500 });
   if (conv) {
-    await adminClient.from("messages").insert({
+    const { error: messageError } = await adminClient.from("messages").insert({
       conversation_id: conv.id,
       sender_id: user.id,
       content: `📦 تم تسليم العمل. يرجى المراجعة والموافقة.\n📦 Deliverables submitted. Please review and approve.`,
       message_type: "text",
     });
+    if (messageError) return NextResponse.json({ error: messageError.message }, { status: 500 });
   }
 
   // Notify brand that deliverables were submitted
-  const { data: talent } = await adminClient
+  const { data: talent, error: talentError } = await adminClient
     .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+  if (talentError) {
+    console.error("Failed to load talent name for deliverable notification:", talentError.message);
+  }
 
   await notifyDeliverableSubmitted({
     bookingId:   id,
@@ -97,8 +116,12 @@ export async function PATCH(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { data: booking } = await adminClient
+  const { data: booking, error: bookingError } = await adminClient
     .from("bookings").select("brand_id,talent_user_id,amount,status").eq("id", id).single();
+  if (bookingError) {
+    const status = isNoRows(bookingError) ? 404 : 500;
+    return NextResponse.json({ error: status === 404 ? "not found" : bookingError.message }, { status });
+  }
   if (!booking) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (booking.brand_id !== user.id) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   if (booking.status !== "completed")
@@ -109,7 +132,8 @@ export async function PATCH(
   if (action === "approve") {
     // Mark deliverable approved
     if (deliverable_id) {
-      await adminClient.from("deliverables").update({ status: "approved" }).eq("id", deliverable_id);
+      const { error: deliverableError } = await adminClient.from("deliverables").update({ status: "approved" }).eq("id", deliverable_id);
+      if (deliverableError) return NextResponse.json({ error: deliverableError.message }, { status: 500 });
     }
     // Release payment to talent balance
     if (booking.talent_user_id && booking.amount) {
@@ -117,7 +141,8 @@ export async function PATCH(
       await adminClient.rpc("increment_balance", { user_id: booking.talent_user_id, amount: booking.amount })
         .then(() => null, () => null);
     }
-    await adminClient.from("bookings").update({ status: "paid" }).eq("id", id);
+    const { error: bookingPaidError } = await adminClient.from("bookings").update({ status: "paid" }).eq("id", id);
+    if (bookingPaidError) return NextResponse.json({ error: bookingPaidError.message }, { status: 500 });
     if (booking.talent_user_id) {
       await notifyPaymentSuccess({
         bookingId:   id,
@@ -131,9 +156,11 @@ export async function PATCH(
 
   if (action === "revision") {
     if (deliverable_id) {
-      await adminClient.from("deliverables").update({ status: "revision_requested", feedback: feedback ?? null }).eq("id", deliverable_id);
+      const { error: deliverableError } = await adminClient.from("deliverables").update({ status: "revision_requested", feedback: feedback ?? null }).eq("id", deliverable_id);
+      if (deliverableError) return NextResponse.json({ error: deliverableError.message }, { status: 500 });
     }
-    await adminClient.from("bookings").update({ status: "in_progress" }).eq("id", id);
+    const { error: bookingRevisionError } = await adminClient.from("bookings").update({ status: "in_progress" }).eq("id", id);
+    if (bookingRevisionError) return NextResponse.json({ error: bookingRevisionError.message }, { status: 500 });
     if (booking.talent_user_id) {
       await notifyBookingUpdated({
         bookingId:   id,
@@ -145,14 +172,16 @@ export async function PATCH(
         messageEn:   feedback ?? "The brand requested changes to your submitted work.",
       });
     }
-    const { data: conv } = await adminClient
+    const { data: conv, error: convError } = await adminClient
       .from("conversations").select("id").eq("brand_id", user.id).eq("talent_id", booking.talent_user_id ?? "").maybeSingle();
+    if (convError) return NextResponse.json({ error: convError.message }, { status: 500 });
     if (conv) {
-      await adminClient.from("messages").insert({
+      const { error: messageError } = await adminClient.from("messages").insert({
         conversation_id: conv.id, sender_id: user.id,
         content: `🔄 طُلب تعديل على العمل${feedback ? `: ${feedback}` : ""}.\n🔄 Revision requested${feedback ? `: ${feedback}` : ""}.`,
         message_type: "text",
       });
+      if (messageError) return NextResponse.json({ error: messageError.message }, { status: 500 });
     }
     return NextResponse.json({ success: true, status: "in_progress" });
   }

@@ -27,17 +27,18 @@ export async function GET() {
   const uniqueOtherIds = [...new Set(otherIds)];
 
   // Fetch profiles in one query
-  const { data: profiles } = await adminClient
+  const { data: profiles, error: profilesError } = await adminClient
     .from("profiles")
     .select("id, full_name, handle, avatar_url, role")
     .in("id", uniqueOtherIds);
+  if (profilesError) return NextResponse.json({ error: profilesError.message }, { status: 500 });
 
   const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
 
   // Fetch last message + unread count per conversation
   const convIds = conversations.map((c) => c.id);
 
-  const [{ data: lastMessages }, { data: unreadCounts }] = await Promise.all([
+  const [{ data: lastMessages, error: lastMessagesError }, { data: unreadCounts, error: unreadCountsError }] = await Promise.all([
     adminClient
       .from("messages")
       .select("conversation_id, content, created_at")
@@ -50,6 +51,8 @@ export async function GET() {
       .eq("is_read", false)
       .neq("sender_id", user.id),
   ]);
+  if (lastMessagesError) return NextResponse.json({ error: lastMessagesError.message }, { status: 500 });
+  if (unreadCountsError) return NextResponse.json({ error: unreadCountsError.message }, { status: 500 });
 
   // Build last-message map (first match per conversation since ordered DESC)
   const lastMsgMap: Record<string, string> = {};
@@ -88,17 +91,22 @@ export async function POST(req: NextRequest) {
   if (!other_user_id) return NextResponse.json({ error: "other_user_id required" }, { status: 400 });
 
   // Determine who is brand and who is talent
-  const { data: currentProfile } = await adminClient
+  const { data: currentProfile, error: currentProfileError } = await adminClient
     .from("profiles")
     .select("id, role, account_status, brand_status, is_suspended, talent_profiles(status)")
     .eq("id", user.id)
     .single();
+  if (currentProfileError) return NextResponse.json({ error: currentProfileError.message }, { status: 500 });
 
-  const { data: otherProfile } = await adminClient
+  const { data: otherProfile, error: otherProfileError } = await adminClient
     .from("profiles")
     .select("id, role, account_status, brand_status, is_suspended, talent_profiles(status)")
     .eq("id", other_user_id)
     .single();
+  if (otherProfileError) {
+    const status = otherProfileError.code === "PGRST116" ? 404 : 500;
+    return NextResponse.json({ error: status === 404 ? "profiles not found" : otherProfileError.message }, { status });
+  }
 
   if (!currentProfile || !otherProfile) {
     return NextResponse.json({ error: "profiles not found" }, { status: 404 });

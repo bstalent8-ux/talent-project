@@ -14,11 +14,12 @@ export async function GET(req: NextRequest, { params }: Params) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { data: profile } = await adminClient
+  const { data: profile, error: profileError } = await adminClient
     .from("profiles")
     .select("id, role, account_status, is_suspended")
     .eq("id", user.id)
     .single();
+  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
   if (!canSendMessage(profile).allowed) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
@@ -29,11 +30,15 @@ export async function GET(req: NextRequest, { params }: Params) {
   const limit = Math.min(Number(url.searchParams.get("limit") ?? 50), 100);
 
   // Verify user is participant
-  const { data: conv } = await adminClient
+  const { data: conv, error: convError } = await adminClient
     .from("conversations")
     .select("id, brand_id, talent_id")
     .eq("id", id)
     .single();
+  if (convError) {
+    const status = convError.code === "PGRST116" ? 404 : 500;
+    return NextResponse.json({ error: status === 404 ? "not found" : convError.message }, { status });
+  }
 
   if (!conv || (conv.brand_id !== user.id && conv.talent_id !== user.id)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -66,11 +71,12 @@ export async function POST(req: NextRequest, { params }: Params) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { data: profile } = await adminClient
+  const { data: profile, error: profileError } = await adminClient
     .from("profiles")
     .select("id, role, account_status, is_suspended")
     .eq("id", user.id)
     .single();
+  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
   if (!canSendMessage(profile).allowed) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
@@ -83,11 +89,15 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   // Verify user is participant and get receiver
-  const { data: conv } = await adminClient
+  const { data: conv, error: convError } = await adminClient
     .from("conversations")
     .select("id, brand_id, talent_id")
     .eq("id", id)
     .single();
+  if (convError) {
+    const status = convError.code === "PGRST116" ? 404 : 500;
+    return NextResponse.json({ error: status === 404 ? "not found" : convError.message }, { status });
+  }
 
   if (!conv || (conv.brand_id !== user.id && conv.talent_id !== user.id)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -108,16 +118,20 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (msgError) return NextResponse.json({ error: msgError.message }, { status: 500 });
 
   // Update last_message_at on conversation
-  await adminClient
+  const { error: conversationUpdateError } = await adminClient
     .from("conversations")
     .update({ last_message_at: message.created_at })
     .eq("id", id);
+  if (conversationUpdateError) return NextResponse.json({ error: conversationUpdateError.message }, { status: 500 });
 
   // Notify the other participant — skipped when they are already reading this
   // thread, and collapsed onto an existing unread entry for the same thread.
   const receiverId = conv.brand_id === user.id ? conv.talent_id : conv.brand_id;
-  const { data: sender } = await adminClient
+  const { data: sender, error: senderError } = await adminClient
     .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+  if (senderError) {
+    console.error("Failed to load sender name for chat notification:", senderError.message);
+  }
 
   await notifyChatMessage({
     conversationId: id,

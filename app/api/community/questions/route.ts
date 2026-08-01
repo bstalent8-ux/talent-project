@@ -124,11 +124,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: profile } = await adminClient
+    const { data: profile, error: profileError } = await adminClient
       .from("profiles")
       .select("id, role, account_status, is_suspended")
       .eq("id", user.id)
       .single();
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 500, headers: privateNoStoreHeaders() });
+    }
     if (!canPerformAction("create_community_question", profile).allowed) {
       return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
     }

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "db:schema-audit": "node scripts/schema-audit.mjs",
     "test:e2e": "node tests/e2e/me-role.test.mjs && node tests/e2e/cache.test.mjs && node tests/e2e/explore.test.mjs && node tests/e2e/guest-permissions.test.mjs",
     "test:e2e:guest": "node tests/e2e/guest-permissions.test.mjs",
     "pages:build": "npx @cloudflare/next-on-pages@1",

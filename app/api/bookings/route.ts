@@ -10,8 +10,10 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
-  const { data: profile } = await adminClient
+  const { data: profile, error: profileError } = await adminClient
     .from("profiles").select("role").eq("id", user.id).single();
+  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500, headers: privateNoStoreHeaders() });
+  if (!profile) return NextResponse.json({ error: "profile not found" }, { status: 404, headers: privateNoStoreHeaders() });
 
   let bookings: Record<string, unknown>[] = [];
   let err: { message: string } | null = null;
@@ -25,8 +27,9 @@ export async function GET() {
     bookings = (data ?? []) as Record<string, unknown>[];
     err = error;
   } else {
-    const { data: tp } = await adminClient
+    const { data: tp, error: tpError } = await adminClient
       .from("talent_profiles").select("id").eq("user_id", user.id).maybeSingle();
+    if (tpError) return NextResponse.json({ error: tpError.message }, { status: 500, headers: privateNoStoreHeaders() });
     if (!tp) return NextResponse.json({ bookings: [] }, { headers: privateNoStoreHeaders() });
     const { data, error } = await adminClient
       .from("bookings")
@@ -47,11 +50,14 @@ export async function GET() {
   const bookingIds = bookings.map((b) => b.id) as string[];
 
   const [jobsRes, brandsRes, talentsRes, briefsRes] = await Promise.all([
-    jobIds.length   ? adminClient.from("jobs").select("id,title").in("id", jobIds) : { data: [] },
-    brandIds.length ? adminClient.from("profiles").select("id,full_name,handle,avatar_url").in("id", brandIds) : { data: [] },
-    talentUserIds.length ? adminClient.from("profiles").select("id,full_name,handle,avatar_url").in("id", talentUserIds) : { data: [] },
-    bookingIds.length ? adminClient.from("booking_briefs").select("booking_id,id,title,status,deadline").in("booking_id", bookingIds) : { data: [] },
+    jobIds.length   ? adminClient.from("jobs").select("id,title").in("id", jobIds) : Promise.resolve({ data: [], error: null }),
+    brandIds.length ? adminClient.from("profiles").select("id,full_name,handle,avatar_url").in("id", brandIds) : Promise.resolve({ data: [], error: null }),
+    talentUserIds.length ? adminClient.from("profiles").select("id,full_name,handle,avatar_url").in("id", talentUserIds) : Promise.resolve({ data: [], error: null }),
+    bookingIds.length ? adminClient.from("booking_briefs").select("booking_id,id,title,status,deadline").in("booking_id", bookingIds) : Promise.resolve({ data: [], error: null }),
   ]);
+
+  const enrichError = [jobsRes, brandsRes, talentsRes, briefsRes].find((result) => result.error)?.error;
+  if (enrichError) return NextResponse.json({ error: enrichError.message }, { status: 500, headers: privateNoStoreHeaders() });
 
   const jobMap    = Object.fromEntries((jobsRes.data ?? []).map((j) => [j.id, j]));
   const brandMap  = Object.fromEntries((brandsRes.data ?? []).map((p) => [p.id, p]));
