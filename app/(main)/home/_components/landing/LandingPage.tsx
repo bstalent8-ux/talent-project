@@ -178,17 +178,55 @@ function localize<T>(value: Record<LandingLang, T>, lang: LandingLang): T {
   return value[lang];
 }
 
+const CATEGORY_LABELS: Record<string, Record<LandingLang, string>> = {
+  ugc: { ar: "UGC Creator", en: "UGC Creator" },
+  influencer: { ar: "مؤثر", en: "Influencer" },
+  influencers: { ar: "مؤثر", en: "Influencer" },
+  model: { ar: "موديل", en: "Model" },
+  models: { ar: "موديل", en: "Model" },
+  photographer: { ar: "مصور", en: "Photographer" },
+  photographers: { ar: "مصور", en: "Photographer" },
+  videographer: { ar: "مخرج فيديو", en: "Videographer" },
+  videographers: { ar: "مخرج فيديو", en: "Videographer" },
+  host: { ar: "مقدم", en: "Host" },
+  hosts: { ar: "مقدم", en: "Host" },
+  designer: { ar: "مصمم", en: "Designer" },
+  designers: { ar: "مصمم", en: "Designer" },
+};
+
+function cleanText(value: string | null | undefined) {
+  return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
+}
+
+function formatCategory(value: string | null | undefined, fallback: string, lang: LandingLang) {
+  const cleaned = cleanText(value);
+  if (!cleaned) return fallback;
+  const key = cleaned.toLowerCase().replace(/[\s_-]+/g, "-");
+  const readable = cleaned.replace(/[-_]+/g, " ");
+  return CATEGORY_LABELS[key]?.[lang] ?? (lang === "en" ? readable.replace(/\b\w/g, (char) => char.toUpperCase()) : readable);
+}
+
+function formatPrice(value: number | null | undefined, lang: LandingLang) {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    const amount = value.toLocaleString("en-US");
+    return lang === "ar" ? `من ${amount} ج.م` : `From EGP ${amount}`;
+  }
+
+  return lang === "ar" ? "السعر حسب الطلب" : "Price on request";
+}
+
 function formatRealTalents(talents: ServerTalentCard[], lang: LandingLang): DisplayTalent[] {
   return talents.slice(0, 4).map((talent, index) => {
     const demo = demoTalents[index % demoTalents.length];
+    const fallbackName = localize(demo.name, lang);
+    const fallbackProfession = localize(demo.profession, lang);
+    const fallbackCity = localize(demo.city, lang);
     return {
-      name: talent.name || localize(demo.name, lang),
-      profession: talent.category || localize(demo.profession, lang),
-      city: talent.location || localize(demo.city, lang),
-      rating: (talent.rating || Number(demo.rating)).toFixed(1),
-      price: talent.starting_price
-        ? `${lang === "ar" ? "من" : "From"} ${talent.starting_price.toLocaleString()} EGP`
-        : localize(demo.price, lang),
+      name: cleanText(talent.name) || fallbackName,
+      profession: formatCategory(talent.category, fallbackProfession, lang),
+      city: cleanText(talent.location) || fallbackCity,
+      rating: Number.isFinite(talent.rating) && talent.rating > 0 ? talent.rating.toFixed(1) : (lang === "ar" ? "جديد" : "New"),
+      price: formatPrice(talent.starting_price, lang),
       image: talent.avatar_url || demo.image,
       portfolio: demo.portfolio,
       href: talent.handle ? `/talent/${talent.handle}` : "/explore",
@@ -462,7 +500,10 @@ function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang
   const availability = lang === "ar" ? "\u0645\u062a\u0627\u062d \u0627\u0644\u0622\u0646" : "Available now";
   const profileLabel = lang === "ar" ? "\u0639\u0631\u0636 \u0627\u0644\u0645\u0644\u0641" : "View profile";
   const priceLabel = lang === "ar" ? "\u064a\u0628\u062f\u0623 \u0645\u0646" : "Starts at";
-  const displayPrice = talent.price.replace(/^From\s+/i, "").replace(/^\u0645\u0646\s+/u, "");
+  const hasRequestPrice = talent.price === "Price on request" || talent.price === "السعر حسب الطلب";
+  const displayPrice = hasRequestPrice
+    ? talent.price
+    : talent.price.replace(/^From\s+/i, "").replace(/^\u0645\u0646\s+/u, "");
 
   return (
     <article className={styles.talentCard}>
@@ -506,7 +547,7 @@ function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang
         </div>
         <div className={styles.talentFooter}>
           <span className={styles.talentPrice}>
-            <small>{priceLabel}</small>
+            <small>{hasRequestPrice ? (lang === "ar" ? "السعر" : "Price") : priceLabel}</small>
             {displayPrice}
           </span>
           <Link className={styles.talentCta} href={talent.href}>

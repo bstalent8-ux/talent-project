@@ -45,11 +45,8 @@ const NAV_LINKS = {
     { label: "Jobs", href: "/jobs" },
     { label: "Brands", href: "/brands" },
     { label: "Projects", href: "/bookings" },
-    { label: "Pricing", href: "/packages" },
   ],
 };
-
-NAV_LINKS.ar.push({ label: "الأسعار", href: "/packages" });
 
 const TX = {
   ar: {
@@ -105,7 +102,7 @@ export default function Navbar({
 
   const dir = lang === "ar" ? "rtl" : "ltr";
   const t = TX[lang];
-  const links = NAV_LINKS[lang];
+  const links = NAV_LINKS[lang].filter((item) => !item.href.startsWith("/bookings") || !isGuest);
   const dashboardLabel = lang === "ar" ? "\u0645\u0644\u0641\u064a" : "My Profile";
   const adminPanelLabel = lang === "ar" ? "\u0644\u0648\u062d\u0629 \u0627\u0644\u0625\u062f\u0627\u0631\u0629" : "Admin Panel";
   const role = user?.role ?? null;

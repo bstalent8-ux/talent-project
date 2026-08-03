@@ -200,13 +200,13 @@
   gap: 0.45rem;
   min-height: 40px;
   padding: 0 1rem;
-  border: 1px solid var(--nav-active-border);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 42%, var(--nav-border));
   border-radius: 10px;
-  background: var(--color-secondary);
-  color: var(--nav-on-gold);
+  background: var(--color-primary);
+  color: #fff;
   font-size: 0.9rem;
   font-weight: 850;
-  box-shadow: var(--shadow-xs);
+  box-shadow: none;
   transition:
     background-color var(--duration-base) var(--ease-standard),
     transform var(--duration-base) var(--ease-emphasis),
@@ -214,7 +214,7 @@
 }
 
 .bookButton:hover {
-  background: var(--color-secondary-strong);
+  background: var(--color-primary-strong);
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }
@@ -421,7 +421,7 @@
   max-width: 18rem;
   margin: 0;
   color: var(--footer-muted);
-  font-size: 0.95rem;
+  font-size: var(--text-sm);
   line-height: 1.8;
 }
 
@@ -449,7 +449,7 @@
   gap: 0.35rem;
   width: fit-content;
   color: var(--footer-muted);
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
   font-weight: 750;
   transition:
     color var(--duration-base) var(--ease-standard),
@@ -498,10 +498,17 @@
 }
 
 .socialLink:hover {
-  color: #151109;
   background: var(--color-secondary);
   border-color: var(--color-secondary);
   transform: translateY(-2px);
+}
+
+.footerDark .socialLink:hover {
+  color: var(--bg-page);
+}
+
+.footerLight .socialLink:hover {
+  color: var(--text-primary);
 }
 
 .socialIcon {

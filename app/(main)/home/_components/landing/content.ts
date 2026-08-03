@@ -278,17 +278,17 @@ export const brandMoments = [
 
 export const brandSteps: StepItem[] = [
   {
-    title: { ar: "ابحث واستكشف", en: "Search and discover" },
+    title: { ar: "ابحث", en: "Search" },
     description: { ar: "فلتر المواهب حسب الفئة، المدينة، السعر ونوع المحتوى.", en: "Filter by category, city, budget and content style." },
     icon: Search,
   },
   {
-    title: { ar: "راجع البورتفوليو", en: "Review portfolios" },
+    title: { ar: "راجع", en: "Review" },
     description: { ar: "شاهد الأعمال السابقة، التقييمات، والباقات قبل التواصل.", en: "Compare work, ratings and packages before you connect." },
     icon: Star,
   },
   {
-    title: { ar: "احجز وابدأ", en: "Book and launch" },
+    title: { ar: "احجز", en: "Book" },
     description: { ar: "أرسل brief واضح وابدأ التعاون بدون رسائل مشتتة.", en: "Send a clear brief and start without scattered messages." },
     icon: Handshake,
   },
@@ -296,12 +296,12 @@ export const brandSteps: StepItem[] = [
 
 export const talentSteps: StepItem[] = [
   {
-    title: { ar: "أنشئ ملفك", en: "Create your profile" },
+    title: { ar: "أنشئ ملفك", en: "Create profile" },
     description: { ar: "اعرض خدماتك، أسعارك، وأفضل أعمالك في صفحة قوية.", en: "Present your services, pricing and strongest work." },
     icon: UserRound,
   },
   {
-    title: { ar: "استقبل فرصا مناسبة", en: "Receive relevant briefs" },
+    title: { ar: "استقبل فرصا", en: "Receive opportunities" },
     description: { ar: "وصلك بالبراندات المناسبة بدل مطاردة الفرص يدويا.", en: "Meet matching brands without chasing work manually." },
     icon: BriefcaseBusiness,
   },
@@ -329,8 +329,8 @@ export const features: FeatureItem[] = [
     icon: Gem,
   },
   {
-    title: { ar: "مدفوعات آمنة", en: "Secure payments" },
-    description: { ar: "تجربة دفع وحجز قابلة للتوسع مع نمو المنصة.", en: "A scalable payment and booking foundation." },
+    title: { ar: "حالة دفع واضحة", en: "Clear payment status" },
+    description: { ar: "تأكيد يدوي واضح ينقل الحجز إلى التنفيذ بدون وعود غير مبنية.", en: "Manual confirmation keeps bookings moving without overstating payment automation." },
     icon: WalletCards,
   },
   {
