@@ -916,6 +916,8 @@
 .workflowPanel {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   padding: clamp(1rem, 2.2vw, 1.35rem);
 }
 
@@ -929,33 +931,86 @@
   font-size: var(--text-lg);
 }
 
+/* Vertical timeline: one row per step, equal-height rows so both
+   panels line up side by side. The connector is drawn per marker so
+   it never runs past the last circle. */
 .stepList {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 0.75rem;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .stepItem {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.7rem;
-  align-items: start;
-  padding: 0.8rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: stretch;
+}
+
+.stepMarker {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 2.5rem;
+}
+
+/* Connector runs from the bottom of this circle into the next row,
+   covering the grid gap. */
+.stepItem:not(:last-child) .stepMarker::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 2.5rem;
+  inset-block-end: -0.75rem;
+  inset-inline-start: 50%;
+  width: 2px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 50%, transparent),
+    color-mix(in srgb, var(--color-primary) 16%, transparent)
+  );
+  transform: translateX(-50%);
+}
+
+.stepNumber {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, var(--border-subtle));
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--color-primary);
+  font-weight: 900;
+  font-size: var(--text-base);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepBody {
+  padding: 0.8rem 0.9rem;
   border-radius: var(--radius-sm);
   background: var(--bg-card-muted);
 }
 
-.stepItem:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  inset-block-start: 1.9rem;
-  inset-inline-end: -0.55rem;
-  width: 0.36rem;
-  height: 0.36rem;
-  border-block-start: 2px solid color-mix(in srgb, var(--color-primary) 56%, transparent);
-  border-inline-end: 2px solid color-mix(in srgb, var(--color-primary) 56%, transparent);
-  transform: rotate(45deg);
+.stepItem h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.stepItem h4 svg {
+  flex: none;
+  color: var(--color-primary);
 }
 
 .stepItem h4,
@@ -1320,10 +1375,15 @@
     grid-column: 1 / -1;
   }
 
-  .twoColumn,
   .campaignGrid,
   .pricingGrid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  /* Tablet: the two timelines stack (brands first, talents second)
+     instead of squeezing into half-width columns. */
+  .twoColumn {
+    grid-template-columns: 1fr;
   }
 
   .statsStrip {
@@ -1346,22 +1406,6 @@
 
   .workflowPathRight {
     inset-inline-end: 0.3rem;
-  }
-
-  .stepList {
-    grid-template-columns: 1fr;
-  }
-
-  .stepItem {
-    grid-template-columns: auto 1fr;
-  }
-
-  .stepItem:not(:last-child)::after {
-    inset-block-start: auto;
-    inset-block-end: -0.52rem;
-    inset-inline-end: auto;
-    inset-inline-start: 1.72rem;
-    transform: rotate(135deg);
   }
 }
 

@@ -639,22 +639,25 @@ function WorkflowPanel({ title, steps, lang }: { title: string; steps: typeof br
         </span>
         {title}
       </h3>
-      <div className={styles.stepList}>
-        {steps.map((step) => {
+      <ol className={styles.stepList}>
+        {steps.map((step, index) => {
           const Icon = step.icon;
           return (
-            <div className={styles.stepItem} key={step.title.en}>
-              <span className={styles.iconBubble}>
-                <Icon size={19} />
+            <li className={styles.stepItem} key={step.title.en}>
+              <span className={styles.stepMarker} aria-hidden="true">
+                <span className={styles.stepNumber}>{index + 1}</span>
               </span>
-              <div>
-                <h4>{localize(step.title, lang)}</h4>
+              <div className={styles.stepBody}>
+                <h4>
+                  <Icon size={17} aria-hidden="true" />
+                  {localize(step.title, lang)}
+                </h4>
                 <p>{localize(step.description, lang)}</p>
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
     </div>
   );
 }
