@@ -649,7 +649,7 @@ function WorkflowPanel({ title, steps, lang }: { title: string; steps: typeof br
               </span>
               <div className={styles.stepBody}>
                 <h4>
-                  <Icon size={17} aria-hidden="true" />
+                  <Icon size={15} aria-hidden="true" />
                   {localize(step.title, lang)}
                 </h4>
                 <p>{localize(step.description, lang)}</p>
