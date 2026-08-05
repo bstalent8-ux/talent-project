@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
+import { ProfileError, profileService } from "@/features/profiles";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -38,13 +39,25 @@ export async function PATCH(
 
   const { profile_user_id, full_name, city, handle, ...tpFields } = body;
 
-  // Update talent_profiles
+  // Update the typed core row through the provider layer.
+  //
+  // `id` is a talent_profiles.id, so it is resolved to the owning profile first
+  // — the provider layer addresses profiles, not core-row ids.
+  //
+  // A missing row is a silent no-op, matching the previous `.update().eq("id")`
+  // behaviour exactly: it affected zero rows and still returned { ok: true }.
+  // Latent issue, preserved deliberately; see the Part 2 migration report.
   if (Object.keys(tpFields).length) {
-    const { error } = await adminClient
-      .from("talent_profiles")
-      .update(tpFields)
-      .eq("id", id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
+    try {
+      const ownerId = await profileService.resolveProviderOwner(id, "talent");
+      if (ownerId) {
+        await profileService.updateCoreForUser(ownerId, tpFields as Record<string, unknown>);
+      }
+    } catch (e) {
+      const err = ProfileError.from(e);
+      console.error("[admin/talents/profile] core write failed", err.code, err.internal);
+      return NextResponse.json(err.toBody(), { status: err.status, headers: privateNoStoreHeaders() });
+    }
   }
 
   // Update profiles if profile fields provided

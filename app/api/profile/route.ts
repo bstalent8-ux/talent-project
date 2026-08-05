@@ -5,22 +5,20 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { normalizeCategoryId, setProfileCategories } from "@/features/categories/services/category.service";
 import { invalidateBrand, invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
+import { ProfileError, profileService } from "@/features/profiles";
 
 // ─── Mass-assignment guards ──────────────────────────────────────────────────
 // This route writes through the service role (RLS bypassed), so the caller must
 // never be able to set moderation / trust / money columns on itself.
 // Column names verified against the live schema — an unknown key here makes
 // PostgREST reject the whole write with a 400.
+//
+// PROFILE_FIELDS still lives here because this route owns the shared `profiles`
+// row. The per-role core allowlists moved to the providers
+// (features/profiles/providers/*.provider.ts → meta.writableCoreFields), which
+// hold byte-identical copies of the former TALENT_FIELDS / BRAND_FIELDS.
 const PROFILE_FIELDS = [
   "handle", "full_name", "avatar_url", "city", "bio", "phone_number", "phone",
-] as const;
-
-const TALENT_FIELDS = [
-  "category", "specialties", "social_links", "bio", "packages", "availability",
-] as const;
-
-const BRAND_FIELDS = [
-  "company_name", "category_id", "industry", "website_url", "social_links",
 ] as const;
 
 const ALLOWED_ROLES = ["talent", "brand"] as const;
@@ -79,14 +77,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `profiles: ${profileErr.message}` }, { status: 500, headers: privateNoStoreHeaders() });
     }
 
-    // talent_profiles columns: user_id, category, specialties, social_links, bio, packages, availability
+    // Typed core row, written through the provider layer.
+    // The `profiles` upsert above has already run, so trg_sync_profile_type has
+    // populated profile_type_id and the service can resolve the provider.
     if (effectiveRole === "talent" && talentProfileData) {
-      const { error: talentErr } = await adminClient
-        .from("talent_profiles")
-        .upsert({ ...pick(talentProfileData, TALENT_FIELDS), user_id: targetId }, { onConflict: "user_id" });
-
-      if (talentErr) {
-        return NextResponse.json({ error: `talent_profiles: ${talentErr.message}` }, { status: 500, headers: privateNoStoreHeaders() });
+      try {
+        await profileService.updateCoreForUser(targetId, talentProfileData);
+      } catch (e) {
+        const err = ProfileError.from(e);
+        console.error("[profile] talent core upsert failed", err.code, err.internal);
+        // Was: `talent_profiles: ${message}` — leaked the table name and the raw
+        // PostgREST error. Documented leak, fixed here as part of the migration.
+        return NextResponse.json(err.toBody(), { status: err.status, headers: privateNoStoreHeaders() });
       }
     }
 
@@ -112,26 +114,20 @@ export async function POST(req: NextRequest) {
     if (effectiveRole === "brand") {
       const categoryId = normalizedCategoryIds[0] ?? normalizeCategoryId(brandProfileData?.category_id);
 
-      // `status` is moderation state — only seed it on creation, never on edit,
-      // otherwise saving a profile silently sends an approved brand back to pending.
-      const { data: existingBrand } = await adminClient
-        .from("brand_profiles")
-        .select("user_id")
-        .eq("user_id", targetId)
-        .maybeSingle();
-
-      const { error: brandErr } = await adminClient
-        .from("brand_profiles")
-        .upsert({
-          ...pick(brandProfileData, BRAND_FIELDS),
-          user_id:      targetId,
+      // The "seed `status` only on creation" rule moved into
+      // BrandRepository.upsert — an approved brand must never be sent back to
+      // pending by an ordinary profile save.
+      try {
+        await profileService.updateCoreForUser(targetId, {
+          ...(brandProfileData ?? {}),
           category_id:  categoryId || null,
           company_name: profileData?.full_name ?? brandProfileData?.company_name ?? null,
-          ...(existingBrand ? {} : { status: "pending" }),
-        }, { onConflict: "user_id" });
-
-      if (brandErr) {
-        return NextResponse.json({ error: `brand_profiles: ${brandErr.message}` }, { status: 500, headers: privateNoStoreHeaders() });
+        });
+      } catch (e) {
+        const err = ProfileError.from(e);
+        console.error("[profile] brand core upsert failed", err.code, err.internal);
+        // Was: `brand_profiles: ${message}`. Documented leak, fixed here.
+        return NextResponse.json(err.toBody(), { status: err.status, headers: privateNoStoreHeaders() });
       }
     }
 

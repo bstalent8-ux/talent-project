@@ -4,6 +4,27 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { privateNoStoreHeaders } from "@/lib/cache";
+import { profileService } from "@/features/profiles";
+
+// The exact `talentProfile` keys this endpoint has always returned. Projected
+// explicitly so the payload stays byte-identical now that the core row is
+// loaded through the provider, which selects a wider column set.
+// Consumers: app/(main)/profile/me/page.tsx, components/Navbar.tsx.
+const TALENT_PROFILE_KEYS = [
+  "id", "category", "specialties", "availability", "bio", "avg_rating",
+  "total_reviews", "total_bookings", "profile_views", "social_links",
+  "packages", "is_featured",
+] as const;
+
+// Ditto for portfolio items — no is_approved key, and no is_approved filter.
+const PORTFOLIO_KEYS = ["id", "url", "media_type", "caption", "sort_order"] as const;
+
+function project<T extends Record<string, unknown>>(row: T | null, keys: readonly string[]) {
+  if (!row) return null;
+  const out: Record<string, unknown> = {};
+  for (const key of keys) out[key] = row[key] ?? null;
+  return out;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -42,25 +63,27 @@ export async function GET(req: NextRequest) {
 
     if (!profile) return NextResponse.json({ error: "profile not found" }, { status: 404, headers: privateNoStoreHeaders() });
 
-    // Talent profile
-    const { data: talentProfile } = await adminClient
-      .from("talent_profiles")
-      .select("id, category, specialties, availability, bio, avg_rating, total_reviews, total_bookings, profile_views, social_links, packages, is_featured")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    // Talent profile — loaded through the provider layer.
+    // Guarded on typeSlug: a brand user has a brand_profiles row, and this
+    // endpoint has always returned null for them under the `talentProfile` key.
+    const loaded = await profileService.loadCoreRow(user.id);
+    const talentCore = loaded?.typeSlug === "talent"
+      ? (loaded.core as Record<string, unknown>)
+      : null;
+    const talentProfile = project(talentCore, TALENT_PROFILE_KEYS);
 
-    // Portfolio items
+    // Portfolio items — portfolio_items is not a Class B table; left in place.
     let portfolioItems: any[] = [];
-    if (talentProfile?.id) {
+    if (talentCore?.id) {
       const { data: items } = await adminClient
         .from("portfolio_items")
         .select("id, url, media_type, caption, sort_order")
-        .eq("talent_id", talentProfile.id)
+        .eq("talent_id", talentCore.id as string)
         .order("sort_order", { ascending: true });
-      portfolioItems = items ?? [];
+      portfolioItems = (items ?? []).map((i) => project(i, PORTFOLIO_KEYS));
     }
 
-    return NextResponse.json({ profile, talentProfile: talentProfile ?? null, portfolioItems }, { headers: privateNoStoreHeaders() });
+    return NextResponse.json({ profile, talentProfile, portfolioItems }, { headers: privateNoStoreHeaders() });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500, headers: privateNoStoreHeaders() });
   }

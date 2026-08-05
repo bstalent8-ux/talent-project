@@ -5,17 +5,29 @@ import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { canPerformAction } from "@/lib/permissions";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
+import { ProfileError, profileService } from "@/features/profiles";
 
+/**
+ * Writes one section's fields to the typed core row through the provider layer.
+ *
+ * Replaces the former insert-or-update branch: the provider upserts on
+ * `user_id`, which produces the same row either way.
+ *
+ * Returns an error-shaped object so the existing call sites keep their
+ * `if (error) return 500` structure unchanged.
+ */
 async function saveTalentProfileSection(
   userId: string,
-  existing: { id?: string } | null,
   payload: Record<string, unknown>,
-) {
-  const result = existing
-    ? await adminClient.from("talent_profiles").update(payload).eq("user_id", userId)
-    : await adminClient.from("talent_profiles").insert({ user_id: userId, ...payload });
-
-  return result.error;
+): Promise<{ message: string; status: number } | null> {
+  try {
+    await profileService.updateCoreForUser(userId, payload);
+    return null;
+  } catch (e) {
+    const err = ProfileError.from(e);
+    console.error("[profile/complete] core write failed", err.code, err.internal);
+    return { message: err.publicMessage, status: err.status };
+  }
 }
 
 // PATCH /api/profile/complete
@@ -58,52 +70,55 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: true }, { headers: privateNoStoreHeaders() });
     }
 
-    // ── talent_profiles table ─────────────────────────────
-    // Get existing row first
-    const { data: existing, error: existingError } = await adminClient
-      .from("talent_profiles")
-      .select("id, social_links")
-      .eq("user_id", uid)
-      .maybeSingle();
-    if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500, headers: privateNoStoreHeaders() });
+    // ── typed core row ────────────────────────────────────
+    // Read the existing row first: every social_links section MERGES into it,
+    // so a partial write must never clobber the other keys. That merge is
+    // pre-existing controller logic and stays exactly where it was.
+    let existingSocialLinks: Record<string, unknown> = {};
+    try {
+      const loaded = await profileService.loadCoreRow(uid);
+      if (loaded?.typeSlug === "talent") {
+        existingSocialLinks =
+          ((loaded.core as Record<string, unknown>).social_links as Record<string, unknown>) ?? {};
+      }
+    } catch (e) {
+      const err = ProfileError.from(e);
+      console.error("[profile/complete] core read failed", err.code, err.internal);
+      return NextResponse.json(err.toBody(), { status: err.status, headers: privateNoStoreHeaders() });
+    }
+
+    let saveError: { message: string; status: number } | null = null;
 
     if (section === "categories") {
-      const error = await saveTalentProfileSection(uid, existing, { category: data.category });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
+      saveError = await saveTalentProfileSection(uid, { category: data.category });
     } else if (section === "social") {
       // Only keep non-empty values, merge with existing
       const incoming = Object.fromEntries(
         Object.entries(data as Record<string, string>).filter(([, v]) => v && v.trim().length > 0),
       );
-      const merged = { ...(existing?.social_links ?? {}), ...incoming };
-      const error = await saveTalentProfileSection(uid, existing, { social_links: merged });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
+      saveError = await saveTalentProfileSection(uid, { social_links: { ...existingSocialLinks, ...incoming } });
     } else if (section === "availability") {
-      const error = await saveTalentProfileSection(uid, existing, { availability: data.availability });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
+      saveError = await saveTalentProfileSection(uid, { availability: data.availability });
     } else if (section === "physical") {
       const allowed = ["height","weight","hair_color","shoe_size","age","languages","dialect"];
       const incoming = Object.fromEntries(
         Object.entries(data as Record<string,string>).filter(([k,v]) => allowed.includes(k) && v && String(v).trim().length > 0),
       );
-      const merged = { ...(existing?.social_links ?? {}), ...incoming };
-      const error = await saveTalentProfileSection(uid, existing, { social_links: merged });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
+      saveError = await saveTalentProfileSection(uid, { social_links: { ...existingSocialLinks, ...incoming } });
     } else if (section === "packages") {
-      const error = await saveTalentProfileSection(uid, existing, { packages: data.packages });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
+      saveError = await saveTalentProfileSection(uid, { packages: data.packages });
     } else if (section === "usage_addons") {
-      const { data: existingRow, error: existingRowError } = await adminClient
-        .from("talent_profiles")
-        .select("id, social_links")
-        .eq("user_id", uid)
-        .maybeSingle();
-      if (existingRowError) return NextResponse.json({ error: existingRowError.message }, { status: 500, headers: privateNoStoreHeaders() });
-      const merged = { ...(existingRow?.social_links ?? {}), usage_addons: data.usage_addons };
-      const error = await saveTalentProfileSection(uid, existingRow, { social_links: merged });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
+      // Previously re-read the row here; the single read above serves both,
+      // and the merge result is identical.
+      saveError = await saveTalentProfileSection(uid, {
+        social_links: { ...existingSocialLinks, usage_addons: data.usage_addons },
+      });
     } else {
       return NextResponse.json({ error: "unknown section" }, { status: 400, headers: privateNoStoreHeaders() });
+    }
+
+    if (saveError) {
+      return NextResponse.json({ error: saveError.message }, { status: saveError.status, headers: privateNoStoreHeaders() });
     }
 
     invalidateTalent(profile?.handle ?? uid);
