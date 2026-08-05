@@ -209,6 +209,8 @@
   line-height: 1.08;
   letter-spacing: 0;
   text-wrap: balance;
+  /* The hero photo has bright highlights right under the headline. */
+  text-shadow: 0 2px 22px rgba(3, 8, 12, 0.62);
 }
 
 .heroTitle em {
@@ -472,7 +474,9 @@
 .categoryGrid {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: clamp(13.5rem, 23vw, 17.5rem);
+  /* 7 categories never fit one row: keep a deliberate half-card peek so the
+     rail reads as scrollable instead of as a clipped grid. */
+  grid-auto-columns: clamp(13.5rem, 20vw, 16.5rem);
   gap: 1rem;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
@@ -658,6 +662,19 @@
   color: var(--text-primary);
   font-weight: 900;
   font-size: var(--text-lg);
+}
+
+/* Long handles/emails must truncate instead of overrunning the rating badge. */
+.talentName > span:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.talentName > .stars {
+  flex: 0 0 auto;
 }
 
 .talentMetaRow {
@@ -981,6 +998,8 @@
 }
 
 .campaignCard {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   scroll-snap-align: start;
 }
@@ -992,7 +1011,17 @@
 }
 
 .campaignCard div {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   padding: 1rem;
+}
+
+/* Pins the location line to the card bottom so 1-line and 2-line titles
+   still produce a shared baseline across the row. */
+.campaignCard p {
+  margin-top: auto;
+  padding-top: 0.35rem;
 }
 
 .darkCtaPanel {
@@ -1163,8 +1192,30 @@
 }
 
 .faqSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   cursor: pointer;
   list-style: none;
+}
+
+.faqSummary::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  /* Physical borders on purpose: the chevron must read down/up in both
+     directions, not flip to a sideways caret under RTL. */
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.5;
+  transform: rotate(45deg);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.faqItem[open] .faqSummary::after {
+  transform: rotate(-135deg);
 }
 
 .faqSummary::-webkit-details-marker {
@@ -1177,15 +1228,16 @@
   padding: clamp(3.25rem, 6vw, 4.75rem) clamp(1rem, 4vw, 2rem);
   color: #fff;
   background:
-    linear-gradient(90deg, rgba(4, 9, 13, 0.88), rgba(4, 9, 13, 0.56), rgba(4, 9, 13, 0.9)),
+    radial-gradient(110% 95% at 50% 50%, rgba(4, 9, 13, 0.84), rgba(4, 9, 13, 0.96)),
     url("https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1800&q=82") center / cover;
 }
 
 .finalCtaContent {
   width: min(640px, 100%);
-  margin-inline-start: auto;
+  margin-inline: auto;
   display: grid;
   gap: 1rem;
+  text-align: center;
 }
 
 .finalCta h2 {
@@ -1213,6 +1265,40 @@
 @keyframes floatY {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
+}
+
+/* Once features sit side by side, equal row heights keep the row baselines
+   aligned. Skipped on mobile, where 1fr rows would only add dead height. */
+@media (min-width: 681px) {
+  .featureGrid {
+    grid-auto-rows: 1fr;
+  }
+}
+
+/* ─── Desktop: fixed rails become real grids ─────────────────────────────
+   The column-flow rails overflow the 1180px container at desktop widths
+   (4 talent cards = 1232px, 3 testimonials = 1136px), which clipped the
+   last card and left dead space on the inline-start edge. At >=981px the
+   item counts are known and finite, so lay them out as filled grids. */
+@media (min-width: 981px) {
+  .talentGrid {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow-x: visible;
+    padding-block-end: 0;
+  }
+
+  .testimonialGrid {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow-x: visible;
+    padding-block-end: 0;
+  }
+
+  /* 6 features in 4 columns left an orphan row of 2. */
+  .featureGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 980px) {
@@ -1391,19 +1477,24 @@
     grid-template-columns: 1fr;
   }
 
+  /* 4 stats in one row overflowed 390px viewports and clipped the first
+     cell; a 2x2 block fits without a hidden horizontal scroll. */
   .statsStrip {
-    grid-template-columns: repeat(4, minmax(6.25rem, 1fr));
-    overflow-x: auto;
-    scrollbar-width: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: hidden;
   }
 
   .stat {
-    border-top: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     border-inline-start: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.55rem 0.6rem;
+    padding: 0.6rem;
   }
 
-  .stat:first-child {
+  .stat:nth-child(-n + 2) {
+    border-top: 0;
+  }
+
+  .stat:nth-child(odd) {
     border-inline-start: 0;
   }
 
