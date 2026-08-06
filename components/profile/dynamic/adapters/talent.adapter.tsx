@@ -16,6 +16,9 @@ import PortfolioSection from "@/app/(main)/talent/[handle]/_components/Portfolio
 import PackagesSection from "@/app/(main)/talent/[handle]/_components/PackagesSection";
 import UsageRightsSection from "@/app/(main)/talent/[handle]/_components/UsageRightsSection";
 import ReviewsCard from "@/app/(main)/talent/[handle]/_components/ReviewsCard";
+import ExperienceSection from "@/app/(main)/talent/[handle]/_components/ExperienceSection";
+import BrandsCard from "@/app/(main)/talent/[handle]/_components/BrandsCard";
+import PerformanceSidebar from "@/app/(main)/talent/[handle]/_components/PerformanceSidebar";
 import TrustCard from "@/app/(main)/talent/[handle]/_components/TrustCard";
 
 import type { ProfileSectionDTO } from "@/features/profiles/types/dto";
@@ -36,6 +39,9 @@ function renderPlan(plan: CoreSectionRenderPlan) {
     case "PackagesSection":    return <PackagesSection {...plan.props} />;
     case "UsageRightsSection": return <UsageRightsSection {...plan.props} />;
     case "ReviewsCard":        return <ReviewsCard {...plan.props} />;
+    case "ExperienceSection":  return <ExperienceSection {...plan.props} />;
+    case "BrandsCard":         return <BrandsCard {...plan.props} />;
+    case "PerformanceSidebar": return <PerformanceSidebar {...plan.props} />;
     case "TrustCard":          return <TrustCard />;
     default:                   return null;
   }

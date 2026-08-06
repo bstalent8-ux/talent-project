@@ -22,6 +22,9 @@ export const TALENT_RENDERABLE_CORE_KEYS = [
   "packages",
   "usage_addons",
   "reviews",
+  "experience",
+  "brands",
+  "performance",
   "trust",
 ] as const;
 
@@ -40,18 +43,21 @@ export const TALENT_INLINE_CORE_KEYS = [
   "payment",
 ] as const;
 
-/**
- * Brand core sections. All inline today — app/(main)/brand/ renders them
- * without extracted components, so the brand adapter claims nothing.
- */
-export const BRAND_RENDERABLE_CORE_KEYS = [] as const;
-
-export const BRAND_INLINE_CORE_KEYS = [
+/** Brand core sections with a standalone component in components/profile/brand/. */
+export const BRAND_RENDERABLE_CORE_KEYS = [
+  "bio",
   "company_info",
   "industry",
-  "verification",
-  "logo",
   "social",
+  "verification",
+] as const;
+
+/**
+ * `logo` renders inside BrandHero, which the brand page draws as chrome above
+ * the layout slots — exactly as `avatar` does for talent.
+ */
+export const BRAND_INLINE_CORE_KEYS = [
+  "logo",
 ] as const;
 
 export const RENDERABLE_CORE_KEYS_BY_TYPE: Record<string, readonly string[]> = {

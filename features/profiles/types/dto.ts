@@ -173,11 +173,14 @@ export interface TalentPublicCore {
   portfolio:     PortfolioItemDTO[];
   reviews:       ReviewItemDTO[];
   brands:        TalentBrandDTO[];
+  /**
+   * Public: the talent page already renders these counts to guests today
+   * (fetchBookingStatsByTalentId, app/(main)/talent/[handle]/page.tsx:41).
+   */
+  bookingStats:  BookingStatsDTO;
 }
 
-export interface TalentPrivateCore extends TalentPublicCore {
-  bookingStats: BookingStatsDTO;
-}
+export type TalentPrivateCore = TalentPublicCore;
 
 export interface BrandPublicCore {
   kind:        "brand";

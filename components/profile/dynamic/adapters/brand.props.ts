@@ -1,15 +1,10 @@
 // ─── Brand core prop builder ──────────────────────────────────────────────────
-// PURE. Mirrors talent.props.ts.
+// PURE. Mirrors talent.props.ts: section key + context → component props, no JSX
+// and no side effects, so the mapping is unit-testable without a DOM.
 //
-// Claims ZERO keys today. The brand core sections seeded in 20260806_08 —
-// company_info, industry, verification, logo, social — have no standalone
-// components; app/(main)/brand/ renders them inline. Inventing components here
-// would be the duplicated rendering logic this layer exists to prevent, and it
-// would be new public UI, which this phase excludes.
-//
-// Everything therefore returns null and falls back to CoreSectionPlaceholder.
-// When brand components are extracted, add their keys to
-// BRAND_RENDERABLE_CORE_KEYS and a case below — nothing else changes.
+// Every branch returns props for a component that already decides its own empty
+// state. The section-content rules hide these sections server-side first, so a
+// null return here is a second line of defence, not the primary one.
 
 import { BRAND_RENDERABLE_CORE_KEYS } from "./core-keys";
 import type { BrandProfileContext, CoreSectionRenderPlan } from "./types";
@@ -21,10 +16,33 @@ export function supportsBrandCoreKey(sectionKey: string): boolean {
 }
 
 export function buildBrandCoreProps(
-  _sectionKey: string,
-  _context: BrandProfileContext,
+  sectionKey: string,
+  context: BrandProfileContext,
 ): CoreSectionRenderPlan | null {
-  // TODO(brand-core-components): populate once brand hero / verification /
-  // industry components are extracted from app/(main)/brand/.
-  return null;
+  switch (sectionKey) {
+    case "bio":
+      return { component: "BrandAboutCard", props: { bio: context.bio } };
+
+    case "company_info":
+      return {
+        component: "BrandCompanyCard",
+        props: { companyName: context.companyName, websiteUrl: context.websiteUrl },
+      };
+
+    case "industry":
+      return {
+        component: "BrandIndustryCard",
+        props: { industry: context.industry, categoryId: context.categoryId },
+      };
+
+    case "social":
+      return { component: "BrandSocialCard", props: { socialLinks: context.socialLinks } };
+
+    case "verification":
+      return { component: "BrandVerificationCard", props: { isApproved: context.isApproved } };
+
+    // `logo` is deliberately unclaimed — BrandHero carries it as page chrome.
+    default:
+      return null;
+  }
 }

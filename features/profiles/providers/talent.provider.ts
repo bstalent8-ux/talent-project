@@ -126,9 +126,10 @@ function toBookingStats(rows: Array<{ status: string }>): BookingStatsDTO {
 }
 
 function buildPublicCore(core: RawTalentCore, parts: {
-  portfolio: PortfolioItemDTO[];
-  reviews:   ReviewItemDTO[];
-  brands:    TalentBrandDTO[];
+  portfolio:    PortfolioItemDTO[];
+  reviews:      ReviewItemDTO[];
+  brands:       TalentBrandDTO[];
+  bookingStats: BookingStatsDTO;
 }): TalentPublicCore {
   return {
     kind:          "talent",
@@ -145,6 +146,7 @@ function buildPublicCore(core: RawTalentCore, parts: {
     portfolio:     parts.portfolio,
     reviews:       parts.reviews,
     brands:        parts.brands,
+    bookingStats:  parts.bookingStats,
   };
 }
 
@@ -165,10 +167,11 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
     // it here is how it stops being forgotten (CLAUDE.md §8).
     if (core.status && core.status !== "approved") return null;
 
-    const [portfolio, reviews, brands] = await Promise.all([
+    const [portfolio, reviews, brands, bookingRows] = await Promise.all([
       talentRepository.findPortfolio(core.id, true),
       talentRepository.findReviews(core.id, true),
       talentRepository.findBrands(core.id),
+      talentRepository.findBookingStatuses(core.id),
     ]);
 
     // Reviewer names: one batched profiles lookup keyed by reviews.brand_id,
@@ -178,9 +181,10 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
     );
 
     return buildPublicCore(core, {
-      portfolio: toPortfolio(portfolio),
-      reviews:   toReviews(reviews, authorByBrandId),
-      brands:    toBrands(brands),
+      portfolio:    toPortfolio(portfolio),
+      reviews:      toReviews(reviews, authorByBrandId),
+      brands:       toBrands(brands),
+      bookingStats: toBookingStats(bookingRows),
     });
   },
 
@@ -202,13 +206,14 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
     );
 
     const publicShape = buildPublicCore(core, {
-      portfolio: toPortfolio(portfolio),
-      reviews:   toReviews(reviews, authorByBrandId),
-      brands:    toBrands(brands),
+      portfolio:    toPortfolio(portfolio),
+      reviews:      toReviews(reviews, authorByBrandId),
+      brands:       toBrands(brands),
+      bookingStats: toBookingStats(bookingRows),
     });
 
     return {
-      core: { ...publicShape, bookingStats: toBookingStats(bookingRows) },
+      core: publicShape,
       moderation: {
         status:          core.status,
         rejectionReason: core.rejection_reason,

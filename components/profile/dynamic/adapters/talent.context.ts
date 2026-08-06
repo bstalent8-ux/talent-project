@@ -11,19 +11,17 @@
 import type { PublicProfileDTO, TalentPublicCore } from "@/features/profiles/types/dto";
 import type {
   AddonItem,
+  BookingStats,
+  BrandItem,
+  CampaignStats,
+  ExperienceItem,
+  FeaturedCampaign,
   PackageItem,
   PortfolioItem,
   Review,
   TalentData,
 } from "@/features/talent-profile/types";
 import type { TalentProfileContext } from "./types";
-
-/** Same rule as the existing transformer's formatViews(). */
-function formatViews(views: number): string {
-  if (views >= 1_000_000) return `${(views / 1_000_000).toFixed(1)}M`;
-  if (views >= 1_000) return `${Math.round(views / 1_000)}K`;
-  return String(views);
-}
 
 export function toTalentData(dto: PublicProfileDTO): TalentData {
   const core = dto.core as TalentPublicCore;
@@ -41,7 +39,10 @@ export function toTalentData(dto: PublicProfileDTO): TalentData {
     memberSince: (social.member_since as string) ?? identity.createdAt?.slice(0, 4) ?? "2022",
     rating:       core.rating ?? 0,
     reviewCount:  core.reviewCount ?? 0,
-    views:       (social.views_display as string) ?? formatViews(0),
+    // `core.views` is already formatted by the provider (TalentPublicCore.views).
+    // Reading it here — rather than re-formatting 0 — is what makes the dynamic
+    // path show the same view count the legacy transformer shows.
+    views:       (social.views_display as string) ?? core.views ?? "0",
     verified:     Boolean(identity.isVerified),
     fastResponse: Boolean(social.fast_response),
     premium:      Boolean(social.premium),
@@ -107,6 +108,72 @@ export function toReviews(dto: PublicProfileDTO, locale = "ar-EG"): Review[] {
   }));
 }
 
+/** Mirrors transformExperience() — entries still live in the social_links blob. */
+export function toExperience(dto: PublicProfileDTO): ExperienceItem[] | null {
+  const core = dto.core as TalentPublicCore;
+  const raw = (core.socialLinks ?? {})["experience"];
+  if (!Array.isArray(raw)) return null;
+
+  return (raw as Array<Record<string, unknown>>).map((entry) => ({
+    name:     String(entry?.name ?? ""),
+    year:     String(entry?.year ?? ""),
+    verified: Boolean(entry?.verified),
+  }));
+}
+
+/**
+ * Brands come from the typed `talent_brands` table (core.brands), never from the
+ * legacy `social_links.brands` fallback — that migration is already done.
+ */
+export function toBrandItems(dto: PublicProfileDTO): BrandItem[] {
+  const core = dto.core as TalentPublicCore;
+  return (core.brands ?? []).map((brand) => ({
+    id:                brand.id,
+    name:              brand.name,
+    logo_url:          brand.logoUrl,
+    year_collaborated: brand.yearCollaborated,
+    sort_order:        brand.sortOrder,
+  }));
+}
+
+export function toBookingStats(dto: PublicProfileDTO): BookingStats {
+  const core = dto.core as TalentPublicCore;
+  return core.bookingStats ?? { total: 0, completed: 0, pending: 0, cancelled: 0 };
+}
+
+/**
+ * Campaign copy is page CHROME, not a section — CampaignBanner renders above the
+ * layout slots. It still belongs here because the blob it reads is only reachable
+ * through the DTO, and mirroring transformCampaignStats() keeps the two paths
+ * showing identical numbers.
+ */
+export function toCampaignStats(dto: PublicProfileDTO): CampaignStats | null {
+  const raw = (dto.core as TalentPublicCore).socialLinks?.["campaign_stats"] as
+    | Record<string, string>
+    | undefined;
+  if (!raw) return null;
+  return {
+    views:          raw.views          ?? "—",
+    ctr:            raw.ctr            ?? "—",
+    sales_increase: raw.sales_increase ?? "—",
+    repeat:         raw.repeat         ?? "—",
+  };
+}
+
+/** Mirrors transformFeaturedCampaign(). */
+export function toFeaturedCampaign(dto: PublicProfileDTO): FeaturedCampaign | null {
+  const raw = (dto.core as TalentPublicCore).socialLinks?.["featured_campaign"] as
+    | Record<string, string>
+    | undefined;
+  if (!raw) return null;
+  return {
+    name:       raw.name       ?? "—",
+    ctr_before: raw.ctr_before ?? "—",
+    ctr_after:  raw.ctr_after  ?? "—",
+    growth:     raw.growth     ?? "—",
+  };
+}
+
 export interface TalentContextHandlers {
   selectedPackage: PackageItem | null;
   onSelectPackage: (pkg: PackageItem) => void;
@@ -130,6 +197,9 @@ export function buildTalentContextFromDTO(
     packages:        toPackages(dto),
     addons:          toAddons(dto),
     reviews:         toReviews(dto),
+    experience:      toExperience(dto),
+    brands:          toBrandItems(dto),
+    bookingStats:    toBookingStats(dto),
     selectedPackage: handlers.selectedPackage,
     onSelectPackage: handlers.onSelectPackage,
   };

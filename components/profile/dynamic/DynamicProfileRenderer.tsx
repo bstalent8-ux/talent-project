@@ -14,6 +14,7 @@
 // It is the only module that imports both the adapters and the slot walker, so
 // it is also the only one that pulls the talent component tree into a bundle.
 
+import type { ReactNode } from "react";
 import { DynamicProfileProvider, useDynamicProfile, type BookingActions } from "./DynamicProfileContext";
 import { DynamicProfileSections, type CoreRenderBridge } from "./DynamicSectionRenderer";
 import { renderCoreSection } from "./adapters";
@@ -21,7 +22,13 @@ import type { PublicProfileDTO } from "@/features/profiles/types/dto";
 import type { DynamicLang } from "./registry";
 
 /** Reads the context and hands the slot walker a ready core bridge. */
-function DynamicProfileBody() {
+function DynamicProfileBody({
+  sidebarFooter,
+  mainFooter,
+}: {
+  sidebarFooter?: ReactNode;
+  mainFooter?:    ReactNode;
+}) {
   const { profile, lang, typeSlug, adapterContext } = useDynamicProfile();
 
   const core: CoreRenderBridge<never> | undefined = adapterContext
@@ -36,8 +43,10 @@ function DynamicProfileBody() {
       core={core}
       lang={lang}
       layout={profile.layout ?? null}
+      mainFooter={mainFooter}
       profile={profile}
       sections={profile.sections}
+      sidebarFooter={sidebarFooter}
       typeSlug={typeSlug}
     />
   );
@@ -47,14 +56,19 @@ export default function DynamicProfileRenderer({
   profile,
   lang,
   booking,
+  sidebarFooter,
+  mainFooter,
 }: {
   profile:  PublicProfileDTO;
   lang:     DynamicLang;
   booking?: BookingActions;
+  /** Fixed chrome appended after the sidebar / main slots. See the walker. */
+  sidebarFooter?: ReactNode;
+  mainFooter?:    ReactNode;
 }) {
   return (
     <DynamicProfileProvider booking={booking} lang={lang} profile={profile}>
-      <DynamicProfileBody />
+      <DynamicProfileBody mainFooter={mainFooter} sidebarFooter={sidebarFooter} />
     </DynamicProfileProvider>
   );
 }

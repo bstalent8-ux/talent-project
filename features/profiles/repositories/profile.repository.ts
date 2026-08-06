@@ -80,6 +80,32 @@ export const profileRepository = {
     if (error) throw fromSupabaseError(error);
   },
 
+  /**
+   * Batched display-name lookup: profiles.id → full_name.
+   *
+   * One query for N ids, never one per id. Used to resolve reviewer names
+   * without a cross-table join (CLAUDE.md §11.10 — joins across these tables
+   * are avoided deliberately; lookup maps are built in JS instead).
+   *
+   * No review table structure changes: reviews.brand_id already points at
+   * profiles.id.
+   */
+  async findDisplayNames(profileIds: string[]): Promise<Record<string, string | null>> {
+    const unique = [...new Set(profileIds.filter(Boolean))];
+    if (unique.length === 0) return {};
+
+    const { data, error } = await adminClient
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", unique);
+
+    if (error) throw fromSupabaseError(error);
+
+    return Object.fromEntries(
+      (data ?? []).map((row) => [row.id as string, (row.full_name as string) ?? null]),
+    );
+  },
+
   /** Type registry lookup, used by the service when a profile carries no type. */
   async findTypeBySlug(slug: string): Promise<RawProfileType | null> {
     const { data, error } = await adminClient

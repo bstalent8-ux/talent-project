@@ -16,6 +16,9 @@ import type { ReactNode } from "react";
 import type { ProfileSectionDTO } from "@/features/profiles/types/dto";
 import type {
   AddonItem,
+  BookingStats,
+  BrandItem,
+  ExperienceItem,
   PackageItem,
   PortfolioItem,
   Review,
@@ -36,6 +39,9 @@ export interface TalentProfileContext {
   packages:        PackageItem[] | null;
   addons:          AddonItem[] | null;
   reviews:         Review[];
+  experience:      ExperienceItem[] | null;
+  brands:          BrandItem[];
+  bookingStats:    BookingStats;
   /** Lifted state: PackagesSection sets it, UsageRightsSection consumes it. */
   selectedPackage: PackageItem | null;
   onSelectPackage: (pkg: PackageItem) => void;
@@ -47,6 +53,10 @@ export interface BrandProfileContext {
   industry:    string | null;
   websiteUrl:  string | null;
   isApproved:  boolean;
+  /** From the SHARED identity, not from brand_profiles — brands have no core bio column. */
+  bio:         string | null;
+  categoryId:  string | null;
+  socialLinks: Record<string, unknown>;
 }
 
 export type ProfileContext = TalentProfileContext | BrandProfileContext;
@@ -65,7 +75,17 @@ export type CoreSectionRenderPlan =
   | { component: "PackagesSection";    props: { onSelect: (pkg: PackageItem) => void; packages?: PackageItem[] | null } }
   | { component: "UsageRightsSection"; props: { selectedPackage: PackageItem | null; addons?: AddonItem[] | null } }
   | { component: "ReviewsCard";        props: { reviews: Review[]; rating?: number } }
-  | { component: "TrustCard";          props: Record<string, never> };
+  | { component: "ExperienceSection";  props: { experience?: ExperienceItem[] | null } }
+  | { component: "BrandsCard";         props: { brands: BrandItem[] } }
+  | { component: "PerformanceSidebar"; props: { talent: TalentData; bookingStats?: BookingStats } }
+  | { component: "TrustCard";          props: Record<string, never> }
+  // Brand core sections. `logo` is absent: it is carried by BrandHero, which the
+  // page renders as chrome above the layout slots.
+  | { component: "BrandAboutCard";        props: { bio: string | null } }
+  | { component: "BrandCompanyCard";      props: { companyName: string | null; websiteUrl: string | null } }
+  | { component: "BrandIndustryCard";     props: { industry: string | null; categoryId: string | null } }
+  | { component: "BrandSocialCard";       props: { socialLinks: Record<string, unknown> } }
+  | { component: "BrandVerificationCard"; props: { isApproved: boolean } };
 
 export interface CoreSectionAdapter<TContext extends ProfileContext = ProfileContext> {
   readonly typeSlug: CoreProfileTypeSlug;

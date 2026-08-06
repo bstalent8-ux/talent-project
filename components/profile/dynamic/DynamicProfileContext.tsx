@@ -19,6 +19,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import type { PublicProfileDTO } from "@/features/profiles/types/dto";
 import type { PackageItem } from "@/features/talent-profile/types";
+import { buildBrandContextFromDTO } from "./adapters/brand.context";
 import { buildTalentContextFromDTO } from "./adapters/talent.context";
 import type { ProfileContext } from "./adapters/types";
 import type { DynamicLang } from "./registry";
@@ -74,11 +75,17 @@ export function DynamicProfileProvider({
     setSelectedPackage(pkg);
   }, []);
 
-  // Only the talent adapter consumes a rich context today. Other types get null
-  // and fall through to the placeholder / dynamic renderers.
+  // One branch per registered core adapter. An unregistered type gets null and
+  // falls through to the placeholder / dynamic renderers rather than throwing.
+  //
+  // Only the talent context depends on `selectedPackage`; the brand branch is
+  // memoized on the DTO alone so selecting a package cannot rebuild it.
   const adapterContext = useMemo<ProfileContext | null>(() => {
-    if (typeSlug !== "talent") return null;
-    return buildTalentContextFromDTO(profile, { selectedPackage, onSelectPackage });
+    if (typeSlug === "talent") {
+      return buildTalentContextFromDTO(profile, { selectedPackage, onSelectPackage });
+    }
+    if (typeSlug === "brand") return buildBrandContextFromDTO(profile);
+    return null;
   }, [profile, typeSlug, selectedPackage, onSelectPackage]);
 
   const value = useMemo<DynamicProfileState>(

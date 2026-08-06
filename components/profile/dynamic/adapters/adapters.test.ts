@@ -48,6 +48,9 @@ const talentContext: TalentProfileContext = {
   packages: [{ id: "pkg1", name: "Basic", price: "1000", popular: true, features: ["one"] }],
   addons: [{ key: "wl", label: "Whitelisting", price: 500 }],
   reviews: [{ id: "r1", author: "Brand", brand: "", rating: 5, text: "Great", date: "2026" }],
+  experience: [{ name: "Acme", year: "2025", verified: true }],
+  brands: [{ id: "b1", name: "Acme", logo_url: null, year_collaborated: "2025", sort_order: 0 }],
+  bookingStats: { total: 7, completed: 5, pending: 1, cancelled: 1 },
   selectedPackage: null,
   onSelectPackage,
 };
@@ -58,6 +61,9 @@ const brandContext: BrandProfileContext = {
   industry: "retail",
   websiteUrl: "https://example.com",
   isApproved: true,
+  bio: "We make things.",
+  categoryId: "retail",
+  socialLinks: { instagram: "acme" },
 };
 
 // ─── 1. Every renderable core section has an adapter entry ────────────────────
@@ -80,9 +86,28 @@ describe("every core section has an adapter", () => {
     expect(claimed).toEqual([...TALENT_RENDERABLE_CORE_KEYS]);
   });
 
-  it("brand adapter claims no keys yet, and that is declared explicitly", () => {
-    expect([...BRAND_RENDERABLE_CORE_KEYS]).toEqual([]);
-    expect(RENDERABLE_CORE_KEYS_BY_TYPE.brand).toEqual([]);
+  it.each(BRAND_RENDERABLE_CORE_KEYS)(
+    "brand core section %s resolves to a render plan",
+    (key) => {
+      expect(supportsBrandCoreKey(key)).toBe(true);
+
+      const plan = buildBrandCoreProps(key, brandContext);
+      expect(plan).not.toBeNull();
+      expect(plan!.component).toBeTruthy();
+      expect(plan!.props).toBeTypeOf("object");
+    },
+  );
+
+  it("brand adapter claims exactly the declared renderable keys", () => {
+    const claimed = [...BRAND_RENDERABLE_CORE_KEYS].filter(supportsBrandCoreKey);
+    expect(claimed).toEqual([...BRAND_RENDERABLE_CORE_KEYS]);
+  });
+
+  // `logo` is carried by BrandHero as page chrome. If it ever starts resolving
+  // to a plan it would render twice — once in the hero, once in a slot.
+  it("brand `logo` stays unclaimed", () => {
+    expect(supportsBrandCoreKey("logo")).toBe(false);
+    expect(buildBrandCoreProps("logo", brandContext)).toBeNull();
   });
 
   it("renderable and inline key sets never overlap", () => {

@@ -67,6 +67,7 @@ const dto: PublicProfileDTO = {
       { id: "r1", author: "Acme Co", rating: 5, text: "Great", createdAt: "2026-02-01T00:00:00.000Z" },
     ],
     brands: [],
+    bookingStats: { total: 7, completed: 5, pending: 1, cancelled: 1 },
   },
   sections: [],
   layout: { main: [], sidebar: [] },
@@ -143,9 +144,18 @@ describe("inline core sections", () => {
     expect(isRenderableCoreKey("agency", "bio")).toBe(false);
   });
 
-  it("brand inline keys are declared, so brand sections never show placeholders", () => {
+  // Every brand core key must be classified one way or the other. An
+  // unclassified key is the only case that reaches CoreSectionPlaceholder,
+  // which tells a visitor something is broken when nothing is.
+  it("brand core keys are all classified, so brand sections never show placeholders", () => {
     expect(INLINE_CORE_KEYS_BY_TYPE.brand.length).toBeGreaterThan(0);
-    expect(isInlineCoreKey("brand", "company_info")).toBe(true);
+    // `logo` is carried by BrandHero as page chrome, not by a layout slot.
+    expect(isInlineCoreKey("brand", "logo")).toBe(true);
+
+    for (const key of ["bio", "company_info", "industry", "social", "verification"]) {
+      expect(isRenderableCoreKey("brand", key), `brand "${key}" should be renderable`).toBe(true);
+      expect(isInlineCoreKey("brand", key)).toBe(false);
+    }
   });
 });
 

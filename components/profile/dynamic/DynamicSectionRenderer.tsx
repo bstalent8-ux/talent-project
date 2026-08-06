@@ -1,3 +1,5 @@
+"use client";
+
 // ─── DynamicSectionRenderer / DynamicProfileSections ──────────────────────────
 // The layout-slot walker. Given sections, a layout and a language, it renders
 // each slot in configured order.
@@ -8,6 +10,7 @@
 import type { ReactNode } from "react";
 import type { ProfileLayoutDTO, ProfileSectionDTO, PublicProfileDTO } from "@/features/profiles/types/dto";
 import { hasSectionContent } from "@/features/profiles/content/section-content";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { resolveRenderer, type DynamicLang } from "./registry";
 import { anchorIdFor } from "./anchors";
 import { isInlineCoreKey } from "./adapters/core-keys";
@@ -130,6 +133,8 @@ export function DynamicProfileSections({
   core,
   typeSlug,
   profile,
+  sidebarFooter,
+  mainFooter,
 }: {
   sections:  ProfileSectionDTO[];
   layout:    ProfileLayoutDTO | null;
@@ -138,7 +143,17 @@ export function DynamicProfileSections({
   typeSlug?: string;
   /** When supplied, empty sections are dropped before the slots are laid out. */
   profile?:  PublicProfileDTO;
+  /**
+   * Fixed chrome pinned below the sidebar slots — the booking CTA and the
+   * ask-a-question card. Not sections: they are always available and are not
+   * driven by profile data, so they must survive an otherwise empty sidebar.
+   */
+  sidebarFooter?: ReactNode;
+  /** Same, for the main column (e.g. a closing call to action). */
+  mainFooter?: ReactNode;
 }) {
+  const isMobile = useIsMobile();
+
   // Emptiness is resolved BEFORE slotting, not inside each slot: a sidebar whose
   // every section is empty must collapse the grid back to one column, which is
   // impossible to decide once the aside has already been rendered.
@@ -158,11 +173,15 @@ export function DynamicProfileSections({
     ? layout!.sidebar.map((key) => byKey[key]).filter(Boolean)
     : [];
 
+  // Chrome keeps the sidebar alive on a profile whose sidebar sections are all
+  // empty — otherwise a brand new talent loses the booking CTA entirely.
+  const showSidebar = sidebar.length > 0 || Boolean(sidebarFooter);
+
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: sidebar.length > 0 ? "minmax(0, 1fr) minmax(240px, 0.42fr)" : "1fr",
+        gridTemplateColumns: showSidebar && !isMobile ? "minmax(0, 1fr) minmax(240px, 0.42fr)" : "1fr",
         gap: "1rem",
         alignItems: "start",
       }}
@@ -171,13 +190,15 @@ export function DynamicProfileSections({
         {main.map((section) => (
           <DynamicSectionRenderer core={core} key={section.key} lang={lang} profile={profile} section={section} typeSlug={typeSlug} />
         ))}
+        {mainFooter}
       </div>
 
-      {sidebar.length > 0 ? (
+      {showSidebar ? (
         <aside style={{ display: "grid", gap: "1rem" }}>
           {sidebar.map((section) => (
             <DynamicSectionRenderer core={core} key={section.key} lang={lang} profile={profile} section={section} typeSlug={typeSlug} />
           ))}
+          {sidebarFooter}
         </aside>
       ) : null}
     </div>

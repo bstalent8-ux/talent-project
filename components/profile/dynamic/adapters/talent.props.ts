@@ -59,6 +59,24 @@ export function buildTalentCoreProps(
         props: { reviews: context.reviews, rating: context.talent.rating },
       };
 
+    case "experience":
+      return {
+        component: "ExperienceSection",
+        props: { experience: context.experience },
+      };
+
+    case "brands":
+      return {
+        component: "BrandsCard",
+        props: { brands: context.brands },
+      };
+
+    case "performance":
+      return {
+        component: "PerformanceSidebar",
+        props: { talent: context.talent, bookingStats: context.bookingStats },
+      };
+
     case "trust":
       return { component: "TrustCard", props: {} };
 

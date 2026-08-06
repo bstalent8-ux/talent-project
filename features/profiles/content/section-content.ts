@@ -94,8 +94,10 @@ const TALENT_RULES: Record<string, ContentRule> = {
   reviews:   (p) => listLength((p.core as TalentPublicCore).reviews) > 0,
   brands:    (p) => listLength((p.core as TalentPublicCore).brands) > 0,
 
-  // Add-ons still live in the social_links JSONB blob (CLAUDE.md §7).
+  // Add-ons and past collaborations still live in the social_links JSONB blob
+  // (CLAUDE.md §7), which is why they read through `bag()` and not a column.
   usage_addons: (p) => listLength(bag(p.core as TalentPublicCore)["usage_addons"]) > 0,
+  experience:   (p) => listLength(bag(p.core as TalentPublicCore)["experience"]) > 0,
 
   availability: (p) => isFilled((p.core as TalentPublicCore).availability),
 
@@ -108,6 +110,7 @@ const TALENT_RULES: Record<string, ContentRule> = {
 };
 
 const BRAND_RULES: Record<string, ContentRule> = {
+  bio:          (p) => isFilled(p.identity.bio),
   company_info: (p) => isFilled((p.core as BrandPublicCore).companyName),
   industry:     (p) => {
     const core = p.core as BrandPublicCore;

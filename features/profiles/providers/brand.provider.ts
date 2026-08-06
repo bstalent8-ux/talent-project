@@ -45,15 +45,18 @@ const meta: ProviderMetadata = {
 };
 
 // ─── Completion sections ──────────────────────────────────────────────────────
-// New logic — no legacy equivalent exists for brands. Weights sum to 100 so the
-// score is directly readable; the Phase 3 engine normalizes regardless.
+// New logic — no legacy equivalent exists for brands, and deliberately NOT the
+// talent weights: a brand has no portfolio, packages or physical attributes, so
+// scoring it against lib/profile-completion.ts would cap every brand well below
+// 100 no matter how complete it is. The service normalizes to 100 regardless.
 
 const COMPLETION_SECTIONS: Array<Omit<CompletionSectionDTO, "done">> = [
-  { key: "company_info", label: { ar: "بيانات الشركة",  en: "Company details" }, weight: 30, href: "/profile/me" },
-  { key: "industry",     label: { ar: "المجال",         en: "Industry"        }, weight: 20, href: "/profile/me" },
+  { key: "company_info", label: { ar: "بيانات الشركة",  en: "Company details" }, weight: 25, href: "/profile/me" },
+  { key: "bio",          label: { ar: "نبذة عن العلامة", en: "About"          }, weight: 15, href: "/profile/me" },
+  { key: "industry",     label: { ar: "المجال",         en: "Industry"        }, weight: 15, href: "/profile/me" },
   { key: "logo",         label: { ar: "الشعار",         en: "Logo"            }, weight: 15, href: "/profile/me" },
   { key: "social",       label: { ar: "مواقع التواصل",  en: "Social media"    }, weight: 15, href: "/profile/me" },
-  { key: "verification", label: { ar: "التوثيق",        en: "Verification"    }, weight: 20, href: "/profile/me" },
+  { key: "verification", label: { ar: "التوثيق",        en: "Verification"    }, weight: 15, href: "/profile/me" },
 ];
 
 const SOCIAL_KEYS = ["instagram", "tiktok", "youtube", "linkedin", "facebook", "x"];
@@ -129,6 +132,7 @@ export const brandProvider: ProfileProvider<RawBrandCore, BrandPublicCore, Brand
 
     return {
       company_info: Boolean(core?.company_name && core?.website_url),
+      bio:          Boolean(shared?.bio && shared.bio.trim().length > 0),
       industry:     Boolean(core?.industry || core?.category_id),
       logo:         Boolean(shared?.avatar_url),
       social:       hasSocial,
