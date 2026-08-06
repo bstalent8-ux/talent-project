@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
-import { calculateCompletion, COMPLETION_THRESHOLDS } from "@/lib/profile-completion";
+import { calculateCompletion } from "@/lib/profile-completion";
 import { cdnImage } from "@/lib/images";
+import type { CompletionDTO } from "@/features/profiles/types/dto";
 
 /* ─── translations ───────────────────────────────────────── */
 const TX = {
@@ -11,6 +12,11 @@ const TX = {
     title:        "أكمل ملفك الشخصي",
     score:        (n: number) => `${n}% مكتمل`,
     tapToAdd:     "اضغط للإضافة",
+    notStarted:   "لم يبدأ بعد",
+    complete:     "مكتمل",
+    done:         "تم",
+    partial:      (n: number) => `${n}% · تابع الإكمال`,
+    pendingReview:"قيد المراجعة",
     locked:       "يفتح قريباً",
     save:         "حفظ",
     saving:       "جاري الحفظ...",
@@ -64,6 +70,11 @@ const TX = {
     title:        "Complete your profile",
     score:        (n: number) => `${n}% complete`,
     tapToAdd:     "Tap to add",
+    notStarted:   "Not started",
+    complete:     "Complete",
+    done:         "Done",
+    partial:      (n: number) => `${n}% · Continue`,
+    pendingReview:"Pending review",
     locked:       "Coming soon",
     save:         "Save",
     saving:       "Saving...",
@@ -141,6 +152,11 @@ const ICONS: Record<string, string> = {
   usage_addons: "🎬",
   availability: "📅",
   payment:      "💳",
+  // Brand keys.
+  company_info: "🏢",
+  industry:     "💼",
+  logo:         "🖼️",
+  verification: "🛡️",
 };
 
 /* ─── props ──────────────────────────────────────────────── */
@@ -149,7 +165,26 @@ interface Props {
   talentProfile:  any;
   portfolioItems: any[];
   onUpdate:       () => void;
+  /**
+   * Completion computed by THIS profile's provider (GET /api/profile/completion).
+   *
+   * Null means "not loaded yet", not "no completion" — the card falls back to the
+   * local talent calculation for that first paint so the score does not flash in.
+   * The fallback is talent-shaped, which is exactly the bug this prop fixes for
+   * brands, so it is deliberately only a loading state.
+   */
+  completion?:    CompletionDTO | null;
 }
+
+/** Labels for gate keys. Talent and brand gates are different features. */
+const GATE_TX: Record<string, { ar: string; en: string }> = {
+  applyToJobs:    { ar: "التقديم على الفرص",  en: "Apply to opportunities" },
+  appearInSearch: { ar: "الظهور في البحث",    en: "Appear in search" },
+  receiveBriefs:  { ar: "استقبال العروض",     en: "Receive direct briefs" },
+  becomeVerified: { ar: "شارة التحقق",        en: "Verified badge" },
+  postJobs:       { ar: "نشر الفرص",          en: "Post opportunities" },
+  contactTalents: { ar: "التواصل مع المواهب", en: "Contact talents" },
+};
 
 /* ─── tiny modal wrapper ─────────────────────────────────── */
 function Modal({
@@ -196,7 +231,7 @@ function Modal({
 }
 
 /* ─── main component ─────────────────────────────────────── */
-export default function ProfileCompletionCard({ profile, talentProfile, portfolioItems, onUpdate }: Props) {
+export default function ProfileCompletionCard({ profile, talentProfile, portfolioItems, onUpdate, completion }: Props) {
   const { lang, dark } = useSite();
   const t    = TX[lang];
   const dir  = lang === "ar" ? "rtl" : "ltr";
@@ -208,6 +243,9 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
   const INP    = dark ? "rgba(255,255,255,0.05)" : "#f8fafc";
   const TEAL   = "#00C9B1";
   const ORANGE = "#FF6B2B";
+  // Same green the rest of the profile uses for "confirmed" (TrustCard, hero
+  // verified badge), so a done section reads as done everywhere.
+  const GREEN_DONE = "#00D26A";
 
   const [active,    setActive]    = useState<string | null>(null);
   const [saving,    setSaving]    = useState(false);
@@ -292,7 +330,13 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
     dialect:    sl.dialect    ?? "",
   });
 
-  const { score, sections } = calculateCompletion(profile, talentProfile, portfolioItems);
+  // Provider-computed when loaded; the local talent calculation only covers the
+  // first paint. `progress` is display-only — see CompletionSectionDTO.
+  const fallback = calculateCompletion(profile, talentProfile, portfolioItems);
+  const score    = completion?.score ?? fallback.score;
+  const sections = completion?.sections
+    ?? fallback.sections.map((s) => ({ ...s, progress: s.done ? 1 : 0 }));
+  const gates    = completion?.gates ?? [];
 
   if (score >= 100) {
     return (
@@ -330,7 +374,14 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
     );
   }
 
-  const incomplete = sections.filter((s) => !s.done);
+  // Every section is listed, not only the unfinished ones. A card that only
+  // shows what is missing gives no sense of what has been built, and a profile
+  // that is nearly finished looks identical to one that has barely started.
+  // Unfinished first, so the next action is always at the top.
+  const ordered = [...sections].sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return b.weight - a.weight;
+  });
 
   /* score bar color */
   const scoreColor = score >= 80 ? "#00D26A" : score >= 50 ? TEAL : score >= 25 ? "#FFB800" : ORANGE;
@@ -467,17 +518,28 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
           <span style={{ color: scoreColor, fontSize: 20, fontWeight: 800, minWidth: 52, textAlign: "center" }}>{score}%</span>
         </div>
 
-        {/* Incomplete section cards */}
+        {/* Every section, with its state */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
-          {incomplete.map((s) => {
-            const isLocked    = s.key === "payment";
+          {ordered.map((s) => {
+            // `payment` is the weight-0 "coming soon" section, and a brand's
+            // `verification` is decided by an admin — neither is a task the user
+            // can act on, so neither opens an editor.
+            const isLocked    = s.key === "payment" || (s.key === "verification" && !s.done);
             const isUploading = uploading && s.key === "avatar";
+            const isEditable  = !isLocked && !isUploading;
+
+            const pct = Math.round((s.progress ?? (s.done ? 1 : 0)) * 100);
+            // Shown only where it says something the ✓ does not: a section that
+            // counts as done but still has empty slots, or one genuinely started.
+            const showPartial = pct > 0 && pct < 100;
+
+            const accent = s.done ? GREEN_DONE : TEAL;
 
             return (
               <button
                 key={s.key}
-                onClick={() => !isUploading && handleCardClick(s.key)}
-                disabled={isUploading}
+                onClick={() => isEditable && handleCardClick(s.key)}
+                disabled={!isEditable}
                 style={{
                   display:        "flex",
                   flexDirection:  "column",
@@ -487,46 +549,60 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
                   background:     isLocked
                     ? (dark ? "rgba(255,255,255,0.02)" : "#f8fafc")
                     : CARD,
-                  border:         `1px solid ${isLocked ? BORDER : (dark ? "rgba(0,201,177,0.2)" : "rgba(0,201,177,0.25)")}`,
+                  border:         `1px solid ${isLocked ? BORDER : (dark ? `${accent}33` : `${accent}40`)}`,
                   borderRadius:   14,
-                  cursor:         isLocked ? "not-allowed" : "pointer",
+                  cursor:         isEditable ? "pointer" : "not-allowed",
                   textAlign:      lang === "ar" ? "right" : "left",
                   transition:     "transform 0.15s, box-shadow 0.15s",
                   opacity:        isLocked ? 0.5 : 1,
                   position:       "relative",
                   overflow:       "hidden",
                 }}
-                onMouseEnter={(e) => { if (!isLocked) (e.currentTarget.style.transform = "translateY(-2px)"), (e.currentTarget.style.boxShadow = `0 6px 20px ${dark ? "rgba(0,201,177,0.15)" : "rgba(0,201,177,0.12)"}`); }}
+                onMouseEnter={(e) => { if (isEditable) (e.currentTarget.style.transform = "translateY(-2px)"), (e.currentTarget.style.boxShadow = `0 6px 20px ${accent}26`); }}
                 onMouseLeave={(e) => { (e.currentTarget.style.transform = "none"), (e.currentTarget.style.boxShadow = "none"); }}
               >
-                {/* Score badge */}
+                {/* Icon + state badge */}
                 <div style={{
                   display:      "flex",
                   alignItems:   "center",
                   justifyContent: "space-between",
                   width:        "100%",
                 }}>
-                  <span style={{ fontSize: 22 }}>{ICONS[s.key]}</span>
+                  <span style={{ fontSize: 22 }}>{ICONS[s.key] ?? "•"}</span>
                   <span style={{
-                    background:   isLocked ? "rgba(148,163,184,0.15)" : "rgba(0,201,177,0.12)",
-                    color:        isLocked ? MUTED : TEAL,
+                    background:   isLocked ? "rgba(148,163,184,0.15)" : `${accent}1F`,
+                    color:        isLocked ? MUTED : accent,
                     padding:      "2px 8px",
                     borderRadius: 20,
                     fontSize:     12,
                     fontWeight:   700,
                   }}>
-                    {isLocked ? "—" : `+${s.weight}%`}
+                    {isLocked ? "—" : s.done ? `✓ ${t.done}` : `+${s.weight}%`}
                   </span>
                 </div>
 
-                {/* Label */}
-                <div>
+                {/* Label + state line */}
+                <div style={{ width: "100%" }}>
                   <p style={{ color: TEXT, fontSize: 13, fontWeight: 600, margin: "0 0 2px" }}>
-                    {(t.sections as any)[s.key]}
+                    {(t.sections as any)[s.key] ?? s.label[lang]}
                   </p>
                   <p style={{ color: MUTED, fontSize: 11, margin: 0 }}>
-                    {isUploading ? t.uploading : isLocked ? t.locked : t.tapToAdd}
+                    {isUploading    ? t.uploading
+                      : isLocked    ? (s.key === "verification" ? t.pendingReview : t.locked)
+                      : showPartial ? t.partial(pct)
+                      : s.done      ? t.complete
+                      :               t.notStarted}
                   </p>
+
+                  {/* A bar only where there is real partial state to show. */}
+                  {showPartial && !isLocked && (
+                    <div style={{
+                      height: 3, marginTop: 7, borderRadius: 3, overflow: "hidden",
+                      background: dark ? "rgba(255,255,255,0.07)" : "#eef2f7",
+                    }}>
+                      <div style={{ height: "100%", width: `${pct}%`, background: accent, borderRadius: 3 }} />
+                    </div>
+                  )}
                 </div>
 
                 {/* uploading overlay */}
@@ -550,12 +626,15 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
 
         {/* Locked features strip */}
         {(() => {
-          const locked = [
-            { key: "applyToJobs",    label: t.features.applyToJobs,    n: COMPLETION_THRESHOLDS.applyToJobs },
-            { key: "appearInSearch", label: t.features.appearInSearch,  n: COMPLETION_THRESHOLDS.appearInSearch },
-            { key: "receiveBriefs",  label: t.features.receiveBriefs,   n: COMPLETION_THRESHOLDS.receiveBriefs },
-            { key: "becomeVerified", label: t.features.becomeVerified,  n: COMPLETION_THRESHOLDS.becomeVerified },
-          ].filter((f) => score < f.n);
+          // Gates come from the provider, so a brand is never shown "apply to
+          // opportunities" and a talent is never shown "post opportunities".
+          const locked = gates
+            .filter((gate) => !gate.passed)
+            .map((gate) => ({
+              key:   gate.key,
+              label: GATE_TX[gate.key]?.[lang] ?? gate.key,
+              n:     gate.minScore,
+            }));
           if (!locked.length) return null;
           return (
             <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>

@@ -18,6 +18,7 @@ import { dynamicProfileService } from "../services/dynamic-profile.service";
 import type {
   BrandPrivateCore,
   BrandPublicCore,
+  CompletionGateDTO,
   CompletionSectionDTO,
   CoreSectionState,
   DynamicValidationResult,
@@ -50,7 +51,7 @@ const meta: ProviderMetadata = {
 // scoring it against lib/profile-completion.ts would cap every brand well below
 // 100 no matter how complete it is. The service normalizes to 100 regardless.
 
-const COMPLETION_SECTIONS: Array<Omit<CompletionSectionDTO, "done">> = [
+const COMPLETION_SECTIONS: Array<Omit<CompletionSectionDTO, "done" | "progress">> = [
   { key: "company_info", label: { ar: "بيانات الشركة",  en: "Company details" }, weight: 25, href: "/profile/me" },
   { key: "bio",          label: { ar: "نبذة عن العلامة", en: "About"          }, weight: 15, href: "/profile/me" },
   { key: "industry",     label: { ar: "المجال",         en: "Industry"        }, weight: 15, href: "/profile/me" },
@@ -127,21 +128,40 @@ export const brandProvider: ProfileProvider<RawBrandCore, BrandPublicCore, Brand
   },
 
   async getCompletion({ shared, core }: ProviderCompletionInput<RawBrandCore>): Promise<CoreSectionState> {
-    const social = (core?.social_links ?? {}) as Record<string, unknown>;
-    const hasSocial = SOCIAL_KEYS.some((k) => social[k] && String(social[k]).trim().length > 2);
+    const social      = (core?.social_links ?? {}) as Record<string, unknown>;
+    const filledSocial = SOCIAL_KEYS.filter((k) => social[k] && String(social[k]).trim().length > 2).length;
+
+    const hasName = Boolean(core?.company_name);
+    const hasSite = Boolean(core?.website_url);
 
     return {
-      company_info: Boolean(core?.company_name && core?.website_url),
+      // Two fields, satisfied only by both — so the halfway state is real and
+      // worth showing rather than reporting a bare `false`.
+      company_info: { done: hasName && hasSite, progress: (Number(hasName) + Number(hasSite)) / 2 },
+      social:       { done: filledSocial > 0,   progress: filledSocial / SOCIAL_KEYS.length },
+
       bio:          Boolean(shared?.bio && shared.bio.trim().length > 0),
       industry:     Boolean(core?.industry || core?.category_id),
       logo:         Boolean(shared?.avatar_url),
-      social:       hasSocial,
+      // Admin-driven, not something the brand can fill in. Reported so the card
+      // can show it as pending rather than as a task the user is failing at.
       verification: core?.status === "approved",
     };
   },
 
   async getCoreCompletionSections() {
     return COMPLETION_SECTIONS;
+  },
+
+  // Deliberately NOT lib/profile-completion.ts's thresholds: those name talent
+  // features (apply to jobs, appear in talent search). A brand shown "apply to
+  // jobs at 50%" is being told to chase something it can never do.
+  async getCompletionGates(): Promise<Array<Omit<CompletionGateDTO, "passed">>> {
+    return [
+      { key: "postJobs",       minScore: 40, enforced: false },
+      { key: "contactTalents", minScore: 50, enforced: false },
+      { key: "appearInSearch", minScore: 60, enforced: false },
+    ];
   },
 
   async validateDynamicFields({ values }): Promise<DynamicValidationResult> {

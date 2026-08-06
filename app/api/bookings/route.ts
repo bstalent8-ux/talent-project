@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { privateNoStoreHeaders } from "@/lib/cache";
+import { ProfileError, profileService } from "@/features/profiles";
 
 export async function GET() {
   const supabase = await createClient();
@@ -27,9 +28,17 @@ export async function GET() {
     bookings = (data ?? []) as Record<string, unknown>[];
     err = error;
   } else {
-    const { data: tp, error: tpError } = await adminClient
-      .from("talent_profiles").select("id").eq("user_id", user.id).maybeSingle();
-    if (tpError) return NextResponse.json({ error: tpError.message }, { status: 500, headers: privateNoStoreHeaders() });
+    // talent_profiles.id via the provider layer. Same value, same downstream
+    // filter on bookings.talent_id.
+    let tp: { id: string } | null = null;
+    try {
+      const ref = await profileService.resolveProviderRef(user.id, "talent");
+      tp = ref ? { id: ref.providerProfileId } : null;
+    } catch (e) {
+      const err = ProfileError.from(e);
+      console.error("[bookings] provider ref lookup failed", err.code, err.internal);
+      return NextResponse.json(err.toBody(), { status: err.status, headers: privateNoStoreHeaders() });
+    }
     if (!tp) return NextResponse.json({ bookings: [] }, { headers: privateNoStoreHeaders() });
     const { data, error } = await adminClient
       .from("bookings")

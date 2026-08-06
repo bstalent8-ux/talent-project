@@ -21,6 +21,7 @@ import type {
   AnyPublicCore,
   BookingTarget,
   CompletionDTO,
+  CompletionGateDTO,
   CompletionSectionDTO,
   PrivateProfileDTO,
   ProfileSectionDTO,
@@ -219,15 +220,27 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
   ): Promise<CompletionDTO> {
     const core = await provider.loadCore(profile.id);
 
-    const [state, descriptors] = await Promise.all([
+    const [state, descriptors, gateDescriptors] = await Promise.all([
       provider.getCompletion({ shared: profile, core }),
       provider.getCoreCompletionSections(),
+      provider.getCompletionGates(),
     ]);
 
-    const sections: CompletionSectionDTO[] = descriptors.map((d) => ({
-      ...d,
-      done: state[d.key] === true,
-    }));
+    const sections: CompletionSectionDTO[] = descriptors.map((d) => {
+      const raw = state[d.key];
+
+      // `done` is always the provider's own answer and is the ONLY input to the
+      // score. `progress` is left independent rather than clamped up to 1 for a
+      // done section: most talent sections count as done at their first entry,
+      // so "complete, 2 of 4 socials" is the state most profiles are actually
+      // in, and collapsing it to 100% throws away the only signal that would
+      // get someone to add the other two.
+      const done     = typeof raw === "object" && raw !== null ? raw.done : raw === true;
+      const reported = typeof raw === "object" && raw !== null ? raw.progress : done ? 1 : 0;
+      const progress = Math.min(1, Math.max(0, reported));
+
+      return { ...d, done, progress };
+    });
 
     // Normalized so the achievable maximum is always exactly 100, which keeps
     // zero-weight sections (e.g. talent "payment") harmless.
@@ -235,11 +248,18 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
     const earned      = sections.reduce((acc, s) => acc + (s.done ? s.weight : 0), 0);
     const score       = totalWeight > 0 ? Math.round((earned / totalWeight) * 100) : 0;
 
+    // Gates are resolved against the normalized score, not the raw weight sum —
+    // otherwise a provider whose weights happen not to total 100 would gate at a
+    // different effective percentage than the one it declared.
+    const gates: CompletionGateDTO[] = gateDescriptors.map((gate) => ({
+      ...gate,
+      passed: score >= gate.minScore,
+    }));
+
     return {
       score,
       sections,
-      // TODO(phase-3): read profile_completion_rules and report real gates.
-      gates:      [],
+      gates,
       computedAt: new Date().toISOString(),
     };
   }

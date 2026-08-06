@@ -119,3 +119,54 @@ export function calculateCompletion(
 
   return { score, sections };
 }
+
+// ─── Partial progress (display only) ──────────────────────────────────────────
+// Deliberately NOT folded into calculateCompletion: the score above stays
+// exactly what it is today, so adding this moves nobody's percentage. It exists
+// because several sections are satisfied by their first entry but have many
+// slots — a talent with two of four socials filled is not "not started", and a
+// card that says so is the reason people abandon a half-finished profile.
+//
+// Sections with no meaningful middle state are absent from the map and fall back
+// to their binary `done` value.
+
+function ratio(filled: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.min(1, filled / total);
+}
+
+function countFilled(values: unknown[]): number {
+  return values.filter((v) => v !== null && v !== undefined && String(v).trim().length > 0).length;
+}
+
+/**
+ * Per-section 0..1 progress for a talent. Keys match calculateCompletion's, so a
+ * consumer can zip the two lists by key.
+ */
+export function calculateSectionProgress(
+  profile: any,
+  talentProfile: any,
+  portfolioItems: any[],
+): Record<string, number> {
+  const sl = talentProfile?.social_links ?? {};
+
+  const SOCIALS  = ["instagram", "tiktok", "youtube", "linkedin"];
+  const PHYSICAL = ["height", "weight", "hair_color", "shoe_size", "age", "languages", "dialect"];
+
+  return {
+    personal: ratio(countFilled([profile?.full_name, profile?.city]), 2),
+    social:   ratio(countFilled(SOCIALS.map((k) => sl[k])), SOCIALS.length),
+    physical: ratio(countFilled(PHYSICAL.map((k) => sl[k])), PHYSICAL.length),
+
+    // Three items is what makes a portfolio grid look intentional rather than
+    // accidental; the section still COUNTS as done at one (see calculateCompletion).
+    portfolio: ratio(portfolioItems?.length ?? 0, 3),
+
+    categories: ratio(
+      (talentProfile?.category ? 1 : 0) + Math.min(2, talentProfile?.specialties?.length ?? 0),
+      3,
+    ),
+
+    packages: ratio(talentProfile?.packages?.length ?? 0, 2),
+  };
+}

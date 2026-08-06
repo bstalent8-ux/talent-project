@@ -80,6 +80,16 @@ export interface CompletionSectionDTO {
   weight: number;
   done:   boolean;
   href:   string;
+  /**
+   * How far through this section the user is, 0..1. DISPLAY ONLY — the score is
+   * computed from `done`, not from this.
+   *
+   * A section like "social" is satisfied by one handle but has four slots, so a
+   * binary state can only say "not started", which reads as no progress to
+   * someone who has filled two of them. Keeping it out of the score means adding
+   * this number moves nobody's percentage.
+   */
+  progress: number;
 }
 
 export interface CompletionGateDTO {
@@ -96,8 +106,19 @@ export interface CompletionDTO {
   computedAt: string;
 }
 
-/** Provider output for core sections: section key → satisfied. */
-export type CoreSectionState = Record<string, boolean>;
+/**
+ * Provider output for core sections: section key → satisfied.
+ *
+ * A bare boolean is the whole answer for a section with no middle state (an
+ * avatar is uploaded or it is not). The object form adds a display-only 0..1
+ * ratio for sections that have many slots but are satisfied by the first one.
+ *
+ * `done` and `progress` are INDEPENDENT on purpose. A talent with one portfolio
+ * item is done (that is the shipped rule, and the score must not move) while
+ * being a third of the way to a portfolio that looks intentional. Deriving one
+ * from the other would silently re-score every existing profile.
+ */
+export type CoreSectionState = Record<string, boolean | { done: boolean; progress: number }>;
 
 // ─── Booking ──────────────────────────────────────────────────────────────────
 

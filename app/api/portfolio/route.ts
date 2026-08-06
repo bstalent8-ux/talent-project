@@ -5,6 +5,27 @@ import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { canPerformAction } from "@/lib/permissions";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
+import { ProfileError, profileService } from "@/features/profiles";
+
+/**
+ * talent_profiles.id for the caller, through the provider layer.
+ * Returns the row on success, or a ready-to-return NextResponse on failure —
+ * preserving both existing outcomes: 500 on a lookup error, 404 "no talent
+ * profile" when the caller has none.
+ */
+async function resolveTalentRef(userId: string): Promise<{ id: string } | NextResponse> {
+  try {
+    const ref = await profileService.resolveProviderRef(userId, "talent");
+    if (!ref) {
+      return NextResponse.json({ error: "no talent profile" }, { status: 404, headers: privateNoStoreHeaders() });
+    }
+    return { id: ref.providerProfileId };
+  } catch (e) {
+    const err = ProfileError.from(e);
+    console.error("[portfolio] provider ref lookup failed", err.code, err.internal);
+    return NextResponse.json(err.toBody(), { status: err.status, headers: privateNoStoreHeaders() });
+  }
+}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -24,14 +45,9 @@ export async function POST(req: NextRequest) {
   const { url, media_type, caption } = await req.json();
 
   // Get talent_profile id
-  const { data: tp, error: tpError } = await adminClient
-    .from("talent_profiles")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (tpError) return NextResponse.json({ error: tpError.message }, { status: 500, headers: privateNoStoreHeaders() });
-  if (!tp) return NextResponse.json({ error: "no talent profile" }, { status: 404, headers: privateNoStoreHeaders() });
+  const resolved = await resolveTalentRef(user.id);
+  if (resolved instanceof NextResponse) return resolved;
+  const tp = resolved;
 
   const { data, error } = await adminClient
     .from("portfolio_items")
@@ -64,14 +80,9 @@ export async function DELETE(req: NextRequest) {
 
   // Scope the delete to the caller's own talent profile — without this any
   // signed-in user can delete any talent's portfolio item by id.
-  const { data: tp, error: tpError } = await adminClient
-    .from("talent_profiles")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (tpError) return NextResponse.json({ error: tpError.message }, { status: 500, headers: privateNoStoreHeaders() });
-  if (!tp) return NextResponse.json({ error: "no talent profile" }, { status: 404, headers: privateNoStoreHeaders() });
+  const resolved = await resolveTalentRef(user.id);
+  if (resolved instanceof NextResponse) return resolved;
+  const tp = resolved;
 
   const { error } = await adminClient
     .from("portfolio_items")

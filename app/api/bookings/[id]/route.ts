@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { ProfileError, profileService } from "@/features/profiles";
 
 function isNoRows(error: { code?: string } | null): boolean {
   return error?.code === "PGRST116";
@@ -33,9 +34,17 @@ export async function GET(
   const isBrand  = booking.brand_id === user.id;
   const isTalent = booking.talent_user_id === user.id;
   if (!isBrand && !isTalent) {
-    // Fallback check via talent_profiles
-    const { data: tp, error: tpError } = await adminClient.from("talent_profiles").select("id").eq("user_id", user.id).maybeSingle();
-    if (tpError) return NextResponse.json({ error: tpError.message }, { status: 500 });
+    // Fallback check via the talent provider row. Authorization rule unchanged:
+    // the caller must own the talent_profiles row this booking points at.
+    let tp: { id: string } | null = null;
+    try {
+      const ref = await profileService.resolveProviderRef(user.id, "talent");
+      tp = ref ? { id: ref.providerProfileId } : null;
+    } catch (e) {
+      const err = ProfileError.from(e);
+      console.error("[bookings/:id] provider ref lookup failed", err.code, err.internal);
+      return NextResponse.json(err.toBody(), { status: err.status });
+    }
     if (!tp || tp.id !== booking.talent_id) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

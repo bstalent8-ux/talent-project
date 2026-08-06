@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyApplicationAccepted, notifyApplicationRejected } from "@/lib/notifications/events";
 import { privateNoStoreHeaders } from "@/lib/cache";
+import { ProfileError, profileService } from "@/features/profiles";
 
 // PATCH /api/jobs/[id]/applications/[appId]
 // body: { action: "accept" | "reject", reject_reason?: string }
@@ -68,13 +69,18 @@ export async function PATCH(
       .eq("id", appId);
     if (appErr) return NextResponse.json({ error: appErr.message }, { status: 500, headers: privateNoStoreHeaders() });
 
-    // 2. Try to find talent_profiles row (bookings FK references talent_profiles.id)
-    const { data: talentProfile, error: talentProfileError } = await adminClient
-      .from("talent_profiles")
-      .select("id")
-      .eq("user_id", app.talent_id)
-      .maybeSingle();
-    if (talentProfileError) return NextResponse.json({ error: talentProfileError.message }, { status: 500, headers: privateNoStoreHeaders() });
+    // 2. Resolve the applicant's provider row (bookings FK references
+    //    talent_profiles.id). Lookup mechanism only — the booking created below
+    //    still writes this value to bookings.talent_id unchanged.
+    let talentProfile: { id: string } | null = null;
+    try {
+      const ref = await profileService.resolveProviderRef(app.talent_id, "talent");
+      talentProfile = ref ? { id: ref.providerProfileId } : null;
+    } catch (e) {
+      const err = ProfileError.from(e);
+      console.error("[applications/:appId] provider ref lookup failed", err.code, err.internal);
+      return NextResponse.json(err.toBody(), { status: err.status, headers: privateNoStoreHeaders() });
+    }
     if (!talentProfile) return NextResponse.json({ error: "talent profile not found" }, { status: 404, headers: privateNoStoreHeaders() });
 
     // 3. Determine service_type from job category

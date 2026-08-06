@@ -8,6 +8,7 @@ import type {
   AnyPrivateCore,
   AnyPublicCore,
   BookingTarget,
+  CompletionGateDTO,
   CompletionSectionDTO,
   CoreSectionState,
   DynamicValidationResult,
@@ -97,7 +98,22 @@ export interface ProfileProvider<
   getCompletion(input: ProviderCompletionInput<TCoreRow>): Promise<CoreSectionState>;
 
   /** Descriptors for this type's core sections, used to build a CompletionDTO. */
-  getCoreCompletionSections(): Promise<Array<Omit<CompletionSectionDTO, "done">>>;
+  getCoreCompletionSections(): Promise<Array<Omit<CompletionSectionDTO, "done" | "progress">>>;
+
+  /**
+   * Feature gates for this type: "what does this profile unlock at what score?"
+   *
+   * Per-provider rather than a shared constant because the gates are not the
+   * same features — a brand never applies to a job, a talent never posts one.
+   * A single list would show every user half a list of things they can never do.
+   *
+   * `passed` is filled in by ProfileService against the computed score.
+   * `enforced` reports whether the platform actually blocks the feature today;
+   * see COMPLETION_THRESHOLDS in lib/profile-completion.ts, which is declared
+   * but not yet wired into any route (CLAUDE.md §10.5). Surfacing an unenforced
+   * gate as motivation is fine; claiming it is enforced when it is not is not.
+   */
+  getCompletionGates(): Promise<Array<Omit<CompletionGateDTO, "passed">>>;
 
   /** Compiles profile_fields to a schema and validates. Never throws. */
   validateDynamicFields(input: {

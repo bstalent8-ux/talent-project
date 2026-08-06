@@ -14,6 +14,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { createClient } from "@/lib/supabase/client";
 import ProfileCompletionCard from "@/components/profile/ProfileCompletionCard";
+import type { CompletionDTO } from "@/features/profiles/types/dto";
 
 /* ─── colour helpers ─── */
 const GREEN = "#00D26A";
@@ -226,6 +227,24 @@ export default function DashboardPage() {
   const [physicalModal, setPhysicalModal] = useState(false);
   const [physForm,      setPhysForm]      = useState<any>({});
   const [physSaving,    setPhysSaving]    = useState(false);
+  const [completion,    setCompletion]    = useState<CompletionDTO | null>(null);
+
+  /**
+   * Completion is computed by the signed-in user's own provider, so a brand is
+   * scored on brand rules instead of the talent weights the card used to import
+   * directly. Fetched alongside the profile, not blocking it: a failure here
+   * must not stop the page rendering, and the card falls back until it lands.
+   */
+  const fetchCompletion = async () => {
+    try {
+      const res = await fetch("/api/profile/completion");
+      if (!res.ok) return;
+      const { data } = await res.json();
+      setCompletion(data ?? null);
+    } catch {
+      // Non-fatal by design — see above.
+    }
+  };
 
   const fetchProfile = async (retryCount = 0) => {
     const res = await fetch("/api/me");
@@ -277,7 +296,12 @@ export default function DashboardPage() {
     setStatus("ready");
   };
 
-  useEffect(() => { fetchProfile(); }, []);
+  /** Both sources, after any edit — a saved section changes the score too. */
+  const refreshAll = async () => {
+    await Promise.all([fetchProfile(), fetchCompletion()]);
+  };
+
+  useEffect(() => { refreshAll(); }, []);
 
   const handleAvatarUpload = async (file: File) => {
     setUploading(true);
@@ -533,7 +557,8 @@ export default function DashboardPage() {
           profile={profile}
           talentProfile={tp}
           portfolioItems={media}
-          onUpdate={fetchProfile}
+          completion={completion}
+          onUpdate={refreshAll}
         />
 
         {/* ─── Top action bar ─── */}

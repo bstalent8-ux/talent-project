@@ -20,15 +20,28 @@ const TABS_EN = [
   { key: "history",    label: "Usage Rights",      sectionId: "section-usage" },
 ];
 
+export interface TabItem {
+  key:       string;
+  label:     string;
+  sectionId: string;
+}
+
 export default function TabsNavigation({
   talent,
+  tabs,
 }: {
   talent: TalentData;
+  /**
+   * Tabs to show. Supplied by the dynamic shell, which only lists sections that
+   * actually rendered — a tab scrolling to a hidden section goes nowhere.
+   * Omitted by the legacy composition, which keeps the fixed five.
+   */
+  tabs?: TabItem[];
   activeTab?: string;
   onTabChange?: (t: string) => void;
 }) {
   const { dark, lang } = useSite();
-  const TABS = lang === "en" ? TABS_EN : TABS_AR;
+  const TABS = tabs ?? (lang === "en" ? TABS_EN : TABS_AR);
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const GREEN = "#00D26A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
@@ -77,7 +90,9 @@ export default function TabsNavigation({
     });
 
     return () => obs.disconnect();
-  }, []);
+    // Re-observes when the tab set changes: which sections exist depends on
+    // what the profile actually contains, so the list is no longer constant.
+  }, [TABS.map((t) => t.sectionId).join("|")]);
 
   function scrollToSection(sectionId: string, key: string) {
     setActive(key);

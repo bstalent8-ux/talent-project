@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { redirect, notFound } from "next/navigation";
 import { getCachedUser } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { profileService } from "@/features/profiles";
 import BookingDetail from "./_components/BookingDetail";
 
 export default async function BookingPage({ params }: { params: Promise<{ id: string }> }) {
@@ -29,8 +30,10 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
   } else if (isTalent) {
     myRole = "talent";
   } else {
-    const { data: tp } = await adminClient
-      .from("talent_profiles").select("id").eq("user_id", user.id).maybeSingle();
+    // Same lookup as before, through the provider layer. The comparison target
+    // is still booking.talent_id, and the authorization rule is untouched.
+    const ref = await profileService.resolveProviderRefSafe(user.id, "talent");
+    const tp = ref ? { id: ref.providerProfileId } : null;
     if (tp && tp.id === booking.talent_id) myRole = "talent";
     else redirect("/bookings");
   }

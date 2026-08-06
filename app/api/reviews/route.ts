@@ -5,6 +5,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { recalcRating } from "@/lib/recalcRating";
 import { notifyNewReview } from "@/lib/notifications/events";
+import { profileService } from "@/features/profiles";
 
 // GET /api/reviews?talent_id=xxx
 export async function GET(req: NextRequest) {
@@ -94,12 +95,17 @@ export async function POST(req: NextRequest) {
     // Recalculate avg_rating + total_reviews and bust Next.js cache.
     await recalcRating(booking.talent_id);
 
-    // Notify the talent that they received a review
-    const { data: talentProfile } = await adminClient
-      .from("talent_profiles")
-      .select("user_id")
-      .eq("id", booking.talent_id)
-      .maybeSingle();
+    // Notify the talent that they received a review.
+    // Reverse ID resolution: talent_profiles.id → owning profile id.
+    // Notification failures must never break the review flow, so a lookup
+    // failure degrades to "no notification", exactly as before.
+    let talentProfile: { user_id: string } | null = null;
+    try {
+      const ownerId = await profileService.resolveProviderOwner(booking.talent_id, "talent");
+      talentProfile = ownerId ? { user_id: ownerId } : null;
+    } catch {
+      talentProfile = null;
+    }
     if (talentProfile?.user_id) {
       const { data: brand } = await adminClient
         .from("profiles").select("full_name").eq("id", user.id).maybeSingle();

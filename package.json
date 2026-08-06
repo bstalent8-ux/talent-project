@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:schema-audit": "node scripts/schema-audit.mjs",
     "test:e2e": "node tests/e2e/me-role.test.mjs && node tests/e2e/cache.test.mjs && node tests/e2e/explore.test.mjs && node tests/e2e/guest-permissions.test.mjs",
     "test:e2e:guest": "node tests/e2e/guest-permissions.test.mjs",
@@ -39,6 +41,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

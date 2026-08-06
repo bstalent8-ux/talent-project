@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { getCachedUser } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { profileService } from "@/features/profiles";
 import BookingsClient from "./_components/BookingsClient";
 
 export default async function BookingsPage() {
@@ -23,8 +24,12 @@ export default async function BookingsPage() {
       .order("created_at", { ascending: false });
     bookings = (data ?? []) as Record<string, unknown>[];
   } else {
-    const { data: tp } = await adminClient
-      .from("talent_profiles").select("id").eq("user_id", user.id).maybeSingle();
+    // talent_profiles.id via the provider layer. `talent_id` on bookings keeps
+    // its exact meaning — only the lookup mechanism changed.
+    // Safe variant: this page previously ignored the query error and rendered
+    // an empty list.
+    const ref = await profileService.resolveProviderRefSafe(user.id, "talent");
+    const tp = ref ? { id: ref.providerProfileId } : null;
     if (tp) {
       const { data } = await adminClient
         .from("bookings")

@@ -7,7 +7,11 @@ import "server-only";
 // completion calculation are copied from, or delegate to, the code that ships
 // today. This provider is a seam, not a rewrite.
 
-import { calculateCompletion } from "@/lib/profile-completion";
+import {
+  COMPLETION_THRESHOLDS,
+  calculateCompletion,
+  calculateSectionProgress,
+} from "@/lib/profile-completion";
 import { hasSectionContent } from "../content/section-content";
 import { profileRepository } from "../repositories/profile.repository";
 import { talentRepository } from "../repositories/talent.repository";
@@ -15,6 +19,7 @@ import { dynamicProfileService } from "../services/dynamic-profile.service";
 import type {
   BookingStatsDTO,
   BookingTarget,
+  CompletionGateDTO,
   CompletionSectionDTO,
   CoreSectionState,
   DynamicValidationResult,
@@ -249,13 +254,20 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
 
     const portfolio = await talentRepository.findPortfolio(core.id, false);
 
-    // Delegates verbatim to the shipped implementation so scores cannot
-    // regress. Phase 3 replaces the internals behind this same signature.
+    // `done` delegates verbatim to the shipped implementation so scores cannot
+    // regress. The progress ratios are additive and never feed the score.
     const { sections } = calculateCompletion(shared, core, portfolio);
-    return Object.fromEntries(sections.map((s) => [s.key, s.done]));
+    const progressByKey = calculateSectionProgress(shared, core, portfolio);
+
+    return Object.fromEntries(
+      sections.map((s) => {
+        const progress = progressByKey[s.key];
+        return [s.key, progress === undefined ? s.done : { done: s.done, progress }];
+      }),
+    );
   },
 
-  async getCoreCompletionSections(): Promise<Array<Omit<CompletionSectionDTO, "done">>> {
+  async getCoreCompletionSections(): Promise<Array<Omit<CompletionSectionDTO, "done" | "progress">>> {
     // Derived from the same source of truth as getCompletion, with an empty
     // fixture, so weights and labels can never drift from the calculation.
     const { sections } = calculateCompletion({}, {}, []);
@@ -265,6 +277,18 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
       weight: s.weight,
       href:   s.href,
     }));
+  },
+
+  // Thresholds come from the shipped constant, so the card and any future
+  // enforcement read one number. `enforced: false` is the truthful answer today
+  // — nothing in app/api/** checks these yet (CLAUDE.md §10.5).
+  async getCompletionGates(): Promise<Array<Omit<CompletionGateDTO, "passed">>> {
+    return [
+      { key: "applyToJobs",    minScore: COMPLETION_THRESHOLDS.applyToJobs,    enforced: false },
+      { key: "appearInSearch", minScore: COMPLETION_THRESHOLDS.appearInSearch, enforced: false },
+      { key: "receiveBriefs",  minScore: COMPLETION_THRESHOLDS.receiveBriefs,  enforced: false },
+      { key: "becomeVerified", minScore: COMPLETION_THRESHOLDS.becomeVerified, enforced: false },
+    ];
   },
 
   async validateDynamicFields({ values }): Promise<DynamicValidationResult> {
