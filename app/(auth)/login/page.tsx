@@ -10,9 +10,12 @@ import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import styles from "../auth.module.css";
 
+// brandHighlight excludes the trailing "." on purpose — .brandHighlight::after
+// draws it in auth.module.css instead, so it can never end up bidi-reordered
+// to the wrong side of the word the way a literal trailing "." would.
 const tx = {
   ar: {
-    eyebrow:    "WELCOME BACK //",
+    eyebrow:    "اهلاً بيك //",
     heading:    "أهلاً بيك من جديد",
     sub:        "سجل دخولك وكمّل من حيث وقفت",
     email:      "البريد الإلكتروني أو اسم المستخدم",
@@ -30,7 +33,7 @@ const tx = {
     langBtn:    "تغيير اللغة",
     themeBtn:   "تغيير الوضع",
     brand:          "منصة المواهب",
-    brandHighlight: "العربية.",
+    brandHighlight: "العربية",
     brandDesc:      "موديلز، UGC Creators، وإنفلونسرز — كلهم في مكان واحد. براندات موثقة. تعاون حقيقي.",
     stat1: "متوسط التقييم",
     stat2: "براند",
@@ -55,7 +58,7 @@ const tx = {
     langBtn:    "Toggle language",
     themeBtn:   "Toggle theme",
     brand:          "Arab Talent",
-    brandHighlight: "Platform.",
+    brandHighlight: "Platform",
     brandDesc:      "Models, UGC Creators, and Influencers — all in one place. Verified brands. Real collaboration.",
     stat1: "Avg Rating",
     stat2: "Brands",
@@ -147,7 +150,7 @@ export default function LoginPage() {
             <label className={styles.label} htmlFor="login-email">{t.email}</label>
             <input
               id="login-email"
-              className={`${styles.input} ${styles.inputLtr}`}
+              className={styles.input}
               type="email"
               placeholder={t.emailPH}
               value={email}
@@ -162,7 +165,7 @@ export default function LoginPage() {
             <div className={styles.inputWrap}>
               <input
                 id="login-password"
-                className={`${styles.input} ${styles.inputLtr} ${styles.inputWithAffix}`}
+                className={`${styles.input} ${styles.inputWithAffix}`}
                 type={showPass ? "text" : "password"}
                 placeholder={t.passwordPH}
                 value={password}
@@ -206,9 +209,11 @@ export default function LoginPage() {
       {/* ── BRANDING SIDE — hidden under 768px by the stylesheet ── */}
       <div className={styles.brandPane}>
         <div className={styles.brandTop}>
+          {/* Always the white wordmark: .brandPane is a fixed dark photo panel
+              now, independent of [data-theme] (see auth.module.css). */}
           <Image
             className={styles.brandLogo}
-            src={dark ? "/assets/logo-dark.png" : "/assets/logo-light.png"}
+            src="/assets/logo-dark.png"
             alt="Talents"
             width={110}
             height={32}

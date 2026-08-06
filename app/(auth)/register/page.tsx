@@ -1,7 +1,7 @@
 "use client";
 export const runtime = "edge";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,13 +9,17 @@ import { Eye, EyeOff, Languages, Moon, Sun } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import styles from "../auth.module.css";
+import PhoneInput from "../phone/PhoneInput";
+import { detectDefaultCountryIso, findCountry, rememberCountryIso } from "../phone/countries";
 
 type Role = "talent" | "brand";
 
 interface FormData {
   fullName:        string;
   email:           string;
-  phone:           string;
+  /** LOCAL number only — the dial code lives in `phoneCountryIso` state below,
+   *  never merged in here. See handleSubmit for where they're composed. */
+  phoneNumber:     string;
   password:        string;
   confirmPassword: string;
   role:            Role;
@@ -27,7 +31,7 @@ interface FormData {
 const INIT: FormData = {
   fullName:        "",
   email:           "",
-  phone:           "",
+  phoneNumber:     "",
   password:        "",
   confirmPassword: "",
   role:            "talent",
@@ -50,6 +54,9 @@ const BRAND_CATEGORIES = [
   { value: "technology", ar: "Tech", en: "Tech" },
 ];
 
+// brandHighlight excludes the trailing "." on purpose — .brandHighlight::after
+// draws it in auth.module.css instead, so it can never end up bidi-reordered
+// to the wrong side of the word the way a literal trailing "." would.
 const TX = {
   ar: {
     eyebrow:         "انضم الآن //",
@@ -92,7 +99,7 @@ const TX = {
     langBtn:         "تغيير اللغة",
     themeBtn:        "تغيير الوضع",
     brand2:          "منصة المواهب",
-    brandHighlight:  "العربية.",
+    brandHighlight:  "العربية",
     brandDesc:       "موديلز، UGC Creators، وإنفلونسرز — كلهم في مكان واحد. براندات موثقة. تعاون حقيقي.",
     stat1: "متوسط التقييم",
     stat2: "براند",
@@ -139,7 +146,7 @@ const TX = {
     langBtn:         "Toggle language",
     themeBtn:        "Toggle theme",
     brand2:          "Arab Talent",
-    brandHighlight:  "Platform.",
+    brandHighlight:  "Platform",
     brandDesc:       "Models, UGC Creators, and Influencers — all in one place. Verified brands. Real collaboration.",
     stat1: "Avg Rating",
     stat2: "Brands",
@@ -174,17 +181,37 @@ export default function RegisterPage() {
   const [showConf, setShowConf] = useState(false);
   const [error,    setError]    = useState("");
 
+  // SSR-safe default ("SA", matching the field's previous static default) —
+  // detectDefaultCountryIso() reads navigator/localStorage, which don't exist
+  // during edge/server render, so it's re-run client-side in the effect below
+  // rather than as the useState initializer. That avoids a hydration mismatch
+  // between what the server rendered and what the browser would compute.
+  const [phoneCountryIso, setPhoneCountryIso] = useState("SA");
+
+  useEffect(() => {
+    setPhoneCountryIso(detectDefaultCountryIso());
+  }, []);
+
+  function handleCountryChange(iso: string) {
+    setPhoneCountryIso(iso);
+    rememberCountryIso(iso);
+  }
+
   const tx = TX[lang];
 
   const set = (k: keyof FormData, v: FormData[keyof FormData]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
   const validate = (): string => {
-    if (!form.fullName.trim() || !form.email.trim() || !form.phone.trim() || !form.password || !form.confirmPassword)
+    if (!form.fullName.trim() || !form.email.trim() || !form.phoneNumber.trim() || !form.password || !form.confirmPassword)
       return tx.errRequired;
     if (!form.email.includes("@") || !form.email.includes("."))
       return tx.errEmail;
-    if (form.phone.replace(/\D/g, "").length < 9)
+    // Same rule as before (>=9 digits), now checked against the LOCAL number
+    // alone — the dial code used to live inside this same string (whatever
+    // the user happened to type), so this is the same check applied to a
+    // smaller, more precisely-scoped field, not a new rule.
+    if (form.phoneNumber.replace(/\D/g, "").length < 9)
       return tx.errPhone;
     if (form.role === "talent" && !form.talentType)
       return tx.errTalentType;
@@ -220,6 +247,15 @@ export default function RegisterPage() {
 
       const handle = form.email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-");
 
+      // Composed here, not stored pre-joined in state (the brief: "Do NOT
+      // merge the country code into the typed value"). /api/profile's
+      // contract is unchanged — profileData.phone_number is still a single
+      // string — this just sends a more complete one than before, since the
+      // dial code used to depend on the user having typed it into the same
+      // field themselves.
+      const dialCode    = findCountry(phoneCountryIso).dialCode;
+      const phoneNumber = `+${dialCode}${form.phoneNumber.replace(/\D/g, "")}`;
+
       await fetch("/api/profile", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -229,7 +265,7 @@ export default function RegisterPage() {
           profileData: {
             handle,
             full_name:    form.fullName.trim(),
-            phone_number: form.phone.trim(),
+            phone_number: phoneNumber,
           },
           categoryIds: form.role === "talent" ? [form.talentType] : [form.brandCategory],
           ...(form.role === "talent" && {
@@ -346,8 +382,6 @@ export default function RegisterPage() {
             </select>
           </div>
 
-          {error && <div className={styles.errorBanner} role="alert">{error}</div>}
-
           {/* Fields */}
           <div className={styles.fieldGroup}>
             <div>
@@ -367,7 +401,7 @@ export default function RegisterPage() {
               <label className={styles.label} htmlFor="register-email">{tx.email}</label>
               <input
                 id="register-email"
-                className={`${styles.input} ${styles.inputLtr}`}
+                className={styles.input}
                 type="email"
                 placeholder={tx.emailPH}
                 value={form.email}
@@ -378,14 +412,15 @@ export default function RegisterPage() {
 
             <div>
               <label className={styles.label} htmlFor="register-phone">{tx.phone}</label>
-              <input
-                id="register-phone"
-                className={`${styles.input} ${styles.inputLtr}`}
-                type="tel"
-                placeholder={tx.phonePH}
-                value={form.phone}
-                autoComplete="tel"
-                onChange={(e) => set("phone", e.target.value)}
+              <PhoneInput
+                countryIso={phoneCountryIso}
+                lang={lang}
+                number={form.phoneNumber}
+                numberAutoComplete="tel-national"
+                numberInputId="register-phone"
+                numberPlaceholder={tx.phonePH}
+                onCountryChange={handleCountryChange}
+                onNumberChange={(value) => set("phoneNumber", value)}
               />
             </div>
 
@@ -394,7 +429,7 @@ export default function RegisterPage() {
               <div className={styles.inputWrap}>
                 <input
                   id="register-password"
-                  className={`${styles.input} ${styles.inputLtr} ${styles.inputWithAffix}`}
+                  className={`${styles.input} ${styles.inputWithAffix}`}
                   type={showPass ? "text" : "password"}
                   placeholder={tx.passwordPH}
                   value={form.password}
@@ -428,7 +463,7 @@ export default function RegisterPage() {
               <div className={styles.inputWrap}>
                 <input
                   id="register-confirm"
-                  className={`${styles.input} ${styles.inputLtr} ${styles.inputWithAffix} ${confirmState}`}
+                  className={`${styles.input} ${styles.inputWithAffix} ${confirmState}`}
                   type={showConf ? "text" : "password"}
                   placeholder={tx.confirmPH}
                   value={form.confirmPassword}
@@ -462,6 +497,8 @@ export default function RegisterPage() {
               </span>
             </label>
 
+            {error && <p className={styles.errorText} role="alert">{error}</p>}
+
             <button
               type="button"
               className={styles.submitButton}
@@ -482,9 +519,11 @@ export default function RegisterPage() {
       {/* ── BRANDING SIDE — hidden under 768px by the stylesheet ── */}
       <div className={styles.brandPane}>
         <div className={styles.brandTop}>
+          {/* Always the white wordmark: .brandPane is a fixed dark photo panel
+              now, independent of [data-theme] (see auth.module.css). */}
           <Image
             className={styles.brandLogo}
-            src={dark ? "/assets/logo-dark.png" : "/assets/logo-light.png"}
+            src="/assets/logo-dark.png"
             alt="Talents"
             width={110}
             height={32}

@@ -17,9 +17,28 @@
      --text-inverse flips to white in light mode, which is unreadable on gold. */
   --auth-on-gold: var(--bg-page);
 
+  /* app/globals.css hardcodes `html { direction: rtl }` unconditionally — it
+     does not read the `dir` attribute SiteProvider toggles. Nothing else on
+     the site notices (CLAUDE.md: most pages branch on `lang` in inline
+     styles, not on CSS `direction`), but this file is built entirely on
+     logical properties, so in English mode every input, icon and alignment
+     here was silently still resolving right-to-left. Fixing the global rule
+     is out of scope for two auth pages; overriding it here, scoped to this
+     wrapper, is enough — `direction` inherits down through every descendant
+     below, all of which already use logical properties. */
+  direction: rtl;
+
   display: flex;
   flex-direction: row;
-  min-height: 100vh;
+  /* Fixed height, not min-height: min-height is a floor, so a flex row with
+     the default align-items:stretch would grow past the viewport whenever a
+     child's content needed more room than that — which register's long form
+     always does — pushing the whole PAGE into a vertical scroll instead of
+     .formPane's own overflow-y:auto (below) ever engaging. A fixed height
+     caps this box at the viewport, so .formPane scrolls internally instead.
+     dvh (not vh) accounts for mobile browser chrome. */
+  height: 100dvh;
+  overflow-y: hidden;
   background: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-sans);
@@ -29,13 +48,22 @@
   --auth-on-gold: var(--text-primary);
 }
 
+:global([dir="ltr"]) .authPage {
+  direction: ltr;
+}
+
 /* ─── Form column ─────────────────────────────────────────────────────────── */
 
 .formPane {
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* No justify-content:center here — see .formInner's margin-block:auto,
+     which centers the same way but degrades to top-aligned instead of
+     clipping when content is taller than the pane (verified live: at
+     register's pre-polish height, justify-content:center made the topmost
+     ~34px of content permanently unreachable — scrollTop can't go negative,
+     so centering an overflowing flex item just crops its start edge). */
   width: 42%;
   min-width: 380px;
   padding: var(--space-12) 3.5rem;
@@ -47,13 +75,24 @@
 .formPaneWide {
   width: 48%;
   min-width: 400px;
-  padding: var(--space-10) 3.25rem;
+  /* Top padding matches the base .formPane value (not --space-10): .controls
+     is position:absolute and reserves no layout space of its own, so top
+     padding is what keeps it clear of .eyebrow. Register's controls row
+     carries an extra account-switch link .formPane doesn't have, so shrinking
+     this below the value .controls was sized against reproduces the exact
+     overlap the login page was fixed for. Bottom padding has no such
+     constraint, so it's tightened as part of fitting the register form into
+     1366×768 without a scrollbar. */
+  padding: var(--space-12) 3.25rem var(--space-2);
 }
 
 .formInner {
   width: 100%;
   max-width: 440px;
   margin-inline: auto;
+  /* Vertical centering that degrades to top-aligned on overflow — see the
+     comment on .formPane. */
+  margin-block: auto;
 }
 
 /* ─── Top-right controls ──────────────────────────────────────────────────── */
@@ -112,7 +151,7 @@
 /* ─── Headings ────────────────────────────────────────────────────────────── */
 
 .eyebrow {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-1);
   color: var(--color-secondary);
   font-size: var(--text-xs);
   font-weight: 700;
@@ -120,7 +159,7 @@
 }
 
 .heading {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-1);
   color: var(--text-primary);
   font-family: var(--font-display);
   font-size: var(--text-xl);
@@ -129,7 +168,7 @@
 }
 
 .subheading {
-  margin: 0 0 var(--space-8);
+  margin: 0 0 var(--space-2);
   color: var(--text-secondary);
   font-size: var(--text-sm);
 }
@@ -139,16 +178,16 @@
 .fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-1);
 }
 
 .field {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-1);
 }
 
 .label {
   display: block;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   color: var(--text-secondary);
   font-size: var(--text-xs);
   font-weight: 500;
@@ -157,7 +196,7 @@
 .input,
 .select {
   width: 100%;
-  padding: 0.7rem var(--space-4);
+  padding: 0.5rem var(--space-4);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   background: var(--bg-card-muted);
@@ -219,6 +258,186 @@
   position: relative;
 }
 
+/* ─── Phone field ─────────────────────────────────────────────────────────── */
+/* .phoneFieldRow is a plain logical flex row — no forced direction. The
+   country trigger is the first DOM child, so it lands at the inline-START
+   automatically: left on an LTR page, right on an RTL one. That is the
+   whole mechanism; flexbox's own start/end resolution already does what the
+   brief asks ("LEFT (LTR pages) / RIGHT (RTL pages)"), no extra CSS needed.
+
+   .phoneNumberInput is the one deliberate exception to "logical properties
+   only" in this file, and only ITS OWN text rendering, not its position:
+   direction stays ltr regardless of page language — confirmed live that
+   direction:rtl renders "+966 5xx xxx xxx" as "5xx xxx xxx 966+" (segments
+   reordered), which is the Unicode Bidi Algorithm correctly doing its job on
+   a mixed digit/letter run, just not usable. Every production RTL phone
+   input (Careem, WhatsApp...) forces the digits to ltr and uses
+   `text-align` — independent of `direction` — to pick the visual side
+   instead. That split is what delivers "placeholder aligned correctly,
+   types naturally" in Arabic: digits keep their natural order, text-align
+   is what actually follows the page's real direction. */
+
+.phoneFieldRow {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.phoneCountryTrigger {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.375rem;
+  max-width: 11rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-inline-end: none;
+  border-start-start-radius: var(--radius-sm);
+  border-end-start-radius: var(--radius-sm);
+  background: var(--bg-card-muted);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+
+.phoneCountryTrigger:hover {
+  border-color: var(--border-strong);
+}
+
+.phoneCountryTrigger:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: -2px;
+}
+
+.phoneFlag {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+.phoneCountryName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.phoneDialCode {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.phoneChevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.phoneChevronOpen {
+  transform: rotate(180deg);
+}
+
+.phoneNumberInput {
+  flex: 1;
+  min-width: 0;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  /* See the file-level comment above: direction is deliberately NOT
+     inherited here, text-align is what follows the page's real direction. */
+  text-align: right;
+}
+
+:global([dir="ltr"]) .phoneNumberInput {
+  text-align: left;
+}
+
+/* ─── Country dropdown ────────────────────────────────────────────────────── */
+
+.phoneDropdown {
+  position: absolute;
+  z-index: 20;
+  inset-inline-start: 0;
+  top: calc(100% + var(--space-2));
+  width: 19rem;
+  max-width: calc(100vw - 2 * var(--space-6));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.phoneSearchInput {
+  flex-shrink: 0;
+  margin: var(--space-2);
+  width: auto;
+  padding: 0.5rem var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-muted);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  outline: none;
+}
+
+.phoneSearchInput:focus-visible {
+  border-color: var(--color-secondary);
+  box-shadow: var(--shadow-focus);
+}
+
+.phoneOptionList {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-2) var(--space-2);
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.phoneOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-xs);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.phoneOptionHighlighted {
+  background: var(--bg-card-muted);
+}
+
+.phoneOptionSelected {
+  font-weight: 700;
+}
+
+.phoneOptionName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.phoneOptionCode {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.phoneOptionEmpty {
+  padding: var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
 /* Room for the reveal toggle, on whichever side the text ends. */
 .inputWithAffix {
   padding-inline-end: 2.6rem;
@@ -259,7 +478,7 @@
 .strengthTrack {
   display: flex;
   gap: var(--space-1);
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
 }
 
 .strengthSegment {
@@ -284,7 +503,7 @@
 
 .roleButton {
   flex: 1;
-  padding: 0.625rem 0;
+  padding: 0.5rem 0;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   background: var(--bg-card-muted);
@@ -324,7 +543,7 @@
 }
 
 .errorText {
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-2);
   color: var(--color-error);
   font-size: var(--text-xs);
   text-align: center;
@@ -383,7 +602,7 @@
 }
 
 .footNote {
-  margin: var(--space-5) 0 0;
+  margin: var(--space-2) 0 0;
   color: var(--text-secondary);
   font-size: var(--text-xs);
   text-align: center;
@@ -412,6 +631,11 @@
 }
 
 /* ─── Branding column ─────────────────────────────────────────────────────── */
+/* The hero photo is a fixed dark cinematic shot, so this pane is deliberately
+   NOT theme-reactive — it stays dark and its text stays light regardless of
+   [data-theme]. Same treatment CommunityPage.module.css already uses for its
+   own photo hero band (heroBg / heroTitle forcing #fff), so this isn't a new
+   pattern, just the existing one applied here. */
 
 .brandPane {
   position: relative;
@@ -422,8 +646,16 @@
   padding: var(--space-8) var(--space-12);
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 30% 60%, var(--color-secondary-soft) 0%, transparent 60%),
-    var(--bg-page-subtle);
+    radial-gradient(ellipse at 30% 15%, color-mix(in srgb, var(--color-accent) 22%, transparent) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 85%, color-mix(in srgb, var(--color-purple) 20%, transparent) 0%, transparent 55%),
+    linear-gradient(
+      180deg,
+      rgba(5, 11, 18, 0.82) 0%,
+      rgba(5, 11, 18, 0.32) 30%,
+      rgba(5, 11, 18, 0.38) 62%,
+      rgba(5, 11, 18, 0.92) 100%
+    ),
+    url("/assets/auth-hero.avif") 50% 22% / cover no-repeat;
 }
 
 .brandTop {
@@ -450,9 +682,14 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--radius-md);
-  background: var(--bg-card);
+  /* Frosted glass over the photo, not the theme card surface — .brandPane no
+     longer follows [data-theme], so var(--bg-card) would go opaque-white in
+     light mode and hide the photo behind these cards. */
+  background: rgba(8, 14, 22, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   box-shadow: var(--shadow-sm);
 }
 
@@ -475,14 +712,14 @@
 
 .floatingName {
   margin: 0;
-  color: var(--text-primary);
+  color: #fff;
   font-size: var(--text-xs);
   font-weight: 700;
 }
 
 .floatingSub {
   margin: 0;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.66);
   font-size: var(--text-xs);
 }
 
@@ -492,7 +729,7 @@
 
 .brandHeadline {
   margin: 0 0 var(--space-4);
-  color: var(--text-primary);
+  color: #fff;
   font-family: var(--font-display);
   font-size: var(--text-3xl);
   font-weight: 900;
@@ -504,11 +741,22 @@
   font-style: italic;
 }
 
+.brandHighlight::after {
+  /* Drawn by CSS, not typed as the last character of the translated string
+     (see the comment above `brandHighlight` in login/page.tsx and
+     register/page.tsx) — a generated character always renders at the visual
+     end of THIS element's own content in whichever direction is active, so
+     it can never land on the wrong side the way a literal trailing "."
+     could when direction resolution was wrong. */
+  content: ".";
+  margin-inline-start: 0.04em;
+}
+
 .brandDesc {
   max-width: 20rem;
   margin: 0;
   margin-inline-end: auto;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.82);
   font-size: var(--text-sm);
   line-height: 1.7;
 }
@@ -529,7 +777,7 @@
 
 .statLabel {
   margin: var(--space-1) 0 0;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.66);
   font-size: var(--text-xs);
 }
 
