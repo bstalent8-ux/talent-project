@@ -41,6 +41,30 @@ UPDATE public.profile_sections s
    AND s.kind <> 'core';
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- 1b. TALENT: `bio` needs a layout slot to carry its anchor
+--
+-- `bio` is an INLINE core key — its text renders inside ProfileHero, not in a
+-- card. But DynamicSectionRenderer still emits `<div id="section-about" />` for
+-- an inline key, which is the scroll target the "Overview" tab uses (and
+-- exactly what TalentModelProfile.tsx:97 emitted).
+--
+-- The renderer only walks keys that appear in the layout, so without a slot the
+-- anchor is never emitted and the first tab scrolls nowhere. Placed first so the
+-- empty anchor div sits above the portfolio, where the old markup had it.
+-- ─────────────────────────────────────────────────────────────────────────────
+UPDATE public.profile_layouts l
+   SET layout = jsonb_set(
+         l.layout,
+         '{main}',
+         '["bio","portfolio","experience","packages","usage_addons","equipment","awards"]'::jsonb
+       )
+  FROM public.profile_types t
+ WHERE t.id = l.profile_type_id
+   AND t.slug = 'talent'
+   AND l.variant = 'public'
+   AND NOT (COALESCE(l.layout->'main', '[]'::jsonb) @> '["bio"]'::jsonb);
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 2. BRAND: `bio` core section
 --
 -- The brand public page has always rendered profiles.bio as its main body, but

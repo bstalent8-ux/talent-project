@@ -592,3 +592,114 @@ Commit style: `feat: …`, `fix: …`, `chore: …`, or short descriptive messag
 - Centralized editable landing content, localized copy, image URLs, categories, testimonials, FAQ, and pricing preview in `app/(main)/home/_components/landing/content.ts`.
 - Moved landing-specific presentation into `LandingPage.module.css` to avoid duplicated inline style objects.
 - The redesign is visual and conversion-focused only; it does not change Supabase, auth, admin, booking, API, or payment behavior.
+
+---
+
+## Dynamic Public Profiles — 2026-08-06
+
+The public profile pages now render through the layout-driven renderer. §4 and §10
+describe the pipeline; this section records what changed and what a contributor
+must know before touching it.
+
+### The rendering path
+
+```
+/talent/[handle]  ──┐
+/brand/[id]       ──┴─► profileService.getPublicProfileByHandle | ById
+                          │  provider public gate + hasContent filter
+                          ▼
+                        PublicProfileDTO  (empty sections already dropped)
+                          │
+                          ▼
+                        *ProfileShell  (chrome only)
+                          └─► DynamicProfileRenderer
+                                └─► DynamicProfileSections   (layout slots)
+                                      ├─ core    → adapters → existing components
+                                      └─ dynamic → registry renderers
+```
+
+Both pages keep their `cachedPublic` wrapper and existing tags. Removing them
+would make every view a fresh provider fan-out and would stop the existing
+`revalidateTag` calls invalidating anything.
+
+### Section visibility
+
+**A section that has no content is never serialized.** `ProfileService.buildPublic`
+drops it via `provider.hasContent()`; the renderer re-checks as defence in depth.
+The rules live in one pure module, `features/profiles/content/section-content.ts`,
+which is deliberately NOT `server-only` so both sides reach the identical answer.
+
+Do not add a visibility check inside a component. A component can only hide its
+body, leaving the heading and card chrome behind, and the sidebar cannot collapse
+to one column once its aside has already rendered.
+
+An unknown core key **fails open** (renders). A core section exists because a
+typed column backs it, so failing closed would silently delete part of a live
+profile after a config change.
+
+### Chrome vs sections
+
+Chrome is anything that must survive a profile with no content: the hero, the
+booking CTA, the tab bar. It lives in the shell, never in a layout slot.
+`avatar` / `personal` / `bio` (talent) and `logo` (brand) are declared INLINE in
+`components/profile/dynamic/adapters/core-keys.ts` for this reason — their data
+renders inside the hero.
+
+`bio` is still listed in the talent layout: the renderer emits a bare
+`<div id="section-about" />` for an inline key, and that is the anchor the
+"Overview" tab scrolls to. Removing it from the layout breaks the tab bar
+silently.
+
+`StickyBookingBar` mounts through the renderer's `mainFooter` so it reads the
+selected package from `DynamicProfileContext`. It is fixed-position, so its DOM
+location does not affect where it draws — but a second copy of the selection
+would drift from the one `UsageRightsSection` prices against.
+
+### Completion
+
+`GET /api/profile/completion` returns a `CompletionDTO` computed by the
+signed-in user's own provider. Own-profile only — completion exposes which parts
+of a profile are unfinished.
+
+- `provider.getCompletion()` returns `CoreSectionState`: a bare boolean, or
+  `{ done, progress }` for a section with a real middle state.
+- `done` is the **only** input to the score. `progress` is display-only and
+  independent — most talent sections count as done at their first entry, so
+  "complete, 2 of 4 socials" is the state most profiles are in.
+- `provider.getCompletionGates()` is per-provider because the gates are not the
+  same features: a brand never applies to a job. Gates report `enforced: false`,
+  which is truthful — `COMPLETION_THRESHOLDS` is still not checked in any route.
+- `lib/profile-completion.ts` keeps `calculateCompletion` byte-for-byte so
+  talent scores cannot regress; `calculateSectionProgress` is additive.
+
+Do not import `calculateCompletion` into a component. It hardcodes the talent
+weights, which is what made brands unscorable.
+
+### Brand core components
+
+`components/profile/brand/` holds the five brand section components plus
+`BrandHero`. They share chrome through `BrandCard` / `useBrandPalette`. The brand
+adapter previously claimed zero keys, so every brand section fell through to
+`CoreSectionPlaceholder`.
+
+### The two brand approval flags
+
+`profiles.brand_status` (what the admin UI writes) and `brand_profiles.status`
+(what the provider gate reads) still both exist — CLAUDE.md §8's known debt.
+Migration `20260809` reconciles them, including mapping a **NULL** `brand_status`
+to `approved`: the shipped page hid a brand only when `brand_status` was
+explicitly non-approved, so never-moderated brands have always been public.
+Tightening that is a product decision, not a refactor's to make.
+
+### Migrations that must be applied
+
+`20260808_seed_talent_core_sections.sql` and
+`20260809_campaign_profile_readiness.sql` are **required** for these pages. With
+no section rows the layout has nothing to order and a profile renders empty.
+Both are idempotent and print a `RAISE NOTICE` verification summary.
+
+### Tests
+
+`vitest` now runs (`vitest.config.ts`, 75 tests over the adapters and the runtime
+prep). §11.11 and §15.9's "no test suite exists" is no longer strictly true for
+this area — run `npx vitest run` alongside `npx tsc --noEmit` and `npm run build`.
