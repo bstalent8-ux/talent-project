@@ -1,16 +1,25 @@
 export const runtime = 'edge';
 
+// ─── Public talent profile ────────────────────────────────────────────────────
+// Reads ONE DTO from ProfileService and hands it to the layout-driven shell.
+//
+// Replaces the previous fetch-four-things-and-transform composition. Three
+// things change as a result, all of them the point of the exercise:
+//
+//   • the public gate lives in TalentProvider, not re-implemented here
+//     (CLAUDE.md §8 — RLS is bypassed, so a forgotten filter is a data leak)
+//   • empty sections never reach the client; the profile shrinks around them
+//   • section order comes from profile_layouts, not from JSX
+//
+// The cachedPublic wrapper and its tags are UNCHANGED. Dropping them would make
+// every profile view a fresh fan-out of provider queries, and the existing
+// revalidateTag calls on profile edits would stop invalidating anything.
+
 import { notFound } from "next/navigation";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
-import {
-  fetchTalentByHandle,
-  fetchPortfolioByTalentId,
-  fetchReviewsByTalentId,
-  fetchBookingStatsByTalentId,
-  fetchBrandsByTalentProfileId,
-} from "@/features/talent-profile/services/talent-profile.service";
-import { transformTalentPageData } from "@/features/talent-profile/transformers/talent-profile.transformer";
-import TalentModelProfile from "./_components/TalentModelProfile";
+import { ProfileError, profileService } from "@/features/profiles";
+import type { PublicProfileDTO } from "@/features/profiles/types/dto";
+import TalentProfileShell from "./_components/TalentProfileShell";
 
 export default async function TalentPage({
   params,
@@ -19,54 +28,30 @@ export default async function TalentPage({
 }) {
   const { handle } = await params;
 
-  const payload = await cachedPublic(
+  const profile = await cachedPublic<PublicProfileDTO | null>(
     ["talent-detail", handle],
     [CACHE_TAGS.talents.detail(handle), CACHE_TAGS.talents.list],
     CACHE_SECONDS.tenMinutes,
     async () => {
-      const profile = await fetchTalentByHandle(handle);
-      if (!profile) return null;
+      try {
+        return await profileService.getPublicProfileByHandle(handle);
+      } catch (e) {
+        const error = ProfileError.from(e);
 
-      const tp = Array.isArray(profile.talent_profiles)
-        ? profile.talent_profiles[0]
-        : profile.talent_profiles;
-
-      if (!tp) return null;
-      if ((profile as any).account_status && ["blocked", "suspended", "rejected"].includes((profile as any).account_status)) return null;
-      if (tp.status && tp.status !== "approved") return null;
-
-      const [rawPortfolio, rawReviews, bookingStats, dbBrands] = await Promise.all([
-        tp.id ? fetchPortfolioByTalentId(tp.id)        : Promise.resolve([]),
-        tp.id ? fetchReviewsByTalentId(tp.id)          : Promise.resolve([]),
-        tp.id ? fetchBookingStatsByTalentId(tp.id)     : Promise.resolve({ total: 0, completed: 0, pending: 0, cancelled: 0 }),
-        tp.id ? fetchBrandsByTalentProfileId(tp.id)    : Promise.resolve([]),
-      ]);
-
-      return { profile, tp, rawPortfolio, rawReviews, bookingStats, dbBrands };
+        // NOT_FOUND covers a missing handle, a blocked account and a talent
+        // whose listing is not approved — deliberately the same outcome, so the
+        // page cannot be used to probe moderation status. Anything else is a
+        // real failure and must not be cached as a 404.
+        if (error.status === 404) return null;
+        throw error;
+      }
     },
   );
 
-  if (!payload) notFound();
-
-  const { profile, tp, rawPortfolio, rawReviews, bookingStats, dbBrands } = payload;
   if (!profile) notFound();
 
-  const data = transformTalentPageData(profile, tp ?? null, rawPortfolio, rawReviews);
-  // Prefer DB brands (talent_brands table); fall back to social_links.brands
-  const brands = dbBrands.length > 0 ? dbBrands : data.brands;
+  // A brand handle must not render through the talent shell.
+  if (profile.meta.typeSlug !== "talent") notFound();
 
-  return (
-    <TalentModelProfile
-      talent={data.talent}
-      brands={brands}
-      reviews={data.reviews}
-      experience={data.experience}
-      packages={data.packages}
-      addons={data.addons}
-      portfolioItems={data.portfolioItems}
-      campaignStats={data.campaignStats}
-      featuredCampaign={data.featuredCampaign}
-      bookingStats={bookingStats}
-    />
-  );
+  return <TalentProfileShell profile={profile} />;
 }

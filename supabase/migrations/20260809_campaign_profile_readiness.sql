@@ -94,24 +94,40 @@ UPDATE public.profile_layouts l
 -- Unifying the two flags onto one column is post-campaign work.
 -- ─────────────────────────────────────────────────────────────────────────────
 
+-- Visibility rule being reproduced, from app/(main)/brand/[id]/page.tsx as it
+-- shipped:
+--
+--     if (brand.brand_status && brand.brand_status !== "approved") return null;
+--
+-- A NULL brand_status therefore PASSED — brands that were never explicitly
+-- moderated have always been publicly visible. brand_profiles.status is NOT
+-- NULL DEFAULT 'pending', so mapping NULL to 'pending' would silently unpublish
+-- every one of them on launch day. This migration preserves the shipped
+-- behaviour and does not tighten it; tightening the brand gate is a product
+-- decision, not something a refactor should smuggle in.
+
 -- 3a. Create the missing core rows. A brand with no brand_profiles row cannot
 --     be loaded by the provider at all — not a gate failure, a NOT_FOUND.
 INSERT INTO public.brand_profiles (user_id, company_name, status)
 SELECT p.id,
        p.full_name,
-       CASE WHEN p.brand_status = 'approved' THEN 'approved' ELSE 'pending' END
+       CASE WHEN p.brand_status IS NULL OR p.brand_status = 'approved'
+            THEN 'approved'
+            ELSE 'pending'
+       END
 FROM public.profiles p
 WHERE p.role IN ('brand', 'client')
   AND NOT EXISTS (SELECT 1 FROM public.brand_profiles b WHERE b.user_id = p.id)
 ON CONFLICT (user_id) DO NOTHING;
 
--- 3b. Promote rows the admin already approved via the legacy flag.
+-- 3b. Promote rows the admin already approved via the legacy flag, plus the
+--     never-moderated ones the public page has always shown.
 UPDATE public.brand_profiles b
    SET status      = 'approved',
        approved_at = COALESCE(b.approved_at, p.brand_approved_at, now())
   FROM public.profiles p
  WHERE p.id = b.user_id
-   AND p.brand_status = 'approved'
+   AND (p.brand_status = 'approved' OR p.brand_status IS NULL)
    AND b.status <> 'approved';
 
 -- 3c. Carry over an explicit rejection so a rejected brand does not read as
@@ -151,7 +167,9 @@ BEGIN
   SELECT count(*) INTO status_drift
     FROM public.profiles p
     JOIN public.brand_profiles b ON b.user_id = p.id
-   WHERE p.brand_status = 'approved' AND b.status <> 'approved';
+   WHERE (p.brand_status = 'approved' OR p.brand_status IS NULL)
+     AND p.role IN ('brand', 'client')
+     AND b.status <> 'approved';
 
   SELECT count(*) INTO orphan_keys
     FROM public.profile_layouts l
