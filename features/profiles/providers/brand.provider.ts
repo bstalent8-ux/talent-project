@@ -12,6 +12,7 @@ import "server-only";
 // that is Phase 4 work, and doing it here would smuggle a behaviour change
 // into a refactor.
 
+import { hasSectionContent } from "../content/section-content";
 import { brandRepository } from "../repositories/brand.repository";
 import { dynamicProfileService } from "../services/dynamic-profile.service";
 import type {
@@ -116,6 +117,10 @@ export const brandProvider: ProfileProvider<RawBrandCore, BrandPublicCore, Brand
 
   async getSections(): Promise<ProfileSectionDTO[]> {
     return dynamicProfileService.getSectionDefinitions(meta.typeSlug);
+  },
+
+  hasContent(section, profile) {
+    return hasSectionContent(meta.typeSlug, section, profile);
   },
 
   async getCompletion({ shared, core }: ProviderCompletionInput<RawBrandCore>): Promise<CoreSectionState> {

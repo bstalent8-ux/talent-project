@@ -1,0 +1,208 @@
+// ─── Core section adapter tests ───────────────────────────────────────────────
+// Targets the PURE prop builders, so no DOM, no React renderer and no jsdom
+// dependency is needed. The JSX half is covered by the compiler:
+// CoreSectionRenderPlan types `props` as the real component prop types, so a
+// mismatch fails `npx tsc --noEmit`.
+
+import { describe, expect, it, vi } from "vitest";
+
+import {
+  BRAND_INLINE_CORE_KEYS,
+  BRAND_RENDERABLE_CORE_KEYS,
+  INLINE_CORE_KEYS_BY_TYPE,
+  RENDERABLE_CORE_KEYS_BY_TYPE,
+  TALENT_INLINE_CORE_KEYS,
+  TALENT_RENDERABLE_CORE_KEYS,
+} from "./core-keys";
+import { buildTalentCoreProps, supportsTalentCoreKey } from "./talent.props";
+import { buildBrandCoreProps, supportsBrandCoreKey } from "./brand.props";
+import type { BrandProfileContext, TalentProfileContext } from "./types";
+
+// ─── Fixtures ─────────────────────────────────────────────────────────────────
+
+const onSelectPackage = vi.fn();
+
+const talentContext: TalentProfileContext = {
+  typeSlug: "talent",
+  talent: {
+    id: "t1",
+    name: "Sara",
+    handle: "sara",
+    avatarUrl: null,
+    title: "UGC Creator",
+    location: "القاهرة، مصر",
+    memberSince: "2023",
+    rating: 4.8,
+    reviewCount: 12,
+    views: "12K",
+    verified: true,
+    fastResponse: false,
+    premium: false,
+    bio: "Bio",
+    specialties: ["ugc"],
+    category: "ugc",
+  },
+  portfolioItems: [
+    { id: "p1", url: "https://res.cloudinary.com/demo/a.jpg", media_type: "image", caption: null, sort_order: 0 },
+  ],
+  packages: [{ id: "pkg1", name: "Basic", price: "1000", popular: true, features: ["one"] }],
+  addons: [{ key: "wl", label: "Whitelisting", price: 500 }],
+  reviews: [{ id: "r1", author: "Brand", brand: "", rating: 5, text: "Great", date: "2026" }],
+  selectedPackage: null,
+  onSelectPackage,
+};
+
+const brandContext: BrandProfileContext = {
+  typeSlug: "brand",
+  companyName: "Acme",
+  industry: "retail",
+  websiteUrl: "https://example.com",
+  isApproved: true,
+};
+
+// ─── 1. Every renderable core section has an adapter entry ────────────────────
+
+describe("every core section has an adapter", () => {
+  it.each(TALENT_RENDERABLE_CORE_KEYS)(
+    "talent core section %s resolves to a render plan",
+    (key) => {
+      expect(supportsTalentCoreKey(key)).toBe(true);
+
+      const plan = buildTalentCoreProps(key, talentContext);
+      expect(plan).not.toBeNull();
+      expect(plan!.component).toBeTruthy();
+      expect(plan!.props).toBeTypeOf("object");
+    },
+  );
+
+  it("talent adapter claims exactly the declared renderable keys", () => {
+    const claimed = [...TALENT_RENDERABLE_CORE_KEYS].filter(supportsTalentCoreKey);
+    expect(claimed).toEqual([...TALENT_RENDERABLE_CORE_KEYS]);
+  });
+
+  it("brand adapter claims no keys yet, and that is declared explicitly", () => {
+    expect([...BRAND_RENDERABLE_CORE_KEYS]).toEqual([]);
+    expect(RENDERABLE_CORE_KEYS_BY_TYPE.brand).toEqual([]);
+  });
+
+  it("renderable and inline key sets never overlap", () => {
+    for (const [typeSlug, renderable] of Object.entries(RENDERABLE_CORE_KEYS_BY_TYPE)) {
+      const inline = new Set(INLINE_CORE_KEYS_BY_TYPE[typeSlug] ?? []);
+      for (const key of renderable) {
+        expect(inline.has(key), `${typeSlug}: "${key}" is in both sets`).toBe(false);
+      }
+    }
+  });
+});
+
+// ─── 2. Unknown / inline core sections fail safely ────────────────────────────
+
+describe("unknown core section fails safely", () => {
+  it.each(["", "not_a_section", "HERO", "hero ", "packages;drop", "__proto__", "constructor"])(
+    "returns null for %j instead of throwing",
+    (key) => {
+      expect(() => buildTalentCoreProps(key, talentContext)).not.toThrow();
+      expect(buildTalentCoreProps(key, talentContext)).toBeNull();
+      expect(supportsTalentCoreKey(key)).toBe(false);
+    },
+  );
+
+  it.each(TALENT_INLINE_CORE_KEYS)(
+    "inline talent key %s is unclaimed and returns null",
+    (key) => {
+      expect(supportsTalentCoreKey(key)).toBe(false);
+      expect(buildTalentCoreProps(key, talentContext)).toBeNull();
+    },
+  );
+
+  it.each(BRAND_INLINE_CORE_KEYS)("inline brand key %s returns null", (key) => {
+    expect(supportsBrandCoreKey(key)).toBe(false);
+    expect(buildBrandCoreProps(key, brandContext)).toBeNull();
+  });
+
+  it("brand adapter returns null for a key the talent adapter does claim", () => {
+    expect(buildBrandCoreProps("portfolio", brandContext)).toBeNull();
+  });
+});
+
+// ─── 3. Adapter output matches component prop requirements ────────────────────
+// The compiler already enforces the shapes; these assert the VALUES are the
+// ones TalentModelProfile passes today, so swapping in the dynamic renderer is
+// behaviour-neutral.
+
+describe("adapter output matches component prop requirements", () => {
+  it("hero / avatar / personal all map to ProfileHero with the talent object", () => {
+    for (const key of ["hero", "avatar", "personal"]) {
+      const plan = buildTalentCoreProps(key, talentContext)!;
+      expect(plan.component).toBe("ProfileHero");
+      expect(plan.props).toEqual({ talent: talentContext.talent });
+    }
+  });
+
+  it("portfolio maps to PortfolioSection with portfolioItems", () => {
+    const plan = buildTalentCoreProps("portfolio", talentContext)!;
+    expect(plan.component).toBe("PortfolioSection");
+    expect(plan.props).toEqual({ portfolioItems: talentContext.portfolioItems });
+  });
+
+  it("packages maps to PackagesSection with the onSelect callback wired", () => {
+    const plan = buildTalentCoreProps("packages", talentContext)!;
+    expect(plan.component).toBe("PackagesSection");
+
+    const props = plan.props as { onSelect: (pkg: unknown) => void; packages: unknown };
+    expect(props.packages).toEqual(talentContext.packages);
+    expect(props.onSelect).toBeTypeOf("function");
+
+    // The lifted-state contract: PackagesSection.onSelect must reach the
+    // context handler, because UsageRightsSection reads selectedPackage.
+    props.onSelect(talentContext.packages![0]);
+    expect(onSelectPackage).toHaveBeenCalledWith(talentContext.packages![0]);
+  });
+
+  it("usage_addons maps to UsageRightsSection with selectedPackage and addons", () => {
+    const plan = buildTalentCoreProps("usage_addons", talentContext)!;
+    expect(plan.component).toBe("UsageRightsSection");
+    expect(plan.props).toEqual({
+      selectedPackage: talentContext.selectedPackage,
+      addons:          talentContext.addons,
+    });
+  });
+
+  it("usage_addons reflects a selected package rather than caching null", () => {
+    const withSelection: TalentProfileContext = {
+      ...talentContext,
+      selectedPackage: talentContext.packages![0],
+    };
+    const plan = buildTalentCoreProps("usage_addons", withSelection)!;
+    expect((plan.props as { selectedPackage: unknown }).selectedPackage)
+      .toEqual(talentContext.packages![0]);
+  });
+
+  it("reviews maps to ReviewsCard with reviews and the talent rating", () => {
+    const plan = buildTalentCoreProps("reviews", talentContext)!;
+    expect(plan.component).toBe("ReviewsCard");
+    expect(plan.props).toEqual({
+      reviews: talentContext.reviews,
+      rating:  talentContext.talent.rating,
+    });
+  });
+
+  it("trust maps to TrustCard, which takes no props", () => {
+    const plan = buildTalentCoreProps("trust", talentContext)!;
+    expect(plan.component).toBe("TrustCard");
+    expect(plan.props).toEqual({});
+  });
+
+  it("builders are pure — they never mutate the context", () => {
+    const snapshot = JSON.stringify(talentContext, (key, value) =>
+      key === "onSelectPackage" ? "fn" : value,
+    );
+
+    for (const key of TALENT_RENDERABLE_CORE_KEYS) buildTalentCoreProps(key, talentContext);
+
+    const after = JSON.stringify(talentContext, (key, value) =>
+      key === "onSelectPackage" ? "fn" : value,
+    );
+    expect(after).toBe(snapshot);
+  });
+});

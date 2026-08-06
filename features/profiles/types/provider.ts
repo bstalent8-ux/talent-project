@@ -13,6 +13,7 @@ import type {
   DynamicValidationResult,
   ProfileSectionDTO,
   ModerationDTO,
+  PublicProfileDTO,
   Bilingual,
 } from "./dto";
 import type { RawSharedProfile } from "./raw";
@@ -78,6 +79,19 @@ export interface ProfileProvider<
 
   /** Section definitions for this type. Definitions only, never user values. */
   getSections(): Promise<ProfileSectionDTO[]>;
+
+  /**
+   * Does this section have anything worth rendering for this profile?
+   *
+   * Owned by the provider, NOT by each component: a component that decides its
+   * own visibility can only hide its body, leaving the heading and card chrome
+   * behind, and every new component has to remember the rule again. Asking here
+   * lets ProfileService drop the section from the DTO entirely, so the renderer
+   * stays generic and the payload never carries sections nobody sees.
+   *
+   * Synchronous and side-effect free — it runs once per section per render.
+   */
+  hasContent(section: ProfileSectionDTO, profile: PublicProfileDTO): boolean;
 
   /** Evaluates CORE sections only. Dynamic sections are scored generically. */
   getCompletion(input: ProviderCompletionInput<TCoreRow>): Promise<CoreSectionState>;

@@ -30,14 +30,13 @@ export default function UsageRightsSection({ selectedPackage, addons: addonsProp
 
   const fmt = (n: number) => n.toLocaleString("ar-EG");
 
+  // Without add-ons there is nothing to price up — the block is only a
+  // calculator over them.
+  if (addons.length === 0) return null;
+
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
       <h2 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 18, fontWeight: 800, marginBottom: 20, margin: "0 0 20px" }}>{ar ? "حقوق الاستخدام والإضافات" : "Usage Rights & Add-ons"}</h2>
-      {addons.length === 0 && (
-        <p style={{ color: MUTED, fontSize: 14, textAlign: "center", padding: "32px 0" }}>
-          {ar ? "لا توجد إضافات حالياً" : "No add-ons available yet"}
-        </p>
-      )}
       {addons.length > 0 && <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: 20 }}>
         {/* Add-ons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

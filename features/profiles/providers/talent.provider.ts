@@ -8,6 +8,8 @@ import "server-only";
 // today. This provider is a seam, not a rewrite.
 
 import { calculateCompletion } from "@/lib/profile-completion";
+import { hasSectionContent } from "../content/section-content";
+import { profileRepository } from "../repositories/profile.repository";
 import { talentRepository } from "../repositories/talent.repository";
 import { dynamicProfileService } from "../services/dynamic-profile.service";
 import type {
@@ -91,7 +93,10 @@ function toPortfolio(rows: RawPortfolioRow[]): PortfolioItemDTO[] {
   }));
 }
 
-function toReviews(rows: RawReviewRow[], authorByBrandId: Record<string, string>): ReviewItemDTO[] {
+function toReviews(
+  rows: RawReviewRow[],
+  authorByBrandId: Record<string, string | null>,
+): ReviewItemDTO[] {
   return rows.map((r) => ({
     id:        r.id,
     author:    authorByBrandId[r.brand_id] ?? "Client",
@@ -166,12 +171,15 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
       talentRepository.findBrands(core.id),
     ]);
 
+    // Reviewer names: one batched profiles lookup keyed by reviews.brand_id,
+    // matching fetchReviewsByTalentId. No review table structure changes.
+    const authorByBrandId = await profileRepository.findDisplayNames(
+      reviews.map((review) => review.brand_id),
+    );
+
     return buildPublicCore(core, {
       portfolio: toPortfolio(portfolio),
-      // TODO(part-2): reviewer names need a batched profiles lookup, matching
-      // fetchReviewsByTalentId. Left empty here so Part 1 introduces no new
-      // cross-domain query; the existing public page path is unchanged.
-      reviews:   toReviews(reviews, {}),
+      reviews:   toReviews(reviews, authorByBrandId),
       brands:    toBrands(brands),
     });
   },
@@ -189,9 +197,13 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
       talentRepository.findBookingStatuses(core.id),
     ]);
 
+    const authorByBrandId = await profileRepository.findDisplayNames(
+      reviews.map((review) => review.brand_id),
+    );
+
     const publicShape = buildPublicCore(core, {
       portfolio: toPortfolio(portfolio),
-      reviews:   toReviews(reviews, {}),
+      reviews:   toReviews(reviews, authorByBrandId),
       brands:    toBrands(brands),
     });
 
@@ -219,6 +231,12 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
 
   async getSections(): Promise<ProfileSectionDTO[]> {
     return dynamicProfileService.getSectionDefinitions(meta.typeSlug);
+  },
+
+  // Rules live in ../content/section-content so the client renderer can reach
+  // the identical answer — that module is deliberately not server-only.
+  hasContent(section, profile) {
+    return hasSectionContent(meta.typeSlug, section, profile);
   },
 
   async getCompletion({ shared, core }: ProviderCompletionInput<RawTalentCore>): Promise<CoreSectionState> {

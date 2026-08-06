@@ -34,6 +34,10 @@ export default function PackagesSection({ onSelect, packages }: Props) {
     onSelect(pkg);
   };
 
+  // A talent who has not priced anything shows no pricing block at all. An
+  // "no packages yet" card advertises an unfinished profile to the brand.
+  if (data.length === 0) return null;
+
   return (
     <section
       style={{
@@ -102,12 +106,6 @@ export default function PackagesSection({ onSelect, packages }: Props) {
           </span>
         </div>
       </div>
-
-      {data.length === 0 && (
-        <p style={{ color: muted, fontSize: 14, textAlign: "center", padding: "32px 0" }}>
-          {ar ? "لا توجد باقات متاحة حالياً" : "No packages available yet"}
-        </p>
-      )}
 
       <div
         style={{

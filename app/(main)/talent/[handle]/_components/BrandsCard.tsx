@@ -12,21 +12,16 @@ export default function BrandsCard({ brands }: { brands: BrandItem[] }) {
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
   const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+
+  if (brands.length === 0) return null;
+
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
       <h3 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
         {ar ? "براندات تعاونت معها" : "Collaborated Brands"}
       </h3>
 
-      {brands.length === 0 ? (
-        <div style={{
-          textAlign: "center", padding: "20px 0",
-          color: MUTED, fontSize: 13,
-        }}>
-          {ar ? "لا توجد براندات مسجلة بعد" : "No brands registered yet"}
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
           {brands.slice(0, 6).map((brand, i) => (
             <motion.div
               key={brand.id}
@@ -56,8 +51,7 @@ export default function BrandsCard({ brands }: { brands: BrandItem[] }) {
               </span>
             </motion.div>
           ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -27,6 +27,10 @@ export default function PortfolioSection({ portfolioItems }: Props) {
   const MUTED = dark ? "#A8B3C2" : "#64748B";
   const hasReal = portfolioItems && portfolioItems.length > 0;
 
+  // Previously this fell back to decorative gradient tiles, which read as real
+  // work to a brand. An unfinished portfolio now shows nothing instead.
+  if (!hasReal) return null;
+
   return (
     <div
       style={{
@@ -65,8 +69,7 @@ export default function PortfolioSection({ portfolioItems }: Props) {
           gap: 12,
         }}
       >
-        {hasReal ? (
-          portfolioItems.slice(0, 6).map((item, i) => (
+        {portfolioItems.slice(0, 6).map((item, i) => (
             <motion.div
               key={item.id ?? i}
               whileHover={{ scale: 1.04 }}
@@ -130,20 +133,7 @@ export default function PortfolioSection({ portfolioItems }: Props) {
                 </p>
               </div>
             </motion.div>
-          ))
-        ) : (
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              textAlign: "center",
-              padding: "48px 0",
-              color: MUTED,
-              fontSize: 14,
-            }}
-          >
-            لا توجد أعمال في البورتفوليو بعد
-          </div>
-        )}
+          ))}
       </div>
     </div>
   );

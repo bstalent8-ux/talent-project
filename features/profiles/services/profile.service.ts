@@ -173,7 +173,7 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
     // NOT_FOUND as a missing profile, deliberately.
     if (!core) throw ProfileError.notFound({ profileId: profile.id, reason: "failed public gate" });
 
-    return {
+    const dto: PublicProfileDTO = {
       identity:   toIdentityDTO(profile, ctx.typeSlug),
       meta:       toMetaDTO(ctx.provider.meta),
       core:       core as AnyPublicCore,
@@ -181,6 +181,15 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
       layout,
       isBookable: ctx.provider.meta.bookable,
     };
+
+    // Empty sections are dropped HERE, not in the renderer. Filtering server-side
+    // keeps the payload honest (a hidden section is never serialized to the
+    // client) and means one rule governs every surface that reads this DTO.
+    // A profile therefore grows as its owner fills it in, instead of shipping a
+    // fixed skeleton of "no data yet" cards.
+    dto.sections = dto.sections.filter((section) => ctx.provider.hasContent(section, dto));
+
+    return dto;
   }
 
   /**
@@ -392,15 +401,45 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
      * "What is this user's provider row id?" — one indexed query.
      * Deliberately NOT a profile load and deliberately NOT cached: it backs
      * ownership checks, where a stale entry is an authorization bug.
+     *
+     * `typeSlug` is an optional hint. Callers that already know which kind of
+     * provider row they want (a booking page asking for the talent row, a
+     * portfolio write asking for the talent row) should pass it: the type
+     * lookup is skipped and the call costs exactly one query, matching the
+     * direct `.from("talent_profiles").select("id")` it replaces.
+     *
+     * Without the hint the profile type is resolved first, which costs a second
+     * query. Only omit it when the caller genuinely does not know the type.
      */
-    async resolveProviderRef(userId: string): Promise<ProviderRef | null> {
+    async resolveProviderRef(userId: string, typeSlug?: string): Promise<ProviderRef | null> {
+      if (typeSlug) {
+        if (!deps.registry.hasProvider(typeSlug)) return null;
+        return deps.providerRefs.resolveRef(userId, typeSlug);
+      }
+
       const identity = await deps.profiles.findIdentityByUserId(userId);
       if (!identity) return null;
 
-      const typeSlug = resolveTypeSlug(identity);
-      if (!typeSlug) return null;
+      const resolved = resolveTypeSlug(identity);
+      if (!resolved) return null;
 
-      return deps.providerRefs.resolveRef(userId, typeSlug);
+      return deps.providerRefs.resolveRef(userId, resolved);
+    },
+
+    /**
+     * Same as resolveProviderRef, but never throws — a DB failure yields null.
+     *
+     * For server components that previously ignored the query error entirely
+     * (`const { data: tp } = await adminClient…`) and degraded to an empty view.
+     * API routes should use resolveProviderRef and map the error themselves.
+     */
+    async resolveProviderRefSafe(userId: string, typeSlug?: string): Promise<ProviderRef | null> {
+      try {
+        return await this.resolveProviderRef(userId, typeSlug);
+      } catch (e) {
+        console.error("[profiles] resolveProviderRefSafe failed", ProfileError.from(e).internal);
+        return null;
+      }
     },
 
     /**

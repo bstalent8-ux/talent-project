@@ -22,6 +22,9 @@ export default function ReviewsCard({ reviews, rating = 0 }: Props) {
   const [idx, setIdx] = useState(0);
   const review = reviews[idx];
 
+  // No reviews means no rating either, so the whole card would be a zero.
+  if (reviews.length === 0) return null;
+
   return (
     <div
       style={{
@@ -54,12 +57,6 @@ export default function ReviewsCard({ reviews, rating = 0 }: Props) {
           </div>
         )}
       </div>
-
-      {reviews.length === 0 && (
-        <div style={{ textAlign: "center", padding: "28px 0", color: MUTED, fontSize: 13 }}>
-          {ar ? "لا توجد تقييمات بعد" : "No reviews yet"}
-        </div>
-      )}
 
       {reviews.length > 0 && <AnimatePresence mode="wait">
         <motion.div
