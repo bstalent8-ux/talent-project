@@ -9,3 +9,5 @@ pages_build_output_dir = ".vercel/output/static"
 
 [vars]
 NODE_ENV = "production"
+NEXT_PUBLIC_SUPABASE_URL = "https://kjtppolajcwoovrwnoqs.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_lx5jPg0rUKbtcFKebVkL_Q_VT_uEQUE"
