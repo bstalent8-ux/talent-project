@@ -34,8 +34,8 @@ const INIT_SCRIPT = `(function(){try{
       '--color-primary':theme.primary,
       '--color-secondary':theme.secondary,
       '--color-accent':theme.accent,
-      '--font-sans':theme.fontSans?('\''+theme.fontSans+'\', system-ui, sans-serif'):null,
-      '--font-display':theme.fontDisplay?('\''+theme.fontDisplay+'\', system-ui, sans-serif'):null
+      '--font-sans':theme.fontSans?('"'+theme.fontSans+'", system-ui, sans-serif'):null,
+      '--font-display':theme.fontDisplay?('"'+theme.fontDisplay+'", system-ui, sans-serif'):null
     };
     Object.keys(vars).forEach(function(k){ if(vars[k]) document.documentElement.style.setProperty(k,vars[k]); });
   }
