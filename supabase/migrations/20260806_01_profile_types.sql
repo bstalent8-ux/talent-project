@@ -118,6 +118,13 @@ DROP POLICY IF EXISTS "profile_types public read" ON public.profile_types;
 CREATE POLICY "profile_types public read" ON public.profile_types
   FOR SELECT USING (is_active = true);
 
+-- ─── Grant ───────────────────────────────────────────────────────────────────
+-- Explicit because this project's default privileges were confirmed NOT to
+-- auto-apply to new public tables: profile_types was invisible to PostgREST
+-- (PGRST205) after creation even though RLS + policy above were correct. RLS
+-- restricts ROWS; it does not substitute for a table-level GRANT.
+GRANT SELECT ON public.profile_types TO anon, authenticated, service_role;
+
 -- ─── Verification ────────────────────────────────────────────────────────────
 -- Expect 3 rows, with agency inactive.
 DO $$
@@ -129,3 +136,14 @@ BEGIN
   END IF;
   RAISE NOTICE 'OK 20260806_01: profile_types has % rows', n;
 END $$;
+
+-- ─── Verification: table existence (PostgreSQL ground truth) ────────────────
+SELECT to_regclass('public.profile_types') AS profile_types_table;
+
+SELECT schemaname, tablename
+  FROM pg_tables
+ WHERE schemaname = 'public'
+   AND tablename = 'profile_types';
+
+-- ─── PostgREST cache ─────────────────────────────────────────────────────────
+NOTIFY pgrst, 'reload schema';

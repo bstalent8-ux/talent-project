@@ -15,6 +15,7 @@ import { dynamicProfileRepository } from "../repositories/dynamic-profile.reposi
 import { ProfileError } from "../errors/profile-error";
 import { buildFieldSchema } from "../validation/build-schema";
 import { SECTION_RENDERER_KEYS } from "../validation/config-schemas";
+import { normalizeLayoutArray } from "../content/layout-entries";
 import type {
   Bilingual,
   DynamicFieldDTO,
@@ -150,11 +151,10 @@ export const previewService = {
 
     const layoutRow = await dynamicProfileRepository.findLayout(profileTypeId, variant, true);
     const rawLayout = (layoutRow?.layout ?? {}) as Record<string, unknown>;
-    const asKeys = (value: unknown): string[] => (Array.isArray(value) ? value.map(String) : []);
 
     const layout: ProfileLayoutDTO | null =
       layoutRow && layoutRow.is_active
-        ? { main: asKeys(rawLayout.main), sidebar: asKeys(rawLayout.sidebar) }
+        ? { main: normalizeLayoutArray(rawLayout.main), sidebar: normalizeLayoutArray(rawLayout.sidebar) }
         : null;
 
     const diagnostics: PreviewDiagnostic[] = [];
@@ -265,7 +265,7 @@ export const previewService = {
         allSections.filter((section) => !section.is_enabled).map((section) => section.key),
       );
 
-      for (const key of [...layout!.main, ...layout!.sidebar]) {
+      for (const key of [...layout!.main, ...layout!.sidebar].map((entry) => entry.key)) {
         if (enabledByKey.has(key)) continue;
 
         diagnostics.push(

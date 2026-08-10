@@ -17,7 +17,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import AdminShell from "@/components/admin/AdminShell";
 import { useSite } from "@/contexts/SiteContext";
-import { LAYOUT_VARIANTS, type LayoutVariant } from "@/features/profiles/validation/config-schemas";
+import { LAYOUT_VARIANTS, LAYOUT_WIDTHS, type LayoutVariant, type LayoutWidth } from "@/features/profiles/validation/config-schemas";
+import { normalizeLayoutArray, type LayoutEntry } from "@/features/profiles/content/layout-entries";
 import type { ProfileTypeSummary } from "@/features/profiles/services/profile-config.service";
 import type { RawProfileLayout, RawProfileSection } from "@/features/profiles/types/raw";
 import styles from "../../../../../packages/_components/AdminPackages.module.css";
@@ -26,14 +27,13 @@ import { requestJson } from "../../../../_components/config-api";
 type Slot = "main" | "sidebar";
 
 interface SlotState {
-  main:    string[];
-  sidebar: string[];
+  main:    LayoutEntry[];
+  sidebar: LayoutEntry[];
 }
 
 function readSlots(layout: RawProfileLayout | null): SlotState {
   const raw = (layout?.layout ?? {}) as Record<string, unknown>;
-  const asKeys = (value: unknown): string[] => (Array.isArray(value) ? value.map(String) : []);
-  return { main: asKeys(raw.main), sidebar: asKeys(raw.sidebar) };
+  return { main: normalizeLayoutArray(raw.main), sidebar: normalizeLayoutArray(raw.sidebar) };
 }
 
 interface Props {
@@ -75,7 +75,10 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
    * A key stored in the layout whose section has since been disabled or deleted
    * simply will not resolve — it is surfaced as "unknown" rather than hidden.
    */
-  const placed = useMemo(() => new Set([...slots.main, ...slots.sidebar]), [slots]);
+  const placed = useMemo(
+    () => new Set([...slots.main, ...slots.sidebar].map((entry) => entry.key)),
+    [slots],
+  );
   const available = useMemo(
     () => enabledSections.filter((section) => !placed.has(section.key)),
     [enabledSections, placed],
@@ -107,6 +110,13 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
     toMain:       ar ? "→ الرئيسي" : "→ Main",
     moveUp:       ar ? "تحريك لأعلى" : "Move up",
     moveDown:     ar ? "تحريك لأسفل" : "Move down",
+    width:        ar ? "العرض" : "Width",
+    widthLabel: {
+      full:       ar ? "كامل" : "Full",
+      half:       ar ? "نصف" : "Half",
+      third:      ar ? "ثلث" : "Third",
+      two_thirds: ar ? "ثلثان" : "Two thirds",
+    } as Record<LayoutWidth, string>,
     save:         ar ? "حفظ التخطيط" : "Save layout",
     create:       ar ? "إنشاء التخطيط" : "Create layout",
     saving:       ar ? "جاري الحفظ..." : "Saving...",
@@ -122,8 +132,8 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
       ? "مفاتيح في التخطيط لا تطابق قسماً مفعّلاً — أزلها قبل الحفظ."
       : "Layout keys that match no enabled section — remove them before saving.",
     orderingNote: ar
-      ? "التخطيط يخزّن الترتيب فقط: مصفوفتان من مفاتيح الأقسام. لا توجد مكوّنات أو أنماط هنا."
-      : "A layout stores ordering only: two arrays of section keys. No components, no styles.",
+      ? "التخطيط يخزّن الترتيب والعرض فقط. لا توجد مكوّنات أو أنماط CSS حرة هنا — العرض من قائمة مغلقة فقط."
+      : "A layout stores ordering and width only. No components, no free-form CSS — width is a closed list.",
     applyNote:    ar
       ? "اختياري: ينسخ ترتيب العمود الرئيسي إلى display_order في صفحة الأقسام."
       : "Optional: copies the main column order into display_order on the sections screen.",
@@ -164,9 +174,9 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
     const to: Slot = from === "main" ? "sidebar" : "main";
     setSlots((current) => {
       const source = [...current[from]];
-      const [key] = source.splice(index, 1);
-      if (!key) return current;
-      return { ...current, [from]: source, [to]: [...current[to], key] };
+      const [entry] = source.splice(index, 1);
+      if (!entry) return current;
+      return { ...current, [from]: source, [to]: [...current[to], entry] };
     });
     setMessage(null);
   }
@@ -178,8 +188,22 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
 
   function addToSlot(key: string, slot: Slot) {
     setSlots((current) =>
-      placed.has(key) ? current : { ...current, [slot]: [...current[slot], key] },
+      placed.has(key) ? current : { ...current, [slot]: [...current[slot], { key, width: "full" as LayoutWidth }] },
     );
+    setMessage(null);
+  }
+
+  /** Width only has visible effect in the main column — see WIDTH_BASIS in
+   *  DynamicSectionRenderer.tsx — but is stored either way for forward
+   *  compatibility if the sidebar ever gains its own sub-columns. */
+  function setEntryWidth(slot: Slot, index: number, width: LayoutWidth) {
+    setSlots((current) => {
+      const list = [...current[slot]];
+      const entry = list[index];
+      if (!entry) return current;
+      list[index] = { ...entry, width };
+      return { ...current, [slot]: list };
+    });
     setMessage(null);
   }
 
@@ -221,7 +245,7 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
     setMessage(null);
     try {
       const ordered = [...slots.main, ...slots.sidebar]
-        .map((key) => sectionByKey[key])
+        .map((entry) => sectionByKey[entry.key])
         .filter(Boolean);
 
       if (ordered.length === 0) return;
@@ -248,19 +272,23 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
 
   function renderSlot(slot: Slot) {
     const list = slots[slot];
+    // Width only takes visual effect in the main column — see WIDTH_BASIS in
+    // DynamicSectionRenderer.tsx — so the control is offered there only.
+    const showWidth = slot === "main";
     return (
       <div className={styles.field}>
         <label>{slot === "main" ? tx.main : tx.sidebar}</label>
         <div className={styles.rowList}>
           {list.length === 0 ? (
             <p className={styles.muted}>{tx.emptySlot}</p>
-          ) : list.map((key, index) => {
+          ) : list.map((entry, index) => {
+            const key = entry.key;
             const known = Boolean(sectionByKey[key]);
             return (
               <div
                 className={styles.draftRow}
                 key={`${slot}-${key}`}
-                style={{ gridTemplateColumns: "1fr auto auto auto auto" }}
+                style={{ gridTemplateColumns: showWidth ? "1fr auto auto auto auto auto" : "1fr auto auto auto auto" }}
               >
                 <div>
                   <strong style={{ display: "block", fontSize: "var(--text-sm)" }}>{label(key)}</strong>
@@ -273,6 +301,19 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
                     )}
                   </span>
                 </div>
+                {showWidth ? (
+                  <select
+                    aria-label={tx.width}
+                    disabled={saving}
+                    title={tx.width}
+                    value={entry.width}
+                    onChange={(event) => setEntryWidth(slot, index, event.target.value as LayoutWidth)}
+                  >
+                    {LAYOUT_WIDTHS.map((width) => (
+                      <option key={width} value={width}>{tx.widthLabel[width]}</option>
+                    ))}
+                  </select>
+                ) : null}
                 <button
                   aria-label={tx.moveUp}
                   className={styles.iconButton}

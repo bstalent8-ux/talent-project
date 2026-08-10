@@ -13,11 +13,11 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
   const { dark, toggleMode, lang, toggleLang } = useSite();
   const [search, setSearch] = useState("");
 
-  const BG     = dark ? "#090e1a" : "#ffffff";
-  const BORDER = dark ? "#1e293b" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const INPUT  = dark ? "#0d1527" : "#f1f5f9";
+  const BG     = "var(--bg-surface)";
+  const BORDER = "var(--border-subtle)";
+  const TEXT   = "var(--text-primary)";
+  const MUTED  = "var(--text-muted)";
+  const INPUT  = "var(--bg-card-muted)";
   const ar     = lang === "ar";
 
   const iconBtn = (onClick: () => void, child: React.ReactNode, tip: string) => (
@@ -116,14 +116,6 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
           <Bell size={17} />
         </Link>
 
-        {/* <div style={{
-          width: 34, height: 34, borderRadius: "50%",
-          backgroundColor: "#00D26A22", border: "2px solid #00D26A44",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: "#00D26A", fontSize: 13, fontWeight: 800, cursor: "pointer", flexShrink: 0,
-        }}>
-          A
-        </div> */}
       </div>
 
       <style>{`

@@ -149,6 +149,25 @@ BEGIN
   END IF;
 END $$;
 
+-- ─── Verification: functions exist ───────────────────────────────────────────
+SELECT routine_name, security_type
+  FROM information_schema.routines
+ WHERE routine_schema = 'public'
+   AND routine_name IN ('sync_profile_type_from_role', 'sync_booking_provider');
+
+-- ─── Verification: triggers exist and are enabled ────────────────────────────
+-- tgenabled = 'O' means origin/enabled (normal state).
+SELECT c.relname AS table_name, t.tgname AS trigger_name, t.tgenabled
+  FROM pg_trigger t
+  JOIN pg_class c ON c.oid = t.tgrelid
+ WHERE NOT t.tgisinternal
+   AND t.tgname IN ('trg_sync_profile_type', 'trg_sync_booking_provider');
+
+-- ─── Verification: restate the gate this file already enforces ──────────────
+SELECT count(*) AS drift_must_be_zero FROM public.booking_provider_drift;
+SELECT count(*) AS unmapped_must_be_zero
+  FROM public.profiles WHERE profile_type_id IS NULL AND role::text <> 'admin';
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- POST-DEPLOY SMOKE TEST — run manually, in a transaction you ROLL BACK.
 -- Proves an unmodified legacy write still produces correct shadow columns.

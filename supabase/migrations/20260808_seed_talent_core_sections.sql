@@ -165,7 +165,7 @@ ON CONFLICT (profile_type_id, key) DO UPDATE
 INSERT INTO public.profile_layouts (profile_type_id, variant, layout)
 SELECT t.id, 'public',
   '{"main":["portfolio","experience","packages","usage_addons","equipment","awards"],
-    "sidebar":["performance","reviews","brands","trust"]}'::jsonb
+    "sidebar":["bio","performance","reviews","brands","trust"]}'::jsonb
 FROM public.profile_types t WHERE t.slug = 'talent'
 ON CONFLICT (profile_type_id, variant) DO UPDATE SET layout = EXCLUDED.layout;
 

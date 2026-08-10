@@ -84,6 +84,10 @@ export default function ProfileTypesClient({ initialTypes }: { initialTypes: Pro
     profiles:     ar ? "ملف" : "profiles",
     providerOk:   ar ? "المزوّد مسجّل" : "Provider registered",
     providerNone: ar ? "لا يوجد مزوّد — لا يمكن التفعيل" : "No provider — cannot be activated",
+    generic:      ar ? "عام — يعمل بدون كود" : "Generic — works with no code",
+    genericNote:  ar
+      ? "لا يوجد جدول أساسي مُهيكل لهذا النوع، فهو يُعرض بالكامل عبر الحقول الديناميكية دون الحاجة لمزوّد مكتوب بالكود. غير قابل للحجز حالياً."
+      : "This type has no typed core table, so it renders entirely through dynamic fields with no hardcoded provider. Not bookable yet.",
     cacheNote:    ar
       ? "تظهر التغييرات لجميع المستخدمين خلال 5 دقائق."
       : "Changes appear for all users within 5 minutes.",
@@ -212,7 +216,7 @@ export default function ProfileTypesClient({ initialTypes }: { initialTypes: Pro
                 </Link>
                 <button
                   className={selected.is_active ? styles.dangerButton : styles.secondaryButton}
-                  disabled={saving || (!selected.is_active && !selected.providerRegistered)}
+                  disabled={saving || (!selected.is_active && !selected.providerRegistered && !selected.genericEligible)}
                   type="button"
                   onClick={() => setActive(selected, !selected.is_active)}
                 >
@@ -243,11 +247,15 @@ export default function ProfileTypesClient({ initialTypes }: { initialTypes: Pro
                 </div>
                 <div className={styles.field}>
                   <label>&nbsp;</label>
-                  <span className={`${styles.pill} ${selected.providerRegistered ? styles.pillActive : ""}`}>
-                    {selected.providerRegistered ? tx.providerOk : tx.providerNone}
+                  <span className={`${styles.pill} ${selected.providerRegistered || selected.genericEligible ? styles.pillActive : ""}`}>
+                    {selected.providerRegistered ? tx.providerOk : selected.genericEligible ? tx.generic : tx.providerNone}
                   </span>
                 </div>
               </div>
+
+              {!selected.providerRegistered && selected.genericEligible ? (
+                <p className={styles.muted}>{tx.genericNote}</p>
+              ) : null}
 
               <p className={styles.muted}>{tx.readOnly}</p>
 
@@ -307,7 +315,7 @@ export default function ProfileTypesClient({ initialTypes }: { initialTypes: Pro
                 <label className={styles.checkboxLabel}>
                   <input
                     checked={form.is_active}
-                    disabled={!selected.providerRegistered}
+                    disabled={!selected.providerRegistered && !selected.genericEligible}
                     type="checkbox"
                     onChange={(event) => setForm((current) => ({ ...current, is_active: event.target.checked }))}
                   />
@@ -324,7 +332,7 @@ export default function ProfileTypesClient({ initialTypes }: { initialTypes: Pro
                 </label>
               </div>
 
-              {!selected.providerRegistered ? (
+              {!selected.providerRegistered && !selected.genericEligible ? (
                 <div className={`${styles.status} ${styles.error}`} role="status">
                   {tx.providerNone}
                 </div>

@@ -16,9 +16,29 @@ product
 The core loop is app UI — `/explore`, `/talent/[handle]`, `/profile/me`, `/bookings`, `/chat`, and the
 `(admin)` back-office. Design serves the task: the user is mid-workflow, and consistency beats surprise.
 
-The marketing surfaces (`/home`, `/become-talent`, `/brands`, `/about`, `/blog`) are the deliberate
-exception and may be worked in the **brand** register — bigger typography, scroll-driven sections,
-conversion-first. Name the register explicitly when working on those pages; everything else defaults to product.
+**As of the Stage 1 UI-consistency work, the Home Page is no longer treated as an isolated visual
+exception — it is the canonical source for the product's design tokens (teal `#0F766E` primary, gold
+`#D7A84F` secondary; see `app/globals.css` and DESIGN.md).** Every surface — marketing, app UI, and
+admin — shares the same colours, typography, radii, and component language. What differs by surface
+is **density and pacing**, not identity:
+- Marketing surfaces (`/home`, `/explore`, `/become-talent`, `/brands`, `/about`, `/blog`) may still
+  use bigger display typography, scroll-driven sections, and a conversion-first layout rhythm.
+- The `(admin)` back-office stays denser and more utilitarian — tighter padding, smaller type steps,
+  data-table-first layout, a permanently-dark navigation rail — but reads unmistakably as the same
+  product, not a different one copied into a dashboard.
+- Every other app-UI surface (`/talent/[handle]`, `/profile/me`, `/bookings`, `/chat`, auth) uses
+  standard product density.
+
+This replaces the old framing where `/home` used a separate "brand register." Name the surface
+you're working on (marketing pacing vs. standard vs. admin-dense) rather than a separate register —
+the visual language itself is now one system everywhere.
+
+**Migration note:** a large share of existing components (talent/brand public profile, `/profile/me`,
+bookings, and most admin pages) still hardcode an older neon-green (`#00D26A`) + bright-gold
+(`#FFB800`/`#F4B740`) palette inline, predating this change. That is tracked, staged migration work
+(Stage 2+ of the UI-consistency effort), not a second intentional design direction — see DESIGN.md
+§2's "Superseded, not deprecated-and-dead" note. New work must use the canonical tokens; do not add
+new neon-green literals anywhere.
 
 ## Platform
 
@@ -244,65 +264,54 @@ regardless of how well executed it is.
 
 ## 9. Color System
 
+**Canonical as of Stage 1 of the UI-consistency work. See DESIGN.md §2 for the full rationale and
+named rules — this section is the quick-reference table.**
+
 ### Design tokens (`app/globals.css`, `:root`)
 
 | Token | Hex | Role |
 |---|---|---|
-| `--color-teal` | `#00C9B1` | Primary action / success |
-| `--color-blue` | `#1565C0` | Trust / links / secondary brand |
-| `--color-orange` | `#FF6B2B` | CTA / alerts / attention |
-| `--color-purple` | `#8B2FC9` | Premium / creative / highlight |
-| `--color-gold` | `#FFB800` | Ratings / badges / VIP / featured |
+| `--color-primary` | `#0F766E` | The one action colour — primary buttons, active states, scrollbar |
+| `--color-primary-strong` | `#0B5F59` | Hover/pressed state of a primary fill |
+| `--color-secondary` | `#D7A84F` | Earned status — ratings, verification, featured; also the `/login`/`/register` CTA |
+| `--color-secondary-strong` | `#B98422` | Hover/pressed state of a secondary fill |
+| `--color-accent` | `#16A3A3` | Narrow secondary emphasis (glows, gradients) — never a primary action fill |
+| `--color-success` / `--color-warning` / `--color-error` / `--color-info` | `#1EA672` / `#D99822` / `#DF3F4D` / `#3A82F6` | Booking/moderation/validation states — distinct from brand teal/gold |
 
-Each accent has `-light`, `-dark`, and `-glow` variants (`rgba(..., 0.25)`) used for hover shadows.
-
-### The colours actually used in components
-The component layer has converged on a **neon-green + gold** pairing that is *not* in the token file.
-By usage count across `app/` and `components/`:
-
-| Hex | Uses | Meaning in practice |
-|---|---:|---|
-| `#00D26A` | ~130 | **The de-facto primary** — buttons, active states, success, scrollbar |
-| `#FFB800` | ~45 | Gold — ratings, badges, "premium" |
-| `#F4B740` | ~29 | Softer gold variant (profile pages) |
-| `#00C9B1` | ~11 | Token teal — legacy/decorative |
-| `#FF6B2B` | ~9 | Orange CTA |
-| `#8B2FC9` | ~9 | Purple premium |
-| `#1565C0` | ~3 | Blue |
-
-> ⚠️ **Known inconsistency:** `#00D26A` (component green) and `--color-teal` `#00C9B1` (token) are two
-> different primaries living side by side. New work should use **`#00D26A`** for primary actions to
-> match the majority of the UI, and this divergence should eventually be reconciled into the tokens.
+Legacy aliases (`--color-teal`, `--color-gold`, `--bg-base`, `--bg-elevated`, `--bg-border`) still
+exist in `globals.css` and now point at these canonical values — they exist for components not yet
+migrated to the semantic names directly, not as a second palette.
 
 ### Surfaces
 
-**Dark mode** (`[data-theme="dark"]`, and the `:root` default)
+**Dark mode** (`:root` default, and `[data-theme="dark"]` re-affirms it)
 | Token | Hex |
 |---|---|
-| `--bg-base` | `#050B12` (an earlier `#030812` is also declared) |
-| `--bg-surface` | `#090e1a` |
-| `--bg-card` | `#0d1527` |
-| `--bg-elevated` | `#111c35` |
-| `--bg-border` | `#1e293b` |
-| `--text-primary` | `#f1f5f9` |
-| `--text-secondary` | `#94a3b8` |
-| `--text-muted` | `#475569` |
-
-Component-level dark values commonly used: card `#0D1623`, surface `#0A121C`,
-muted text `#A8B3C2`, border `rgba(0,255,163,0.15)`.
+| `--bg-page` | `#070B10` |
+| `--bg-surface` | `#101720` |
+| `--bg-card` | `#141D27` |
+| `--bg-card-muted` | `#192431` |
+| `--text-primary` | `#F7FAFC` |
+| `--text-secondary` | `#C4CCD6` |
+| `--text-muted` | `#8996A5` |
 
 **Light mode** (`[data-theme="light"]`)
 | Token | Hex |
 |---|---|
-| `--bg-base` | `#f1f5f9` |
-| `--bg-surface` / `--bg-card` | `#ffffff` |
-| `--bg-elevated` | `#e2e8f0` |
-| `--bg-border` | `#cbd5e1` |
-| `--text-primary` | `#0f172a` |
-| `--text-secondary` | `#475569` |
-| `--text-muted` | `#64748b` |
+| `--bg-page` | `#F7F8F8` |
+| `--bg-surface` / `--bg-card` | `#FFFFFF` |
+| `--bg-card-muted` | `#F1F4F5` |
+| `--text-primary` | `#101820` |
+| `--text-secondary` | `#40505F` |
+| `--text-muted` | `#6C7A86` |
 
-Accent glows are reduced to ~10% opacity in light mode so the neon reads as accent, not glare.
+### Migration status
+Home Page, `/explore`, `/login`, `/register`, and the shared navbar/footer are fully on these tokens
+— no hardcoded literals. `components/admin/**`'s shared primitives (AdminSidebar, AdminTopbar,
+StatusBadge, DashboardCard, Pagination, ConfirmationModal, EmptyState, LoadingSkeleton) were
+retargeted in Stage 1. Talent/brand public profile, `/profile/me`, and booking-detail screens still
+hardcode the old `#00D26A`/`#FFB800`/`#F4B740` palette inline — Stage 2 work, tracked, not a second
+intentional direction.
 
 ---
 

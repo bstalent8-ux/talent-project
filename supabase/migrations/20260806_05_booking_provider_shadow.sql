@@ -163,3 +163,31 @@ BEGIN
       'booking_provider_drift returned % rows immediately after backfill. Do NOT proceed. Inspect: SELECT * FROM public.booking_provider_drift;', drift;
   END IF;
 END $$;
+
+-- ─── Verification: shadow columns exist on bookings ──────────────────────────
+SELECT column_name, data_type, is_nullable
+  FROM information_schema.columns
+ WHERE table_schema = 'public'
+   AND table_name   = 'bookings'
+   AND column_name IN ('provider_type', 'provider_profile_id', 'provider_user_id');
+
+-- ─── Verification: view exists ────────────────────────────────────────────────
+SELECT to_regclass('public.booking_provider_drift') AS drift_view;
+
+-- ─── Verification: the REVOKE ALL on the view actually took (given this
+-- project's default privileges grant ALL automatically on new objects,
+-- confirmed by the 20260811 hardening migration) ─────────────────────────────
+-- Expect ZERO rows for anon/authenticated. service_role rows are expected and correct.
+SELECT table_name, grantee, privilege_type
+  FROM information_schema.role_table_grants
+ WHERE table_schema = 'public'
+   AND table_name = 'booking_provider_drift'
+ ORDER BY grantee, privilege_type;
+
+-- ─── PostgREST cache ─────────────────────────────────────────────────────────
+NOTIFY pgrst, 'reload schema';
+
+-- Post-NOTIFY PostgREST-side checks (service-role REST):
+--   GET /booking_provider_drift?select=id&limit=1  -> expect 200, empty array
+-- Anon-role check (expected to fail, this is an ops-only view):
+--   GET /booking_provider_drift?select=id&limit=1  with anon key -> expect 401/403

@@ -15,6 +15,7 @@ import "server-only";
 import { profileRepository } from "../repositories/profile.repository";
 import { dynamicProfileRepository } from "../repositories/dynamic-profile.repository";
 import { validateFieldValue } from "../validation/build-schema";
+import { normalizeLayoutArray } from "../content/layout-entries";
 import type {
   Bilingual,
   DynamicFieldDTO,
@@ -190,11 +191,12 @@ export const dynamicProfileService = {
     const schema = await this.getSchemaBySlug(typeSlug);
     const raw = (schema?.layout?.layout ?? {}) as Record<string, unknown>;
 
-    const asKeys = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
-
     // Unknown section keys are left in place; the renderer skips them. Dropping
-    // them here would hide a config mistake instead of surfacing it.
-    return { main: asKeys(raw.main), sidebar: asKeys(raw.sidebar) };
+    // them here would hide a config mistake instead of surfacing it. Each
+    // entry is normalized to { key, width } regardless of whether the stored
+    // row used the legacy plain-string shape or the Stage 1 object shape —
+    // see features/profiles/content/layout-entries.ts.
+    return { main: normalizeLayoutArray(raw.main), sidebar: normalizeLayoutArray(raw.sidebar) };
   },
 
   /**

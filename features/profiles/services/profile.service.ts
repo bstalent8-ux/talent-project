@@ -13,6 +13,7 @@ import "server-only";
 
 import { ProfileError } from "../errors/profile-error";
 import { providerRegistry } from "../providers/registry";
+import { createGenericProvider } from "../providers/generic.provider";
 import { profileRepository, type IdentityRow } from "../repositories/profile.repository";
 import { providerRefRepository } from "../repositories/provider-ref.repository";
 import { dynamicProfileService } from "./dynamic-profile.service";
@@ -152,7 +153,21 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
     // used as a moderation-status oracle.
     if (!typeSlug) throw ProfileError.notFound({ profileId: identity.profile.id, reason: "no profile type" });
 
-    const provider = deps.registry.resolve(typeSlug);
+    // Talent and brand ALWAYS win here — the registry lookup is unchanged and
+    // tried first. Only when nothing is registered for this slug do we ask
+    // whether the type is meant to be generic: `core_table IS NULL` is the
+    // DB-level signal profileConfigService.createType() sets on every
+    // admin-created type today. A type with a non-null core_table but no
+    // registered provider is a real misconfiguration and must still throw —
+    // silently generic-ifying it would hide a broken deployment.
+    const provider = deps.registry.hasProvider(typeSlug)
+      ? deps.registry.resolve(typeSlug)
+      : identity.type && identity.type.core_table === null
+        ? createGenericProvider(identity.type)
+        : null;
+
+    if (!provider) throw ProfileError.invalidProfileType(typeSlug);
+
     return { identity, typeSlug, provider };
   }
 

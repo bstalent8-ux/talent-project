@@ -27,6 +27,11 @@
   --text-secondary: #c4ccd6;
   --text-muted: #8996a5;
   --text-inverse: #081016;
+  /* Text on a solid --color-primary fill. Deliberately NOT --text-inverse:
+     that token flips with the theme (near-black in dark mode), but the teal
+     fill itself does not flip, so it needs one fixed ink colour in both
+     modes. White clears 5.47:1 on #0f766e. */
+  --color-primary-ink: #ffffff;
 
   --border-subtle: rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.18);

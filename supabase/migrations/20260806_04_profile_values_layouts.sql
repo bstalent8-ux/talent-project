@@ -91,6 +91,25 @@ CREATE TRIGGER set_profile_layouts_updated_at
   BEFORE UPDATE ON public.profile_layouts
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+-- ─── Grants ──────────────────────────────────────────────────────────────────
+-- Explicit, same reason as 20260806_01/03: this project's default privileges
+-- do not auto-apply to new public tables.
+--
+-- profile_layouts is ordering config only (no owner-gated rows), so it gets
+-- the same open grant as profile_types/profile_sections/profile_fields.
+--
+-- profile_values is different and DELIBERATELY narrower: it is the only V2
+-- table holding real user data, and 20260806_07_dynamic_profile_rls.sql
+-- already grants anon/authenticated SELECT on it in the SAME file that
+-- enables its visibility-gated RLS policies (public/authenticated/owner/admin
+-- per section). Granting anon/authenticated here, before RLS exists, would be
+-- unrestricted read access to every profile's dynamic values with zero row
+-- filtering. service_role is granted now because the app already reads this
+-- table exclusively through adminClient (server-only) — nothing today queries
+-- it as anon/authenticated.
+GRANT SELECT ON public.profile_layouts TO anon, authenticated, service_role;
+GRANT SELECT ON public.profile_values  TO service_role;
+
 -- ─── Verification ────────────────────────────────────────────────────────────
 DO $$
 BEGIN
@@ -100,3 +119,47 @@ BEGIN
   END IF;
   RAISE NOTICE 'OK 20260806_04: profile_values + profile_layouts created';
 END $$;
+
+-- ─── Verification: table existence (PostgreSQL ground truth) ────────────────
+SELECT to_regclass('public.profile_values')  AS profile_values_table,
+       to_regclass('public.profile_layouts') AS profile_layouts_table;
+
+SELECT schemaname, tablename
+  FROM pg_tables
+ WHERE schemaname = 'public'
+   AND tablename IN ('profile_values', 'profile_layouts');
+
+-- ─── Verification: FK chain ───────────────────────────────────────────────────
+SELECT
+  tc.table_name        AS child_table,
+  kcu.column_name       AS fk_column,
+  ccu.table_name         AS references_table,
+  ccu.column_name        AS references_column
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu
+  ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+JOIN information_schema.constraint_column_usage ccu
+  ON tc.constraint_name = ccu.constraint_name AND tc.table_schema = ccu.table_schema
+WHERE tc.constraint_type = 'FOREIGN KEY'
+  AND tc.table_schema = 'public'
+  AND tc.table_name IN ('profile_values', 'profile_layouts')
+ORDER BY tc.table_name;
+
+-- ─── Verification: grant scope is correct (values narrower than layouts) ────
+SELECT table_name, grantee, privilege_type
+  FROM information_schema.role_table_grants
+ WHERE table_schema = 'public'
+   AND table_name IN ('profile_values', 'profile_layouts')
+   AND grantee IN ('anon', 'authenticated', 'service_role')
+ ORDER BY table_name, grantee;
+
+-- ─── PostgREST cache ─────────────────────────────────────────────────────────
+NOTIFY pgrst, 'reload schema';
+
+-- Post-NOTIFY PostgREST-side checks (service-role REST):
+--   GET /profile_layouts?select=id&limit=1  -> expect 200 (empty until 08 seeds it)
+--   GET /profile_values?select=id&limit=1   -> expect 200 (empty, no values written yet)
+-- Anon-role check (expected to differ between the two tables):
+--   GET /profile_layouts?select=id&limit=1  with anon key -> expect 200
+--   GET /profile_values?select=id&limit=1   with anon key -> expect 401/403 until
+--     migration 07 grants + RLS land. That is CORRECT, not a bug.

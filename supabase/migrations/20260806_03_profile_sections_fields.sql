@@ -151,6 +151,17 @@ CREATE TRIGGER set_profile_fields_updated_at
   BEFORE UPDATE ON public.profile_fields
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+-- ─── Grants ──────────────────────────────────────────────────────────────────
+-- Explicit, same reason as 20260806_01: this project's default privileges do
+-- not auto-apply to new public tables, which left profile_types invisible to
+-- PostgREST (PGRST205) after creation until a GRANT was added by hand.
+-- RLS for these two tables lands in 20260806_07 (they depend on profile_layouts
+-- and profile_values existing first) — until then they are config-only, no
+-- user data, so an open SELECT grant carries the same exposure as profile_types
+-- had before its own RLS policy, and none after.
+GRANT SELECT ON public.profile_sections TO anon, authenticated, service_role;
+GRANT SELECT ON public.profile_fields   TO anon, authenticated, service_role;
+
 -- ─── Verification ────────────────────────────────────────────────────────────
 DO $$
 BEGIN
@@ -160,3 +171,37 @@ BEGIN
   END IF;
   RAISE NOTICE 'OK 20260806_03: profile_sections + profile_fields created';
 END $$;
+
+-- ─── Verification: table existence (PostgreSQL ground truth) ────────────────
+SELECT to_regclass('public.profile_sections') AS profile_sections_table,
+       to_regclass('public.profile_fields')   AS profile_fields_table;
+
+SELECT schemaname, tablename
+  FROM pg_tables
+ WHERE schemaname = 'public'
+   AND tablename IN ('profile_sections', 'profile_fields');
+
+-- ─── Verification: FK chain (sections -> profile_types, fields -> sections) ──
+SELECT
+  tc.table_name        AS child_table,
+  kcu.column_name       AS fk_column,
+  ccu.table_name         AS references_table,
+  ccu.column_name        AS references_column
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu
+  ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+JOIN information_schema.constraint_column_usage ccu
+  ON tc.constraint_name = ccu.constraint_name AND tc.table_schema = ccu.table_schema
+WHERE tc.constraint_type = 'FOREIGN KEY'
+  AND tc.table_schema = 'public'
+  AND tc.table_name IN ('profile_sections', 'profile_fields')
+ORDER BY tc.table_name;
+
+-- ─── PostgREST cache ─────────────────────────────────────────────────────────
+NOTIFY pgrst, 'reload schema';
+
+-- Post-NOTIFY PostgREST-side check (run via service-role REST, not SQL Editor):
+--   GET /profile_sections?select=id,key&limit=1   -> expect 200, not PGRST205
+--   GET /profile_fields?select=id,key&limit=1     -> expect 200, not PGRST205
+-- Both tables are empty until 20260806_08 seeds them, so 200 with an empty
+-- array is the correct healthy result at this point in the chain.

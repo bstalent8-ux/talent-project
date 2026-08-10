@@ -10,10 +10,23 @@
 import type { ReactNode } from "react";
 import type { ProfileLayoutDTO, ProfileSectionDTO, PublicProfileDTO } from "@/features/profiles/types/dto";
 import { hasSectionContent } from "@/features/profiles/content/section-content";
+import type { LayoutWidth } from "@/features/profiles/content/layout-entries";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { resolveRenderer, type DynamicLang } from "./registry";
 import { anchorIdFor } from "./anchors";
 import { isInlineCoreKey } from "./adapters/core-keys";
+
+/**
+ * Closed enum → CSS flex-basis, gap-aware. "Do not allow arbitrary CSS" is
+ * enforced by construction: this is the ONLY place a LayoutWidth becomes a
+ * style value, and it can only ever be one of these four strings.
+ */
+const WIDTH_BASIS: Record<LayoutWidth, string> = {
+  full:       "100%",
+  half:       "calc(50% - 0.5rem)",
+  third:      "calc(33.333% - 0.667rem)",
+  two_thirds: "calc(66.666% - 0.334rem)",
+};
 
 /**
  * Core-section renderer, supplied by the caller.
@@ -165,12 +178,20 @@ export function DynamicProfileSections({
 
   const hasLayout = Boolean(layout && (layout.main.length > 0 || layout.sidebar.length > 0));
 
-  const main = hasLayout
-    ? layout!.main.map((key) => byKey[key]).filter(Boolean)
-    : [...visible].sort((a, b) => a.displayOrder - b.displayOrder);
+  // main pairs each section with its configured width; sidebar stays a single
+  // narrow rail and is never subdivided — width only ever applies to the
+  // main column. On mobile every width collapses to full, matching every
+  // other stacking behavior in this component (see `showSidebar` below).
+  const main: Array<{ section: ProfileSectionDTO; width: LayoutWidth }> = hasLayout
+    ? layout!.main
+        .map((entry) => (byKey[entry.key] ? { section: byKey[entry.key], width: entry.width } : null))
+        .filter((entry): entry is { section: ProfileSectionDTO; width: LayoutWidth } => entry !== null)
+    : [...visible]
+        .sort((a, b) => a.displayOrder - b.displayOrder)
+        .map((section) => ({ section, width: "full" as const }));
 
   const sidebar = hasLayout
-    ? layout!.sidebar.map((key) => byKey[key]).filter(Boolean)
+    ? layout!.sidebar.map((entry) => byKey[entry.key]).filter(Boolean)
     : [];
 
   // Chrome keeps the sidebar alive on a profile whose sidebar sections are all
@@ -186,9 +207,14 @@ export function DynamicProfileSections({
         alignItems: "start",
       }}
     >
-      <div style={{ display: "grid", gap: "1rem" }}>
-        {main.map((section) => (
-          <DynamicSectionRenderer core={core} key={section.key} lang={lang} profile={profile} section={section} typeSlug={typeSlug} />
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+        {main.map(({ section, width }) => (
+          <div
+            key={section.key}
+            style={{ flexBasis: isMobile ? "100%" : WIDTH_BASIS[width], flexGrow: 0, minWidth: 0 }}
+          >
+            <DynamicSectionRenderer core={core} lang={lang} profile={profile} section={section} typeSlug={typeSlug} />
+          </div>
         ))}
         {mainFooter}
       </div>

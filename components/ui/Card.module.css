@@ -1,0 +1,32 @@
+/* Flat at rest, per DESIGN.md's Elevation rules — shadow is a hover response,
+   never a default. Border does the separating work. */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-emphasis);
+}
+
+.padded {
+  padding: var(--space-6);
+}
+
+.interactive {
+  cursor: pointer;
+}
+
+.interactive:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 32%, var(--border-subtle));
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.interactive:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}

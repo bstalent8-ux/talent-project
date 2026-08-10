@@ -38,6 +38,16 @@ function conflict(message: string): ProfileError {
   return new ProfileError("CONFLICT", { publicMessage: message });
 }
 
+/**
+ * Stage 0: `core_table IS NULL` is the DB-level signal that a type has no
+ * typed core and resolves through the generic provider — see
+ * features/profiles/providers/generic.provider.ts and resolveContext() in
+ * profile.service.ts, the only two places that read this signal at runtime.
+ */
+function isGenericEligible(type: { core_table: string | null }): boolean {
+  return type.core_table === null;
+}
+
 /** Drops undefined keys so a PATCH never nulls a column it did not mention. */
 function definedOnly(patch: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -53,10 +63,19 @@ function invalidate(slug: string | null | undefined): void {
 }
 
 export interface ProfileTypeSummary extends RawProfileType {
-  /** Is a code provider registered for this slug? */
+  /** Is a HARDCODED code provider (talent, brand, …) registered for this slug? */
   providerRegistered: boolean;
-  /** Does that provider actually support bookings? */
+  /** Does that hardcoded provider actually support bookings? */
   providerBookable:   boolean;
+  /**
+   * Stage 0: true when `core_table IS NULL` — the type has no typed core and
+   * resolves at runtime through the generic provider (createGenericProvider
+   * in features/profiles/providers/generic.provider.ts), with zero
+   * type-specific TypeScript. This is what lets an admin activate a
+   * brand-new type without a code deploy. A generic type is NEVER bookable
+   * (see generic.provider.ts's header for why), independent of this flag.
+   */
+  genericEligible:    boolean;
   /** How many profiles reference this type — drives the delete guard. */
   profileCount:       number;
 }
@@ -79,6 +98,7 @@ export const profileConfigService = {
         ...type,
         providerRegistered: registered,
         providerBookable:   registered ? providerRegistry.resolve(type.slug).meta.bookable : false,
+        genericEligible:    isGenericEligible(type),
         profileCount:       counts[index],
       };
     });
@@ -93,6 +113,7 @@ export const profileConfigService = {
       ...type,
       providerRegistered: registered,
       providerBookable:   registered ? providerRegistry.resolve(type.slug).meta.bookable : false,
+      genericEligible:    isGenericEligible(type),
       profileCount:       await profileTypeRepository.countProfilesUsing(type.id),
     };
   },
@@ -101,22 +122,41 @@ export const profileConfigService = {
    * Guards shared by create and update.
    *
    * The is_active guard is the most important control in this service: a type
-   * with no registered provider would make ProfileService throw
-   * INVALID_PROFILE_TYPE for every profile of that type. `agency` is seeded
-   * inactive for exactly this reason.
+   * with neither a registered provider NOR a generic-eligible core_table would
+   * make ProfileService throw INVALID_PROFILE_TYPE for every profile of that
+   * type. `agency` is seeded inactive for exactly this reason (it has
+   * core_table IS NULL today but predates the generic provider — reactivating
+   * it now would actually work, that's a product decision, not this guard's).
+   *
+   * `core_table` is required here (not derivable from `slug` alone) because on
+   * CREATE it is always null — profileConfigService.createType() never accepts
+   * it from a request — and on UPDATE it must be the EXISTING row's value,
+   * since core_table itself is immutable and absent from the update schema.
    */
-  assertTypeCapabilities(slug: string, patch: { is_active?: boolean; is_bookable?: boolean }): void {
-    const registered = providerRegistry.hasProvider(slug);
+  assertTypeCapabilities(
+    type: { slug: string; core_table: string | null },
+    patch: { is_active?: boolean; is_bookable?: boolean },
+  ): void {
+    const registered = providerRegistry.hasProvider(type.slug);
+    const generic     = isGenericEligible(type);
 
-    if (patch.is_active === true && !registered) {
+    if (patch.is_active === true && !registered && !generic) {
       throw conflict("no provider is registered for this profile type — it cannot be activated");
     }
 
     if (patch.is_bookable === true) {
+      // Stage 0: the booking-creation pipeline (POST /api/bookings/direct)
+      // hard-queries talent_profiles directly, independent of this provider
+      // layer — a generic type could never actually be booked regardless of
+      // this flag. Rejecting it here keeps the flag truthful rather than
+      // letting an admin set something that would silently never apply.
+      if (generic) {
+        throw conflict("generic profile types cannot be marked bookable yet — the booking pipeline requires a typed provider");
+      }
       if (!registered) {
         throw conflict("no provider is registered for this profile type");
       }
-      if (!providerRegistry.resolve(slug).meta.bookable) {
+      if (!providerRegistry.resolve(type.slug).meta.bookable) {
         throw conflict("the provider for this profile type does not support bookings");
       }
     }
@@ -127,10 +167,13 @@ export const profileConfigService = {
       throw conflict("a profile type with this slug already exists");
     }
 
-    this.assertTypeCapabilities(input.slug, input);
+    // core_table is always null on create — never accepted from a request —
+    // so a brand-new type is always generic-eligible under Stage 0.
+    this.assertTypeCapabilities({ slug: input.slug, core_table: null }, input);
 
     // core_table and provider_key are code-owned and never accepted from a
-    // request; a new type starts inactive until its provider ships.
+    // request; a new type starts inactive until an admin turns it on (either
+    // once a hardcoded provider ships, or immediately if it stays generic).
     const created = await profileTypeRepository.insert(
       definedOnly({
         slug:         input.slug,
@@ -160,7 +203,7 @@ export const profileConfigService = {
 
     // slug, core_table and provider_key are immutable — absent from the schema,
     // and never read from the request here either.
-    this.assertTypeCapabilities(before.slug, input);
+    this.assertTypeCapabilities(before, input);
 
     const after = await profileTypeRepository.update(
       id,
@@ -189,7 +232,7 @@ export const profileConfigService = {
     const before = await profileTypeRepository.findById(id);
     if (!before) throw ProfileError.notFound({ profileTypeId: id });
 
-    this.assertTypeCapabilities(before.slug, { is_active: isActive });
+    this.assertTypeCapabilities(before, { is_active: isActive });
 
     const after = await profileTypeRepository.update(id, { is_active: isActive });
 
@@ -545,7 +588,11 @@ export const profileConfigService = {
     const sections = await dynamicProfileRepository.findSectionsByType(profileTypeId, true);
     const enabled  = new Set(sections.filter((s) => s.is_enabled).map((s) => s.key));
 
-    const all = [...input.layout.main, ...input.layout.sidebar];
+    // Each entry is a legacy plain string OR a { key, width } object — layoutSchema
+    // accepts both. Extract the key either way for the uniqueness/existence checks.
+    const all = [...input.layout.main, ...input.layout.sidebar].map((entry) =>
+      typeof entry === "string" ? entry : entry.key,
+    );
 
     const seen = new Set<string>();
     for (const key of all) {

@@ -65,6 +65,28 @@ UPDATE public.profile_layouts l
    AND NOT (COALESCE(l.layout->'main', '[]'::jsonb) @> '["bio"]'::jsonb);
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- 1c. TALENT: drop `bio` from the sidebar if an interim state put it there
+--
+-- An interim correction layered onto 20260806_08 (before this file existed)
+-- placed `bio` in the sidebar slot, since 08 alone shipped no bio placement at
+-- all. Step 1b above is the real fix and puts it in `main`. Without this
+-- statement bio would end up in BOTH slots after 1b runs — duplicate
+-- `#section-about` anchor rendered in two grid columns at once. Guarded so a
+-- rerun, or a DB that never had the interim state, is a no-op either way.
+-- ─────────────────────────────────────────────────────────────────────────────
+UPDATE public.profile_layouts l
+   SET layout = jsonb_set(
+         l.layout,
+         '{sidebar}',
+         (COALESCE(l.layout->'sidebar', '[]'::jsonb) - 'bio')
+       )
+  FROM public.profile_types t
+ WHERE t.id = l.profile_type_id
+   AND t.slug = 'talent'
+   AND l.variant = 'public'
+   AND (COALESCE(l.layout->'sidebar', '[]'::jsonb) @> '["bio"]'::jsonb);
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 2. BRAND: `bio` core section
 --
 -- The brand public page has always rendered profiles.bio as its main body, but
@@ -167,16 +189,24 @@ UPDATE public.brand_profiles b
 -- ─── Verification ────────────────────────────────────────────────────────────
 DO $$
 DECLARE
-  exp_kind      text;
-  brand_bio     integer;
-  missing_rows  integer;
-  status_drift  integer;
-  orphan_keys   integer;
+  exp_kind        text;
+  brand_bio       integer;
+  missing_rows    integer;
+  status_drift    integer;
+  orphan_keys     integer;
+  talent_bio_dupe boolean;
 BEGIN
   SELECT s.kind INTO exp_kind
     FROM public.profile_sections s
     JOIN public.profile_types t ON t.id = s.profile_type_id
    WHERE t.slug = 'talent' AND s.key = 'experience';
+
+  SELECT (COALESCE(l.layout->'main', '[]'::jsonb) @> '["bio"]'::jsonb)
+     AND (COALESCE(l.layout->'sidebar', '[]'::jsonb) @> '["bio"]'::jsonb)
+    INTO talent_bio_dupe
+    FROM public.profile_layouts l
+    JOIN public.profile_types t ON t.id = l.profile_type_id
+   WHERE t.slug = 'talent' AND l.variant = 'public';
 
   SELECT count(*) INTO brand_bio
     FROM public.profile_sections s
@@ -205,11 +235,15 @@ BEGIN
       WHERE s.profile_type_id = l.profile_type_id AND s.key = k.section_key
    );
 
-  RAISE NOTICE 'OK 20260809: experience kind=%, brand bio sections=%, brands missing core row=%, approved-but-pending=%, orphan layout keys=%',
-    exp_kind, brand_bio, missing_rows, status_drift, orphan_keys;
+  RAISE NOTICE 'OK 20260809: experience kind=%, brand bio sections=%, brands missing core row=%, approved-but-pending=%, orphan layout keys=%, talent bio duplicated across slots=%',
+    exp_kind, brand_bio, missing_rows, status_drift, orphan_keys, talent_bio_dupe;
 
   IF exp_kind IS DISTINCT FROM 'core' THEN
     RAISE WARNING 'talent.experience is still % — ExperienceSection will not render', exp_kind;
+  END IF;
+
+  IF talent_bio_dupe THEN
+    RAISE WARNING 'talent bio is present in BOTH main and sidebar — duplicate #section-about anchor';
   END IF;
 
   IF missing_rows > 0 OR status_drift > 0 THEN

@@ -8,6 +8,7 @@
 // /packages and /trusted-brands.
 
 import { z } from "zod";
+import { LAYOUT_WIDTHS } from "../content/layout-entries";
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
@@ -221,23 +222,38 @@ export const reorderSchema = z.object({
 // ─── profile_layouts ──────────────────────────────────────────────────────────
 
 /**
- * Ordering only — arrays of profile_sections.key. No markup, no components.
- * Cross-checking the keys against real, enabled sections needs a DB read and
- * happens in the service.
+ * Ordering + placement only — arrays of profile_sections.key, each optionally
+ * paired with a closed-enum width. No markup, no components, no free-text
+ * CSS. Cross-checking the keys against real, enabled sections needs a DB read
+ * and happens in the service.
+ *
+ * A slot entry accepts EITHER a plain key string (legacy shape, width
+ * defaults to "full") OR a `{ key, width }` object — mirrors
+ * features/profiles/content/layout-entries.ts exactly, so a layout saved
+ * through this schema and one read back through dynamicProfileService.getLayout
+ * agree on every entry.
  */
+const layoutEntry = z.union([
+  slug,
+  z.object({ key: slug, width: z.enum(LAYOUT_WIDTHS).default("full") }),
+]);
+
 export const layoutSchema = z.object({
   variant: z.enum(["public", "edit", "card"]).default("public"),
   /** A deactivated layout is ignored by the renderer, which falls back to
    *  profile_sections.display_order. */
   is_active: z.boolean().default(true),
   layout: z.object({
-    main:    z.array(slug).max(60).default([]),
-    sidebar: z.array(slug).max(60).default([]),
+    main:    z.array(layoutEntry).max(60).default([]),
+    sidebar: z.array(layoutEntry).max(60).default([]),
   }),
 });
 
 export const LAYOUT_VARIANTS = ["public", "edit", "card"] as const;
 export type LayoutVariant = (typeof LAYOUT_VARIANTS)[number];
+
+export { LAYOUT_WIDTHS } from "../content/layout-entries";
+export type { LayoutWidth } from "../content/layout-entries";
 
 // ─── Inferred types ───────────────────────────────────────────────────────────
 

@@ -3,6 +3,7 @@
 // DB error text. Safe to serialize to a client.
 
 import type { DynamicFieldType, ModerationStatus } from "./raw";
+import type { LayoutEntry } from "../content/layout-entries";
 
 export interface Bilingual {
   ar: string;
@@ -67,9 +68,15 @@ export interface ProfileSectionDTO {
   fields:          DynamicFieldDTO[];
 }
 
+/**
+ * Stage 1: each slot is an array of normalized entries (key + width), not raw
+ * strings. A layout with no admin-set width still round-trips — every entry's
+ * `width` defaults to "full" whether the DB row stored a plain key string or
+ * an explicit object. See features/profiles/content/layout-entries.ts.
+ */
 export interface ProfileLayoutDTO {
-  main:    string[];
-  sidebar: string[];
+  main:    LayoutEntry[];
+  sidebar: LayoutEntry[];
 }
 
 // ─── Completion ───────────────────────────────────────────────────────────────
@@ -217,8 +224,20 @@ export interface BrandPrivateCore extends BrandPublicCore {
   profileViews: number;
 }
 
-export type AnyPublicCore  = TalentPublicCore  | BrandPublicCore;
-export type AnyPrivateCore = TalentPrivateCore | BrandPrivateCore;
+/**
+ * Stage 0: the core payload for a profile type with no typed core table
+ * (`profile_types.core_table IS NULL`). Carries nothing — a generic type's
+ * entire content lives in its dynamic sections/fields, never in a typed
+ * column. See features/profiles/providers/generic.provider.ts.
+ */
+export interface GenericPublicCore {
+  kind: "generic";
+}
+
+export type GenericPrivateCore = GenericPublicCore;
+
+export type AnyPublicCore  = TalentPublicCore  | BrandPublicCore  | GenericPublicCore;
+export type AnyPrivateCore = TalentPrivateCore | BrandPrivateCore | GenericPrivateCore;
 
 // ─── Composite ────────────────────────────────────────────────────────────────
 

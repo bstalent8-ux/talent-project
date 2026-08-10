@@ -65,3 +65,48 @@ BEGIN
     RAISE WARNING 'profile_type_id backfill incomplete: % non-admin rows still NULL. Inspect with: SELECT id, role FROM public.profiles WHERE profile_type_id IS NULL AND role::text <> ''admin'';', unmapped;
   END IF;
 END $$;
+
+-- ─── Verification: column exists (PostgreSQL ground truth) ──────────────────
+SELECT column_name, data_type, is_nullable
+  FROM information_schema.columns
+ WHERE table_schema = 'public'
+   AND table_name   = 'profiles'
+   AND column_name  = 'profile_type_id';
+
+-- ─── Verification: FK points exactly to profile_types(id) ───────────────────
+SELECT
+  tc.constraint_name,
+  kcu.column_name        AS fk_column,
+  ccu.table_name          AS references_table,
+  ccu.column_name         AS references_column
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu
+  ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+JOIN information_schema.constraint_column_usage ccu
+  ON tc.constraint_name = ccu.constraint_name AND tc.table_schema = ccu.table_schema
+WHERE tc.constraint_type = 'FOREIGN KEY'
+  AND tc.table_schema = 'public'
+  AND tc.table_name   = 'profiles'
+  AND kcu.column_name = 'profile_type_id';
+
+-- ─── Verification: backfill result by role / profile type ───────────────────
+SELECT p.role, t.slug AS profile_type, count(*) AS n
+  FROM public.profiles p
+  LEFT JOIN public.profile_types t ON t.id = p.profile_type_id
+ GROUP BY p.role, t.slug
+ ORDER BY p.role, t.slug;
+
+-- ─── Verification: no unexpected non-admin NULLs ─────────────────────────────
+-- Expect 0 rows.
+SELECT id, role
+  FROM public.profiles
+ WHERE profile_type_id IS NULL
+   AND role::text <> 'admin';
+
+-- ─── PostgREST cache ─────────────────────────────────────────────────────────
+NOTIFY pgrst, 'reload schema';
+
+-- After the NOTIFY, the PostgREST-side check (run outside SQL Editor, via the
+-- app's service-role REST path) is:
+--   GET /profiles?select=id,handle,profile_types(slug)&limit=1
+-- Expect 200 with a nested profile_types object, not PGRST200/PGRST205.

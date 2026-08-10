@@ -178,3 +178,26 @@ BEGIN
     RAISE EXCEPTION 'expected at least 9 policies, found %', n;
   END IF;
 END $$;
+
+-- ─── Verification: RLS enabled per table ─────────────────────────────────────
+SELECT c.relname AS table_name, c.relrowsecurity AS rls_enabled
+  FROM pg_class c
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+ WHERE n.nspname = 'public'
+   AND c.relname IN ('profile_types','profile_sections','profile_fields','profile_values','profile_layouts')
+ ORDER BY c.relname;
+
+-- ─── Verification: policy list per table ─────────────────────────────────────
+SELECT tablename, policyname, cmd, roles
+  FROM pg_policies
+ WHERE schemaname = 'public'
+   AND tablename IN ('profile_sections','profile_fields','profile_values','profile_layouts')
+ ORDER BY tablename, cmd;
+
+-- ─── Verification: final grant matrix ────────────────────────────────────────
+SELECT table_name, grantee, privilege_type
+  FROM information_schema.role_table_grants
+ WHERE table_schema = 'public'
+   AND table_name IN ('profile_types','profile_sections','profile_fields','profile_values','profile_layouts')
+   AND grantee IN ('anon','authenticated','service_role')
+ ORDER BY table_name, grantee, privilege_type;

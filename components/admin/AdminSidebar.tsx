@@ -102,8 +102,15 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
       .catch(() => {});
   }, []);
 
+  // The sidebar shell is deliberately always dark navy, regardless of
+  // [data-theme] — a fixed nav rail, not a themed surface (same class of
+  // exception as auth's photo hero band). Only the accent/status colours
+  // below come from the canonical token palette.
   const BG = dark ? "#060c18" : "#0f172a";
-  const ACTIVE = "#00D26A";
+  const ACTIVE = "var(--color-primary)";
+  const ACTIVE_TINT = "color-mix(in srgb, var(--color-primary) 15%, transparent)";
+  const DESTRUCTIVE = "color-mix(in srgb, var(--color-error) 80%, white)";
+  const DESTRUCTIVE_HOVER = "color-mix(in srgb, var(--color-error) 8%, transparent)";
   const MUTED = "rgba(255,255,255,0.55)";
   const HOVER = "rgba(255,255,255,0.07)";
 
@@ -196,7 +203,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
                   width: 40,
                   height: 40,
                   borderRadius: "50%",
-                  backgroundColor: "rgba(0,210,106,0.15)",
+                  backgroundColor: ACTIVE_TINT,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -270,7 +277,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
                   padding: collapsed ? "10px 0" : "10px 12px",
                   borderRadius: 10,
                   color: active ? ACTIVE : MUTED,
-                  backgroundColor: active ? "rgba(0,210,106,0.1)" : "transparent",
+                  backgroundColor: active ? ACTIVE_TINT : "transparent",
                   textDecoration: "none",
                   fontSize: 14,
                   fontWeight: active ? 700 : 400,
@@ -303,7 +310,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
               gap: collapsed ? 0 : 12,
               padding: collapsed ? "10px 0" : "10px 12px",
               borderRadius: 10,
-              color: "rgba(239,68,68,0.8)",
+              color: DESTRUCTIVE,
               textDecoration: "none",
               fontSize: 14,
               transition: "all 0.2s",
@@ -311,7 +318,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
               overflow: "hidden",
             }}
             onMouseEnter={(event) => {
-              event.currentTarget.style.backgroundColor = "rgba(239,68,68,0.08)";
+              event.currentTarget.style.backgroundColor = DESTRUCTIVE_HOVER;
             }}
             onMouseLeave={(event) => {
               event.currentTarget.style.backgroundColor = "transparent";
