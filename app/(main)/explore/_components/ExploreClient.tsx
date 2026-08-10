@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   SlidersHorizontal, Camera, UsersRound, Mic2, Sparkles, Clapperboard, LayoutGrid,
   ShieldCheck, Wallet, MessagesSquare, Star, type LucideIcon,
@@ -56,7 +57,11 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
   const { lang, dark } = useSite();
   const ar = lang === "ar";
 
-  const [search,   setSearch]   = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [search,   setSearch]   = useState(() => searchParams.get("q") ?? "");
   const [type,     setType]     = useState("all");
   const [sort,     setSort]     = useState<SortOption>("rating");
   const [minPrice, setMinPrice] = useState<number>(0);
@@ -85,6 +90,26 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
   }, []);
 
   useEffect(() => { setPage(1); }, [search, type, sort, minPrice, maxPrice, verified, sex]);
+
+  // ── URL "q" sync ───────────────────────────────────────
+  // Browser back/forward and hard refresh change the URL under us; mirror
+  // "q" into local state so the existing filter logic below picks it up.
+  useEffect(() => {
+    const q = searchParams.get("q") ?? "";
+    setSearch((prev) => (prev === q ? prev : q));
+  }, [searchParams]);
+
+  // Typing updates local state first (for instant filtering); reflect it
+  // back into the URL so refresh/back-forward/copy-paste stay correct.
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (current === search) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (search) params.set("q", search); else params.delete("q");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   // ── Personalized ranking key ──────────────────────────
   // A brand sees talents in its own category first. This is a ranking bucket

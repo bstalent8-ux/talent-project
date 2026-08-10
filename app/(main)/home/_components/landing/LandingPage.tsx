@@ -1,7 +1,8 @@
 ﻿"use client";
 
-import { type PointerEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, type PointerEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -299,11 +300,20 @@ function SectionHeader({
 
 function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTalents: number; media: DesignMedia }) {
   const heroRef = useRef<HTMLElement | null>(null);
+  const router = useRouter();
+  const [heroSearch, setHeroSearch] = useState("");
   const t = pageCopy[lang];
   const localizedStats = stats.map((item, index) => ({
     ...item,
     value: index === 0 && totalTalents > 0 ? `+${Math.max(totalTalents, 30)}` : item.value,
   }));
+
+  function handleHeroSearchSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = heroSearch.trim();
+    if (!trimmed) return;
+    router.push(`/explore?q=${encodeURIComponent(trimmed)}`);
+  }
 
   function handlePointerMove(event: PointerEvent<HTMLElement>) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -415,10 +425,17 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
             </ButtonLink>
           </motion.div>
 
-          <form className={styles.heroSearch} action="/explore" role="search">
+          <form className={styles.heroSearch} action="/explore" role="search" onSubmit={handleHeroSearchSubmit}>
             <label className={styles.searchField}>
               <Search size={18} aria-hidden="true" />
-              <input name="q" type="search" placeholder={t.searchPlaceholder} aria-label={t.searchPlaceholder} />
+              <input
+                name="q"
+                type="search"
+                value={heroSearch}
+                onChange={(e) => setHeroSearch(e.target.value)}
+                placeholder={t.searchPlaceholder}
+                aria-label={t.searchPlaceholder}
+              />
             </label>
             <div className={styles.searchSelect}>
               <span>{t.searchCategory}</span>
