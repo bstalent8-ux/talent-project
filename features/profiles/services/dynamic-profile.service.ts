@@ -52,6 +52,19 @@ interface SchemaCacheEntry {
 
 const schemaCache = new Map<string, SchemaCacheEntry>();
 
+// Sprint 1 (profile-category-foundation): category-specific layout overrides
+// are cached separately from the per-type schema above — they're a
+// different lookup (findLayoutOverride, not findLayout) and there can be
+// many of them per type (one per category), unlike the single shared
+// layout the schema cache already holds. Empty (no override row yet) is
+// cached too, as `null`, so a category with no override doesn't re-query on
+// every request.
+interface LayoutOverrideCacheEntry {
+  at:     number;
+  layout: RawProfileLayout | null;
+}
+const layoutOverrideCache = new Map<string, LayoutOverrideCacheEntry>();
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function bilingual(ar: string | null, en: string | null, fallback: string): Bilingual {
@@ -67,6 +80,21 @@ function isVisible(visibility: SectionVisibility, viewer: "public" | "authentica
   if (viewer === "owner") return visibility !== "admin";
   if (viewer === "authenticated") return visibility === "public" || visibility === "authenticated";
   return visibility === "public";
+}
+
+/**
+ * Sprint 1 (profile-category-foundation), Option A's core rule: NULL/empty
+ * category_scope = shared by every category of this profile_type (true for
+ * every section today). A non-empty scope is visible only to a profile
+ * whose own category is in it. `category` is the VIEWED profile's category
+ * (null for brand, or a talent with no category set yet) — a scoped section
+ * never shows to a category-less viewer, since it can't know which scope
+ * would apply.
+ */
+function matchesCategory(sectionScope: string[] | null, category: string | null): boolean {
+  if (!sectionScope || sectionScope.length === 0) return true;
+  if (!category) return false;
+  return sectionScope.includes(category);
 }
 
 function toFieldDTO(
@@ -133,8 +161,15 @@ export const dynamicProfileService = {
 
   /** Drops the cached schema. Call after an admin edits sections or fields. */
   invalidateSchema(typeSlug?: string): void {
-    if (typeSlug) schemaCache.delete(typeSlug);
-    else schemaCache.clear();
+    if (typeSlug) {
+      schemaCache.delete(typeSlug);
+      for (const key of layoutOverrideCache.keys()) {
+        if (key.startsWith(`${typeSlug}:`)) layoutOverrideCache.delete(key);
+      }
+    } else {
+      schemaCache.clear();
+      layoutOverrideCache.clear();
+    }
   },
 
   /** Section definitions with empty values — used by provider.getSections(). */
@@ -155,13 +190,20 @@ export const dynamicProfileService = {
   },
 
   /**
-   * Sections populated with this profile's values, filtered by viewer.
-   * Exactly two queries: schema (cached) + values.
+   * Sections populated with this profile's values, filtered by viewer AND
+   * (Sprint 1) by category. Exactly two queries: schema (cached) + values.
+   *
+   * `category` is the viewed profile's talent_profiles.category (null for
+   * brand, or a talent with none set). Filtering happens HERE — the same
+   * place visibility is already filtered — never in a component, per the
+   * audit's §6 instruction to keep category logic in the resolution layer,
+   * not scattered through presentation code.
    */
   async getSectionsForProfile(
     profileId: string,
     typeSlug: string,
     viewer: "public" | "authenticated" | "owner",
+    category: string | null = null,
   ): Promise<ProfileSectionDTO[]> {
     const schema = await this.getSchemaBySlug(typeSlug);
     if (!schema) return [];
@@ -173,6 +215,7 @@ export const dynamicProfileService = {
 
     return schema.sections
       .filter((section) => isVisible(section.visibility, viewer))
+      .filter((section) => matchesCategory(section.category_scope, category))
       .map((section) => ({
         key:             section.key,
         title:           bilingual(section.title_ar, section.title_en, section.title),
@@ -187,9 +230,22 @@ export const dynamicProfileService = {
       }));
   },
 
-  async getLayout(typeSlug: string): Promise<ProfileLayoutDTO> {
+  /**
+   * `category` (Sprint 1): when given and an active override layout exists
+   * for it, the override wins; otherwise falls back to the shared layout —
+   * "shared Talent layout + optional category-specific override" from the
+   * audit's §15.5. The shared layout (via the cached schema) is always
+   * fetched regardless, both because it's already cached and because it's
+   * the fallback target.
+   */
+  async getLayout(typeSlug: string, category: string | null = null): Promise<ProfileLayoutDTO> {
     const schema = await this.getSchemaBySlug(typeSlug);
-    const raw = (schema?.layout?.layout ?? {}) as Record<string, unknown>;
+    let raw = (schema?.layout?.layout ?? {}) as Record<string, unknown>;
+
+    if (category && schema) {
+      const override = await this.getLayoutOverride(schema.typeId, "public", category);
+      if (override?.layout) raw = override.layout as Record<string, unknown>;
+    }
 
     // Unknown section keys are left in place; the renderer skips them. Dropping
     // them here would hide a config mistake instead of surfacing it. Each
@@ -197,6 +253,21 @@ export const dynamicProfileService = {
     // row used the legacy plain-string shape or the Stage 1 object shape —
     // see features/profiles/content/layout-entries.ts.
     return { main: normalizeLayoutArray(raw.main), sidebar: normalizeLayoutArray(raw.sidebar) };
+  },
+
+  /** Cached lookup for a category-specific layout override. Null = none exists (cached too, so a category with no override doesn't re-query every request). */
+  async getLayoutOverride(
+    profileTypeId: string,
+    variant: string,
+    category: string,
+  ): Promise<RawProfileLayout | null> {
+    const cacheKey = `${profileTypeId}:${variant}:${category}`;
+    const hit = layoutOverrideCache.get(cacheKey);
+    if (hit && Date.now() - hit.at < SCHEMA_TTL_MS) return hit.layout;
+
+    const layout = await dynamicProfileRepository.findLayoutOverride(profileTypeId, variant, category);
+    layoutOverrideCache.set(cacheKey, { at: Date.now(), layout });
+    return layout;
   },
 
   /**

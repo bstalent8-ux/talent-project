@@ -86,6 +86,24 @@ function toMetaDTO(meta: ProviderMetadata): ProviderMetadataDTO {
   };
 }
 
+/**
+ * Sprint 1 (profile-category-foundation): the category-scoping input for
+ * `dynamicProfileService.getSectionsForProfile`/`getLayout`. Reads
+ * `core.category` defensively (present on TalentPublicCore/
+ * TalentPrivateCore, absent on brand's core shape) rather than branching on
+ * `typeSlug === "talent"` here — this file "knows no table names [and]
+ * never branches on role" per its own header comment, and the same
+ * discipline applies to not branching on typeSlug for something the core
+ * shape already answers.
+ */
+function extractCategory(core: unknown): string | null {
+  if (core && typeof core === "object" && "category" in core) {
+    const value = (core as { category: unknown }).category;
+    return typeof value === "string" && value.length > 0 ? value : null;
+  }
+  return null;
+}
+
 function pick(src: unknown, keys: readonly string[]): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (src && typeof src === "object") {
@@ -177,17 +195,25 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
 
     if (!isPublicallyVisible(profile)) throw ProfileError.notFound({ profileId: profile.id });
 
-    // One parallel wave. Dynamic + layout are type-agnostic and run for every
-    // profile type without the provider knowing they exist.
-    const [core, sections, layout] = await Promise.all([
-      ctx.provider.getPublicProfile({ shared: profile }),
-      deps.dynamic.getSectionsForProfile(profile.id, ctx.typeSlug, "public"),
-      deps.dynamic.getLayout(ctx.typeSlug),
-    ]);
+    // Core resolves FIRST (not in the same wave as sections/layout below),
+    // because Sprint 1 (profile-category-foundation) needs the profile's
+    // category — which only `core` carries (TalentPublicCore.category) —
+    // before it can ask for category-scoped sections/layout. This trades a
+    // small amount of parallelism (was one wave of 3, now core alone then a
+    // wave of 2) for correct category-scoped resolution; both waves are
+    // fast, indexed lookups, so the latency cost is negligible.
+    const core = await ctx.provider.getPublicProfile({ shared: profile });
 
     // The provider's public gate failed (unapproved / suspended). Same
     // NOT_FOUND as a missing profile, deliberately.
     if (!core) throw ProfileError.notFound({ profileId: profile.id, reason: "failed public gate" });
+
+    const category = extractCategory(core);
+
+    const [sections, layout] = await Promise.all([
+      deps.dynamic.getSectionsForProfile(profile.id, ctx.typeSlug, "public", category),
+      deps.dynamic.getLayout(ctx.typeSlug, category),
+    ]);
 
     const dto: PublicProfileDTO = {
       identity:   toIdentityDTO(profile, ctx.typeSlug),
@@ -297,13 +323,19 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
       const ctx = await resolveContext(await deps.profiles.findIdentityByUserId(userId));
       const { profile } = ctx.identity;
 
-      const [result, sections, completion] = await Promise.all([
+      // Same restructuring as buildPublic(): sections need the resolved
+      // category, so they can't be in the same wave as the core resolution
+      // that produces it. `completion` has no category dependency and stays
+      // parallel with `result`.
+      const [result, completion] = await Promise.all([
         ctx.provider.getPrivateProfile({ shared: profile }),
-        deps.dynamic.getSectionsForProfile(profile.id, ctx.typeSlug, "owner"),
         buildCompletion(ctx.provider, profile),
       ]);
 
       if (!result) throw ProfileError.notFound({ profileId: profile.id, reason: "core row missing" });
+
+      const category = extractCategory(result.core);
+      const sections = await deps.dynamic.getSectionsForProfile(profile.id, ctx.typeSlug, "owner", category);
 
       return {
         identity:   toIdentityDTO(profile, ctx.typeSlug),
