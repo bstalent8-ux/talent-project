@@ -14,7 +14,6 @@ export const fallbackCategories: MarketplaceCategory[] = [
   { id: "tech_reviewer", role_type: "talent", label_ar: "Tech Reviewer", label_en: "Tech Reviewer", description: null, is_active: true, sort_order: 50 },
   { id: "unboxing", role_type: "talent", label_ar: "Unboxing", label_en: "Unboxing", description: null, is_active: true, sort_order: 60 },
   { id: "host", role_type: "talent", label_ar: "Host", label_en: "Host", description: null, is_active: true, sort_order: 70 },
-  { id: "model", role_type: "talent", label_ar: "موديل", label_en: "Model", description: null, is_active: true, sort_order: 75 },
   { id: "restaurant", role_type: "brand", label_ar: "Restaurant", label_en: "Restaurant", description: null, is_active: true, sort_order: 110 },
   { id: "cafe", role_type: "brand", label_ar: "Cafe", label_en: "Cafe", description: null, is_active: true, sort_order: 120 },
   { id: "events", role_type: "brand", label_ar: "Events", label_en: "Events", description: null, is_active: true, sort_order: 130 },

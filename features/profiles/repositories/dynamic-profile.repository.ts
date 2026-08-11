@@ -17,7 +17,7 @@ import type {
 } from "../types/raw";
 
 const SECTION_COLUMNS =
-  "id, profile_type_id, key, title, description, title_ar, title_en, description_ar, description_en, display_order, is_enabled, kind, weight, visibility, render_component, icon, category_scope";
+  "id, profile_type_id, key, title, description, title_ar, title_en, description_ar, description_en, display_order, is_enabled, kind, weight, visibility, render_component, icon";
 
 const FIELD_COLUMNS =
   "id, section_id, key, label, label_ar, label_en, placeholder_ar, placeholder_en, help_text_ar, help_text_en, field_type, is_required, validation_schema, options, weight, is_enabled, display_order";
@@ -211,59 +211,20 @@ export const dynamicProfileRepository = {
     );
   },
 
-  /**
-   * `categoryScope` defaults to `null` (the shared/default layout), so every
-   * pre-Sprint-1 caller (profileConfigService.saveLayout, always called
-   * without it) keeps writing exactly the same row it always has.
-   *
-   * Implemented as an explicit find-then-write rather than `.upsert()` with
-   * `onConflict`, because the uniqueness guarantee for this table is now an
-   * EXPRESSION index (`COALESCE(category_scope, '')`, added in
-   * 20260812_04 — a plain `UNIQUE(profile_type_id, variant, category_scope)`
-   * would silently allow duplicate shared rows, since SQL NULL <> NULL) and
-   * PostgREST's upsert `on_conflict` parameter can only target a plain
-   * column-list constraint, not an expression index.
-   */
   async upsertLayout(
     profileTypeId: string,
     variant: string,
     layout: Record<string, unknown>,
     isActive = true,
-    categoryScope: string | null = null,
   ): Promise<RawProfileLayout> {
-    let findQuery = adminClient
+    const { data, error } = await adminClient
       .from("profile_layouts")
-      .select("id")
-      .eq("profile_type_id", profileTypeId)
-      .eq("variant", variant);
-
-    findQuery = categoryScope === null
-      ? findQuery.is("category_scope", null)
-      : findQuery.eq("category_scope", categoryScope);
-
-    const { data: existing, error: findErr } = await findQuery.maybeSingle();
-    if (findErr) throw fromSupabaseError(findErr);
-
-    const patch = {
-      profile_type_id: profileTypeId,
-      variant,
-      layout,
-      is_active: isActive,
-      category_scope: categoryScope,
-    };
-
-    const { data, error } = existing
-      ? await adminClient
-          .from("profile_layouts")
-          .update(patch)
-          .eq("id", existing.id)
-          .select("id, profile_type_id, variant, layout, is_active, category_scope")
-          .single()
-      : await adminClient
-          .from("profile_layouts")
-          .insert(patch)
-          .select("id, profile_type_id, variant, layout, is_active, category_scope")
-          .single();
+      .upsert(
+        { profile_type_id: profileTypeId, variant, layout, is_active: isActive },
+        { onConflict: "profile_type_id,variant" },
+      )
+      .select("id, profile_type_id, variant, layout, is_active")
+      .single();
 
     if (error) throw fromSupabaseError(error);
     return data as RawProfileLayout;
@@ -320,14 +281,6 @@ export const dynamicProfileRepository = {
    * `includeInactive` defaults to false so the runtime render path only ever
    * sees active layouts; the admin editor passes true so a deactivated layout
    * can still be loaded and edited.
-   *
-   * ALWAYS returns the shared/default layout (`category_scope IS NULL`),
-   * regardless of how many category-specific override rows exist for this
-   * (profile_type_id, variant) — explicit on purpose (Sprint 1), so this
-   * method's contract ("exactly one shared layout") can never break even
-   * after override rows are added. Every pre-Sprint-1 caller
-   * (dynamic-profile.service.ts, preview.service.ts, profile-config.service.ts)
-   * is unchanged and gets exactly the same row it always has.
    */
   async findLayout(
     profileTypeId: string,
@@ -336,37 +289,9 @@ export const dynamicProfileRepository = {
   ): Promise<RawProfileLayout | null> {
     let query = adminClient
       .from("profile_layouts")
-      .select("id, profile_type_id, variant, layout, is_active, category_scope")
+      .select("id, profile_type_id, variant, layout, is_active")
       .eq("profile_type_id", profileTypeId)
-      .eq("variant", variant)
-      .is("category_scope", null);
-
-    if (!includeInactive) query = query.eq("is_active", true);
-
-    const { data, error } = await query.maybeSingle();
-
-    if (error) throw fromSupabaseError(error);
-    return (data as RawProfileLayout) ?? null;
-  },
-
-  /**
-   * The category-specific override row for a (profile_type_id, variant,
-   * category), if one exists. Returns null — never falls back to the shared
-   * layout itself — the caller (dynamicProfileService.getLayout) owns the
-   * fallback decision.
-   */
-  async findLayoutOverride(
-    profileTypeId: string,
-    variant: string,
-    category: string,
-    includeInactive = false,
-  ): Promise<RawProfileLayout | null> {
-    let query = adminClient
-      .from("profile_layouts")
-      .select("id, profile_type_id, variant, layout, is_active, category_scope")
-      .eq("profile_type_id", profileTypeId)
-      .eq("variant", variant)
-      .eq("category_scope", category);
+      .eq("variant", variant);
 
     if (!includeInactive) query = query.eq("is_active", true);
 
@@ -380,7 +305,7 @@ export const dynamicProfileRepository = {
   async findLayoutsByType(profileTypeId: string): Promise<RawProfileLayout[]> {
     const { data, error } = await adminClient
       .from("profile_layouts")
-      .select("id, profile_type_id, variant, layout, is_active, category_scope")
+      .select("id, profile_type_id, variant, layout, is_active")
       .eq("profile_type_id", profileTypeId);
 
     if (error) throw fromSupabaseError(error);

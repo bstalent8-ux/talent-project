@@ -27,16 +27,6 @@ export default defineConfig({
     include: [
       "features/profiles/**/*.test.ts",
       "components/profile/**/*.test.ts",
-      // Sprint 1 (profile-category-foundation): both additions are pure,
-      // dependency-free logic/data — same rationale as the two globs above,
-      // not a broader testing initiative. app/(auth)/register/talent-types.ts
-      // has zero React/CSS/Next imports by design, specifically so it is
-      // safe to import here.
-      "features/categories/**/*.test.ts",
-      // Parens in a route-group folder name must be glob-escaped, or
-      // fast-glob parses "(auth)" as a group and matches nothing.
-      "app/\\(auth\\)/register/**/*.test.ts",
-      "app/api/profile/**/*.test.ts",
     ],
   },
 });

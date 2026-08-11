@@ -11,8 +11,6 @@ import { useSite } from "@/contexts/SiteContext";
 import styles from "../auth.module.css";
 import PhoneInput from "../phone/PhoneInput";
 import { detectDefaultCountryIso, findCountry, rememberCountryIso } from "../phone/countries";
-import { TALENT_TYPES } from "./talent-types";
-import { resolveProfileSubmitOutcome } from "./submit-outcome";
 
 type Role = "talent" | "brand";
 
@@ -41,6 +39,14 @@ const INIT: FormData = {
   brandCategory:   "brand_fashion",
   agreeToTerms:    false,
 };
+
+const TALENT_TYPES = [
+  { value: "ugc", ar: "UGC Creator", en: "UGC Creator" },
+  { value: "influencer", ar: "Influencer", en: "Influencer" },
+  { value: "fashion", ar: "Fashion", en: "Fashion" },
+  { value: "food_reviewer", ar: "Food Reviewer", en: "Food Reviewer" },
+  { value: "media_buyers", ar: "Media Buyers", en: "Media Buyers" },
+];
 
 const BRAND_CATEGORIES = [
   { value: "brand_fashion", ar: "Fashion", en: "Fashion" },
@@ -250,7 +256,7 @@ export default function RegisterPage() {
       const dialCode    = findCountry(phoneCountryIso).dialCode;
       const phoneNumber = `+${dialCode}${form.phoneNumber.replace(/\D/g, "")}`;
 
-      const profileRes = await fetch("/api/profile", {
+      await fetch("/api/profile", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
@@ -282,27 +288,7 @@ export default function RegisterPage() {
         }),
       });
 
-      // Sprint 1 (profile-category-foundation) fix: this response used to be
-      // discarded, and the page navigated to /profile/me unconditionally. If
-      // /api/profile rejected the request (e.g. an invalid category), the
-      // user landed on /profile/me signed-in but with NO profiles row —
-      // whose own GET /api/me self-heal then created a BARE profiles row
-      // (no category, no talent_profiles) to satisfy that page's own need
-      // for a profile to render. Self-heal itself is correct and stays —
-      // it exists for a session genuinely interrupted before /api/profile
-      // was ever called. The bug was reaching that state as a silent
-      // continuation of a request that had already failed. Stopping here
-      // means that never happens: no navigation, no self-heal trigger, no
-      // partially-created account, and the user sees why it failed.
-      // resolveProfileSubmitOutcome is the tested decision point — see
-      // submit-outcome.test.ts.
-      const outcome = resolveProfileSubmitOutcome(profileRes);
-      if (outcome.showError) {
-        setError(tx.errGeneric);
-        setLoading(false);
-        return;
-      }
-      if (outcome.navigate) router.push("/profile/me");
+      router.push("/profile/me");
     } catch (e) {
       setError(e instanceof Error ? e.message : tx.errGeneric);
     }

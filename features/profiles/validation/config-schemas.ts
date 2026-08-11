@@ -26,23 +26,6 @@ const bilingualText = z.string().trim().min(1).max(160);
 const optionalText  = z.string().trim().max(400).nullable().optional();
 
 /**
- * Sprint 1 (profile-category-foundation), Option A. Structural validation
- * only — matches the DB CHECK in 20260812_03. Semantic validation (is this
- * actually a real, active, talent-role category id) can only happen against
- * the live `categories` table, which a Zod schema cannot query; that check
- * is the DB trigger `validate_profile_section_category_scope` in the same
- * migration. Both layers reject the same bad input for different reasons —
- * this one gives a fast, clean 400 with a useful message; the trigger is
- * the guarantee that holds even if this schema is ever bypassed.
- */
-const categoryScope = z
-  .array(z.string().trim().min(2).max(48).regex(SLUG_PATTERN, "category id must be lowercase letters, digits and underscores"))
-  .min(1)
-  .max(8)
-  .nullable()
-  .optional();
-
-/**
  * Whitelist of section renderers.
  *
  * `profile_sections.render_component` is a KEY into a compile-time React
@@ -120,7 +103,6 @@ const sectionCommon = {
   icon:             z.string().trim().max(48).nullable().optional(),
   display_order:    z.coerce.number().int().min(0).max(9999).default(0),
   is_enabled:       z.boolean().default(true),
-  category_scope:   categoryScope,
 };
 
 /**
