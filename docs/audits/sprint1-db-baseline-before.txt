@@ -1,0 +1,33 @@
+=== BASELINE (pre-migration) 2026-08-11T10:11:20Z ===
+--- talent_profiles count ---
+Content-Range: 0-35/36
+--- talent_profiles.category distribution ---
+total: 36 {"fashion":17,"ugc":19}
+ids: 0a365fb7-3e57-4ea4-918a-b8bce1c6630d,0a611871-ca8f-4ae2-bddc-d83768e43455,0d5e7db3-ee3f-4573-834b-45a57f0ebb80,1299c661-1579-44ba-bcc1-985285cc658f,1b63f3cd-698e-4033-a125-c079fef2063f,1f15ab57-bcb8-4514-9cd5-9e6a5e90708c,2b245199-c782-4743-9cff-910bc832d239,2ee3c9dc-278e-4d3f-aa97-33cfbe6954de,2f4f9833-3036-4611-bf9e-c13bb4e98b46,313bea0a-96b2-4dba-9f7f-df97334ea46a,330d710d-9dcd-43fd-8799-2fed9a8569f6,4a0c7935-6455-467f-ba33-e6c8d0ba5408,59a5cb94-ebde-404f-b1dd-f55d73447699,5df5c3f4-fe18-42a1-aaed-9d29293455a7,6452399c-04e8-4921-8c70-a179306fbcef,6bef66fe-47ed-40cd-b497-3ad4ce67cc81,6c2960b8-2d85-4554-95c5-150ab47808df,73a8a2d3-a8bb-40c3-9f7c-22dbb2e3ab00,75578590-8301-4022-ac04-acef54822da4,8ef5b22a-05db-41f8-9383-0a7b926435f7,9b974cf7-dbb6-41b5-84a1-48b512def57b,9ef841da-b909-484d-ab4b-2ca65fea94d1,9f761eb3-e141-45c0-a286-dacc55cce289,a39ffdd4-9c37-4348-9742-90a80a190af1,acde32f7-db2f-4f6c-9d66-948edb9c617c,b7b9cfdc-1db2-4e6c-a14a-c8f5f55ef4cc,cac73a57-e58a-4aaf-994b-521e05fd9c89,cd9fda9d-856e-4aaf-a180-22623141f741,ce74acf1-69c3-4a78-ba20-9170b1b7398d,d51eef93-9766-4d00-9f4a-577d3c581770,dd3f7092-f05a-43e2-bfcd-1feb26a25a38,e624868e-8a16-4f50-85f4-d782c2bddab5,eeaf117e-0241-4c4d-91a9-691844a95524,f286ada3-957f-445e-9e3f-a27151108bc7,fb53f87c-2386-47f2-a483-5d48e058e0ae,ff9abc5e-0fc3-44e8-8a18-30e3eb28fa4a
+--- profile_types ---
+[{"id":"cdadf9da-1079-4aef-bde5-9ca41be7832d","slug":"talent","is_active":true}, 
+ {"id":"d53b3f43-c404-41c6-a9a9-3310e1b7d275","slug":"agency","is_active":false}, 
+ {"id":"f603def4-9f21-45e8-a3c9-329b405c026b","slug":"brand","is_active":true}]
+--- profile_sections count+keys ---
+total: 26
+brand:bio, brand:campaign_preferences, brand:company_info, brand:industry, brand:logo, brand:social, brand:verification, talent:availability, talent:avatar, talent:awards, talent:bio, talent:brands, talent:categories, talent:equipment, talent:experience, talent:hero, talent:packages, talent:payment, talent:performance, talent:personal, talent:physical, talent:portfolio, talent:reviews, talent:social, talent:trust, talent:usage_addons
+
+--- profile_layouts ---
+[{"id":"6f1757a5-c41c-42a4-a07a-20e2c240bcd8","profile_type_id":"cdadf9da-1079-4aef-bde5-9ca41be7832d","variant":"public","layout":{"main": ["bio", "portfolio", "experience", "packages", "usage_addons", "equipment", "awards"], "sidebar": ["performance", "reviews", "brands", "trust"]},"is_active":true}, 
+ {"id":"ddcf05c5-5b40-4b1c-91b8-384a433ff268","profile_type_id":"f603def4-9f21-45e8-a3c9-329b405c026b","variant":"public","layout":{"main": ["bio", "company_info", "industry", "campaign_preferences"], "sidebar": ["verification", "social"]},"is_active":true}]
+--- profile_values count ---
+Content-Range: */0
+
+--- profile_categories count ---
+Content-Range: 0-46/47
+
+--- categories (talent role) ---
+[{"id":"ugc","role_type":"talent","is_active":true}, 
+ {"id":"influencer","role_type":"talent","is_active":true}, 
+ {"id":"fashion","role_type":"talent","is_active":true}, 
+ {"id":"food_reviewer","role_type":"talent","is_active":true}, 
+ {"id":"tech_reviewer","role_type":"talent","is_active":true}, 
+ {"id":"unboxing","role_type":"talent","is_active":true}, 
+ {"id":"host","role_type":"talent","is_active":true}]
+--- profiles.profile_type_id sync check ---
+talent profiles: 43 missing profile_type_id: 0

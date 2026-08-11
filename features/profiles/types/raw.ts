@@ -120,6 +120,15 @@ export interface RawProfileSection {
   visibility:       SectionVisibility;
   render_component: string | null;
   icon:             string | null;
+  /**
+   * Sprint 1 (profile-category-foundation): which talent categories this
+   * section applies to. NULL/empty = shared by every category of this
+   * profile_type (the default, and the only state every pre-Sprint-1 row is
+   * in). Non-null = visible only when the viewing profile's
+   * talent_profiles.category is in this array. Meaningless for non-talent
+   * types (brand sections must never set this).
+   */
+  category_scope:   string[] | null;
 }
 
 export interface RawProfileField {
@@ -155,6 +164,16 @@ export interface RawProfileLayout {
   variant:         string;
   layout:          Record<string, unknown> | null;
   is_active:       boolean;
+  /**
+   * Sprint 1: NULL = the shared/default layout for this (profile_type_id,
+   * variant) — every pre-Sprint-1 row is in this state and
+   * dynamicProfileRepository.findLayout() only ever returns these. A single
+   * category id (e.g. "model") = an override layout for that category only,
+   * read exclusively through findLayoutOverride(). Never both NULL and a
+   * value for the same (profile_type_id, variant) pair being ambiguous —
+   * the two are different rows under the widened unique constraint.
+   */
+  category_scope:  string | null;
 }
 
 // ─── Supporting rows loaded by providers ──────────────────────────────────────
