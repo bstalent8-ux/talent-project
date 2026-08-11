@@ -107,7 +107,6 @@ export default function JobDetailClient({ job }: { job: JobPost }) {
       {showApply && (
         <ApplyModal
           job={job}
-          dark={dark}
           lang={lang}
           onClose={() => setShowApply(false)}
           onSuccess={() => {

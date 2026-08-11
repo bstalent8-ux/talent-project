@@ -1,8 +1,10 @@
 export const runtime = 'edge';
 
+import { Construction } from "lucide-react";
 import { adminClient } from "@/lib/supabase/admin";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import JobsClient from "./_components/JobsClient";
+import styles from "./_components/JobsPage.module.css";
 
 export interface JobPost {
   id: string;
@@ -62,12 +64,12 @@ export default async function JobsPage() {
   if (result.error) {
     // Table doesn't exist yet — show setup message
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Cairo',sans-serif", backgroundColor: "#050B12" }}>
-        <div style={{ textAlign: "center", color: "#64748b", padding: 32 }}>
-          <p style={{ fontSize: 48, margin: 0 }}>🏗️</p>
-          <p style={{ fontSize: 18, color: "#fff", fontWeight: 700 }}>Jobs table not set up yet</p>
-          <p style={{ fontSize: 13 }}>Call GET /api/admin/jobs-migration to get the SQL, then run it in Supabase.</p>
-          <a href="/api/admin/jobs-migration" style={{ color: "#00D26A", fontSize: 13 }}>/api/admin/jobs-migration</a>
+      <div className={styles.setupError}>
+        <div className={styles.setupCard}>
+          <span className={styles.setupIcon}><Construction size={26} /></span>
+          <p className={styles.setupTitle}>Jobs table not set up yet</p>
+          <p className={styles.setupText}>Call GET /api/admin/jobs-migration to get the SQL, then run it in Supabase.</p>
+          <a href="/api/admin/jobs-migration" className={styles.setupLink}>/api/admin/jobs-migration</a>
         </div>
       </div>
     );

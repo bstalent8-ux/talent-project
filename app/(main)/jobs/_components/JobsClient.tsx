@@ -1,6 +1,10 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useSite } from "@/contexts/SiteContext";
+import {
+  Search, Sparkles, SlidersHorizontal, Plus,
+  Camera, UsersRound, Mic2, Aperture, Clapperboard, LayoutGrid, type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 
@@ -8,15 +12,16 @@ const PAGE_SIZE = 12;
 import type { JobPost } from "../page";
 import JobsGrid from "./JobsGrid";
 import JobsFilters from "./JobsFilters";
+import styles from "./JobsPage.module.css";
 
-const CATEGORIES = [
-  { key: "all",        label_ar: "الكل",           label_en: "All" },
-  { key: "ugc",        label_ar: "مبدع محتوى UGC", label_en: "UGC Creator" },
-  { key: "influencer", label_ar: "مؤثر",           label_en: "Influencer" },
-  { key: "model",      label_ar: "موديل",           label_en: "Model" },
-  { key: "actor",      label_ar: "ممثل",            label_en: "Actor" },
-  { key: "host",       label_ar: "مذيع / مقدم",    label_en: "Host" },
-  { key: "photographer", label_ar: "مصور",          label_en: "Photographer" },
+const CATEGORIES: { key: string; label_ar: string; label_en: string; icon: LucideIcon }[] = [
+  { key: "all",           label_ar: "الكل",           label_en: "All",             icon: LayoutGrid },
+  { key: "ugc",           label_ar: "مبدع محتوى UGC", label_en: "UGC Creator",     icon: Camera },
+  { key: "influencer",    label_ar: "مؤثر",           label_en: "Influencer",      icon: UsersRound },
+  { key: "model",         label_ar: "موديل",           label_en: "Model",           icon: Sparkles },
+  { key: "actor",         label_ar: "ممثل",            label_en: "Actor",           icon: Clapperboard },
+  { key: "host",          label_ar: "مذيع / مقدم",    label_en: "Host",            icon: Mic2 },
+  { key: "photographer",  label_ar: "مصور",            label_en: "Photographer",    icon: Aperture },
 ];
 
 export type SortOption = "newest" | "budget_desc" | "budget_asc" | "slots_desc";
@@ -24,7 +29,7 @@ export type SortOption = "newest" | "budget_desc" | "budget_asc" | "slots_desc";
 interface Props { jobs: JobPost[] }
 
 export default function JobsClient({ jobs }: Props) {
-  const { lang, dark } = useSite();
+  const { lang } = useSite();
   const ar = lang === "ar";
 
   const [search,   setSearch]   = useState("");
@@ -33,6 +38,9 @@ export default function JobsClient({ jobs }: Props) {
   const [minBudget, setMinBudget] = useState(0);
   const [maxBudget, setMaxBudget] = useState(100000);
   const [page, setPage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setPage(1); }, [search, category, sort, minBudget, maxBudget]);
 
@@ -63,167 +71,187 @@ export default function JobsClient({ jobs }: Props) {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const GREEN  = "#00D26A";
-  const GOLD   = "#FFB800";
-  const BG     = dark ? "#050B12" : "#F1F5F9";
-  const BORDER = dark ? "rgba(0,255,163,0.1)" : "#e2e8f0";
+
+  const scrollToResults = () => {
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleReset = () => {
+    setSort("newest");
+    setCategory("all");
+    setMinBudget(0);
+    setMaxBudget(100000);
+    setSearch("");
+  };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: BG, fontFamily: "'Cairo',sans-serif", direction: ar ? "rtl" : "ltr" }}>
+    <div className={`${styles.page} ${ar ? styles.rtl : styles.ltr}`}>
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <section className={styles.hero}>
+        <div className={styles.heroBg} />
 
-      {/* Hero */}
-      <div style={{
-        background: dark ? "linear-gradient(135deg,#0D1623 0%,#060d18 100%)" : "linear-gradient(135deg,#f0fdf4 0%,#fffbeb 100%)",
-        borderBottom: `1px solid ${BORDER}`,
-        padding: "40px 24px 28px",
-      }}>
-        <div style={{ maxWidth: 1440, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
-            <div>
-              <h1 style={{ color: dark ? "#fff" : "#0f172a", fontSize: 28, fontWeight: 900, margin: "0 0 4px" }}>
-                {ar ? "الوظائف والفرص 💼" : "Jobs & Opportunities 💼"}
-              </h1>
-              <p style={{ color: "#64748b", fontSize: 14, margin: 0 }}>
-                {ar ? `${jobs.length} فرصة متاحة للمواهب` : `${jobs.length} opportunities available for talents`}
-              </p>
-            </div>
-            {/* Post a job CTA — visible to brands */}
-            <ProtectedAction action="create_job">
-            <Link href="/jobs/create" style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              backgroundColor: GOLD, color: "#050B12",
-              padding: "10px 20px", borderRadius: 12,
-              fontWeight: 800, fontSize: 14,
-              textDecoration: "none", fontFamily: "'Cairo',sans-serif",
-              boxShadow: "0 4px 16px rgba(255,184,0,0.35)",
-            }}>
-              + {ar ? "نشر وظيفة" : "Post a Job"}
-            </Link>
-            </ProtectedAction>
-          </div>
+        <div className={styles.heroContent}>
+          <span className={styles.badge}>
+            <Sparkles size={14} />
+            {ar ? `${jobs.length.toLocaleString()} فرصة متاحة الآن` : `${jobs.length.toLocaleString()} opportunities available now`}
+          </span>
+
+          <h1 className={styles.heroTitle}>
+            {ar ? <>اعثر على <em>فرصتك القادمة</em> من أفضل البراندات</>
+                : <>Find your <em>next opportunity</em> with top brands</>}
+          </h1>
+
+          <p className={styles.heroSubtitle}>
+            {ar
+              ? "تصفّح وظائف حقيقية من براندات موثّقة، وقدّم عرضك مباشرة."
+              : "Browse real openings from verified brands and submit your proposal directly."}
+          </p>
 
           {/* Search */}
-          <div style={{ position: "relative", maxWidth: 480, marginBottom: 16 }}>
+          <div className={styles.searchBar}>
+            <Search size={18} />
             <input
+              type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={ar ? "ابحث باسم الوظيفة أو البراند…" : "Search by job title or brand…"}
-              style={{
-                width: "100%", padding: "12px 16px 12px 44px",
-                backgroundColor: dark ? "#0D1623" : "#fff",
-                border: `1px solid ${dark ? "rgba(0,255,163,0.2)" : "#e2e8f0"}`,
-                borderRadius: 12, color: dark ? "#f1f5f9" : "#0f172a",
-                fontSize: 14, outline: "none", fontFamily: "'Cairo',sans-serif",
-                boxSizing: "border-box", direction: ar ? "rtl" : "ltr",
-              }}
+              placeholder={ar ? "ابحث باسم الوظيفة أو البراند..." : "Search by job title or brand..."}
             />
-            <span style={{
-              position: "absolute", top: "50%", transform: "translateY(-50%)",
-              ...(ar ? { right: 14 } : { left: 14 }),
-              color: "#64748b", pointerEvents: "none",
-            }}>🔍</span>
+            {search && (
+              <button type="button" className={styles.searchClear} onClick={() => setSearch("")} aria-label="clear">×</button>
+            )}
+            <button type="button" className={styles.searchSubmit}>
+              <Search size={15} />
+              {ar ? "بحث" : "Search"}
+            </button>
           </div>
 
-          {/* Category tabs */}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {/* Quick category pills */}
+          <div className={styles.heroPills}>
             {CATEGORIES.map((cat) => {
               const active = category === cat.key;
+              const Icon = cat.icon;
               return (
-                <button key={cat.key} onClick={() => setCategory(cat.key)} style={{
-                  padding: "6px 16px", borderRadius: 20,
-                  border: `1px solid ${active ? GREEN : (dark ? "rgba(255,255,255,0.1)" : "#e2e8f0")}`,
-                  backgroundColor: active ? "rgba(0,210,106,0.12)" : "transparent",
-                  color: active ? GREEN : (dark ? "#94a3b8" : "#64748b"),
-                  fontSize: 13, fontWeight: active ? 700 : 400,
-                  cursor: "pointer", fontFamily: "'Cairo',sans-serif", transition: "all 0.15s",
-                }}>
+                <button
+                  key={cat.key}
+                  type="button"
+                  className={`${styles.heroPill} ${active ? styles.heroPillActive : ""}`}
+                  onClick={() => { setCategory(cat.key); setTimeout(scrollToResults, 60); }}
+                >
+                  <Icon size={13} />
                   {ar ? cat.label_ar : cat.label_en}
                 </button>
               );
             })}
           </div>
-        </div>
-      </div>
 
-      {/* Layout */}
-      <div style={{
-        maxWidth: 1440, margin: "0 auto",
-        padding: "24px 24px 60px",
-        display: "grid",
-        gridTemplateColumns: "220px 1fr",
-        alignItems: "start",
-        gap: 20,
-      }}>
-        <JobsFilters
-          dark={dark} lang={lang}
-          sort={sort} onSort={setSort}
-          minBudget={minBudget} maxBudget={maxBudget}
-          onMinBudget={setMinBudget} onMaxBudget={setMaxBudget}
-          category={category} onCategory={setCategory}
-          categories={CATEGORIES}
-          resultCount={filtered.length}
-          onReset={() => { setSort("newest"); setCategory("all"); setMinBudget(0); setMaxBudget(100000); setSearch(""); }}
-        />
-        <div>
-          <JobsGrid dark={dark} lang={lang} jobs={paginated} />
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              marginTop: 32, flexWrap: "wrap",
-            }}>
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                style={{
-                  padding: "8px 18px", borderRadius: 10,
-                  border: `1px solid ${BORDER}`,
-                  backgroundColor: page === 1 ? "transparent" : (dark ? "#0D1623" : "#fff"),
-                  color: page === 1 ? "#64748b" : (dark ? "#fff" : "#0f172a"),
-                  fontSize: 13, fontWeight: 700, cursor: page === 1 ? "default" : "pointer",
-                  fontFamily: "'Cairo',sans-serif", opacity: page === 1 ? 0.4 : 1,
-                }}
-              >
-                {ar ? "→ السابق" : "← Prev"}
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  style={{
-                    width: 36, height: 36, borderRadius: 8,
-                    border: `1px solid ${p === page ? GREEN : BORDER}`,
-                    backgroundColor: p === page ? GREEN : "transparent",
-                    color: p === page ? "#050B12" : (dark ? "#94a3b8" : "#64748b"),
-                    fontSize: 13, fontWeight: p === page ? 900 : 400,
-                    cursor: "pointer", fontFamily: "'Cairo',sans-serif",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}
-                >
-                  {p}
-                </button>
-              ))}
-
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                style={{
-                  padding: "8px 18px", borderRadius: 10,
-                  border: `1px solid ${BORDER}`,
-                  backgroundColor: page === totalPages ? "transparent" : (dark ? "#0D1623" : "#fff"),
-                  color: page === totalPages ? "#64748b" : (dark ? "#fff" : "#0f172a"),
-                  fontSize: 13, fontWeight: 700, cursor: page === totalPages ? "default" : "pointer",
-                  fontFamily: "'Cairo',sans-serif", opacity: page === totalPages ? 0.4 : 1,
-                }}
-              >
-                {ar ? "← التالي" : "Next →"}
-              </button>
+          {/* Post a job — secondary action, visible to brands */}
+          <ProtectedAction action="create_job">
+            <div className={styles.heroActions}>
+              <Link href="/jobs/create" className={styles.buttonSecondary}>
+                <Plus size={15} />
+                {ar ? "نشر وظيفة" : "Post a job"}
+              </Link>
             </div>
-          )}
+          </ProtectedAction>
         </div>
-      </div>
+
+      </section>
+
+      {/* ── Results: filters + grid ────────────────────── */}
+      <section className={styles.section} ref={resultsRef}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionHeaderText}>
+              <p className={styles.sectionKicker}>{ar ? "كل الوظائف" : "All jobs"}</p>
+              <h2 className={styles.sectionTitle}>{ar ? "الفرص المتاحة الآن" : "Available opportunities"}</h2>
+            </div>
+          </div>
+
+          <div className={styles.layout}>
+            <JobsFilters
+              lang={lang}
+              sort={sort} onSort={setSort}
+              minBudget={minBudget} maxBudget={maxBudget}
+              onMinBudget={setMinBudget} onMaxBudget={setMaxBudget}
+              category={category} onCategory={setCategory}
+              categories={CATEGORIES}
+              open={filtersOpen} onClose={() => setFiltersOpen(false)}
+              onReset={handleReset}
+            />
+
+            <div>
+              <div className={styles.resultsBar}>
+                <span className={styles.resultsCount}>
+                  {ar ? <><strong>{filtered.length}</strong> وظيفة</> : <><strong>{filtered.length}</strong> jobs</>}
+                </span>
+                <div className={styles.resultsControls}>
+                  <button
+                    type="button"
+                    className={styles.mobileFilterBtn}
+                    onClick={() => setFiltersOpen(true)}
+                  >
+                    <SlidersHorizontal size={15} />
+                    {ar ? "تصفية" : "Filters"}
+                  </button>
+                  <div className={styles.sortWrap}>
+                    <label htmlFor="jobs-sort">{ar ? "ترتيب" : "Sort"}</label>
+                    <select
+                      id="jobs-sort"
+                      className={styles.sortSelect}
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value as SortOption)}
+                    >
+                      <option value="newest">{ar ? "الأحدث" : "Newest"}</option>
+                      <option value="budget_desc">{ar ? "الأعلى ميزانية" : "Highest budget"}</option>
+                      <option value="budget_asc">{ar ? "الأقل ميزانية" : "Lowest budget"}</option>
+                      <option value="slots_desc">{ar ? "أكثر أماكن" : "Most slots"}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <JobsGrid lang={lang} jobs={paginated} />
+
+              {totalPages > 1 && (
+                <div className={styles.pagination}>
+                  <button
+                    type="button"
+                    className={styles.pageBtn}
+                    onClick={() => { setPage((p) => Math.max(1, p - 1)); scrollToResults(); }}
+                    disabled={page === 1}
+                  >
+                    {ar ? "السابق" : "Prev"}
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      className={`${styles.pageBtn} ${p === page ? styles.pageBtnActive : ""}`}
+                      onClick={() => { setPage(p); scrollToResults(); }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className={styles.pageBtn}
+                    onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); scrollToResults(); }}
+                    disabled={page === totalPages}
+                  >
+                    {ar ? "التالي" : "Next"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile drawer backdrop */}
+      <div
+        className={`${styles.drawerBackdrop} ${filtersOpen ? styles.drawerBackdropOpen : ""}`}
+        onClick={() => setFiltersOpen(false)}
+      />
     </div>
   );
 }
