@@ -12,6 +12,8 @@
 // file adds only the JSX.
 
 import ProfileHero from "@/app/(main)/talent/[handle]/_components/ProfileHero";
+import ProfessionalPresenceSection from "@/app/(main)/talent/[handle]/_components/ProfessionalPresenceSection";
+import MeasurementsSection from "@/app/(main)/talent/[handle]/_components/MeasurementsSection";
 import PortfolioSection from "@/app/(main)/talent/[handle]/_components/PortfolioSection";
 import PackagesSection from "@/app/(main)/talent/[handle]/_components/PackagesSection";
 import UsageRightsSection from "@/app/(main)/talent/[handle]/_components/UsageRightsSection";
@@ -35,6 +37,8 @@ export { TALENT_CORE_SECTION_KEYS, buildTalentCoreProps };
 function renderPlan(plan: CoreSectionRenderPlan) {
   switch (plan.component) {
     case "ProfileHero":        return <ProfileHero {...plan.props} />;
+    case "ProfessionalPresenceSection": return <ProfessionalPresenceSection {...plan.props} />;
+    case "MeasurementsSection":         return <MeasurementsSection {...plan.props} />;
     case "PortfolioSection":   return <PortfolioSection {...plan.props} />;
     case "PackagesSection":    return <PackagesSection {...plan.props} />;
     case "UsageRightsSection": return <UsageRightsSection {...plan.props} />;

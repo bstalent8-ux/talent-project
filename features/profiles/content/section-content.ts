@@ -20,7 +20,7 @@ import type {
   PublicProfileDTO,
   TalentPublicCore,
 } from "../types/dto";
-import { TALENT_PHYSICAL_KEYS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
+import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -80,9 +80,15 @@ const TALENT_RULES: Record<string, ContentRule> = {
 
   social: (p) => hasSocialHandle(bag(p.core as TalentPublicCore), TALENT_SOCIAL_KEYS),
 
+  // Public Measurements — Model-only by product decision (CLAUDE.md: public
+  // profile layout). Distinct from lib/profile-completion.ts's `physical`
+  // section, which still scores age/languages/dialect for every category —
+  // that is a private completion concern, this is public display.
   physical: (p) => {
-    const links = bag(p.core as TalentPublicCore);
-    return TALENT_PHYSICAL_KEYS.some((key) => isFilled(links[key]));
+    const core = p.core as TalentPublicCore;
+    if (core.category !== "model") return false;
+    const links = bag(core);
+    return MODEL_PHYSICAL_FIELDS.some((key) => isFilled(links[key]));
   },
 
   portfolio: (p) => listLength((p.core as TalentPublicCore).portfolio) > 0,

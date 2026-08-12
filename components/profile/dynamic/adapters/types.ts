@@ -45,6 +45,11 @@ export interface TalentProfileContext {
   /** Lifted state: PackagesSection sets it, UsageRightsSection consumes it. */
   selectedPackage: PackageItem | null;
   onSelectPackage: (pkg: PackageItem) => void;
+  /** Only the platforms the talent actually filled in — see lib/profile-fields.ts. */
+  presenceLinks:   Record<string, string>;
+  /** Null unless category is "model" and at least one field is filled — see
+   *  section-content.ts's `physical` rule, which gates the section itself. */
+  measurements:    Record<string, string> | null;
 }
 
 export interface BrandProfileContext {
@@ -71,6 +76,8 @@ export type ProfileContext = TalentProfileContext | BrandProfileContext;
  */
 export type CoreSectionRenderPlan =
   | { component: "ProfileHero";        props: { talent: TalentData } }
+  | { component: "ProfessionalPresenceSection"; props: { links: Record<string, string> } }
+  | { component: "MeasurementsSection";         props: { measurements: Record<string, string> } }
   | { component: "PortfolioSection";   props: { portfolioItems?: PortfolioItem[] } }
   | { component: "PackagesSection";    props: { onSelect: (pkg: PackageItem) => void; packages?: PackageItem[] | null } }
   | { component: "UsageRightsSection"; props: { selectedPackage: PackageItem | null; addons?: AddonItem[] | null } }

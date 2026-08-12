@@ -133,6 +133,9 @@ export interface TalentData {
   bio?: string | null;
   specialties?: string[];
   category?: string | null;
+  /** Hero-adjacent identity line (public UGC/Model profile). Empty → hidden. */
+  availability?: string | null;
+  languages?: string | null;
 }
 
 export interface BookingStats {

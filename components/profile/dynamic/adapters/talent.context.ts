@@ -9,6 +9,7 @@
 // profile rendered through the dynamic path shows the same values as today.
 
 import type { PublicProfileDTO, TalentPublicCore } from "@/features/profiles/types/dto";
+import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 import type {
   AddonItem,
   BookingStats,
@@ -49,7 +50,40 @@ export function toTalentData(dto: PublicProfileDTO): TalentData {
     bio:          identity.bio ?? null,
     specialties:  core.specialties ?? [],
     category:     core.category ?? null,
+    availability: core.availability ?? null,
+    languages:    typeof social.languages === "string" && social.languages.trim().length > 0
+      ? social.languages.trim()
+      : null,
   };
+}
+
+/** Only platforms the talent actually filled — never a full 8-key object with blanks. */
+export function toPresenceLinks(dto: PublicProfileDTO): Record<string, string> {
+  const core = dto.core as TalentPublicCore;
+  const links = (core.socialLinks ?? {}) as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  for (const key of TALENT_SOCIAL_KEYS) {
+    const value = links[key];
+    if (typeof value === "string" && value.trim().length > 2) out[key] = value.trim();
+  }
+  return out;
+}
+
+/**
+ * Null unless category is "model" AND at least one of the 5 approved fields is
+ * filled — mirrors section-content.ts's `physical` rule exactly, so this never
+ * hands the component data the section itself decided not to show.
+ */
+export function toMeasurements(dto: PublicProfileDTO): Record<string, string> | null {
+  const core = dto.core as TalentPublicCore;
+  if (core.category !== "model") return null;
+  const links = (core.socialLinks ?? {}) as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  for (const key of MODEL_PHYSICAL_FIELDS) {
+    const value = links[key];
+    if (typeof value === "string" && value.trim().length > 0) out[key] = value.trim();
+  }
+  return Object.keys(out).length > 0 ? out : null;
 }
 
 export function toPortfolioItems(dto: PublicProfileDTO): PortfolioItem[] {
@@ -202,5 +236,7 @@ export function buildTalentContextFromDTO(
     bookingStats:    toBookingStats(dto),
     selectedPackage: handlers.selectedPackage,
     onSelectPackage: handlers.onSelectPackage,
+    presenceLinks:   toPresenceLinks(dto),
+    measurements:    toMeasurements(dto),
   };
 }

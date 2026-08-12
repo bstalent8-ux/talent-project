@@ -30,6 +30,7 @@ import {
   toFeaturedCampaign,
   toTalentData,
 } from "@/components/profile/dynamic/adapters/talent.context";
+import { applyCategoryTalentLayout } from "@/components/profile/dynamic/adapters/talent-layout";
 import type { PublicProfileDTO } from "@/features/profiles/types/dto";
 
 import CampaignBanner from "./CampaignBanner";
@@ -63,6 +64,14 @@ export default function TalentProfileShell({ profile }: { profile: PublicProfile
   const talent           = useMemo(() => toTalentData(profile), [profile]);
   const campaignStats    = useMemo(() => toCampaignStats(profile), [profile]);
   const featuredCampaign = useMemo(() => toFeaturedCampaign(profile), [profile]);
+
+  // Category-aware layout — client-side only, never written back to
+  // profile_layouts. Same DTO, same sections, same renderer; only the main
+  // column's order differs between ugc/model/legacy. See talent-layout.ts.
+  const renderProfile = useMemo(
+    () => ({ ...profile, layout: applyCategoryTalentLayout(profile.layout, talent.category) }),
+    [profile, talent.category],
+  );
 
   // Only sections that survived the provider's hasContent filter reach the DTO,
   // so a tab is built from a section that is genuinely on the page. A tab
@@ -99,7 +108,7 @@ export default function TalentProfileShell({ profile }: { profile: PublicProfile
         <div style={{ marginTop: 24 }}>
           <DynamicProfileRenderer
             lang={lang === "en" ? "en" : "ar"}
-            profile={profile}
+            profile={renderProfile}
             mainFooter={<StickyBookingBarSlot talent={talent} />}
             sidebarFooter={
               <>

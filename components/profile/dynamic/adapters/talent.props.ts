@@ -35,6 +35,20 @@ export function buildTalentCoreProps(
     case "personal":
       return { component: "ProfileHero", props: { talent: context.talent } };
 
+    // Only claimed when there is something to show — an empty object would
+    // render an empty card, which section-content.ts's rules already prevent
+    // from reaching here, but a null/empty guard here too costs nothing and
+    // keeps this function correct even if called directly.
+    case "social":
+      return Object.keys(context.presenceLinks).length > 0
+        ? { component: "ProfessionalPresenceSection", props: { links: context.presenceLinks } }
+        : null;
+
+    case "physical":
+      return context.measurements
+        ? { component: "MeasurementsSection", props: { measurements: context.measurements } }
+        : null;
+
     case "portfolio":
       return {
         component: "PortfolioSection",

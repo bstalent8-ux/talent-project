@@ -13,11 +13,20 @@
 // The test suite asserts both halves: every renderable key has an adapter
 // entry, and every inline key fails safe.
 
-/** Talent core sections with a standalone component today. */
+/**
+ * Talent core sections with a standalone component today.
+ *
+ * `social` (Professional Presence) and `physical` (Measurements, Model only —
+ * see section-content.ts's category gate) used to be inline placeholders with
+ * no component; the public UGC/Model profile work gave them one each
+ * (ProfessionalPresenceSection, MeasurementsSection).
+ */
 export const TALENT_RENDERABLE_CORE_KEYS = [
   "hero",
   "avatar",        // seeded completion key — part of the hero block
   "personal",      // seeded completion key — part of the hero block
+  "social",
+  "physical",
   "portfolio",
   "packages",
   "usage_addons",
@@ -30,15 +39,13 @@ export const TALENT_RENDERABLE_CORE_KEYS = [
 
 /**
  * Talent core sections with no standalone component.
- * `bio`, `categories` and `social` render inside ProfileHero; `physical` and
- * `availability` render in the TalentModelProfile sidebar; `payment` is the
+ * `bio` and `categories` render inside ProfileHero; `availability` renders
+ * there too (see the public ProfileHero's identity line); `payment` is the
  * weight-0 "coming soon" section from lib/profile-completion.ts.
  */
 export const TALENT_INLINE_CORE_KEYS = [
   "bio",
   "categories",
-  "social",
-  "physical",
   "availability",
   "payment",
 ] as const;

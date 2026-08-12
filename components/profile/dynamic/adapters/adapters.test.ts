@@ -53,6 +53,8 @@ const talentContext: TalentProfileContext = {
   bookingStats: { total: 7, completed: 5, pending: 1, cancelled: 1 },
   selectedPackage: null,
   onSelectPackage,
+  presenceLinks: { instagram: "https://instagram.com/sara" },
+  measurements: { height: "170", eye_color: "بني" },
 };
 
 const brandContext: BrandProfileContext = {
@@ -210,6 +212,28 @@ describe("adapter output matches component prop requirements", () => {
       reviews: talentContext.reviews,
       rating:  talentContext.talent.rating,
     });
+  });
+
+  it("social maps to ProfessionalPresenceSection with the filled presence links", () => {
+    const plan = buildTalentCoreProps("social", talentContext)!;
+    expect(plan.component).toBe("ProfessionalPresenceSection");
+    expect(plan.props).toEqual({ links: talentContext.presenceLinks });
+  });
+
+  it("social returns null when no presence links are filled", () => {
+    const withoutPresence: TalentProfileContext = { ...talentContext, presenceLinks: {} };
+    expect(buildTalentCoreProps("social", withoutPresence)).toBeNull();
+  });
+
+  it("physical maps to MeasurementsSection with the Model measurements", () => {
+    const plan = buildTalentCoreProps("physical", talentContext)!;
+    expect(plan.component).toBe("MeasurementsSection");
+    expect(plan.props).toEqual({ measurements: talentContext.measurements });
+  });
+
+  it("physical returns null when there are no measurements (e.g. category is not model)", () => {
+    const withoutMeasurements: TalentProfileContext = { ...talentContext, measurements: null };
+    expect(buildTalentCoreProps("physical", withoutMeasurements)).toBeNull();
   });
 
   it("trust maps to TrustCard, which takes no props", () => {

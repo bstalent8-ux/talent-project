@@ -34,6 +34,8 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
     escrowSteps: ar
       ? ["الدفع محجوز", "تسليم العمل", "الموافقة", "الإفراج عن الأموال"]
       : ["Payment Held", "Work Delivery", "Approval", "Fund Release"],
+    availableNow:   ar ? "متاح الآن" : "Available now",
+    unavailableNow: ar ? "غير متاح حالياً" : "Currently unavailable",
   };
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
@@ -157,6 +159,26 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
             <span style={{ opacity: 0.4 }}>•</span>
             <span>{t.memberSince} {talent.memberSince}</span>
           </div>
+
+          {/* Availability + languages — hero-adjacent identity line, hidden when both are empty */}
+          {(talent.availability || talent.languages) && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              {talent.availability && (
+                <span style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  backgroundColor: talent.availability === "available" ? "rgba(0,210,106,0.08)" : "rgba(148,163,184,0.12)",
+                  color: talent.availability === "available" ? GREEN : MUTED,
+                  border: `1px solid ${talent.availability === "available" ? "rgba(0,210,106,0.2)" : BORDER}`,
+                  borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 600,
+                }}>
+                  {talent.availability === "available" ? t.availableNow : t.unavailableNow}
+                </span>
+              )}
+              {talent.languages && (
+                <span style={{ color: MUTED, fontSize: 12 }}>{talent.languages}</span>
+              )}
+            </div>
+          )}
 
           {/* Rating + views */}
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
