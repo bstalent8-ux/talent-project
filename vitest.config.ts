@@ -27,6 +27,18 @@ export default defineConfig({
     include: [
       "features/profiles/**/*.test.ts",
       "components/profile/**/*.test.ts",
+      // MVP registration-scope repair: both additions are pure,
+      // dependency-free logic/data (talent-types.ts, submit-outcome.ts) or
+      // a fully-mocked route handler test — same rationale as the two globs
+      // above, not a broader testing initiative.
+      // Parens in a route-group folder name must be glob-escaped, or
+      // fast-glob parses "(auth)" as a group and matches nothing.
+      "app/\\(auth\\)/register/**/*.test.ts",
+      "app/api/profile/**/*.test.ts",
+      // Category integrity repair: static text-only regression guards on the
+      // migration SQL itself (no live Postgres in this environment — see
+      // the test file's own header for what this does and does not prove).
+      "supabase/migrations/**/*.test.ts",
     ],
   },
 });
