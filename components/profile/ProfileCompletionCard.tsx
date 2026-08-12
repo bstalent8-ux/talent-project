@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { calculateCompletion } from "@/lib/profile-completion";
+import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
+import { getWizardSteps, type WizardStepKey } from "./completion-wizard-steps";
 import { cdnImage } from "@/lib/images";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
 
@@ -11,6 +14,13 @@ const TX = {
   ar: {
     title:        "أكمل ملفك الشخصي",
     score:        (n: number) => `${n}% مكتمل`,
+    ctaComplete:  "أكمل ملفك",
+    stepOf:       (i: number, n: number) => `الخطوة ${i} من ${n}`,
+    back:         "رجوع",
+    continueBtn:  "حفظ واستمرار",
+    saveExit:     "حفظ وخروج",
+    finish:       "إنهاء",
+    reviewHint:   "راجع كل قسم، اضغط أي خطوة أعلاه للتعديل.",
     tapToAdd:     "اضغط للإضافة",
     notStarted:   "لم يبدأ بعد",
     complete:     "مكتمل",
@@ -27,6 +37,15 @@ const TX = {
     choose:       "اختر صورة",
     lockedFeatures: "ميزات مقفلة",
     unlockAt:     (n: number) => `تفتح عند ${n}%`,
+    stepLabels: {
+      basic:        "المعلومات الأساسية",
+      physical:     "البيانات الجسدية",
+      professional: "المعلومات المهنية",
+      portfolio:    "معرض الأعمال",
+      presence:     "الحضور المهني",
+      availability: "حالة الإتاحة",
+      review:       "المراجعة النهائية",
+    },
     features: {
       applyToJobs:    "التقديم على الفرص",
       appearInSearch: "الظهور في البحث",
@@ -38,7 +57,7 @@ const TX = {
       personal:     "الاسم والمدينة",
       bio:          "النبذة الشخصية",
       categories:   "التخصص",
-      social:       "السوشيال ميديا",
+      social:       "الحضور المهني",
       portfolio:    "أعمالي",
       physical:     "البيانات الجسدية",
       packages:     "الباقات والأسعار",
@@ -59,16 +78,28 @@ const TX = {
       category:     "التخصص الأساسي",
       instagram:    "إنستقرام",
       tiktok:       "تيك توك",
+      facebook:     "فيسبوك",
       youtube:      "يوتيوب",
       linkedin:     "لينكد إن",
+      telegram:     "تيليجرام",
+      website:      "الموقع الإلكتروني",
+      other:        "أخرى",
       available:    "متاح",
       unavailable:  "غير متاح",
       availability: "حالة الإتاحة",
+      eyeColor:     "لون العين",
     },
   },
   en: {
     title:        "Complete your profile",
     score:        (n: number) => `${n}% complete`,
+    ctaComplete:  "Complete My Profile",
+    stepOf:       (i: number, n: number) => `Step ${i} of ${n}`,
+    back:         "Back",
+    continueBtn:  "Save & Continue",
+    saveExit:     "Save & Exit",
+    finish:       "Finish",
+    reviewHint:   "Check each section — click a step above to edit it.",
     tapToAdd:     "Tap to add",
     notStarted:   "Not started",
     complete:     "Complete",
@@ -85,6 +116,15 @@ const TX = {
     choose:       "Choose photo",
     lockedFeatures: "Locked features",
     unlockAt:     (n: number) => `Unlocks at ${n}%`,
+    stepLabels: {
+      basic:        "Basic Info",
+      physical:     "Physical Info",
+      professional: "Professional Info",
+      portfolio:    "Portfolio",
+      presence:     "Professional Presence",
+      availability: "Availability",
+      review:       "Final Review",
+    },
     features: {
       applyToJobs:    "Apply to opportunities",
       appearInSearch: "Appear in search",
@@ -96,7 +136,7 @@ const TX = {
       personal:     "Name & city",
       bio:          "Bio",
       categories:   "Specialty",
-      social:       "Social media",
+      social:       "Professional Presence",
       portfolio:    "Portfolio",
       physical:     "Physical details",
       packages:     "Packages & Pricing",
@@ -117,11 +157,16 @@ const TX = {
       category:     "Main specialty",
       instagram:    "Instagram",
       tiktok:       "TikTok",
+      facebook:     "Facebook",
       youtube:      "YouTube",
       linkedin:     "LinkedIn",
+      telegram:     "Telegram",
+      website:      "Website",
+      other:        "Other",
       available:    "Available",
       unavailable:  "Unavailable",
       availability: "Availability status",
+      eyeColor:     "Eye Color",
     },
   },
 };
@@ -137,6 +182,18 @@ const CATEGORIES = [
   { value: "voice_artist",    ar: "فنان مؤثرات صوتية",      en: "Voice Artist" },
   { value: "comedian",        ar: "كوميديان",               en: "Comedian" },
   { value: "animator",        ar: "موشن جرافيك",            en: "Animator" },
+];
+
+/** Professional Presence fields — URL-only links, no OAuth. */
+const PRESENCE_FIELDS: { key: string; icon: string }[] = [
+  { key: "instagram", icon: "📸" },
+  { key: "tiktok",    icon: "🎵" },
+  { key: "facebook",  icon: "📘" },
+  { key: "youtube",   icon: "▶️" },
+  { key: "linkedin",  icon: "💼" },
+  { key: "telegram",  icon: "✈️" },
+  { key: "website",   icon: "🌐" },
+  { key: "other",     icon: "🔗" },
 ];
 
 /* ─── section icon map ───────────────────────────────────── */
@@ -186,10 +243,10 @@ const GATE_TX: Record<string, { ar: string; en: string }> = {
   contactTalents: { ar: "التواصل مع المواهب", en: "Contact talents" },
 };
 
-/* ─── tiny modal wrapper ─────────────────────────────────── */
+/* ─── modal wrapper (also used as the wizard shell) ───────── */
 function Modal({
-  children, onClose, dark, title,
-}: { children: React.ReactNode; onClose: () => void; dark: boolean; title: string }) {
+  children, onClose, dark, title, wide,
+}: { children: React.ReactNode; onClose: () => void; dark: boolean; title: ReactNode; wide?: boolean }) {
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -209,19 +266,19 @@ function Modal({
         border:       `1px solid ${dark ? "rgba(255,255,255,0.1)" : "#e2e8f0"}`,
         borderRadius: 18,
         padding:      "28px 28px 24px",
-        maxWidth:     460,
+        maxWidth:     wide ? 640 : 460,
         width:        "100%",
         maxHeight:    "90vh",
         overflowY:    "auto",
         fontFamily:   "'Cairo', sans-serif",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-          <h3 style={{ color: dark ? "#f1f5f9" : "#0f172a", fontSize: 17, fontWeight: 700, margin: 0 }}>{title}</h3>
+          <div>{title}</div>
           <button onClick={onClose} style={{
             background: dark ? "rgba(255,255,255,0.08)" : "#f1f5f9",
             border: "none", borderRadius: 8, width: 32, height: 32,
             cursor: "pointer", fontSize: 16, color: dark ? "#94a3b8" : "#64748b",
-            display: "flex", alignItems: "center", justifyContent: "center",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>✕</button>
         </div>
         {children}
@@ -235,6 +292,9 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
   const { lang, dark } = useSite();
   const t    = TX[lang];
   const dir  = lang === "ar" ? "rtl" : "ltr";
+  const router     = useRouter();
+  const pathname    = usePathname();
+  const searchParams = useSearchParams();
 
   const TEXT   = dark ? "#f1f5f9"  : "#0f172a";
   const MUTED  = dark ? "#64748b"  : "#94a3b8";
@@ -246,19 +306,57 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
   // Same green the rest of the profile uses for "confirmed" (TrustCard, hero
   // verified badge), so a done section reads as done everywhere.
   const GREEN_DONE = "#00D26A";
+  const GOLD   = "#F4B740";
 
-  const [active,    setActive]    = useState<string | null>(null);
   const [saving,    setSaving]    = useState(false);
   const [uploading, setUploading] = useState(false);
-  /* per-modal local state */
+
+  /* ── guided wizard state ── */
+  const steps = useMemo(() => getWizardSteps(talentProfile?.category), [talentProfile?.category]);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [stepIdx,    setStepIdx]    = useState(0);
+
+  // Resumable: a step deep-linked via ?complete=1&step=<key> reopens the
+  // wizard at that step on mount (e.g. after a refresh mid-flow).
+  useEffect(() => {
+    if (searchParams.get("complete") === "1") {
+      const key = searchParams.get("step");
+      const idx = key ? steps.indexOf(key as WizardStepKey) : 0;
+      setWizardOpen(true);
+      setStepIdx(idx >= 0 ? idx : 0);
+    }
+    // Intentionally mount-only: the wizard's own nav owns step/URL sync after.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const syncUrl = (idx: number, open: boolean) => {
+    if (!open) { router.replace(pathname, { scroll: false }); return; }
+    router.replace(`${pathname}?complete=1&step=${steps[idx]}`, { scroll: false });
+  };
+
+  const openWizard = (startIdx = 0) => {
+    setWizardOpen(true);
+    setStepIdx(startIdx);
+    syncUrl(startIdx, true);
+  };
+  const closeWizard = () => {
+    setWizardOpen(false);
+    syncUrl(0, false);
+  };
+  const goToStep = (idx: number) => {
+    const clamped = Math.max(0, Math.min(steps.length - 1, idx));
+    setStepIdx(clamped);
+    syncUrl(clamped, true);
+  };
+
+  /* per-step local state */
   const sl = talentProfile?.social_links ?? {};
   const [personal,     setPersonal]     = useState({ full_name: profile?.full_name ?? "", city: profile?.city ?? "" });
   const [bio,          setBio]          = useState(profile?.bio ?? talentProfile?.bio ?? "");
   const [category,     setCategory]     = useState(talentProfile?.category ?? "");
-  const [social,       setSocial]       = useState({
-    instagram: sl.instagram ?? "", tiktok: sl.tiktok ?? "",
-    youtube:   sl.youtube   ?? "", linkedin: sl.linkedin ?? "",
-  });
+  const [presence,     setPresence]     = useState<Record<string, string>>(
+    Object.fromEntries(TALENT_SOCIAL_KEYS.map((k) => [k, sl[k] ?? ""])),
+  );
   const [avail, setAvail] = useState(talentProfile?.availability ?? "available");
 
   /* portfolio state */
@@ -319,7 +417,9 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
   const setAddon = (key: string, field: keyof AddonItem, val: any) => setAddons(as => as.map(a => a.key === key ? { ...a, [field]: val } : a));
   const delAddon = (key: string) => setAddons(as => as.filter(a => a.key !== key));
 
-  /* physical state */
+  /* physical state — Model wizard step exposes only MODEL_PHYSICAL_FIELDS,
+     but age/languages/dialect (set by any category through legacy editing)
+     are kept in state so a save never clobbers them. */
   const [physical, setPhysical] = useState({
     height:     sl.height     ?? "",
     weight:     sl.weight     ?? "",
@@ -328,6 +428,7 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
     shoe_size:  sl.shoe_size  ?? "",
     languages:  sl.languages  ?? "",
     dialect:    sl.dialect    ?? "",
+    eye_color:  sl.eye_color  ?? "",
   });
 
   // Provider-computed when loaded; the local talent calculation only covers the
@@ -374,10 +475,8 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
     );
   }
 
-  // Every section is listed, not only the unfinished ones. A card that only
-  // shows what is missing gives no sense of what has been built, and a profile
-  // that is nearly finished looks identical to one that has barely started.
-  // Unfinished first, so the next action is always at the top.
+  // Unfinished-first ordering is still used inside the Review step, so the
+  // guided flow's last screen reads the same way the old grid did.
   const ordered = [...sections].sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
     return b.weight - a.weight;
@@ -404,85 +503,51 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
       fd.append("file", file);
       const res  = await fetch("/api/profile/avatar", { method: "POST", body: fd });
       const data = await res.json();
-      if (data.avatar_url) {
-        onUpdate();
-        setActive(null);
-      }
+      if (data.avatar_url) onUpdate();
     } catch {}
     setUploading(false);
   };
 
-  /* ── save personal ── */
-  const savePersonal = async () => {
-    if (!personal.full_name.trim()) return;
+  /**
+   * Saves whatever the current step's fields hold, skipping empty ones —
+   * a guided step never blocks "Continue" just because an optional field is
+   * blank; the completion score already reflects what's missing.
+   */
+  const saveStep = async (key: WizardStepKey) => {
     setSaving(true);
-    try { await patchSection("personal", { full_name: personal.full_name.trim(), city: personal.city.trim() }); onUpdate(); } catch {}
-    setSaving(false); setActive(null);
-  };
-
-  /* ── save bio ── */
-  const saveBio = async () => {
-    if (!bio.trim()) return;
-    setSaving(true);
-    try { await patchSection("bio", { bio: bio.trim() }); onUpdate(); } catch {}
-    setSaving(false); setActive(null);
-  };
-
-  /* ── save category ── */
-  const saveCategory = async () => {
-    if (!category) return;
-    setSaving(true);
-    try { await patchSection("categories", { category }); onUpdate(); } catch {}
-    setSaving(false); setActive(null);
-  };
-
-  /* ── save social ── */
-  const saveSocial = async () => {
-    const hasAny = Object.values(social).some((v) => v.trim().length > 2);
-    if (!hasAny) return;
-    setSaving(true);
-    try { await patchSection("social", social); onUpdate(); } catch {}
-    setSaving(false); setActive(null);
-  };
-
-  /* ── save availability ── */
-  const saveAvailability = async () => {
-    setSaving(true);
-    try { await patchSection("availability", { availability: avail }); onUpdate(); } catch {}
-    setSaving(false); setActive(null);
-  };
-
-  /* ── save physical ── */
-  const savePhysical = async () => {
-    const hasAny = Object.values(physical).some(v => v.trim().length > 0);
-    if (!hasAny) return;
-    setSaving(true);
-    try { await patchSection("physical", physical); onUpdate(); } catch {}
-    setSaving(false); setActive(null);
-  };
-
-  /* ── save packages ── */
-  const savePackages = async () => {
-    if (!packages.length) return;
-    setSaving(true);
-    try { await patchSection("packages", { packages }); onUpdate(); } catch {}
-    setSaving(false); setActive(null);
-  };
-
-  /* ── save addons ── */
-  const saveAddons = async () => {
-    if (!addons.length) return;
-    setSaving(true);
-    try { await patchSection("usage_addons", { usage_addons: addons }); onUpdate(); } catch {}
-    setSaving(false); setActive(null);
-  };
-
-  /* ── card click handler ── */
-  const handleCardClick = (key: string) => {
-    if (key === "payment") { return; }
+    try {
+      if (key === "basic") {
+        if (personal.full_name.trim()) {
+          await patchSection("personal", { full_name: personal.full_name.trim(), city: personal.city.trim() });
+        }
+        if (bio.trim()) await patchSection("bio", { bio: bio.trim() });
+      } else if (key === "physical") {
+        if (Object.values(physical).some((v) => String(v).trim().length > 0)) {
+          await patchSection("physical", physical);
+        }
+      } else if (key === "professional") {
+        if (category) await patchSection("categories", { category });
+        if (packages.length) await patchSection("packages", { packages });
+        if (addons.length) await patchSection("usage_addons", { usage_addons: addons });
+      } else if (key === "presence") {
+        if (Object.values(presence).some((v) => v.trim().length > 2)) {
+          await patchSection("social", presence);
+        }
+      } else if (key === "availability") {
+        await patchSection("availability", { availability: avail });
+      }
+      // "portfolio" writes immediately per upload; "review" has nothing to save.
+      onUpdate();
+    } catch {}
     setSaving(false);
-    setActive(key);
   };
+
+  const handleContinue = async () => {
+    await saveStep(steps[stepIdx]);
+    if (stepIdx < steps.length - 1) goToStep(stepIdx + 1);
+  };
+  const handleBack = () => goToStep(stepIdx - 1);
+  const handleSaveExit = async () => { await saveStep(steps[stepIdx]); closeWizard(); };
 
   /* ── shared input / button styles ── */
   const inp: React.CSSProperties = {
@@ -497,137 +562,49 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
     fontSize: 15, fontWeight: 700, cursor: disabled ? "not-allowed" : "pointer",
     fontFamily: "'Cairo', sans-serif", marginTop: 16,
   });
+  const ghostBtn: React.CSSProperties = {
+    padding: "12px 20px", background: "transparent",
+    border: `1px solid ${BORDER}`, borderRadius: 10, color: MUTED,
+    fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo', sans-serif",
+  };
 
   /* ─── render ──────────────────────────────────────────── */
   return (
     <>
       <div style={{ marginBottom: 28, fontFamily: "'Cairo', sans-serif" }} dir={dir}>
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
-          <div>
-            <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 700, margin: "0 0 2px" }}>{t.title}</h3>
-            <p style={{ color: MUTED, fontSize: 13, margin: 0 }}>{t.score(score)}</p>
-          </div>
-          {/* Mini progress bar */}
-          <div style={{ flex: 1, maxWidth: 200, minWidth: 100 }}>
-            <div style={{ height: 6, background: dark ? "rgba(255,255,255,0.06)" : "#f1f5f9", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${score}%`, background: scoreColor, borderRadius: 4, transition: "width 0.5s ease" }} />
+        {/* Compact header + CTA (the old per-section card grid is gone —
+            all editing now happens inside the guided wizard). */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          flexWrap: "wrap", gap: 14, padding: "16px 18px", borderRadius: 16,
+          background: CARD, border: `1px solid ${BORDER}`,
+        }}>
+          <div style={{ flex: "1 1 220px", minWidth: 180 }}>
+            <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 700, margin: "0 0 6px" }}>{t.title}</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ flex: 1, maxWidth: 220 }}>
+                <div style={{ height: 8, background: dark ? "rgba(255,255,255,0.06)" : "#f1f5f9", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${score}%`, background: scoreColor, borderRadius: 4, transition: "width 0.5s ease" }} />
+                </div>
+              </div>
+              <span style={{ color: scoreColor, fontSize: 15, fontWeight: 800 }}>{t.score(score)}</span>
             </div>
           </div>
-          <span style={{ color: scoreColor, fontSize: 20, fontWeight: 800, minWidth: 52, textAlign: "center" }}>{score}%</span>
-        </div>
-
-        {/* Every section, with its state */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
-          {ordered.map((s) => {
-            // `payment` is the weight-0 "coming soon" section, and a brand's
-            // `verification` is decided by an admin — neither is a task the user
-            // can act on, so neither opens an editor.
-            const isLocked    = s.key === "payment" || (s.key === "verification" && !s.done);
-            const isUploading = uploading && s.key === "avatar";
-            const isEditable  = !isLocked && !isUploading;
-
-            const pct = Math.round((s.progress ?? (s.done ? 1 : 0)) * 100);
-            // Shown only where it says something the ✓ does not: a section that
-            // counts as done but still has empty slots, or one genuinely started.
-            const showPartial = pct > 0 && pct < 100;
-
-            const accent = s.done ? GREEN_DONE : TEAL;
-
-            return (
-              <button
-                key={s.key}
-                onClick={() => isEditable && handleCardClick(s.key)}
-                disabled={!isEditable}
-                style={{
-                  display:        "flex",
-                  flexDirection:  "column",
-                  alignItems:     "flex-start",
-                  gap:            8,
-                  padding:        "14px 16px",
-                  background:     isLocked
-                    ? (dark ? "rgba(255,255,255,0.02)" : "#f8fafc")
-                    : CARD,
-                  border:         `1px solid ${isLocked ? BORDER : (dark ? `${accent}33` : `${accent}40`)}`,
-                  borderRadius:   14,
-                  cursor:         isEditable ? "pointer" : "not-allowed",
-                  textAlign:      lang === "ar" ? "right" : "left",
-                  transition:     "transform 0.15s, box-shadow 0.15s",
-                  opacity:        isLocked ? 0.5 : 1,
-                  position:       "relative",
-                  overflow:       "hidden",
-                }}
-                onMouseEnter={(e) => { if (isEditable) (e.currentTarget.style.transform = "translateY(-2px)"), (e.currentTarget.style.boxShadow = `0 6px 20px ${accent}26`); }}
-                onMouseLeave={(e) => { (e.currentTarget.style.transform = "none"), (e.currentTarget.style.boxShadow = "none"); }}
-              >
-                {/* Icon + state badge */}
-                <div style={{
-                  display:      "flex",
-                  alignItems:   "center",
-                  justifyContent: "space-between",
-                  width:        "100%",
-                }}>
-                  <span style={{ fontSize: 22 }}>{ICONS[s.key] ?? "•"}</span>
-                  <span style={{
-                    background:   isLocked ? "rgba(148,163,184,0.15)" : `${accent}1F`,
-                    color:        isLocked ? MUTED : accent,
-                    padding:      "2px 8px",
-                    borderRadius: 20,
-                    fontSize:     12,
-                    fontWeight:   700,
-                  }}>
-                    {isLocked ? "—" : s.done ? `✓ ${t.done}` : `+${s.weight}%`}
-                  </span>
-                </div>
-
-                {/* Label + state line */}
-                <div style={{ width: "100%" }}>
-                  <p style={{ color: TEXT, fontSize: 13, fontWeight: 600, margin: "0 0 2px" }}>
-                    {(t.sections as any)[s.key] ?? s.label[lang]}
-                  </p>
-                  <p style={{ color: MUTED, fontSize: 11, margin: 0 }}>
-                    {isUploading    ? t.uploading
-                      : isLocked    ? (s.key === "verification" ? t.pendingReview : t.locked)
-                      : showPartial ? t.partial(pct)
-                      : s.done      ? t.complete
-                      :               t.notStarted}
-                  </p>
-
-                  {/* A bar only where there is real partial state to show. */}
-                  {showPartial && !isLocked && (
-                    <div style={{
-                      height: 3, marginTop: 7, borderRadius: 3, overflow: "hidden",
-                      background: dark ? "rgba(255,255,255,0.07)" : "#eef2f7",
-                    }}>
-                      <div style={{ height: "100%", width: `${pct}%`, background: accent, borderRadius: 3 }} />
-                    </div>
-                  )}
-                </div>
-
-                {/* uploading overlay */}
-                {isUploading && (
-                  <div style={{
-                    position: "absolute", inset: 0,
-                    background: "rgba(0,201,177,0.08)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <div style={{
-                      width: 20, height: 20, borderRadius: "50%",
-                      border: `3px solid ${TEAL}`, borderTopColor: "transparent",
-                      animation: "spin 0.7s linear infinite",
-                    }} />
-                  </div>
-                )}
-              </button>
-            );
-          })}
+          <button
+            onClick={() => openWizard(0)}
+            style={{
+              padding: "12px 24px", background: TEAL, border: "none", borderRadius: 12,
+              color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer",
+              fontFamily: "'Cairo', sans-serif", whiteSpace: "nowrap",
+            }}
+          >
+            {t.ctaComplete}
+          </button>
         </div>
 
         {/* Locked features strip */}
         {(() => {
-          // Gates come from the provider, so a brand is never shown "apply to
-          // opportunities" and a talent is never shown "post opportunities".
           const locked = gates
             .filter((gate) => !gate.passed)
             .map((gate) => ({
@@ -658,362 +635,345 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* ═══════════════════════════════════════════════════
-          M O D A L S
+          G U I D E D   C O M P L E T I O N   W I Z A R D
       ═══════════════════════════════════════════════════ */}
+      {wizardOpen && (
+        <Modal
+          wide
+          dark={dark}
+          onClose={closeWizard}
+          title={
+            <div>
+              <p style={{ color: MUTED, fontSize: 12, fontWeight: 700, margin: "0 0 4px" }}>
+                {t.stepOf(stepIdx + 1, steps.length)}
+              </p>
+              <h3 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: 0 }}>
+                {t.stepLabels[steps[stepIdx]]}
+              </h3>
+              {/* clickable step dots — freely revisit any step, nothing is lost
+                  by jumping since nothing auto-saves except Continue/Save & Exit */}
+              <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+                {steps.map((key, i) => (
+                  <button
+                    key={key}
+                    onClick={() => goToStep(i)}
+                    title={t.stepLabels[key]}
+                    style={{
+                      width: 22, height: 6, borderRadius: 3, border: "none", cursor: "pointer", padding: 0,
+                      background: i === stepIdx ? TEAL : i < stepIdx ? GREEN_DONE : (dark ? "rgba(255,255,255,0.1)" : "#e2e8f0"),
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          }
+        >
+          <div dir={dir}>
+            {steps[stepIdx] === "basic" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <label
+                  htmlFor="completion-avatar-input"
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12, border: `2px dashed ${TEAL}`, borderRadius: 14, padding: "14px 16px",
+                    cursor: "pointer", background: dark ? "rgba(0,201,177,0.04)" : "rgba(0,201,177,0.03)",
+                  }}
+                >
+                  <span style={{ fontSize: 28 }}>📸</span>
+                  <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>
+                    {uploading ? t.uploading : t.uploadPhoto}
+                  </span>
+                </label>
+                <input
+                  id="completion-avatar-input" type="file" accept="image/*" style={{ display: "none" }}
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleAvatarFile(file); }}
+                />
 
-      {/* ── Portfolio modal ── */}
-      {active === "portfolio" && (
-        <Modal title={`${ICONS.portfolio} ${t.sections.portfolio}`} onClose={() => setActive(null)} dark={dark}>
-          <div dir={dir} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 5 }}>{t.labels.fullName}</label>
+                  <input
+                    style={inp}
+                    value={personal.full_name}
+                    placeholder={lang === "ar" ? "مثلاً: أحمد محمد" : "e.g. Ahmed Mohamed"}
+                    onChange={(e) => setPersonal((f) => ({ ...f, full_name: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 5 }}>{t.labels.city}</label>
+                  <input
+                    style={inp}
+                    value={personal.city}
+                    placeholder={lang === "ar" ? "مثلاً: الرياض" : "e.g. Riyadh"}
+                    onChange={(e) => setPersonal((f) => ({ ...f, city: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 5 }}>{t.labels.bio}</label>
+                  <textarea
+                    rows={4}
+                    style={{ ...inp, resize: "vertical", lineHeight: 1.6 }}
+                    value={bio}
+                    placeholder={t.labels.bioHint}
+                    onChange={(e) => setBio(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
 
-            {/* existing items */}
-            {portfolioMedia.length > 0 && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                {portfolioMedia.map((item: any) => (
-                  <div key={item.id} style={{ position: "relative", borderRadius: 8, overflow: "hidden", aspectRatio: "1", background: dark ? "#1e293b" : "#f1f5f9" }}>
-                    {item.media_type === "video" ? (
-                      <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} muted />
-                    ) : (
-                      <img src={cdnImage(item.url, 320)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    )}
+            {steps[stepIdx] === "physical" && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {MODEL_PHYSICAL_FIELDS.map((k) => {
+                  const label = k === "height" ? (lang === "ar" ? "الطول (سم)" : "Height (cm)")
+                    : k === "weight" ? (lang === "ar" ? "الوزن (كجم)" : "Weight (kg)")
+                    : k === "shoe_size" ? (lang === "ar" ? "مقاس الجزمة (EU)" : "Shoe Size (EU)")
+                    : k === "hair_color" ? (lang === "ar" ? "لون الشعر" : "Hair Color")
+                    : t.labels.eyeColor;
+                  const isLtr = k === "height" || k === "weight" || k === "shoe_size";
+                  return (
+                    <div key={k}>
+                      <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{label}</label>
+                      <input
+                        value={(physical as any)[k]}
+                        onChange={(e) => setPhysical((p) => ({ ...p, [k]: e.target.value }))}
+                        style={{ ...inp, direction: isLtr ? "ltr" : "rtl" }}
+                        placeholder={label}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {steps[stepIdx] === "professional" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <div>
+                  <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 8 }}>{t.labels.category}</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {CATEGORIES.map((c) => (
+                      <button
+                        key={c.value}
+                        onClick={() => setCategory(c.value)}
+                        style={{
+                          padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                          fontFamily: "'Cairo', sans-serif", textAlign: "center", transition: "all 0.15s",
+                          background:  category === c.value ? TEAL : INP,
+                          color:       category === c.value ? "#fff" : MUTED,
+                          border:      `1px solid ${category === c.value ? TEAL : BORDER}`,
+                        }}
+                      >
+                        {lang === "ar" ? c.ar : c.en}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p style={{ color: TEXT, fontSize: 13, fontWeight: 700, margin: "0 0 10px" }}>{t.sections.packages}</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {packages.map((pkg) => (
+                      <div key={pkg.id} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, position: "relative" }}>
+                        <button onClick={() => delPkg(pkg.id)} style={{ position: "absolute", top: 8, right: 8, background: "rgba(220,38,38,0.15)", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", padding: "2px 8px", fontSize: 12 }}>✕</button>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                          <div>
+                            <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{lang === "ar" ? "اسم الباقة" : "Package name"}</label>
+                            <input value={pkg.name} onChange={e => setPkg(pkg.id, "name", e.target.value)} style={inp} placeholder={lang === "ar" ? "مثلاً: أساسي" : "e.g. Basic"} />
+                          </div>
+                          <div>
+                            <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{lang === "ar" ? "السعر (جنيه)" : "Price (EGP)"}</label>
+                            <input value={pkg.price} onChange={e => setPkg(pkg.id, "price", e.target.value)} style={{ ...inp, direction: "ltr" }} type="number" min="0" />
+                          </div>
+                        </div>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginBottom: 8 }}>
+                          <input type="checkbox" checked={pkg.popular} onChange={e => setPkg(pkg.id, "popular", e.target.checked)} />
+                          <span style={{ color: MUTED, fontSize: 12 }}>{lang === "ar" ? "الأكثر طلباً" : "Most Popular"}</span>
+                        </label>
+                        <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{lang === "ar" ? "المميزات" : "Features"}</label>
+                        {pkg.features.map((f, fi) => (
+                          <div key={fi} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
+                            <input value={f} onChange={e => setFeat(pkg.id, fi, e.target.value)} style={{ ...inp, flex: 1 }} />
+                            <button onClick={() => delFeat(pkg.id, fi)} style={{ background: "rgba(220,38,38,0.12)", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", padding: "0 10px" }}>✕</button>
+                          </div>
+                        ))}
+                        <button onClick={() => addFeat(pkg.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", background: "transparent", border: `1px dashed ${BORDER}`, borderRadius: 7, color: MUTED, fontSize: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif", marginTop: 4 }}>
+                          + {lang === "ar" ? "إضافة ميزة" : "Add feature"}
+                        </button>
+                      </div>
+                    ))}
+                    <button onClick={addPkg} style={{ padding: "10px 0", background: "transparent", border: `1px dashed ${TEAL}`, borderRadius: 10, color: TEAL, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                      + {lang === "ar" ? "إضافة باقة" : "Add package"}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <p style={{ color: TEXT, fontSize: 13, fontWeight: 700, margin: "0 0 10px" }}>{t.sections.usage_addons}</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {addons.map((addon) => (
+                      <div key={addon.key} style={{ display: "grid", gridTemplateColumns: "1fr 120px 36px", gap: 8, alignItems: "end" }}>
+                        <div>
+                          <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{lang === "ar" ? "الاسم" : "Name"}</label>
+                          <input value={addon.label} onChange={e => setAddon(addon.key, "label", e.target.value)} style={inp} placeholder={lang === "ar" ? "مثلاً: حق تجاري" : "e.g. Commercial use"} />
+                        </div>
+                        <div>
+                          <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{lang === "ar" ? "السعر (جنيه)" : "Price (EGP)"}</label>
+                          <input value={addon.price} onChange={e => setAddon(addon.key, "price", Number(e.target.value))} style={{ ...inp, direction: "ltr" }} type="number" min="0" />
+                        </div>
+                        <button onClick={() => delAddon(addon.key)} style={{ height: 38, background: "rgba(220,38,38,0.12)", border: "none", borderRadius: 8, color: "#ef4444", cursor: "pointer", fontSize: 14 }}>✕</button>
+                      </div>
+                    ))}
+                    <button onClick={addAddon} style={{ padding: "10px 0", background: "transparent", border: `1px dashed #a78bfa`, borderRadius: 10, color: "#a78bfa", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                      + {lang === "ar" ? "إضافة حق استخدام" : "Add usage right"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {steps[stepIdx] === "portfolio" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {portfolioMedia.length > 0 && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                    {portfolioMedia.map((item: any) => (
+                      <div key={item.id} style={{ position: "relative", borderRadius: 8, overflow: "hidden", aspectRatio: "1", background: dark ? "#1e293b" : "#f1f5f9" }}>
+                        {item.media_type === "video" ? (
+                          <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} muted />
+                        ) : (
+                          <img src={cdnImage(item.url, 320)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        )}
+                        <button
+                          onClick={() => handleDeletePortfolio(item.id)}
+                          style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%", background: "rgba(220,38,38,0.85)", border: "none", color: "#fff", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+                        >✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div>
+                  <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>
+                    {lang === "ar" ? "تعليق (اختياري)" : "Caption (optional)"}
+                  </label>
+                  <input
+                    value={portfolioCaption}
+                    onChange={e => setPortfolioCaption(e.target.value)}
+                    style={inp}
+                    placeholder={lang === "ar" ? "اكتب تعليقاً..." : "Write a caption..."}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <label htmlFor="portfolio-photo-input" style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    gap: 6, padding: "18px 12px", border: `2px dashed ${TEAL}`, borderRadius: 12,
+                    cursor: portfolioUploading ? "not-allowed" : "pointer",
+                    background: dark ? "rgba(0,201,177,0.04)" : "rgba(0,201,177,0.03)",
+                    opacity: portfolioUploading ? 0.6 : 1,
+                  }}>
+                    <span style={{ fontSize: 24 }}>🖼️</span>
+                    <span style={{ color: TEAL, fontSize: 13, fontWeight: 700 }}>
+                      {portfolioUploading ? (lang === "ar" ? "جاري الرفع..." : "Uploading...") : (lang === "ar" ? "إضافة صورة" : "Add Photo")}
+                    </span>
+                  </label>
+                  <input id="portfolio-photo-input" type="file" accept="image/*" style={{ display: "none" }} disabled={portfolioUploading}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handlePortfolioFile(f, "photo"); e.target.value = ""; }} />
+
+                  <label htmlFor="portfolio-video-input" style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    gap: 6, padding: "18px 12px", border: `2px dashed #a78bfa`, borderRadius: 12,
+                    cursor: portfolioUploading ? "not-allowed" : "pointer",
+                    background: dark ? "rgba(167,139,250,0.04)" : "rgba(167,139,250,0.03)",
+                    opacity: portfolioUploading ? 0.6 : 1,
+                  }}>
+                    <span style={{ fontSize: 24 }}>🎬</span>
+                    <span style={{ color: "#a78bfa", fontSize: 13, fontWeight: 700 }}>
+                      {portfolioUploading ? (lang === "ar" ? "جاري الرفع..." : "Uploading...") : (lang === "ar" ? "إضافة فيديو" : "Add Video")}
+                    </span>
+                  </label>
+                  <input id="portfolio-video-input" type="file" accept="video/*" style={{ display: "none" }} disabled={portfolioUploading}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handlePortfolioFile(f, "video"); e.target.value = ""; }} />
+                </div>
+              </div>
+            )}
+
+            {steps[stepIdx] === "presence" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {PRESENCE_FIELDS.map((f) => (
+                  <div key={f.key}>
+                    <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 5 }}>
+                      {f.icon} {(t.labels as any)[f.key]}
+                    </label>
+                    <input
+                      style={inp}
+                      dir="ltr"
+                      value={presence[f.key] ?? ""}
+                      placeholder={lang === "ar" ? "رابط الحساب" : "Profile URL"}
+                      onChange={(e) => setPresence((s) => ({ ...s, [f.key]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {steps[stepIdx] === "availability" && (
+              <div>
+                <label style={{ color: MUTED, fontSize: 13, display: "block", marginBottom: 12 }}>{t.labels.availability}</label>
+                <div style={{ display: "flex", gap: 10 }}>
+                  {(["available", "unavailable"] as const).map((v) => (
                     <button
-                      onClick={() => handleDeletePortfolio(item.id)}
-                      style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%", background: "rgba(220,38,38,0.85)", border: "none", color: "#fff", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
-                    >✕</button>
+                      key={v}
+                      onClick={() => setAvail(v)}
+                      style={{
+                        flex: 1, padding: "14px 0", borderRadius: 12, fontSize: 14, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "'Cairo', sans-serif", transition: "all 0.15s",
+                        background:  avail === v ? (v === "available" ? "#00D26A" : ORANGE) : INP,
+                        color:       avail === v ? "#fff" : MUTED,
+                        border:      `1px solid ${avail === v ? (v === "available" ? "#00D26A" : ORANGE) : BORDER}`,
+                      }}
+                    >
+                      {v === "available" ? `✅ ${t.labels.available}` : `⏸️ ${t.labels.unavailable}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {steps[stepIdx] === "review" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <p style={{ color: MUTED, fontSize: 13, margin: "0 0 4px" }}>{t.reviewHint}</p>
+                {ordered.map((s) => (
+                  <div key={s.key} style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER}`,
+                  }}>
+                    <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>
+                      {ICONS[s.key] ?? "•"} {(t.sections as any)[s.key] ?? s.label[lang]}
+                    </span>
+                    <span style={{
+                      fontSize: 12, fontWeight: 700,
+                      color: s.done ? GREEN_DONE : MUTED,
+                    }}>
+                      {s.key === "payment" ? t.locked : s.done ? `✓ ${t.done}` : t.notStarted}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* caption input */}
-            <div>
-              <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>
-                {lang === "ar" ? "تعليق (اختياري)" : "Caption (optional)"}
-              </label>
-              <input
-                value={portfolioCaption}
-                onChange={e => setPortfolioCaption(e.target.value)}
-                style={inp}
-                placeholder={lang === "ar" ? "اكتب تعليقاً..." : "Write a caption..."}
-              />
-            </div>
-
-            {/* upload buttons */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <label htmlFor="portfolio-photo-input" style={{
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                gap: 6, padding: "18px 12px", border: `2px dashed ${TEAL}`, borderRadius: 12,
-                cursor: portfolioUploading ? "not-allowed" : "pointer",
-                background: dark ? "rgba(0,201,177,0.04)" : "rgba(0,201,177,0.03)",
-                opacity: portfolioUploading ? 0.6 : 1,
-              }}>
-                <span style={{ fontSize: 24 }}>🖼️</span>
-                <span style={{ color: TEAL, fontSize: 13, fontWeight: 700 }}>
-                  {portfolioUploading ? (lang === "ar" ? "جاري الرفع..." : "Uploading...") : (lang === "ar" ? "إضافة صورة" : "Add Photo")}
-                </span>
-              </label>
-              <input id="portfolio-photo-input" type="file" accept="image/*" style={{ display: "none" }} disabled={portfolioUploading}
-                onChange={e => { const f = e.target.files?.[0]; if (f) handlePortfolioFile(f, "photo"); e.target.value = ""; }} />
-
-              <label htmlFor="portfolio-video-input" style={{
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                gap: 6, padding: "18px 12px", border: `2px dashed #a78bfa`, borderRadius: 12,
-                cursor: portfolioUploading ? "not-allowed" : "pointer",
-                background: dark ? "rgba(167,139,250,0.04)" : "rgba(167,139,250,0.03)",
-                opacity: portfolioUploading ? 0.6 : 1,
-              }}>
-                <span style={{ fontSize: 24 }}>🎬</span>
-                <span style={{ color: "#a78bfa", fontSize: 13, fontWeight: 700 }}>
-                  {portfolioUploading ? (lang === "ar" ? "جاري الرفع..." : "Uploading...") : (lang === "ar" ? "إضافة فيديو" : "Add Video")}
-                </span>
-              </label>
-              <input id="portfolio-video-input" type="file" accept="video/*" style={{ display: "none" }} disabled={portfolioUploading}
-                onChange={e => { const f = e.target.files?.[0]; if (f) handlePortfolioFile(f, "video"); e.target.value = ""; }} />
-            </div>
-
-            {portfolioMedia.length > 0 && (
-              <button onClick={() => setActive(null)} style={{ ...saveBtn(false), background: TEAL }}>
-                {lang === "ar" ? "تم ✓" : "Done ✓"}
+            {/* nav footer */}
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              {stepIdx > 0 && (
+                <button onClick={handleBack} style={ghostBtn}>{t.back}</button>
+              )}
+              <button onClick={handleSaveExit} disabled={saving} style={{ ...ghostBtn, flex: 1 }}>
+                {saving ? t.saving : t.saveExit}
               </button>
-            )}
-          </div>
-        </Modal>
-      )}
-
-      {/* ── Avatar modal ── */}
-      {active === "avatar" && (
-        <Modal title={`${ICONS.avatar} ${t.sections.avatar}`} onClose={() => setActive(null)} dark={dark}>
-          <label
-            htmlFor="completion-avatar-input"
-            style={{
-              display: "block", border: `2px dashed ${TEAL}`, borderRadius: 14, padding: "32px 20px",
-              textAlign: "center", cursor: "pointer",
-              background: dark ? "rgba(0,201,177,0.04)" : "rgba(0,201,177,0.03)",
-            }}
-          >
-            <div style={{ fontSize: 40, marginBottom: 8 }}>📸</div>
-            <p style={{ color: TEXT, fontSize: 15, fontWeight: 600, margin: "0 0 4px" }}>{t.uploadPhoto}</p>
-            <p style={{ color: MUTED, fontSize: 12, margin: "0 0 16px" }}>{t.uploadHint}</p>
-            <span style={{ display: "inline-block", padding: "9px 20px", background: TEAL, color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 700 }}>
-              {uploading ? t.uploading : t.choose}
-            </span>
-          </label>
-          <input
-            id="completion-avatar-input"
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleAvatarFile(file);
-            }}
-          />
-        </Modal>
-      )}
-
-      {/* ── Personal info modal ── */}
-      {active === "personal" && (
-        <Modal title={`${ICONS.personal} ${t.sections.personal}`} onClose={() => setActive(null)} dark={dark}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }} dir={dir}>
-            <div>
-              <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 5 }}>{t.labels.fullName}</label>
-              <input
-                style={inp}
-                value={personal.full_name}
-                placeholder={lang === "ar" ? "مثلاً: أحمد محمد" : "e.g. Ahmed Mohamed"}
-                onChange={(e) => setPersonal((f) => ({ ...f, full_name: e.target.value }))}
-              />
+              <button
+                onClick={stepIdx < steps.length - 1 ? handleContinue : closeWizard}
+                disabled={saving}
+                style={{ ...saveBtn(saving), marginTop: 0, flex: 2 }}
+              >
+                {saving ? t.saving : stepIdx < steps.length - 1 ? t.continueBtn : t.finish}
+              </button>
             </div>
-            <div>
-              <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 5 }}>{t.labels.city}</label>
-              <input
-                style={inp}
-                value={personal.city}
-                placeholder={lang === "ar" ? "مثلاً: الرياض" : "e.g. Riyadh"}
-                onChange={(e) => setPersonal((f) => ({ ...f, city: e.target.value }))}
-              />
-            </div>
-            <button onClick={savePersonal} disabled={saving || !personal.full_name.trim()} style={saveBtn(saving || !personal.full_name.trim())}>
-              {saving ? t.saving : t.save}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* ── Bio modal ── */}
-      {active === "bio" && (
-        <Modal title={`${ICONS.bio} ${t.sections.bio}`} onClose={() => setActive(null)} dark={dark}>
-          <div dir={dir}>
-            <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 5 }}>{t.labels.bio}</label>
-            <textarea
-              rows={5}
-              style={{ ...inp, resize: "vertical", lineHeight: 1.6 }}
-              value={bio}
-              placeholder={t.labels.bioHint}
-              onChange={(e) => setBio(e.target.value)}
-            />
-            <p style={{ color: MUTED, fontSize: 11, margin: "4px 0 0", textAlign: lang === "ar" ? "left" : "right" }}>
-              {bio.length} / 500
-            </p>
-            <button onClick={saveBio} disabled={saving || !bio.trim()} style={saveBtn(saving || !bio.trim())}>
-              {saving ? t.saving : t.save}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* ── Category modal ── */}
-      {active === "categories" && (
-        <Modal title={`${ICONS.categories} ${t.sections.categories}`} onClose={() => setActive(null)} dark={dark}>
-          <div dir={dir}>
-            <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 8 }}>{t.labels.category}</label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c.value}
-                  onClick={() => setCategory(c.value)}
-                  style={{
-                    padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                    fontFamily: "'Cairo', sans-serif", textAlign: "center", transition: "all 0.15s",
-                    background:  category === c.value ? TEAL : INP,
-                    color:       category === c.value ? "#fff" : MUTED,
-                    border:      `1px solid ${category === c.value ? TEAL : BORDER}`,
-                  }}
-                >
-                  {lang === "ar" ? c.ar : c.en}
-                </button>
-              ))}
-            </div>
-            <button onClick={saveCategory} disabled={saving || !category} style={saveBtn(saving || !category)}>
-              {saving ? t.saving : t.save}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* ── Social links modal ── */}
-      {active === "social" && (
-        <Modal title={`${ICONS.social} ${t.sections.social}`} onClose={() => setActive(null)} dark={dark}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }} dir={dir}>
-            {[
-              { key: "instagram", icon: "📸", placeholder: "@username أو رابط الحساب" },
-              { key: "tiktok",    icon: "🎵", placeholder: "@username أو رابط الحساب" },
-              { key: "youtube",   icon: "▶️", placeholder: "رابط القناة" },
-              { key: "linkedin",  icon: "💼", placeholder: "رابط LinkedIn" },
-            ].map((f) => (
-              <div key={f.key}>
-                <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 5 }}>
-                  {f.icon} {(t.labels as any)[f.key]}
-                </label>
-                <input
-                  style={inp}
-                  dir="ltr"
-                  value={(social as any)[f.key]}
-                  placeholder={f.placeholder}
-                  onChange={(e) => setSocial((s) => ({ ...s, [f.key]: e.target.value }))}
-                />
-              </div>
-            ))}
-            <button
-              onClick={saveSocial}
-              disabled={saving || !Object.values(social).some((v) => v.trim().length > 2)}
-              style={saveBtn(saving || !Object.values(social).some((v) => v.trim().length > 2))}
-            >
-              {saving ? t.saving : t.save}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* ── Physical details modal ── */}
-      {active === "physical" && (
-        <Modal title={`${ICONS.physical} ${t.sections.physical}`} onClose={() => setActive(null)} dark={dark}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }} dir={dir}>
-            {([
-              ["height",     lang === "ar" ? "الطول (سم)"     : "Height (cm)",    "ltr"],
-              ["weight",     lang === "ar" ? "الوزن (كجم)"    : "Weight (kg)",    "ltr"],
-              ["age",        lang === "ar" ? "العمر"           : "Age",            "ltr"],
-              ["hair_color", lang === "ar" ? "لون الشعر"      : "Hair Color",     "rtl"],
-              ["shoe_size",  lang === "ar" ? "مقاس الجزمة"    : "Shoe Size",      "ltr"],
-              ["languages",  lang === "ar" ? "اللغة"          : "Language",       "rtl"],
-              ["dialect",    lang === "ar" ? "اللهجة"         : "Dialect",        "rtl"],
-            ] as [string,string,string][]).map(([k, label, d]) => (
-              <div key={k} style={k === "languages" || k === "dialect" ? { gridColumn: "1/-1" } : {}}>
-                <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{label}</label>
-                <input
-                  value={(physical as any)[k]}
-                  onChange={e => setPhysical(p => ({ ...p, [k]: e.target.value }))}
-                  style={{ ...inp, direction: d as any }}
-                  placeholder={label}
-                />
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={savePhysical}
-            disabled={saving || !Object.values(physical).some(v => v.trim().length > 0)}
-            style={saveBtn(saving || !Object.values(physical).some(v => v.trim().length > 0))}
-          >
-            {saving ? t.saving : t.save}
-          </button>
-        </Modal>
-      )}
-
-      {/* ── Packages modal ── */}
-      {active === "packages" && (
-        <Modal title={`${ICONS.packages} ${t.sections.packages}`} onClose={() => setActive(null)} dark={dark}>
-          <div dir={dir} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {packages.map((pkg) => (
-              <div key={pkg.id} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, position: "relative" }}>
-                <button onClick={() => delPkg(pkg.id)} style={{ position: "absolute", top: 8, right: 8, background: "rgba(220,38,38,0.15)", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", padding: "2px 8px", fontSize: 12 }}>✕</button>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-                  <div>
-                    <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{lang === "ar" ? "اسم الباقة" : "Package name"}</label>
-                    <input value={pkg.name} onChange={e => setPkg(pkg.id, "name", e.target.value)} style={inp} placeholder={lang === "ar" ? "مثلاً: أساسي" : "e.g. Basic"} />
-                  </div>
-                  <div>
-                    <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{lang === "ar" ? "السعر (جنيه)" : "Price (EGP)"}</label>
-                    <input value={pkg.price} onChange={e => setPkg(pkg.id, "price", e.target.value)} style={{ ...inp, direction: "ltr" }} type="number" min="0" />
-                  </div>
-                </div>
-                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginBottom: 8 }}>
-                  <input type="checkbox" checked={pkg.popular} onChange={e => setPkg(pkg.id, "popular", e.target.checked)} />
-                  <span style={{ color: MUTED, fontSize: 12 }}>{lang === "ar" ? "الأكثر طلباً" : "Most Popular"}</span>
-                </label>
-                <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{lang === "ar" ? "المميزات" : "Features"}</label>
-                {pkg.features.map((f, fi) => (
-                  <div key={fi} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
-                    <input value={f} onChange={e => setFeat(pkg.id, fi, e.target.value)} style={{ ...inp, flex: 1 }} />
-                    <button onClick={() => delFeat(pkg.id, fi)} style={{ background: "rgba(220,38,38,0.12)", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", padding: "0 10px" }}>✕</button>
-                  </div>
-                ))}
-                <button onClick={() => addFeat(pkg.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", background: "transparent", border: `1px dashed ${BORDER}`, borderRadius: 7, color: MUTED, fontSize: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif", marginTop: 4 }}>
-                  + {lang === "ar" ? "إضافة ميزة" : "Add feature"}
-                </button>
-              </div>
-            ))}
-            <button onClick={addPkg} style={{ padding: "10px 0", background: "transparent", border: `1px dashed ${TEAL}`, borderRadius: 10, color: TEAL, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
-              + {lang === "ar" ? "إضافة باقة" : "Add package"}
-            </button>
-            <button onClick={savePackages} disabled={saving || !packages.length} style={saveBtn(saving || !packages.length)}>
-              {saving ? t.saving : t.save}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* ── Usage Add-ons modal ── */}
-      {active === "usage_addons" && (
-        <Modal title={`${ICONS.usage_addons} ${t.sections.usage_addons}`} onClose={() => setActive(null)} dark={dark}>
-          <div dir={dir} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {addons.map((addon) => (
-              <div key={addon.key} style={{ display: "grid", gridTemplateColumns: "1fr 120px 36px", gap: 8, alignItems: "end" }}>
-                <div>
-                  <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{lang === "ar" ? "الاسم" : "Name"}</label>
-                  <input value={addon.label} onChange={e => setAddon(addon.key, "label", e.target.value)} style={inp} placeholder={lang === "ar" ? "مثلاً: حق تجاري" : "e.g. Commercial use"} />
-                </div>
-                <div>
-                  <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{lang === "ar" ? "السعر (جنيه)" : "Price (EGP)"}</label>
-                  <input value={addon.price} onChange={e => setAddon(addon.key, "price", Number(e.target.value))} style={{ ...inp, direction: "ltr" }} type="number" min="0" />
-                </div>
-                <button onClick={() => delAddon(addon.key)} style={{ height: 38, background: "rgba(220,38,38,0.12)", border: "none", borderRadius: 8, color: "#ef4444", cursor: "pointer", fontSize: 14 }}>✕</button>
-              </div>
-            ))}
-            <button onClick={addAddon} style={{ padding: "10px 0", background: "transparent", border: `1px dashed #a78bfa`, borderRadius: 10, color: "#a78bfa", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
-              + {lang === "ar" ? "إضافة حق استخدام" : "Add usage right"}
-            </button>
-            <button onClick={saveAddons} disabled={saving || !addons.length} style={saveBtn(saving || !addons.length)}>
-              {saving ? t.saving : t.save}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* ── Availability modal ── */}
-      {active === "availability" && (
-        <Modal title={`${ICONS.availability} ${t.sections.availability}`} onClose={() => setActive(null)} dark={dark}>
-          <div dir={dir}>
-            <label style={{ color: MUTED, fontSize: 13, display: "block", marginBottom: 12 }}>{t.labels.availability}</label>
-            <div style={{ display: "flex", gap: 10 }}>
-              {(["available", "unavailable"] as const).map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setAvail(v)}
-                  style={{
-                    flex: 1, padding: "14px 0", borderRadius: 12, fontSize: 14, fontWeight: 700,
-                    cursor: "pointer", fontFamily: "'Cairo', sans-serif", transition: "all 0.15s",
-                    background:  avail === v ? (v === "available" ? "#00D26A" : ORANGE) : INP,
-                    color:       avail === v ? "#fff" : MUTED,
-                    border:      `1px solid ${avail === v ? (v === "available" ? "#00D26A" : ORANGE) : BORDER}`,
-                  }}
-                >
-                  {v === "available" ? `✅ ${t.labels.available}` : `⏸️ ${t.labels.unavailable}`}
-                </button>
-              ))}
-            </div>
-            <button onClick={saveAvailability} disabled={saving} style={saveBtn(saving)}>
-              {saving ? t.saving : t.save}
-            </button>
           </div>
         </Modal>
       )}

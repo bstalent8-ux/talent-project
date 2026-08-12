@@ -20,6 +20,7 @@ import type {
   PublicProfileDTO,
   TalentPublicCore,
 } from "../types/dto";
+import { TALENT_PHYSICAL_KEYS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -49,12 +50,7 @@ function listLength(value: unknown): number {
   return Array.isArray(value) ? value.length : 0;
 }
 
-const TALENT_SOCIAL_KEYS = ["instagram", "tiktok", "youtube", "linkedin"] as const;
 const BRAND_SOCIAL_KEYS  = ["instagram", "tiktok", "youtube", "linkedin", "facebook", "x"] as const;
-
-const PHYSICAL_KEYS = [
-  "height", "weight", "hair_color", "shoe_size", "age", "languages", "dialect",
-] as const;
 
 // ─── Per-type rules ───────────────────────────────────────────────────────────
 // Keys mirror lib/profile-completion.ts and adapters/core-keys.ts, so a section
@@ -86,7 +82,7 @@ const TALENT_RULES: Record<string, ContentRule> = {
 
   physical: (p) => {
     const links = bag(p.core as TalentPublicCore);
-    return PHYSICAL_KEYS.some((key) => isFilled(links[key]));
+    return TALENT_PHYSICAL_KEYS.some((key) => isFilled(links[key]));
   },
 
   portfolio: (p) => listLength((p.core as TalentPublicCore).portfolio) > 0,

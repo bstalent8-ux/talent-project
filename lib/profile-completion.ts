@@ -1,3 +1,5 @@
+import { TALENT_PHYSICAL_KEYS, TALENT_SOCIAL_KEYS } from "./profile-fields";
+
 export interface CompletionSection {
   key: string;
   label: { ar: string; en: string };
@@ -26,13 +28,13 @@ export function calculateCompletion(
 ): CompletionResult {
   const sl = talentProfile?.social_links ?? {};
 
-  const hasSocial = ["instagram", "tiktok", "youtube", "linkedin"].some(
+  const hasSocial = TALENT_SOCIAL_KEYS.some(
     (k) => sl[k] && String(sl[k]).length > 2,
   );
 
   const hasPackages    = talentProfile?.packages?.length > 0;
   const hasUsageAddons = (sl.usage_addons?.length ?? 0) > 0;
-  const hasPhysical    = ["height","weight","hair_color","shoe_size","age","languages","dialect"]
+  const hasPhysical    = TALENT_PHYSICAL_KEYS
     .some(k => sl[k] && String(sl[k]).trim().length > 0);
 
   const sections: CompletionSection[] = [
@@ -150,8 +152,8 @@ export function calculateSectionProgress(
 ): Record<string, number> {
   const sl = talentProfile?.social_links ?? {};
 
-  const SOCIALS  = ["instagram", "tiktok", "youtube", "linkedin"];
-  const PHYSICAL = ["height", "weight", "hair_color", "shoe_size", "age", "languages", "dialect"];
+  const SOCIALS  = TALENT_SOCIAL_KEYS;
+  const PHYSICAL = TALENT_PHYSICAL_KEYS;
 
   return {
     personal: ratio(countFilled([profile?.full_name, profile?.city]), 2),

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { canPerformAction } from "@/lib/permissions";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 import { ProfileError, profileService } from "@/features/profiles";
+import { TALENT_PHYSICAL_KEYS } from "@/lib/profile-fields";
 
 /**
  * Writes one section's fields to the typed core row through the provider layer.
@@ -100,9 +101,8 @@ export async function PATCH(req: NextRequest) {
     } else if (section === "availability") {
       saveError = await saveTalentProfileSection(uid, { availability: data.availability });
     } else if (section === "physical") {
-      const allowed = ["height","weight","hair_color","shoe_size","age","languages","dialect"];
       const incoming = Object.fromEntries(
-        Object.entries(data as Record<string,string>).filter(([k,v]) => allowed.includes(k) && v && String(v).trim().length > 0),
+        Object.entries(data as Record<string,string>).filter(([k,v]) => TALENT_PHYSICAL_KEYS.includes(k as any) && v && String(v).trim().length > 0),
       );
       saveError = await saveTalentProfileSection(uid, { social_links: { ...existingSocialLinks, ...incoming } });
     } else if (section === "packages") {

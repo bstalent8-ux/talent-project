@@ -27,6 +27,8 @@ export default defineConfig({
     include: [
       "features/profiles/**/*.test.ts",
       "components/profile/**/*.test.ts",
+      "lib/**/*.test.ts",
+      "app/api/profile/**/*.test.ts",
     ],
   },
 });
