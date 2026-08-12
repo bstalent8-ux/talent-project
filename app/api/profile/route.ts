@@ -6,6 +6,15 @@ import { adminClient } from "@/lib/supabase/admin";
 import { fetchCategories, normalizeCategoryId, setProfileCategories } from "@/features/categories/services/category.service";
 import { invalidateBrand, invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 import { ProfileError, profileService } from "@/features/profiles";
+import { TALENT_TYPES } from "@/app/(auth)/register/talent-types";
+
+// Single canonical source for "which category a brand-new Talent signup may
+// pick" — reused from the registration UI's own option list instead of a
+// second hand-maintained array. `categories` (checked below) already allows
+// influencer/food_reviewer/tech_reviewer/unboxing/host/fashion for TALENT
+// role in general (existing profiles, admin edits) — this narrower set only
+// gates a *new* Talent account, per the MVP scope decision.
+const NEW_TALENT_CATEGORY_IDS = new Set<string>(TALENT_TYPES.map((t) => t.value));
 
 // ─── Mass-assignment guards ──────────────────────────────────────────────────
 // This route writes through the service role (RLS bypassed), so the caller must
@@ -92,6 +101,29 @@ export async function POST(req: NextRequest) {
           { error: `invalid category: ${invalid.join(", ")}` },
           { status: 400, headers: privateNoStoreHeaders() },
         );
+      }
+
+      // MVP scope: a *new* Talent account (no existing profiles row yet) may
+      // only be created with ugc or model. This is narrower than the check
+      // above on purpose — `categories` also lists influencer/food_reviewer/
+      // tech_reviewer/unboxing/host as valid ACTIVE talent categories (they
+      // are real rows, so the general check passes them), but
+      // talent_profiles.category is the Postgres enum talent_category,
+      // which does not have those as members yet. Without this gate, a new
+      // signup with e.g. "influencer" would clear the check above and only
+      // fail later at the enum write — the exact partial-account shape this
+      // route already has cleanup for, but cleanup is a safety net, not the
+      // intended path. Existing accounts (editing their profile) are never
+      // subject to this — `existing` is truthy for them, so their legacy
+      // category (fashion, etc.) is left alone.
+      if (!existing && effectiveRole === "talent") {
+        const unsupported = normalizedCategoryIds.filter((id) => !NEW_TALENT_CATEGORY_IDS.has(id));
+        if (unsupported.length) {
+          return NextResponse.json(
+            { error: `category not available for new registrations yet: ${unsupported.join(", ")}` },
+            { status: 400, headers: privateNoStoreHeaders() },
+          );
+        }
       }
     }
 
