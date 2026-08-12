@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { normalizeCategoryId, setProfileCategories } from "@/features/categories/services/category.service";
+import { fetchCategories, normalizeCategoryId, setProfileCategories } from "@/features/categories/services/category.service";
 import { invalidateBrand, invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 import { ProfileError, profileService } from "@/features/profiles";
 
@@ -68,6 +68,33 @@ export async function POST(req: NextRequest) {
       effectiveRole = role;
     }
 
+    // ── 3. Validate categories BEFORE any write ──────────────────────────────
+    // Moved ahead of the profiles/talent_profiles upserts below: validating
+    // after them left a Talent-role `profiles` row on disk with no working
+    // category (and, depending on timing, no `talent_profiles` row either)
+    // whenever the submitted category wasn't a real active row — an invalid
+    // category is now rejected with a clean 400 and zero rows written.
+    const normalizedCategoryIds = Array.isArray(categoryIds)
+      ? categoryIds.map((id) => normalizeCategoryId(String(id))).filter(Boolean)
+      : effectiveRole === "talent" && talentProfileData?.category
+        ? [normalizeCategoryId(String(talentProfileData.category))]
+        : effectiveRole === "brand" && brandProfileData?.category_id
+          ? [normalizeCategoryId(String(brandProfileData.category_id))]
+          : [];
+
+    if (normalizedCategoryIds.length) {
+      const liveCategories = await fetchCategories(effectiveRole === "talent" ? "talent" : "brand", true);
+      const validIds = new Set(liveCategories.map((c) => c.id));
+      const invalid = normalizedCategoryIds.filter((id) => !validIds.has(id));
+
+      if (invalid.length) {
+        return NextResponse.json(
+          { error: `invalid category: ${invalid.join(", ")}` },
+          { status: 400, headers: privateNoStoreHeaders() },
+        );
+      }
+    }
+
     // profiles columns: id, handle, full_name, avatar_url, city, bio, role, brand_category
     const { error: profileErr } = await adminClient
       .from("profiles")
@@ -84,6 +111,18 @@ export async function POST(req: NextRequest) {
       try {
         await profileService.updateCoreForUser(targetId, talentProfileData);
       } catch (e) {
+        // The category passed the live `categories` taxonomy check above but
+        // still failed the underlying DB write (e.g. talent_profiles.category
+        // is a narrower Postgres enum than `categories` — a real, currently
+        // live gap; see CLAUDE.md). Without this cleanup the profiles upsert
+        // just above would be left standing with no talent_profiles row: the
+        // exact partial-account state the category pre-check was meant to
+        // prevent, just one step later. Only remove it for a brand-new
+        // signup (`existing` was null) — never delete an existing account's
+        // profiles row over a failed edit.
+        if (!existing) {
+          await adminClient.from("profiles").delete().eq("id", targetId);
+        }
         const err = ProfileError.from(e);
         console.error("[profile] talent core upsert failed", err.code, err.internal);
         // Was: `talent_profiles: ${message}` — leaked the table name and the raw
@@ -91,14 +130,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(err.toBody(), { status: err.status, headers: privateNoStoreHeaders() });
       }
     }
-
-    const normalizedCategoryIds = Array.isArray(categoryIds)
-      ? categoryIds.map((id) => normalizeCategoryId(String(id))).filter(Boolean)
-      : effectiveRole === "talent" && talentProfileData?.category
-        ? [normalizeCategoryId(String(talentProfileData.category))]
-        : effectiveRole === "brand" && brandProfileData?.category_id
-          ? [normalizeCategoryId(String(brandProfileData.category_id))]
-          : [];
 
     if (normalizedCategoryIds.length) {
       try {

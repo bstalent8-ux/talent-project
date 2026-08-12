@@ -18,6 +18,12 @@
 -- ADDITIVE ONLY. Idempotent.
 -- Depends on: 20260806_03 (profile_sections must exist), 20260812_01 (the
 -- category ids this column's values are validated against, including model).
+--
+-- MVP enum-reachability repair (decision: prefer prevention over proof-of-
+-- harmlessness): the validating trigger below also requires every
+-- category_scope value to be a member of the `talent_category` enum, not
+-- just an active `categories` row, so an admin cannot configure a section
+-- scoped to a category no live talent profile can ever actually have.
 -- ============================================================
 
 ALTER TABLE public.profile_sections
@@ -59,9 +65,18 @@ ALTER TABLE public.profile_sections
 
 -- ─── Validating trigger ───────────────────────────────────────────────────────
 -- Rejects (a) a category_scope on a non-talent section, (b) a category id
--- that isn't a real, active, talent-role row in `categories`. Mirrors the
--- rigor of profile_fields_options_required (20260806_03) — reject at write
--- time, not silently at render time.
+-- that isn't a real, active, talent-role row in `categories`, (c) — MVP
+-- repair addition — a category id that `talent_profiles.category` cannot
+-- currently even hold. `categories` (role_type='talent', active) and the
+-- Postgres enum `talent_category` are two independent taxonomies that only
+-- partially overlap today (see docs from the enum-sync repair): a
+-- category_scope of e.g. 'tech_reviewer' would pass the old check (it is an
+-- active `categories` row) but could never match any real talent profile,
+-- because no talent_profiles row can hold that value until the enum is
+-- widened. That is unreachable, not merely unused, configuration — this
+-- trigger now refuses it outright rather than allowing it to sit inert.
+-- Mirrors the rigor of profile_fields_options_required (20260806_03) —
+-- reject at write time, not silently at render time.
 CREATE OR REPLACE FUNCTION public.validate_profile_section_category_scope()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -88,10 +103,15 @@ BEGIN
    WHERE NOT EXISTS (
      SELECT 1 FROM public.categories c
       WHERE c.id = v AND c.role_type = 'talent' AND c.is_active = true
+   )
+   OR NOT EXISTS (
+     SELECT 1 FROM pg_enum e
+      JOIN pg_type t ON t.oid = e.enumtypid
+      WHERE t.typname = 'talent_category' AND e.enumlabel = v
    );
 
   IF unknown_ids IS NOT NULL THEN
-    RAISE EXCEPTION 'category_scope contains unknown or inactive talent category id(s): %', unknown_ids
+    RAISE EXCEPTION 'category_scope contains id(s) that are not both an active talent category and a talent_category enum member: %', unknown_ids
       USING ERRCODE = '23503'; -- foreign_key_violation family — this IS a soft FK
   END IF;
 
@@ -100,7 +120,7 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.validate_profile_section_category_scope() IS
-  'Sprint 1 (profile-category-foundation). category_scope cannot reference an unknown/inactive talent category, and cannot be set on a non-talent section. A trigger, not a CHECK constraint, because it must read the live categories table.';
+  'Sprint 1 (profile-category-foundation) + MVP enum-reachability repair. category_scope cannot reference an unknown/inactive talent category, cannot reference a category that talent_profiles.category (enum talent_category) cannot currently hold, and cannot be set on a non-talent section. A trigger, not a CHECK constraint, because it must read the live categories table and pg_enum.';
 
 DROP TRIGGER IF EXISTS trg_validate_section_category_scope ON public.profile_sections;
 CREATE TRIGGER trg_validate_section_category_scope

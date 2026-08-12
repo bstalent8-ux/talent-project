@@ -11,6 +11,8 @@ import { useSite } from "@/contexts/SiteContext";
 import styles from "../auth.module.css";
 import PhoneInput from "../phone/PhoneInput";
 import { detectDefaultCountryIso, findCountry, rememberCountryIso } from "../phone/countries";
+import { TALENT_TYPES } from "./talent-types";
+import { resolveProfileSubmitOutcome } from "./submit-outcome";
 
 type Role = "talent" | "brand";
 
@@ -39,14 +41,6 @@ const INIT: FormData = {
   brandCategory:   "brand_fashion",
   agreeToTerms:    false,
 };
-
-const TALENT_TYPES = [
-  { value: "ugc", ar: "UGC Creator", en: "UGC Creator" },
-  { value: "influencer", ar: "Influencer", en: "Influencer" },
-  { value: "fashion", ar: "Fashion", en: "Fashion" },
-  { value: "food_reviewer", ar: "Food Reviewer", en: "Food Reviewer" },
-  { value: "media_buyers", ar: "Media Buyers", en: "Media Buyers" },
-];
 
 const BRAND_CATEGORIES = [
   { value: "brand_fashion", ar: "Fashion", en: "Fashion" },
@@ -256,7 +250,7 @@ export default function RegisterPage() {
       const dialCode    = findCountry(phoneCountryIso).dialCode;
       const phoneNumber = `+${dialCode}${form.phoneNumber.replace(/\D/g, "")}`;
 
-      await fetch("/api/profile", {
+      const profileRes = await fetch("/api/profile", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
@@ -288,7 +282,20 @@ export default function RegisterPage() {
         }),
       });
 
-      router.push("/profile/me");
+      // The response used to be discarded here, navigating to /profile/me
+      // unconditionally. If /api/profile rejected the request (e.g. an
+      // invalid category), the user landed on /profile/me signed-in but with
+      // NO profiles row — whose own GET /api/me self-heal then created a
+      // bare profiles row (no category, no talent_profiles): a partially
+      // created account, silently. resolveProfileSubmitOutcome is the
+      // tested decision point — see submit-outcome.test.ts.
+      const outcome = resolveProfileSubmitOutcome(profileRes);
+      if (outcome.showError) {
+        setError(tx.errGeneric);
+        setLoading(false);
+        return;
+      }
+      if (outcome.navigate) router.push("/profile/me");
     } catch (e) {
       setError(e instanceof Error ? e.message : tx.errGeneric);
     }

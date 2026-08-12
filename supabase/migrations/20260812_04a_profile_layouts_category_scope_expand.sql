@@ -18,6 +18,10 @@
 -- Depends on:
 --   20260806_04_profile_values_layouts.sql
 --   20260812_01_category_taxonomy_model.sql
+--
+-- MVP enum-reachability repair: the validating trigger below also requires
+-- category_scope to be a talent_category enum member, not just an active
+-- categories row — see 20260812_03 for the same decision and reasoning.
 -- ============================================================
 
 ALTER TABLE public.profile_layouts
@@ -48,6 +52,11 @@ END $$;
 --   - NULL is always valid and means shared/default.
 --   - Non-null category_scope is allowed only for the Talent profile type.
 --   - Non-null category_scope must reference an active talent category.
+--   - MVP enum-reachability repair: it must ALSO be a member of the
+--     talent_category enum — otherwise no talent_profiles row could ever
+--     match this layout override, and it would be unreachable configuration
+--     rather than a future-ready one. See 20260812_03 for the identical
+--     decision on profile_sections.category_scope.
 CREATE OR REPLACE FUNCTION public.validate_profile_layout_category_scope()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -82,12 +91,21 @@ BEGIN
       USING ERRCODE = '23503';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_enum e
+     JOIN pg_type t ON t.oid = e.enumtypid
+     WHERE t.typname = 'talent_category' AND e.enumlabel = NEW.category_scope
+  ) THEN
+    RAISE EXCEPTION 'category_scope % is not a member of the talent_category enum and could never match a talent profile', NEW.category_scope
+      USING ERRCODE = '23503';
+  END IF;
+
   RETURN NEW;
 END;
 $$;
 
 COMMENT ON FUNCTION public.validate_profile_layout_category_scope() IS
-  'Sprint 1 (profile-category-foundation). Validates profile_layouts.category_scope without changing the old layout uniqueness contract. Non-null scopes are talent-only and must reference active talent categories.';
+  'Sprint 1 (profile-category-foundation) + MVP enum-reachability repair. Validates profile_layouts.category_scope without changing the old layout uniqueness contract. Non-null scopes are talent-only and must reference an active talent category that is also a talent_category enum member (otherwise no profile could ever match it).';
 
 DROP TRIGGER IF EXISTS trg_validate_layout_category_scope ON public.profile_layouts;
 CREATE TRIGGER trg_validate_layout_category_scope
