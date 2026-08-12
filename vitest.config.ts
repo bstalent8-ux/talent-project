@@ -35,6 +35,10 @@ export default defineConfig({
       // fast-glob parses "(auth)" as a group and matches nothing.
       "app/\\(auth\\)/register/**/*.test.ts",
       "app/api/profile/**/*.test.ts",
+      // Category integrity repair: static text-only regression guards on the
+      // migration SQL itself (no live Postgres in this environment — see
+      // the test file's own header for what this does and does not prove).
+      "supabase/migrations/**/*.test.ts",
     ],
   },
 });
