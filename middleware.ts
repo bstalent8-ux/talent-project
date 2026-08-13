@@ -78,10 +78,18 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check account_status using service role to bypass RLS
+  // Note: 'cache' is not supported in Cloudflare Workers — omit it (matches lib/supabase/admin.ts)
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { global: { fetch: (url, opts = {}) => fetch(url, { ...opts, cache: "no-store" }) } }
+    {
+      global: {
+        fetch: (url, opts = {}) => {
+          const { cache: _cache, ...rest } = opts as RequestInit;
+          return fetch(url, rest);
+        },
+      },
+    }
   );
 
   const { data: profile } = await admin
