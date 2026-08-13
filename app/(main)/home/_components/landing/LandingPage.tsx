@@ -63,6 +63,10 @@ type StoredSystemDesign = {
   home?: Partial<DesignMedia>;
 };
 
+// Temporary kill switch for the hero search bar. Flip to true to bring it
+// back — the markup and handlers stay in place, just gated on this.
+const SHOW_HOME_SEARCH = false;
+
 const SYSTEM_DESIGN_KEY = "talents_system_design";
 const SYSTEM_DESIGN_DB = "talents-system-design";
 const SYSTEM_DESIGN_STORE = "media";
@@ -425,34 +429,36 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
             </ButtonLink>
           </motion.div>
 
-          <form className={styles.heroSearch} action="/explore" role="search" onSubmit={handleHeroSearchSubmit}>
-            <label className={styles.searchField}>
-              <Search size={18} aria-hidden="true" />
-              <input
-                name="q"
-                type="search"
-                value={heroSearch}
-                onChange={(e) => setHeroSearch(e.target.value)}
-                placeholder={t.searchPlaceholder}
-                aria-label={t.searchPlaceholder}
-              />
-            </label>
-            <div className={styles.searchSelect}>
-              <span>{t.searchCategory}</span>
-              <ChevronDown size={16} aria-hidden="true" />
-            </div>
-            <div className={styles.searchSelect}>
-              <MapPin size={16} aria-hidden="true" />
-              <span>{t.searchLocation}</span>
-            </div>
-            <div className={styles.searchSelect}>
-              <span>{t.searchBudget}</span>
-              <ChevronDown size={16} aria-hidden="true" />
-            </div>
-            <button className={styles.searchButton} type="submit">
-              {t.searchAction}
-            </button>
-          </form>
+          {SHOW_HOME_SEARCH && (
+            <form className={styles.heroSearch} action="/explore" role="search" onSubmit={handleHeroSearchSubmit}>
+              <label className={styles.searchField}>
+                <Search size={18} aria-hidden="true" />
+                <input
+                  name="q"
+                  type="search"
+                  value={heroSearch}
+                  onChange={(e) => setHeroSearch(e.target.value)}
+                  placeholder={t.searchPlaceholder}
+                  aria-label={t.searchPlaceholder}
+                />
+              </label>
+              <div className={styles.searchSelect}>
+                <span>{t.searchCategory}</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </div>
+              <div className={styles.searchSelect}>
+                <MapPin size={16} aria-hidden="true" />
+                <span>{t.searchLocation}</span>
+              </div>
+              <div className={styles.searchSelect}>
+                <span>{t.searchBudget}</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </div>
+              <button className={styles.searchButton} type="submit">
+                {t.searchAction}
+              </button>
+            </form>
+          )}
         </div>
 
         <div className={styles.statsStrip} aria-label={lang === "ar" ? "إحصائيات المنصة" : "Platform statistics"}>
