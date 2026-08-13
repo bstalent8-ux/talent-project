@@ -295,6 +295,23 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
         </div>
 
       </div>
+
+      {/* About — bio text lives here per the dynamic renderer's inline-core
+          contract (section-content.ts / core-keys.ts): "bio" is an inline
+          core key, so DynamicSectionRenderer only emits an empty anchor div
+          for it and expects the hero to render the actual text. It didn't;
+          this was a real content gap (About was declared but never printed
+          on the public profile, for every category). */}
+      {talent.bio && (
+        <div style={{ marginTop: isMobile ? 16 : 20, paddingTop: isMobile ? 16 : 20, borderTop: `1px solid ${BORDER}` }}>
+          <h2 style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 8px" }}>
+            {ar ? "نبذة" : "About"}
+          </h2>
+          <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.8, margin: 0, whiteSpace: "pre-wrap" }}>
+            {talent.bio}
+          </p>
+        </div>
+      )}
     </div>
     {showBooking && (
       <DirectBriefModal

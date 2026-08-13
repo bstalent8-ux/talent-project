@@ -20,3 +20,20 @@ export const MODEL_PHYSICAL_FIELDS = [
 export const TALENT_SOCIAL_KEYS = [
   "instagram", "tiktok", "facebook", "youtube", "linkedin", "telegram", "website", "other",
 ] as const;
+
+/**
+ * Server-side guard for a Professional Presence value. MVP is links-only, no
+ * OAuth, so this does not require a full URL — the UI accepts a bare handle
+ * ("@name") and expands it to a real profile URL only at display time (see
+ * ProfessionalPresenceSection.tsx's toHref()). Rejecting anything WITHOUT a
+ * scheme would break that. What must never reach storage is a dangerous
+ * scheme (`javascript:`, `data:`, `vbscript:`, ...) — the only case handled
+ * here is "the value declares an explicit scheme and it isn't http(s)".
+ */
+export function isSafePresenceValue(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  const schemeMatch = /^([a-z][a-z0-9+.-]*):/i.exec(trimmed);
+  if (!schemeMatch) return true; // bare handle/username — no scheme to abuse
+  return /^https?$/i.test(schemeMatch[1]);
+}

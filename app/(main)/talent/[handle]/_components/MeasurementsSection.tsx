@@ -30,12 +30,12 @@ export default function MeasurementsSection({ measurements }: Props) {
   const isMobile = useIsMobile();
   const ar = lang === "ar";
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE= dark ? "#0A121C" : "#F8FAFC";
-  const GOLD   = "#F4B740";
+  const CARD   = "var(--bg-card)";
+  const BORDER = "var(--border-subtle)";
+  const TEXT   = "var(--text-primary)";
+  const MUTED  = "var(--text-muted)";
+  const SURFACE= "var(--bg-surface)";
+  const GOLD   = "var(--color-secondary)";
 
   const entries = FIELD_ORDER.filter((key) => measurements[key]);
   if (!entries.length) return null;

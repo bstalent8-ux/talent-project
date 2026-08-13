@@ -18,16 +18,22 @@ interface Props {
   links: Record<string, string>;
 }
 
-/** Official brand spelling in both languages — these are trademarks, not copy to localize. */
-const PLATFORM_META: Record<string, { icon: string; label: string }> = {
-  instagram: { icon: "📸", label: "Instagram" },
-  tiktok:    { icon: "🎵", label: "TikTok" },
-  facebook:  { icon: "📘", label: "Facebook" },
-  youtube:   { icon: "▶️", label: "YouTube" },
-  linkedin:  { icon: "💼", label: "LinkedIn" },
-  telegram:  { icon: "✈️", label: "Telegram" },
-  website:   { icon: "🌐", label: "Website" },
-  other:     { icon: "🔗", label: "Other" },
+/**
+ * Instagram/TikTok/Facebook/YouTube/LinkedIn/Telegram are official brand
+ * spellings — trademarks, not copy to localize, so ar/en repeat the same
+ * string. Website/Other are plain nouns and DO need real Arabic copy — they
+ * were previously hardcoded English-only in both languages, an Arabic-mode
+ * leak.
+ */
+const PLATFORM_META: Record<string, { icon: string; ar: string; en: string }> = {
+  instagram: { icon: "📸", ar: "Instagram",      en: "Instagram" },
+  tiktok:    { icon: "🎵", ar: "TikTok",         en: "TikTok" },
+  facebook:  { icon: "📘", ar: "Facebook",       en: "Facebook" },
+  youtube:   { icon: "▶️", ar: "YouTube",        en: "YouTube" },
+  linkedin:  { icon: "💼", ar: "LinkedIn",       en: "LinkedIn" },
+  telegram:  { icon: "✈️", ar: "Telegram",       en: "Telegram" },
+  website:   { icon: "🌐", ar: "موقع إلكتروني",  en: "Website" },
+  other:     { icon: "🔗", ar: "أخرى",           en: "Other" },
 };
 
 const PLATFORM_ORDER = ["instagram", "tiktok", "facebook", "youtube", "linkedin", "telegram", "website", "other"];
@@ -64,12 +70,12 @@ export default function ProfessionalPresenceSection({ links }: Props) {
   const isMobile = useIsMobile();
   const ar = lang === "ar";
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE= dark ? "#0A121C" : "#F8FAFC";
-  const GREEN  = "#00D26A";
+  const CARD   = "var(--bg-card)";
+  const BORDER = "var(--border-subtle)";
+  const TEXT   = "var(--text-primary)";
+  const MUTED  = "var(--text-muted)";
+  const SURFACE= "var(--bg-surface)";
+  const TEAL   = "var(--color-primary)";
 
   const entries = PLATFORM_ORDER.filter((key) => links[key]);
   if (!entries.length) return null;
@@ -98,7 +104,7 @@ export default function ProfessionalPresenceSection({ links }: Props) {
               <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                 <span style={{ fontSize: 18, flexShrink: 0 }}>{meta.icon}</span>
                 <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                  <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{meta.label}</span>
+                  <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{ar ? meta.ar : meta.en}</span>
                   <span
                     dir="ltr"
                     style={{
@@ -111,7 +117,7 @@ export default function ProfessionalPresenceSection({ links }: Props) {
                 </span>
               </span>
               <span style={{
-                display: "flex", alignItems: "center", gap: 4, color: GREEN,
+                display: "flex", alignItems: "center", gap: 4, color: TEAL,
                 fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0,
               }}>
                 {ar ? "عرض الملف" : "View Profile"}

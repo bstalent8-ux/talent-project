@@ -88,12 +88,36 @@ describe("PATCH /api/profile/complete — physical section allowlist", () => {
   });
 });
 
-describe("PATCH /api/profile/complete — social section accepts new Professional Presence platforms", () => {
-  it("merges a new platform key (telegram) with no server-side allowlist rejection", async () => {
+describe("PATCH /api/profile/complete — social section: allowlist + unsafe-scheme rejection", () => {
+  it("accepts a platform key from TALENT_SOCIAL_KEYS (telegram)", async () => {
     const res = await PATCH(patchRequest({ section: "social", data: { telegram: "https://t.me/example" } }));
     expect(res.status).toBe(200);
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
       social_links: { instagram: "@existing", telegram: "https://t.me/example" },
+    });
+  });
+
+  it("accepts a bare handle — MVP is links-only, no scheme required", async () => {
+    const res = await PATCH(patchRequest({ section: "social", data: { instagram: "@newname" } }));
+    expect(res.status).toBe(200);
+    expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      social_links: { instagram: "@newname" },
+    });
+  });
+
+  it("drops a key outside TALENT_SOCIAL_KEYS instead of writing it", async () => {
+    const res = await PATCH(patchRequest({ section: "social", data: { instagram: "@ok", not_a_platform: "x" } }));
+    expect(res.status).toBe(200);
+    expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      social_links: { instagram: "@ok" },
+    });
+  });
+
+  it("drops a value with a dangerous scheme (javascript:) instead of writing it", async () => {
+    const res = await PATCH(patchRequest({ section: "social", data: { website: "javascript:alert(1)", instagram: "@ok" } }));
+    expect(res.status).toBe(200);
+    expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      social_links: { instagram: "@ok" },
     });
   });
 });

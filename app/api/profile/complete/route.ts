@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { canPerformAction } from "@/lib/permissions";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 import { ProfileError, profileService } from "@/features/profiles";
-import { TALENT_PHYSICAL_KEYS } from "@/lib/profile-fields";
+import { TALENT_PHYSICAL_KEYS, TALENT_SOCIAL_KEYS, isSafePresenceValue } from "@/lib/profile-fields";
 
 /**
  * Writes one section's fields to the typed core row through the provider layer.
@@ -93,9 +93,13 @@ export async function PATCH(req: NextRequest) {
     if (section === "categories") {
       saveError = await saveTalentProfileSection(uid, { category: data.category });
     } else if (section === "social") {
-      // Only keep non-empty values, merge with existing
+      // Allowlisted keys only (TALENT_SOCIAL_KEYS — the same 8 platforms the
+      // wizard and the public renderer agree on), non-empty, and no
+      // dangerous scheme (javascript:, data:, ...) — see isSafePresenceValue.
       const incoming = Object.fromEntries(
-        Object.entries(data as Record<string, string>).filter(([, v]) => v && v.trim().length > 0),
+        Object.entries(data as Record<string, string>).filter(
+          ([k, v]) => TALENT_SOCIAL_KEYS.includes(k as any) && typeof v === "string" && isSafePresenceValue(v),
+        ),
       );
       saveError = await saveTalentProfileSection(uid, { social_links: { ...existingSocialLinks, ...incoming } });
     } else if (section === "availability") {
