@@ -37,7 +37,12 @@ export default function CompleteProfilePage() {
     if (res.status === 401) { router.push("/login"); return; }
     if (!res.ok) { setStatus("denied"); return; }
     const { profile: prof, talentProfile: talentProf, portfolioItems } = await res.json();
-    if (!talentProf) { router.push("/profile/me"); return; }
+    // Gate on role, not on talentProf being present: a talent account can
+    // legitimately have no talent_profiles row yet (e.g. a partial signup —
+    // see CLAUDE.md's self-healing profiles note). PATCH /api/profile/complete
+    // upserts on user_id, so the wizard's first save creates it; only a
+    // non-talent role (brand) has no business on this page.
+    if (prof?.role !== "talent") { router.push("/profile/me"); return; }
     setProfile(prof);
     setTp(talentProf);
     setMedia(portfolioItems ?? []);
