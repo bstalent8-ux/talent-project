@@ -99,13 +99,15 @@ export async function PATCH(req: NextRequest) {
       );
       saveError = await saveTalentProfileSection(uid, { social_links: { ...existingSocialLinks, ...incoming } });
     } else if (section === "availability") {
-      // availability_schedule is optional structured detail (weekly hours,
-      // date exceptions, timezone) — stored inside the same social_links
-      // JSONB blob as physical/usage_addons, merged the same way. The plain
-      // `availability` column stays the on/off switch, untouched.
+      // availability_schedule is optional structured detail (selected calendar
+      // dates + slots, date exceptions, timezone) — its own dedicated jsonb
+      // column (supabase/migrations/20260813_talent_availability_schedule.sql),
+      // not social_links. The plain `availability` column stays the on/off
+      // switch, untouched. Whole-object replace, same as `packages`: the
+      // client always sends the complete schedule it wants saved.
       const patch: Record<string, unknown> = { availability: data.availability };
       if (data.availability_schedule !== undefined) {
-        patch.social_links = { ...existingSocialLinks, availability_schedule: data.availability_schedule };
+        patch.availability_schedule = data.availability_schedule;
       }
       saveError = await saveTalentProfileSection(uid, patch);
     } else if (section === "physical") {

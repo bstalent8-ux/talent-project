@@ -191,6 +191,8 @@ export interface TalentPublicCore {
   category:      string | null;
   specialties:   string[];
   availability:  string | null;
+  /** Structured detail (dates/slots/timezone/exceptions) shown when availability === "available". Raw jsonb, parsed by the caller. */
+  availabilitySchedule: unknown;
   packages:      PackageItemDTO[];
   socialLinks:   Record<string, unknown>;
   rating:        number;

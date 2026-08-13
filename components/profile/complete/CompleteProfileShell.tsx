@@ -21,8 +21,8 @@ import { getWizardSteps, type WizardStepKey } from "@/components/profile/complet
 import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 import { calculateCompletion } from "@/lib/profile-completion";
 import {
-  DAY_KEYS, DAY_LABELS, emptyAvailabilitySchedule, parseAvailabilitySchedule,
-  type AvailabilitySchedule, type AvailabilityException, type DayKey, type ExceptionType, type TimeSlot,
+  DAY_KEYS, DAY_LABELS, MONTH_LABELS, parseAvailabilitySchedule,
+  type AvailabilitySchedule, type AvailabilityException, type DatesMap, type ExceptionType, type TimeSlot,
 } from "@/lib/availability-schedule";
 import { resumeStepIndex, stepDone, STEP_COMPLETION_KEYS } from "@/components/profile/complete/resume-step";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
@@ -83,8 +83,13 @@ const TX = {
     pkgPopular: "الأكثر طلباً", addFeature: "إضافة ميزة",
     addonName: "الاسم", addonPrice: "السعر (جنيه)",
     avail: {
-      weeklyTitle: "الجدول الأسبوعي",
-      weeklyDesc: "حدد الأيام والساعات التي تكون متاحاً خلالها لاستقبال العروض.",
+      weeklyTitle: "التقويم",
+      weeklyDesc: "اختر تاريخاً واحداً أو أكثر تكون متاحاً خلاله لاستقبال العروض.",
+      prevMonth: "الشهر السابق",
+      nextMonth: "الشهر التالي",
+      selectedHoursTitle: "الساعات المحددة",
+      selectedHoursEmpty: "اختر تاريخاً من التقويم لتحديد ساعاته.",
+      appliesTo: (n: number) => n === 1 ? "تنطبق هذه الساعات على التاريخ المحدد." : `تنطبق هذه الساعات على ${n} تواريخ محددة.`,
       addSlot: "إضافة فترة زمنية أخرى",
       removeSlot: "حذف الفترة",
       to: "إلى",
@@ -155,8 +160,13 @@ const TX = {
     pkgPopular: "Most Popular", addFeature: "Add feature",
     addonName: "Name", addonPrice: "Price (EGP)",
     avail: {
-      weeklyTitle: "Weekly Availability",
-      weeklyDesc: "Pick the days and hours you're available to receive new offers.",
+      weeklyTitle: "Calendar",
+      weeklyDesc: "Select one or more dates you're available to receive new offers.",
+      prevMonth: "Previous month",
+      nextMonth: "Next month",
+      selectedHoursTitle: "Selected Hours",
+      selectedHoursEmpty: "Pick a date on the calendar to set its hours.",
+      appliesTo: (n: number) => n === 1 ? "These hours apply to the selected date." : `These hours apply to ${n} selected dates.`,
       addSlot: "Add another time slot",
       removeSlot: "Remove slot",
       to: "to",
@@ -280,7 +290,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   );
   const [avail, setAvail] = useState(talentProfile?.availability ?? "available");
   const [schedule, setSchedule] = useState<AvailabilitySchedule>(() =>
-    parseAvailabilitySchedule(talentProfile?.social_links?.availability_schedule),
+    parseAvailabilitySchedule(talentProfile?.availability_schedule),
   );
   // No stored timezone yet: fill in the browser's detected zone once we're on
   // the client, instead of guessing on the server (which would hydration-
@@ -295,36 +305,70 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setDaySlots = (day: DayKey, slots: TimeSlot[]) =>
-    setSchedule((s) => ({ ...s, weekly: { ...s.weekly, [day]: { enabled: slots.length > 0, slots } } }));
-  const toggleDay = (day: DayKey) =>
+  // ── Calendar: multi-select dates, all currently selected dates share the
+  // same "Selected Hours" slots (one shared editor below the grid, not a
+  // per-date one) — matches the "define hours for selected dates" spec.
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  const now = useMemo(() => new Date(), []);
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth()); // 0-11
+  const todayISO = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+
+  const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+  const goPrevMonth = () => {
+    if (isCurrentMonth) return;
+    if (viewMonth === 0) { setViewYear((y) => y - 1); setViewMonth(11); } else { setViewMonth((m) => m - 1); }
+  };
+  const goNextMonth = () => {
+    if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); } else { setViewMonth((m) => m + 1); }
+  };
+
+  const calendarCells = useMemo(() => {
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const firstWeekday = new Date(viewYear, viewMonth, 1).getDay(); // 0=Sun..6=Sat
+    const cells: (string | null)[] = Array.from({ length: firstWeekday }, () => null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(`${viewYear}-${pad2(viewMonth + 1)}-${pad2(d)}`);
+    return cells;
+  }, [viewYear, viewMonth]);
+
+  const selectedDates = useMemo(() => Object.keys(schedule.dates).sort(), [schedule.dates]);
+  const sharedSlots: TimeSlot[] = selectedDates.length > 0 ? schedule.dates[selectedDates[0]] : [];
+
+  const toggleDate = (dateStr: string) =>
     setSchedule((s) => {
-      const wasEnabled = s.weekly[day].enabled;
-      return {
-        ...s,
-        weekly: {
-          ...s.weekly,
-          [day]: wasEnabled ? { enabled: false, slots: [] } : { enabled: true, slots: [{ start: "10:00", end: "18:00" }] },
-        },
-      };
+      const next: DatesMap = { ...s.dates };
+      if (next[dateStr]) {
+        delete next[dateStr];
+      } else {
+        const existing = Object.values(next)[0];
+        next[dateStr] = existing ? existing.map((sl) => ({ ...sl })) : [{ start: "10:00", end: "18:00" }];
+      }
+      return { ...s, dates: next };
     });
-  const setSlotTime = (day: DayKey, slotIdx: number, field: "start" | "end", value: string) =>
-    setSchedule((s) => ({
-      ...s,
-      weekly: {
-        ...s.weekly,
-        [day]: { ...s.weekly[day], slots: s.weekly[day].slots.map((sl, i) => (i === slotIdx ? { ...sl, [field]: value } : sl)) },
-      },
-    }));
-  const addDaySlot = (day: DayKey) =>
+  const setSharedSlotTime = (slotIdx: number, field: "start" | "end", value: string) =>
     setSchedule((s) => {
-      if (s.weekly[day].slots.length >= 2) return s;
-      return { ...s, weekly: { ...s.weekly, [day]: { ...s.weekly[day], slots: [...s.weekly[day].slots, { start: "10:00", end: "18:00" }] } } };
+      const next: DatesMap = {};
+      for (const [d, slots] of Object.entries(s.dates)) {
+        next[d] = slots.map((sl, i) => (i === slotIdx ? { ...sl, [field]: value } : sl));
+      }
+      return { ...s, dates: next };
     });
-  const removeDaySlot = (day: DayKey, slotIdx: number) =>
+  const addSharedSlot = () =>
     setSchedule((s) => {
-      const slots = s.weekly[day].slots.filter((_, i) => i !== slotIdx);
-      return { ...s, weekly: { ...s.weekly, [day]: { enabled: slots.length > 0, slots } } };
+      const next: DatesMap = {};
+      for (const [d, slots] of Object.entries(s.dates)) {
+        next[d] = slots.length >= 2 ? slots : [...slots, { start: "10:00", end: "18:00" }];
+      }
+      return { ...s, dates: next };
+    });
+  const removeSharedSlot = (slotIdx: number) =>
+    setSchedule((s) => {
+      const next: DatesMap = {};
+      for (const [d, slots] of Object.entries(s.dates)) {
+        const filtered = slots.filter((_, i) => i !== slotIdx);
+        if (filtered.length > 0) next[d] = filtered;
+      }
+      return { ...s, dates: next };
     });
 
   const [newExceptionDate, setNewExceptionDate] = useState("");
@@ -840,47 +884,94 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
 
                 {avail === "available" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 28, marginTop: 24 }}>
-                    {/* ── Weekly Availability ── */}
+                    {/* ── Calendar ── */}
                     <div>
                       <p style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 4px" }}>{t.avail.weeklyTitle}</p>
                       <p style={{ color: MUTED, fontSize: 12, lineHeight: 1.6, margin: "0 0 14px" }}>{t.avail.weeklyDesc}</p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {DAY_KEYS.map((day) => {
-                          const d = schedule.weekly[day];
-                          return (
-                            <div key={day} style={{ border: `1px solid ${BORDER}`, borderRadius: "var(--radius-md)", padding: 12, background: SURFACE }}>
-                              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                                <input type="checkbox" checked={d.enabled} onChange={() => toggleDay(day)} />
-                                <span style={{ color: TEXT, fontSize: 13, fontWeight: 700, minWidth: 76 }}>
-                                  {lang === "ar" ? DAY_LABELS[day].ar : DAY_LABELS[day].en}
-                                </span>
-                              </label>
-                              {d.enabled && (
-                                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
-                                  {d.slots.map((slot, i) => (
-                                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                      <input type="time" value={slot.start} dir="ltr"
-                                        onChange={(e) => setSlotTime(day, i, "start", e.target.value)}
-                                        style={{ ...inp, width: "auto" }} />
-                                      <span style={{ color: MUTED, fontSize: 12 }}>{t.avail.to}</span>
-                                      <input type="time" value={slot.end} dir="ltr"
-                                        onChange={(e) => setSlotTime(day, i, "end", e.target.value)}
-                                        style={{ ...inp, width: "auto" }} />
-                                      {d.slots.length > 1 && (
-                                        <button onClick={() => removeDaySlot(day, i)} aria-label={t.avail.removeSlot} style={{ background: "rgba(223,63,77,0.12)", border: "none", borderRadius: 6, color: RED, cursor: "pointer", padding: "6px 10px", fontSize: 12 }}>✕</button>
-                                      )}
-                                    </div>
-                                  ))}
-                                  {d.slots.length < 2 && (
-                                    <button onClick={() => addDaySlot(day)} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", background: "transparent", border: `1px dashed ${BORDER}`, borderRadius: 7, color: MUTED, fontSize: 12, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
-                                      + {t.avail.addSlot}
-                                    </button>
-                                  )}
-                                </div>
-                              )}
+
+                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: "var(--radius-md)", padding: isMobile ? 10 : 16, background: SURFACE }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                          <button onClick={goPrevMonth} disabled={isCurrentMonth} aria-label={t.avail.prevMonth} style={{
+                            width: 30, height: 30, borderRadius: "50%", border: `1px solid ${BORDER}`, background: "transparent",
+                            color: isCurrentMonth ? "var(--border-subtle)" : TEXT, cursor: isCurrentMonth ? "not-allowed" : "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                          }}>
+                            {lang === "ar" ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+                          </button>
+                          <span style={{ color: TEXT, fontSize: 14, fontWeight: 800 }}>
+                            {lang === "ar" ? MONTH_LABELS[viewMonth].ar : MONTH_LABELS[viewMonth].en} {viewYear}
+                          </span>
+                          <button onClick={goNextMonth} aria-label={t.avail.nextMonth} style={{
+                            width: 30, height: 30, borderRadius: "50%", border: `1px solid ${BORDER}`, background: "transparent",
+                            color: TEXT, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                          }}>
+                            {lang === "ar" ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
+                          </button>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
+                          {DAY_KEYS.map((day) => (
+                            <div key={day} style={{ textAlign: "center", color: MUTED, fontSize: 11, fontWeight: 700, padding: "4px 0" }}>
+                              {lang === "ar" ? DAY_LABELS[day].short_ar : DAY_LABELS[day].short_en}
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+                          {calendarCells.map((dateStr, i) => {
+                            if (!dateStr) return <div key={`empty-${i}`} />;
+                            const isPast = dateStr < todayISO;
+                            const isSelected = Boolean(schedule.dates[dateStr]);
+                            const dayNum = Number(dateStr.slice(-2));
+                            return (
+                              <button
+                                key={dateStr}
+                                disabled={isPast}
+                                onClick={() => toggleDate(dateStr)}
+                                style={{
+                                  aspectRatio: "1", borderRadius: "var(--radius-sm)", fontSize: isMobile ? 12 : 13, fontWeight: 700,
+                                  cursor: isPast ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)",
+                                  background: isSelected ? TEAL : "transparent",
+                                  color: isSelected ? INK : isPast ? "var(--border-subtle)" : TEXT,
+                                  border: `1px solid ${isSelected ? TEAL : "transparent"}`,
+                                }}
+                              >
+                                {dayNum}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* ── Selected Hours ── */}
+                      <div style={{ marginTop: 16 }}>
+                        <p style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: "0 0 10px" }}>{t.avail.selectedHoursTitle}</p>
+                        {selectedDates.length === 0 ? (
+                          <p style={{ color: MUTED, fontSize: 12.5, margin: 0 }}>{t.avail.selectedHoursEmpty}</p>
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {sharedSlots.map((slot, i) => (
+                              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                <input type="time" value={slot.start} dir="ltr"
+                                  onChange={(e) => setSharedSlotTime(i, "start", e.target.value)}
+                                  style={{ ...inp, width: "auto" }} />
+                                <span style={{ color: MUTED, fontSize: 12 }}>{t.avail.to}</span>
+                                <input type="time" value={slot.end} dir="ltr"
+                                  onChange={(e) => setSharedSlotTime(i, "end", e.target.value)}
+                                  style={{ ...inp, width: "auto" }} />
+                                <button onClick={() => removeSharedSlot(i)} aria-label={t.avail.removeSlot} style={{ background: "rgba(223,63,77,0.12)", border: "none", borderRadius: 6, color: RED, cursor: "pointer", padding: "6px 10px", fontSize: 12 }}>✕</button>
+                              </div>
+                            ))}
+                            {sharedSlots.length < 2 && (
+                              <button onClick={addSharedSlot} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", background: "transparent", border: `1px dashed ${BORDER}`, borderRadius: 7, color: MUTED, fontSize: 12, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                                + {t.avail.addSlot}
+                              </button>
+                            )}
+                            <p style={{ color: MUTED, fontSize: 11.5, margin: "4px 0 0" }}>
+                              {t.avail.appliesTo(selectedDates.length)}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 

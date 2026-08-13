@@ -15,7 +15,7 @@ import type {
 } from "../types/raw";
 
 const CORE_COLUMNS =
-  "id, user_id, category, specialties, bio, availability, packages, social_links, profile_views, avg_rating, total_reviews, total_bookings, is_featured, status, approved_at, approved_by, rejection_reason";
+  "id, user_id, category, specialties, bio, availability, availability_schedule, packages, social_links, profile_views, avg_rating, total_reviews, total_bookings, is_featured, status, approved_at, approved_by, rejection_reason";
 
 export const talentRepository = {
   async findByUserId(userId: string): Promise<RawTalentCore | null> {

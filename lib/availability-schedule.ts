@@ -1,15 +1,17 @@
 // ─── Structured talent availability ─────────────────────────────────────────
 // Pure, no JSX, no React — importable from a vitest test.
 //
-// Storage: talent_profiles.social_links.availability_schedule (existing JSONB
-// catch-all, see lib/profile-fields.ts for the sibling key lists). The plain
+// Storage: talent_profiles.availability_schedule — a dedicated jsonb column
+// (supabase/migrations/20260813_talent_availability_schedule.sql). The plain
 // talent_profiles.availability column ("available" | "unavailable") stays the
 // authoritative on/off switch; this module only adds the structured detail
-// shown when it is "available". No new table, no new column.
+// shown when it is "available": specific calendar dates with time slots, plus
+// a separate date-exceptions list, plus a timezone.
 
 export type DayKey =
   | "sunday" | "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday";
 
+/** Sun-first, matching the calendar grid's column order. */
 export const DAY_KEYS: DayKey[] = [
   "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
 ];
@@ -24,19 +26,26 @@ export const DAY_LABELS: Record<DayKey, { ar: string; en: string; short_ar: stri
   saturday:  { ar: "السبت",     en: "Saturday",  short_ar: "سبت",  short_en: "Sat" },
 };
 
+export const MONTH_LABELS: { ar: string; en: string; short_en: string }[] = [
+  { ar: "يناير",   en: "January",   short_en: "Jan" },
+  { ar: "فبراير",  en: "February",  short_en: "Feb" },
+  { ar: "مارس",    en: "March",     short_en: "Mar" },
+  { ar: "أبريل",   en: "April",     short_en: "Apr" },
+  { ar: "مايو",    en: "May",       short_en: "May" },
+  { ar: "يونيو",   en: "June",      short_en: "Jun" },
+  { ar: "يوليو",   en: "July",      short_en: "Jul" },
+  { ar: "أغسطس",   en: "August",    short_en: "Aug" },
+  { ar: "سبتمبر",  en: "September", short_en: "Sep" },
+  { ar: "أكتوبر",  en: "October",   short_en: "Oct" },
+  { ar: "نوفمبر",  en: "November",  short_en: "Nov" },
+  { ar: "ديسمبر",  en: "December",  short_en: "Dec" },
+];
+
 /** 24h "HH:mm" strings — kept simple, formatted for display only at the edges. */
 export interface TimeSlot {
   start: string;
   end: string;
 }
-
-export interface DaySchedule {
-  enabled: boolean;
-  /** 1 primary slot, optionally a 2nd for a split shift. Max 2, enforced on write. */
-  slots: TimeSlot[];
-}
-
-export type WeeklySchedule = Record<DayKey, DaySchedule>;
 
 export type ExceptionType = "unavailable" | "custom";
 
@@ -48,19 +57,18 @@ export interface AvailabilityException {
   slots?: TimeSlot[];
 }
 
+/** "YYYY-MM-DD" -> up to 2 time slots that date. Presence in the map = selected on the calendar. */
+export type DatesMap = Record<string, TimeSlot[]>;
+
 export interface AvailabilitySchedule {
   /** IANA zone, e.g. "Africa/Cairo". Null when never set. */
   timezone: string | null;
-  weekly: WeeklySchedule;
+  dates: DatesMap;
   exceptions: AvailabilityException[];
 }
 
-export function emptyWeeklySchedule(): WeeklySchedule {
-  return Object.fromEntries(DAY_KEYS.map((d) => [d, { enabled: false, slots: [] }])) as WeeklySchedule;
-}
-
 export function emptyAvailabilitySchedule(timezone: string | null = null): AvailabilitySchedule {
-  return { timezone, weekly: emptyWeeklySchedule(), exceptions: [] };
+  return { timezone, dates: {}, exceptions: [] };
 }
 
 function isValidTime(v: unknown): v is string {
@@ -78,26 +86,26 @@ function parseSlots(raw: unknown, max: number): TimeSlot[] {
   return (raw as unknown[]).filter(isValidSlot).slice(0, max) as TimeSlot[];
 }
 
-/** Reads whatever is stored in social_links.availability_schedule — tolerant of missing/malformed data. */
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Reads whatever is stored in talent_profiles.availability_schedule — tolerant of missing/malformed data. */
 export function parseAvailabilitySchedule(raw: unknown): AvailabilitySchedule {
   if (!raw || typeof raw !== "object") return emptyAvailabilitySchedule();
   const r = raw as Record<string, unknown>;
 
-  const weekly = emptyWeeklySchedule();
-  const rawWeekly = (r.weekly && typeof r.weekly === "object") ? (r.weekly as Record<string, unknown>) : {};
-  for (const day of DAY_KEYS) {
-    const d = rawWeekly[day];
-    if (d && typeof d === "object") {
-      const slots = parseSlots((d as Record<string, unknown>).slots, 2);
-      weekly[day] = { enabled: Boolean((d as Record<string, unknown>).enabled) && slots.length > 0, slots };
-    }
+  const dates: DatesMap = {};
+  const rawDates = (r.dates && typeof r.dates === "object") ? (r.dates as Record<string, unknown>) : {};
+  for (const [date, value] of Object.entries(rawDates)) {
+    if (!DATE_RE.test(date)) continue;
+    const slots = parseSlots(value, 2);
+    if (slots.length > 0) dates[date] = slots;
   }
 
   const exceptions: AvailabilityException[] = Array.isArray(r.exceptions)
     ? (r.exceptions as unknown[]).flatMap((item): AvailabilityException[] => {
         if (!item || typeof item !== "object") return [];
         const e = item as Record<string, unknown>;
-        if (typeof e.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(e.date)) return [];
+        if (typeof e.date !== "string" || !DATE_RE.test(e.date)) return [];
         if (e.type === "unavailable") return [{ date: e.date, type: "unavailable" as const }];
         if (e.type === "custom") {
           const slots = parseSlots(e.slots, 2);
@@ -110,14 +118,14 @@ export function parseAvailabilitySchedule(raw: unknown): AvailabilitySchedule {
 
   const timezone = typeof r.timezone === "string" && r.timezone.trim().length > 0 ? r.timezone.trim() : null;
 
-  return { timezone, weekly, exceptions };
+  return { timezone, dates, exceptions };
 }
 
 function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-/** "14:00" -> "2 PM", "14:30" -> "2:30 PM", "09:00" -> "9 AM" (EN); returns 24h-with-label for AR. */
+/** "14:00" -> "2 PM", "14:30" -> "2:30 PM", "09:00" -> "9 AM" (EN); 24h for AR. */
 function formatClock(time: string, lang: "ar" | "en"): string {
   const [hStr, m] = time.split(":");
   const h = Number(hStr);
@@ -130,27 +138,36 @@ function formatClock(time: string, lang: "ar" | "en"): string {
 }
 
 function formatTimeRange(start: string, end: string, lang: "ar" | "en"): string {
-  const arrow = lang === "ar" ? "–" : "–";
-  return `${formatClock(start, lang)} ${arrow} ${formatClock(end, lang)}`;
+  return `${formatClock(start, lang)} – ${formatClock(end, lang)}`;
 }
 
-function dayLabel(day: DayKey, lang: "ar" | "en"): string {
-  return lang === "ar" ? DAY_LABELS[day].short_ar : DAY_LABELS[day].short_en;
+/** "2026-08-16" -> "Aug 16" (en) / "16 أغسطس" (ar). */
+function formatMonthDay(date: string, lang: "ar" | "en"): string {
+  const [, mStr, dStr] = date.split("-");
+  const day = Number(dStr);
+  const month = MONTH_LABELS[Number(mStr) - 1];
+  return lang === "ar" ? `${day} ${month.ar}` : `${month.short_en} ${day}`;
+}
+
+function todayISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
 /**
- * Compact PUBLIC summary only — never the full schedule, never date
+ * Compact PUBLIC summary only — never the full calendar, never date
  * exceptions (those are internal scheduling detail, not for public display).
  *
- *   unavailable                                -> "Currently unavailable"
- *   available, no weekly detail set             -> "Available now"
- *   available, one uniform contiguous day-range  -> "Sun–Thu · 10 AM–6 PM"
- *   available, irregular pattern                 -> "Available this week"
+ *   unavailable                                    -> "Currently unavailable"
+ *   available, no dates selected                    -> "Available now"
+ *   available, upcoming dates share one time range   -> "Available Aug 16, 18, 20 · 10 AM – 2 PM"
+ *   available, upcoming dates are irregular          -> "Available this week"
  */
 export function formatAvailabilitySummary(
   availability: string | null | undefined,
   schedule: AvailabilitySchedule | null | undefined,
   lang: "ar" | "en",
+  today: string = todayISO(),
 ): string | null {
   if (!availability) return null;
 
@@ -158,28 +175,26 @@ export function formatAvailabilitySummary(
     return lang === "ar" ? "غير متاح حالياً" : "Currently unavailable";
   }
 
-  const enabledDays = schedule
-    ? DAY_KEYS.filter((d) => schedule.weekly[d].enabled && schedule.weekly[d].slots.length > 0)
+  const upcoming = schedule
+    ? Object.keys(schedule.dates).filter((d) => d >= today).sort()
     : [];
 
-  if (enabledDays.length === 0) {
+  if (upcoming.length === 0) {
     return lang === "ar" ? "متاح الآن" : "Available now";
   }
 
-  const indices = enabledDays.map((d) => DAY_KEYS.indexOf(d));
-  const isContiguous = indices.every((idx, i) => i === 0 || idx === indices[i - 1] + 1);
-
-  const firstSlot = schedule!.weekly[enabledDays[0]].slots[0];
-  const uniformSlot = enabledDays.every((d) => {
-    const slots = schedule!.weekly[d].slots;
+  const shown = upcoming.slice(0, 3);
+  const firstSlot = schedule!.dates[shown[0]][0];
+  const uniformSlot = shown.every((d) => {
+    const slots = schedule!.dates[d];
     return slots.length === 1 && slots[0].start === firstSlot.start && slots[0].end === firstSlot.end;
   });
 
-  if (isContiguous && uniformSlot) {
-    const first = enabledDays[0];
-    const last = enabledDays[enabledDays.length - 1];
-    const range = first === last ? dayLabel(first, lang) : `${dayLabel(first, lang)}–${dayLabel(last, lang)}`;
-    return `${range} · ${formatTimeRange(firstSlot.start, firstSlot.end, lang)}`;
+  if (uniformSlot) {
+    const dateList = shown.map((d) => formatMonthDay(d, lang)).join(lang === "ar" ? "، " : ", ");
+    return lang === "ar"
+      ? `متاح ${dateList} · ${formatTimeRange(firstSlot.start, firstSlot.end, lang)}`
+      : `Available ${dateList} · ${formatTimeRange(firstSlot.start, firstSlot.end, lang)}`;
   }
 
   return lang === "ar" ? "متاح هذا الأسبوع" : "Available this week";

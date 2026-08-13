@@ -72,6 +72,7 @@ export interface RawTalentCore {
   specialties:      string[] | null;
   bio:              string | null;
   availability:     string | null;
+  availability_schedule: unknown;
   packages:         unknown;
   social_links:     Record<string, unknown> | null;
   profile_views:    number | null;

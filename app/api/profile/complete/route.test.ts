@@ -95,8 +95,8 @@ describe("PATCH /api/profile/complete — availability section", () => {
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", { availability: "available" });
   });
 
-  it("merges availability_schedule into social_links, preserving existing keys", async () => {
-    const schedule = { timezone: "Africa/Cairo", weekly: {}, exceptions: [] };
+  it("writes availability_schedule as its own column, not into social_links", async () => {
+    const schedule = { timezone: "Africa/Cairo", dates: { "2026-08-16": [{ start: "10:00", end: "14:00" }] }, exceptions: [] };
     const res = await PATCH(patchRequest({
       section: "availability",
       data: { availability: "available", availability_schedule: schedule },
@@ -104,7 +104,7 @@ describe("PATCH /api/profile/complete — availability section", () => {
     expect(res.status).toBe(200);
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
       availability: "available",
-      social_links: { instagram: "@existing", availability_schedule: schedule },
+      availability_schedule: schedule,
     });
   });
 });

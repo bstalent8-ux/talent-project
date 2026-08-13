@@ -56,7 +56,7 @@ const meta: ProviderMetadata = {
   // Byte-identical to TALENT_FIELDS in app/api/profile/route.ts:18.
   // avg_rating / total_reviews / total_bookings are trigger-maintained and
   // deliberately absent — they must never be user-writable.
-  writableCoreFields: ["category", "specialties", "social_links", "bio", "packages", "availability"],
+  writableCoreFields: ["category", "specialties", "social_links", "bio", "packages", "availability", "availability_schedule"],
 };
 
 // ─── Local transformers ───────────────────────────────────────────────────────
@@ -141,6 +141,7 @@ function buildPublicCore(core: RawTalentCore, parts: {
     category:      core.category,
     specialties:   core.specialties ?? [],
     availability:  core.availability,
+    availabilitySchedule: core.availability_schedule ?? null,
     packages:      toPackages(core.packages),
     socialLinks:   core.social_links ?? {},
     rating:        core.avg_rating ?? 0,

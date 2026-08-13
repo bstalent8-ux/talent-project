@@ -13,39 +13,38 @@ describe("parseAvailabilitySchedule", () => {
     expect(parseAvailabilitySchedule("nonsense")).toEqual(emptyAvailabilitySchedule());
   });
 
-  it("parses a valid weekly day and drops invalid slots", () => {
+  it("parses a valid date and drops invalid slots", () => {
     const parsed = parseAvailabilitySchedule({
       timezone: "Africa/Cairo",
-      weekly: {
-        sunday: { enabled: true, slots: [{ start: "10:00", end: "18:00" }, { start: "bad", end: "18:00" }] },
+      dates: {
+        "2026-08-16": [{ start: "10:00", end: "14:00" }, { start: "bad", end: "18:00" }],
       },
     });
     expect(parsed.timezone).toBe("Africa/Cairo");
-    expect(parsed.weekly.sunday).toEqual({ enabled: true, slots: [{ start: "10:00", end: "18:00" }] });
-    expect(parsed.weekly.monday).toEqual({ enabled: false, slots: [] });
+    expect(parsed.dates).toEqual({ "2026-08-16": [{ start: "10:00", end: "14:00" }] });
   });
 
-  it("disables a day whose slots all fail validation, even if enabled:true was stored", () => {
-    const parsed = parseAvailabilitySchedule({
-      weekly: { monday: { enabled: true, slots: [{ start: "18:00", end: "10:00" }] } },
-    });
-    expect(parsed.weekly.monday.enabled).toBe(false);
+  it("drops a date whose key is not a valid YYYY-MM-DD string", () => {
+    const parsed = parseAvailabilitySchedule({ dates: { "not-a-date": [{ start: "10:00", end: "14:00" }] } });
+    expect(parsed.dates).toEqual({});
   });
 
-  it("caps a day at 2 slots", () => {
+  it("drops a date whose slots all fail validation", () => {
+    const parsed = parseAvailabilitySchedule({ dates: { "2026-08-16": [{ start: "18:00", end: "10:00" }] } });
+    expect(parsed.dates).toEqual({});
+  });
+
+  it("caps a date at 2 slots", () => {
     const parsed = parseAvailabilitySchedule({
-      weekly: {
-        friday: {
-          enabled: true,
-          slots: [
-            { start: "09:00", end: "12:00" },
-            { start: "14:00", end: "18:00" },
-            { start: "19:00", end: "21:00" },
-          ],
-        },
+      dates: {
+        "2026-08-16": [
+          { start: "09:00", end: "12:00" },
+          { start: "14:00", end: "18:00" },
+          { start: "19:00", end: "21:00" },
+        ],
       },
     });
-    expect(parsed.weekly.friday.slots).toHaveLength(2);
+    expect(parsed.dates["2026-08-16"]).toHaveLength(2);
   });
 
   it("keeps a valid 'unavailable' exception and drops a malformed one", () => {
@@ -65,55 +64,59 @@ describe("parseAvailabilitySchedule", () => {
 });
 
 describe("formatAvailabilitySummary", () => {
+  const today = "2026-08-14";
+
   it("returns null when availability is unset", () => {
-    expect(formatAvailabilitySummary(null, null, "en")).toBeNull();
-    expect(formatAvailabilitySummary(undefined, null, "en")).toBeNull();
+    expect(formatAvailabilitySummary(null, null, "en", today)).toBeNull();
+    expect(formatAvailabilitySummary(undefined, null, "en", today)).toBeNull();
   });
 
   it("unavailable overrides any schedule detail", () => {
-    expect(formatAvailabilitySummary("unavailable", null, "en")).toBe("Currently unavailable");
-    expect(formatAvailabilitySummary("unavailable", null, "ar")).toBe("غير متاح حالياً");
+    expect(formatAvailabilitySummary("unavailable", null, "en", today)).toBe("Currently unavailable");
+    expect(formatAvailabilitySummary("unavailable", null, "ar", today)).toBe("غير متاح حالياً");
   });
 
-  it("falls back to plain 'Available now' with no weekly detail", () => {
-    expect(formatAvailabilitySummary("available", null, "en")).toBe("Available now");
-    expect(formatAvailabilitySummary("available", emptyAvailabilitySchedule(), "en")).toBe("Available now");
+  it("falls back to plain 'Available now' with no dates selected", () => {
+    expect(formatAvailabilitySummary("available", null, "en", today)).toBe("Available now");
+    expect(formatAvailabilitySummary("available", emptyAvailabilitySchedule(), "en", today)).toBe("Available now");
   });
 
-  it("renders a compact contiguous uniform range", () => {
+  it("ignores past dates when picking upcoming ones", () => {
+    const schedule = emptyAvailabilitySchedule();
+    schedule.dates["2026-08-10"] = [{ start: "10:00", end: "14:00" }]; // past
+    expect(formatAvailabilitySummary("available", schedule, "en", today)).toBe("Available now");
+  });
+
+  it("renders up to 3 upcoming dates sharing one uniform time range", () => {
     const schedule: AvailabilitySchedule = emptyAvailabilitySchedule("Africa/Cairo");
-    for (const day of ["sunday", "monday", "tuesday", "wednesday", "thursday"] as const) {
-      schedule.weekly[day] = { enabled: true, slots: [{ start: "10:00", end: "18:00" }] };
+    schedule.dates["2026-08-16"] = [{ start: "10:00", end: "14:00" }];
+    schedule.dates["2026-08-18"] = [{ start: "10:00", end: "14:00" }];
+    schedule.dates["2026-08-20"] = [{ start: "10:00", end: "14:00" }];
+    expect(formatAvailabilitySummary("available", schedule, "en", today)).toBe("Available Aug 16, Aug 18, Aug 20 · 10 AM – 2 PM");
+    expect(formatAvailabilitySummary("available", schedule, "ar", today)).toBe("متاح 16 أغسطس، 18 أغسطس، 20 أغسطس · 10:00 – 14:00");
+  });
+
+  it("caps the shown date list at 3 even with more selected", () => {
+    const schedule = emptyAvailabilitySchedule();
+    for (const d of ["2026-08-16", "2026-08-17", "2026-08-18", "2026-08-19"]) {
+      schedule.dates[d] = [{ start: "10:00", end: "14:00" }];
     }
-    expect(formatAvailabilitySummary("available", schedule, "en")).toBe("Sun–Thu · 10 AM – 6 PM");
-    expect(formatAvailabilitySummary("available", schedule, "ar")).toBe("أحد–خميس · 10:00 – 18:00");
+    const summary = formatAvailabilitySummary("available", schedule, "en", today)!;
+    expect(summary).toBe("Available Aug 16, Aug 17, Aug 18 · 10 AM – 2 PM");
   });
 
-  it("renders a single enabled day without a range dash", () => {
+  it("falls back to generic 'this week' when upcoming dates have different hours", () => {
     const schedule = emptyAvailabilitySchedule();
-    schedule.weekly.friday = { enabled: true, slots: [{ start: "09:00", end: "12:30" }] };
-    expect(formatAvailabilitySummary("available", schedule, "en")).toBe("Fri · 9 AM – 12:30 PM");
-  });
-
-  it("falls back to generic 'this week' when days are non-contiguous", () => {
-    const schedule = emptyAvailabilitySchedule();
-    schedule.weekly.sunday = { enabled: true, slots: [{ start: "10:00", end: "18:00" }] };
-    schedule.weekly.friday = { enabled: true, slots: [{ start: "10:00", end: "18:00" }] };
-    expect(formatAvailabilitySummary("available", schedule, "en")).toBe("Available this week");
-  });
-
-  it("falls back to generic 'this week' when hours differ across enabled days", () => {
-    const schedule = emptyAvailabilitySchedule();
-    schedule.weekly.sunday = { enabled: true, slots: [{ start: "10:00", end: "18:00" }] };
-    schedule.weekly.monday = { enabled: true, slots: [{ start: "09:00", end: "17:00" }] };
-    expect(formatAvailabilitySummary("available", schedule, "en")).toBe("Available this week");
+    schedule.dates["2026-08-16"] = [{ start: "10:00", end: "14:00" }];
+    schedule.dates["2026-08-17"] = [{ start: "09:00", end: "17:00" }];
+    expect(formatAvailabilitySummary("available", schedule, "en", today)).toBe("Available this week");
   });
 
   it("never leaks date exceptions into the public summary", () => {
     const schedule = emptyAvailabilitySchedule();
-    schedule.weekly.sunday = { enabled: true, slots: [{ start: "10:00", end: "18:00" }] };
+    schedule.dates["2026-08-16"] = [{ start: "10:00", end: "14:00" }];
     schedule.exceptions = [{ date: "2026-09-01", type: "unavailable" }];
-    const summary = formatAvailabilitySummary("available", schedule, "en")!;
-    expect(summary).not.toMatch(/2026|09-01/);
+    const summary = formatAvailabilitySummary("available", schedule, "en", today)!;
+    expect(summary).not.toMatch(/2026-09/);
   });
 });

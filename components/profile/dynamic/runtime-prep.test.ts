@@ -48,6 +48,7 @@ const dto: PublicProfileDTO = {
     category: "ugc",
     specialties: ["ugc", "reels"],
     availability: "available",
+    availabilitySchedule: null,
     packages: [{ id: "pkg1", name: "Basic", price: "1000", popular: true, features: ["a"] }],
     socialLinks: {
       title: "UGC Creator",
