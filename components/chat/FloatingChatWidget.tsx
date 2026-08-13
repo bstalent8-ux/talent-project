@@ -4,7 +4,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { cdnImage } from "@/lib/images";
-import { createClient, getBrowserUser } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import { useConversationPresence } from "@/hooks/notifications/useConversationPresence";
 import type { Conversation, Message } from "@/features/chat/types";
@@ -27,7 +27,7 @@ function initials(name: string | null) {
 
 // ─── types ────────────────────────────────────────────────────────────────────
 // ─── component ────────────────────────────────────────────────────────────────
-export default function FloatingChatWidget() {
+export default function FloatingChatWidget({ myId }: { myId: string }) {
   const { dark, lang } = useSite();
   const ar = lang === "ar";
 
@@ -41,7 +41,6 @@ export default function FloatingChatWidget() {
   useConversationPresence(open && view === "chat" ? activeConvId : null);
 
   // ─── data ────────────────────────────────────────────────────────────────
-  const [myId, setMyId]             = useState<string | null>(null);
   const [convs, setConvs]           = useState<Conversation[]>([]);
   const [messages, setMessages]     = useState<Message[]>([]);
   const [loadingConvs, setLoadingConvs] = useState(false);
@@ -69,10 +68,8 @@ export default function FloatingChatWidget() {
   const myBg   = dark ? "#1a3a5c" : "#FFF3CC";
   const thBg   = dark ? "#0f1e2e" : "#F1F5F9";
 
-  // ─── get own id ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    getBrowserUser().then(({ data }) => setMyId(data.user?.id ?? null));
-  }, []);
+  // myId now comes from GlobalChat's prop (GuestGuard's already-resolved
+  // user) — no independent auth.getUser() call here anymore.
 
   // ─── load conversations ──────────────────────────────────────────────────
   const loadConvs = useCallback(async () => {

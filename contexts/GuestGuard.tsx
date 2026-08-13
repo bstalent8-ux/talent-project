@@ -18,6 +18,7 @@ import {
   type PermissionAction,
   type PermissionUser,
 } from "@/lib/permissions";
+import { setNotificationAuthUser } from "@/hooks/notifications";
 import { useSite } from "./SiteContext";
 
 interface GuestGuardValue {
@@ -64,18 +65,21 @@ export function GuestGuard({ children }: { children: ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setUser(null);
+        setNotificationAuthUser(null);
         return;
       }
 
       const { data: { user: authUser } } = await getBrowserUser();
       if (!authUser) {
         setUser(null);
+        setNotificationAuthUser(null);
         return;
       }
 
       const res = await fetch("/api/me/role", { credentials: "include" });
       if (!res.ok) {
         setUser({ id: authUser.id });
+        setNotificationAuthUser(authUser.id);
         return;
       }
 
@@ -88,13 +92,17 @@ export function GuestGuard({ children }: { children: ReactNode }) {
         talent_status:  profile.talent_status ?? null,
         is_suspended:   profile.is_suspended ?? null,
       });
+      setNotificationAuthUser(authUser.id);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadUser();
+    // No separate initial call: supabase-js fires onAuthStateChange once
+    // immediately on subscribe (INITIAL_SESSION), with or without a session —
+    // an explicit loadUser() call here used to double every auth request this
+    // component makes on every page load.
     const { data: { subscription } } = createClient().auth.onAuthStateChange(() => {
       loadUser();
     });

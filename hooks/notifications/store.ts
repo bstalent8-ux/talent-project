@@ -14,7 +14,7 @@
 //
 // Mutations are optimistic and roll back if the request fails.
 
-import { createClient, getBrowserUser } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import type { Notification } from "@/lib/notifications/types";
 
 export interface NotificationState {
@@ -67,8 +67,6 @@ export function getServerSnapshot(): NotificationState {
 
 // ─── Fetching ────────────────────────────────────────────────────────────────
 
-let initPromise: Promise<void> | null = null;
-
 async function fetchPage(page: number): Promise<{
   notifications: Notification[];
   total:   number;
@@ -82,25 +80,50 @@ async function fetchPage(page: number): Promise<{
   return res.json();
 }
 
+// ─── Auth wiring ─────────────────────────────────────────────────────────────
+// The store used to resolve its own user via getBrowserUser() on first mount —
+// a THIRD independent `auth.getUser()` call alongside GuestGuard's (the app's
+// single canonical auth source) and FloatingChatWidget's. GuestGuard now pushes
+// the already-resolved id here instead, so this store makes zero auth calls of
+// its own.
+let authUserId: string | null = null;
+let authKnown = false;
+let loadPromise: Promise<void> | null = null;
+
+/** Called by GuestGuard whenever its resolved user changes (including to/from null). */
+export function setAuthUser(userId: string | null): void {
+  if (authKnown && authUserId === userId) return;
+  authKnown = true;
+  authUserId = userId;
+
+  if (!userId) {
+    closeChannel();
+    state = { ...EMPTY, loading: false, initialized: true };
+    listeners.forEach((l) => l());
+    return;
+  }
+
+  if (mountCount > 0) void loadForCurrentUser();
+}
+
 /**
- * Idempotent. Concurrent callers share the same in-flight promise, so N
- * components mounting in the same tick still produce one request.
+ * Idempotent per user. Concurrent callers (multiple components mounting in the
+ * same tick) share the same in-flight promise, so N mounts still produce one
+ * request.
  */
-export function init(): Promise<void> {
-  if (state.initialized) return Promise.resolve();
-  if (initPromise) return initPromise;
+function loadForCurrentUser(): Promise<void> {
+  const userId = authUserId;
+  if (!userId) return Promise.resolve();
+  if (state.userId === userId && state.initialized) {
+    if (!channel) openChannel(userId);
+    return Promise.resolve();
+  }
+  if (loadPromise) return loadPromise;
 
-  initPromise = (async () => {
-    const { data: { user } } = await getBrowserUser();
-
-    if (!user) {
-      setState({ ...EMPTY, loading: false, initialized: true });
-      return;
-    }
-
+  loadPromise = (async () => {
     const result = await fetchPage(1);
     if (!result) {
-      setState({ loading: false, initialized: true, userId: user.id, error: "failed to load notifications" });
+      setState({ loading: false, initialized: true, userId, error: "failed to load notifications" });
       return;
     }
 
@@ -112,14 +135,14 @@ export function init(): Promise<void> {
       page:          1,
       loading:       false,
       initialized:   true,
-      userId:        user.id,
+      userId,
       error:         null,
     });
 
-    openChannel(user.id);
-  })().finally(() => { initPromise = null; });
+    openChannel(userId);
+  })().finally(() => { loadPromise = null; });
 
-  return initPromise;
+  return loadPromise;
 }
 
 /** Re-fetch page 1 without clearing the list (used after a realtime gap). */
@@ -323,13 +346,15 @@ function closeChannel() {
 
 /**
  * Ref-counted subscribe used by every hook. The channel opens once and only
- * closes when the last consumer unmounts.
+ * closes when the last consumer unmounts. Does not resolve auth itself —
+ * see setAuthUser(). If auth already resolved before this mount (or resolves
+ * shortly after), loadForCurrentUser() fetches page 1 and opens the channel.
  */
 export function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   mountCount += 1;
 
-  void init();
+  if (authKnown && authUserId) void loadForCurrentUser();
 
   return () => {
     listeners.delete(listener);
@@ -338,7 +363,8 @@ export function subscribe(listener: () => void): () => void {
       mountCount = 0;
       closeChannel();
       // Keep `state` so a remount paints instantly from cache; `initialized`
-      // stays true and the realtime channel reopens on the next init().
+      // stays true and the realtime channel reopens on the next mount via
+      // loadForCurrentUser() above.
       state = { ...state, initialized: false };
     }
   };
@@ -348,6 +374,9 @@ export function subscribe(listener: () => void): () => void {
 export function reset() {
   closeChannel();
   mountCount = 0;
+  authKnown = false;
+  authUserId = null;
+  loadPromise = null;
   state = EMPTY;
   listeners.forEach((l) => l());
 }

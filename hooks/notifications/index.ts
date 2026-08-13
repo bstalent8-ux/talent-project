@@ -5,4 +5,4 @@ export {
   type UseNotificationsResult,
 } from "./useNotifications";
 
-export { reset as resetNotificationStore } from "./store";
+export { reset as resetNotificationStore, setAuthUser as setNotificationAuthUser } from "./store";

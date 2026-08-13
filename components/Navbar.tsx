@@ -79,15 +79,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function Navbar({
-  initialAvatarUrl: _initialAvatarUrl,
-  initialFullName: _initialFullName,
-  initialProfileLoaded = false,
-}: {
-  initialAvatarUrl?: string | null;
-  initialFullName?: string | null;
-  initialProfileLoaded?: boolean;
-}) {
+export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const isMobile = useIsMobile(980);
@@ -95,8 +87,9 @@ export default function Navbar({
   const { loading: authLoading, isGuest, user } = useGuestGuard();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(_initialAvatarUrl ?? null);
-  const [avatarLoaded, setAvatarLoaded] = useState(initialProfileLoaded || !!_initialAvatarUrl);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [fullName, setFullName] = useState<string | null>(null);
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -127,11 +120,11 @@ export default function Navbar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
 
+  // Fetches only once auth has actually resolved to a real logged-in user —
+  // guests and the loading state skip this entirely, so a guest page load no
+  // longer fires a wasted /api/me round trip.
   useEffect(() => {
-    if (initialProfileLoaded || _initialAvatarUrl || _initialFullName) {
-      setAvatarLoaded(true);
-      return;
-    }
+    if (authLoading || isGuest) return;
 
     let cancelled = false;
 
@@ -146,6 +139,7 @@ export default function Navbar({
         const { profile } = await res.json();
         if (cancelled) return;
         if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+        if (profile?.full_name) setFullName(profile.full_name);
         setAvatarLoaded(true);
       } catch {
         if (!cancelled) setAvatarLoaded(true);
@@ -156,7 +150,7 @@ export default function Navbar({
     return () => {
       cancelled = true;
     };
-  }, [_initialAvatarUrl, _initialFullName, initialProfileLoaded]);
+  }, [authLoading, isGuest]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -222,7 +216,13 @@ export default function Navbar({
 
           {!isGuest && <NotificationBell />}
 
-          {authLoading ? null : isGuest ? (
+          {authLoading ? (
+            // Client auth hasn't resolved yet — same box the real avatar
+            // button renders into, so nothing shifts once it does.
+            <span className={styles.avatarButton} aria-hidden="true" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span className={styles.spinner} />
+            </span>
+          ) : isGuest ? (
             <Link className={styles.iconButton} href="/login" aria-label={t.login}>
               <LogIn size={16} aria-hidden="true" />
             </Link>
@@ -232,7 +232,7 @@ export default function Navbar({
                 className={styles.avatarButton}
                 type="button"
                 onClick={() => setDropdownOpen((open) => !open)}
-                aria-label={_initialFullName || "Profile"}
+                aria-label={fullName || "Profile"}
                 aria-expanded={dropdownOpen}
               >
                 {!avatarLoaded && <span className={styles.spinner} aria-hidden="true" />}
@@ -240,7 +240,7 @@ export default function Navbar({
                   <img
                     className={styles.avatarImage}
                     src={cdnImage(avatarUrl, 96)}
-                    alt={_initialFullName || "avatar"}
+                    alt={fullName || "avatar"}
                     onLoad={() => setAvatarLoaded(true)}
                     onError={() => setAvatarLoaded(true)}
                   />
