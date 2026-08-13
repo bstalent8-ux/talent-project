@@ -36,9 +36,15 @@ vi.mock("@/lib/cache", () => ({
 
 const updateCoreForUser = vi.fn(async () => {});
 
+// Default mock: an existing row that already has a category (the common
+// case — most talents' rows were created at registration). A dedicated
+// describe block below overrides this to `category: null` to cover the
+// opposite case: a talent_profiles row that does not exist yet.
+let mockCore: Record<string, unknown> = { category: "ugc", social_links: { instagram: "@existing" } };
+
 vi.mock("@/features/profiles", () => ({
   profileService: {
-    loadCoreRow: async () => ({ typeSlug: "talent", core: { social_links: { instagram: "@existing" } } }),
+    loadCoreRow: async () => ({ typeSlug: "talent", core: mockCore }),
     updateCoreForUser,
   },
   ProfileError: {
@@ -60,6 +66,7 @@ function patchRequest(body: unknown) {
 
 beforeEach(() => {
   updateCoreForUser.mockClear();
+  mockCore = { category: "ugc", social_links: { instagram: "@existing" } };
 });
 
 describe("PATCH /api/profile/complete — physical section allowlist", () => {
@@ -67,6 +74,7 @@ describe("PATCH /api/profile/complete — physical section allowlist", () => {
     const res = await PATCH(patchRequest({ section: "physical", data: { eye_color: "بني" } }));
     expect(res.status).toBe(200);
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      category: "ugc",
       social_links: { instagram: "@existing", eye_color: "بني" },
     });
   });
@@ -75,6 +83,7 @@ describe("PATCH /api/profile/complete — physical section allowlist", () => {
     const res = await PATCH(patchRequest({ section: "physical", data: { not_a_real_field: "x", height: "180" } }));
     expect(res.status).toBe(200);
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      category: "ugc",
       social_links: { instagram: "@existing", height: "180" },
     });
   });
@@ -83,6 +92,7 @@ describe("PATCH /api/profile/complete — physical section allowlist", () => {
     const res = await PATCH(patchRequest({ section: "physical", data: { hair_color: "black", shoe_size: "42" } }));
     expect(res.status).toBe(200);
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      category: "ugc",
       social_links: { instagram: "@existing", hair_color: "black", shoe_size: "42" },
     });
   });
@@ -93,6 +103,7 @@ describe("PATCH /api/profile/complete — social section: allowlist + unsafe-sch
     const res = await PATCH(patchRequest({ section: "social", data: { telegram: "https://t.me/example" } }));
     expect(res.status).toBe(200);
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      category: "ugc",
       social_links: { instagram: "@existing", telegram: "https://t.me/example" },
     });
   });
@@ -101,6 +112,7 @@ describe("PATCH /api/profile/complete — social section: allowlist + unsafe-sch
     const res = await PATCH(patchRequest({ section: "social", data: { instagram: "@newname" } }));
     expect(res.status).toBe(200);
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      category: "ugc",
       social_links: { instagram: "@newname" },
     });
   });
@@ -109,6 +121,7 @@ describe("PATCH /api/profile/complete — social section: allowlist + unsafe-sch
     const res = await PATCH(patchRequest({ section: "social", data: { instagram: "@ok", not_a_platform: "x" } }));
     expect(res.status).toBe(200);
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      category: "ugc",
       social_links: { instagram: "@ok" },
     });
   });
@@ -117,7 +130,37 @@ describe("PATCH /api/profile/complete — social section: allowlist + unsafe-sch
     const res = await PATCH(patchRequest({ section: "social", data: { website: "javascript:alert(1)", instagram: "@ok" } }));
     expect(res.status).toBe(200);
     expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      category: "ugc",
       social_links: { instagram: "@ok" },
     });
+  });
+});
+
+describe("PATCH /api/profile/complete — category NOT NULL fallback (regression: found via live QA)", () => {
+  it("a brand-new talent_profiles row (no category yet) gets a default so the insert doesn't violate NOT NULL", async () => {
+    mockCore = { social_links: {} }; // no `category` key at all — the orphaned-account case
+    const res = await PATCH(patchRequest({ section: "physical", data: { height: "175" } }));
+    expect(res.status).toBe(200);
+    expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      category: "ugc",
+      social_links: { height: "175" },
+    });
+  });
+
+  it("never overwrites a category the talent has already chosen", async () => {
+    mockCore = { category: "model", social_links: {} };
+    const res = await PATCH(patchRequest({ section: "availability", data: { availability: "available" } }));
+    expect(res.status).toBe(200);
+    expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      category: "model",
+      availability: "available",
+    });
+  });
+
+  it("the categories section itself still writes the talent's real choice, not the fallback", async () => {
+    mockCore = { social_links: {} };
+    const res = await PATCH(patchRequest({ section: "categories", data: { category: "model" } }));
+    expect(res.status).toBe(200);
+    expect(updateCoreForUser).toHaveBeenCalledWith("user-1", { category: "model" });
   });
 });

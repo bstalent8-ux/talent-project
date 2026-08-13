@@ -76,11 +76,21 @@ export async function PATCH(req: NextRequest) {
     // so a partial write must never clobber the other keys. That merge is
     // pre-existing controller logic and stays exactly where it was.
     let existingSocialLinks: Record<string, unknown> = {};
+    // A talent account can reach this route with no talent_profiles row yet
+    // (a partial signup — see CLAUDE.md's self-healing profiles note, and
+    // /profile/me/complete's own role-not-presence gate). The provider
+    // upserts on user_id, so any section's save becomes that row's first
+    // INSERT — and talent_profiles.category is NOT NULL. Every write below
+    // must therefore carry a category, not just the "categories" section,
+    // or the very first save (e.g. Measurements, before the category step)
+    // fails the NOT NULL constraint outright.
+    let existingCategory: string | null = null;
     try {
       const loaded = await profileService.loadCoreRow(uid);
       if (loaded?.typeSlug === "talent") {
-        existingSocialLinks =
-          ((loaded.core as Record<string, unknown>).social_links as Record<string, unknown>) ?? {};
+        const core = loaded.core as Record<string, unknown>;
+        existingSocialLinks = (core.social_links as Record<string, unknown>) ?? {};
+        existingCategory = (core.category as string) ?? null;
       }
     } catch (e) {
       const err = ProfileError.from(e);
@@ -89,6 +99,9 @@ export async function PATCH(req: NextRequest) {
     }
 
     let saveError: { message: string; status: number } | null = null;
+    // Only backfills when the row doesn't have a category yet — never
+    // downgrades a real, already-chosen category.
+    const categoryFallback = { category: existingCategory ?? "ugc" };
 
     if (section === "categories") {
       saveError = await saveTalentProfileSection(uid, { category: data.category });
@@ -101,20 +114,21 @@ export async function PATCH(req: NextRequest) {
           ([k, v]) => TALENT_SOCIAL_KEYS.includes(k as any) && typeof v === "string" && isSafePresenceValue(v),
         ),
       );
-      saveError = await saveTalentProfileSection(uid, { social_links: { ...existingSocialLinks, ...incoming } });
+      saveError = await saveTalentProfileSection(uid, { ...categoryFallback, social_links: { ...existingSocialLinks, ...incoming } });
     } else if (section === "availability") {
-      saveError = await saveTalentProfileSection(uid, { availability: data.availability });
+      saveError = await saveTalentProfileSection(uid, { ...categoryFallback, availability: data.availability });
     } else if (section === "physical") {
       const incoming = Object.fromEntries(
         Object.entries(data as Record<string,string>).filter(([k,v]) => TALENT_PHYSICAL_KEYS.includes(k as any) && v && String(v).trim().length > 0),
       );
-      saveError = await saveTalentProfileSection(uid, { social_links: { ...existingSocialLinks, ...incoming } });
+      saveError = await saveTalentProfileSection(uid, { ...categoryFallback, social_links: { ...existingSocialLinks, ...incoming } });
     } else if (section === "packages") {
-      saveError = await saveTalentProfileSection(uid, { packages: data.packages });
+      saveError = await saveTalentProfileSection(uid, { ...categoryFallback, packages: data.packages });
     } else if (section === "usage_addons") {
       // Previously re-read the row here; the single read above serves both,
       // and the merge result is identical.
       saveError = await saveTalentProfileSection(uid, {
+        ...categoryFallback,
         social_links: { ...existingSocialLinks, usage_addons: data.usage_addons },
       });
     } else {

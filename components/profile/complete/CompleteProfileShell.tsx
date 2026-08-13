@@ -33,6 +33,7 @@ const TX = {
     saveContinue:"حفظ ومتابعة",
     completeBtn: "إنهاء الملف",
     saving:      "جاري الحفظ...",
+    saveErrorMsg:"تعذّر الحفظ. حاول مرة أخرى.",
     completion:  "نسبة الاكتمال",
     viewAllSteps:"عرض كل الخطوات",
     hideSteps:   "إخفاء الخطوات",
@@ -87,6 +88,7 @@ const TX = {
     saveContinue:"Save & Continue",
     completeBtn: "Complete Profile",
     saving:      "Saving...",
+    saveErrorMsg:"Couldn't save. Please try again.",
     completion:  "Profile Completion",
     viewAllSteps:"View all steps",
     hideSteps:   "Hide steps",
@@ -209,6 +211,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const [stepIdx, setStepIdx] = useState(0);
   const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   // Resolve the starting step once: an explicit ?step= wins (deep link from
@@ -322,8 +325,15 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
     await onUpdate();
   };
 
-  const saveStep = async (key: WizardStepKey) => {
+  /**
+   * Returns whether the save actually succeeded. Callers must not advance
+   * the step or navigate away on `false` — silently doing so was the bug:
+   * a failed PATCH was swallowed and the wizard moved on as if it hadn't
+   * happened, so the talent believed a step was saved when it was not.
+   */
+  const saveStep = async (key: WizardStepKey): Promise<boolean> => {
     setSaving(true);
+    setSaveError(null);
     try {
       if (key === "basic") {
         if (personal.full_name.trim()) await patchSection("personal", { full_name: personal.full_name.trim(), city: personal.city.trim() });
@@ -340,16 +350,26 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
         await patchSection("availability", { availability: avail });
       }
       await onUpdate();
-    } catch {}
-    setSaving(false);
+      setSaving(false);
+      return true;
+    } catch {
+      setSaving(false);
+      setSaveError(t.saveErrorMsg);
+      return false;
+    }
   };
 
   const handleSaveContinue = async () => {
-    await saveStep(steps[stepIdx]);
+    const ok = await saveStep(steps[stepIdx]);
+    if (!ok) return;
     if (stepIdx < steps.length - 1) goToStep(stepIdx + 1);
     else router.push("/profile/me");
   };
-  const handleSaveDraft = async () => { await saveStep(steps[stepIdx]); router.push("/profile/me"); };
+  const handleSaveDraft = async () => {
+    const ok = await saveStep(steps[stepIdx]);
+    if (!ok) return;
+    router.push("/profile/me");
+  };
   const handleBack = () => { if (stepIdx > 0) goToStep(stepIdx - 1); else router.push("/profile/me"); };
 
   const fallback = calculateCompletion(profile, talentProfile, portfolioItems);
@@ -743,8 +763,14 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
             )}
           </div>
 
+          {saveError && (
+            <p style={{ color: "var(--color-error)", fontSize: 12.5, fontWeight: 700, marginTop: 18, marginBottom: 0 }}>
+              {saveError}
+            </p>
+          )}
+
           {/* ─── bottom nav (mirrors top) ─── */}
-          <div style={{ display: "flex", gap: 10, marginTop: 26, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
             <button onClick={handleBack} style={ghostBtn}>
               {lang === "ar" ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
               {t.back}
