@@ -135,6 +135,8 @@ export interface TalentData {
   category?: string | null;
   /** Hero-adjacent identity line (public UGC/Model profile). Empty → hidden. */
   availability?: string | null;
+  /** Structured weekly hours + exceptions, when the talent has filled it in. */
+  availabilitySchedule?: import("@/lib/availability-schedule").AvailabilitySchedule | null;
   languages?: string | null;
 }
 

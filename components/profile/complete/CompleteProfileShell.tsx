@@ -20,6 +20,10 @@ import { cdnImage } from "@/lib/images";
 import { getWizardSteps, type WizardStepKey } from "@/components/profile/completion-wizard-steps";
 import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 import { calculateCompletion } from "@/lib/profile-completion";
+import {
+  DAY_KEYS, DAY_LABELS, emptyAvailabilitySchedule, parseAvailabilitySchedule,
+  type AvailabilitySchedule, type AvailabilityException, type DayKey, type ExceptionType, type TimeSlot,
+} from "@/lib/availability-schedule";
 import { resumeStepIndex, stepDone, STEP_COMPLETION_KEYS } from "@/components/profile/complete/resume-step";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
 
@@ -78,6 +82,24 @@ const TX = {
     pkgName: "اسم الباقة", pkgPrice: "السعر (جنيه)", pkgFeatures: "المميزات",
     pkgPopular: "الأكثر طلباً", addFeature: "إضافة ميزة",
     addonName: "الاسم", addonPrice: "السعر (جنيه)",
+    avail: {
+      weeklyTitle: "الجدول الأسبوعي",
+      weeklyDesc: "حدد الأيام والساعات التي تكون متاحاً خلالها لاستقبال العروض.",
+      addSlot: "إضافة فترة زمنية أخرى",
+      removeSlot: "حذف الفترة",
+      to: "إلى",
+      exceptionsTitle: "استثناءات بتواريخ محددة",
+      exceptionsDesc: "أضف تاريخاً تكون فيه غير متاح، أو له ساعات مختلفة عن جدولك المعتاد.",
+      exceptionsEmpty: "لا توجد استثناءات مضافة.",
+      exceptionDate: "التاريخ",
+      exceptionType: "النوع",
+      exceptionUnavailable: "غير متاح",
+      exceptionCustom: "ساعات مخصصة",
+      addException: "إضافة استثناء",
+      removeException: "حذف",
+      timezoneTitle: "المنطقة الزمنية",
+      timezoneDesc: "تُستخدم لعرض ساعاتك بالتوقيت الصحيح للعلامات التجارية.",
+    },
   },
   en: {
     pageTitle:   "Complete My Profile",
@@ -132,6 +154,24 @@ const TX = {
     pkgName: "Package name", pkgPrice: "Price (EGP)", pkgFeatures: "Features",
     pkgPopular: "Most Popular", addFeature: "Add feature",
     addonName: "Name", addonPrice: "Price (EGP)",
+    avail: {
+      weeklyTitle: "Weekly Availability",
+      weeklyDesc: "Pick the days and hours you're available to receive new offers.",
+      addSlot: "Add another time slot",
+      removeSlot: "Remove slot",
+      to: "to",
+      exceptionsTitle: "Date Exceptions",
+      exceptionsDesc: "Add a specific date you're unavailable, or one with different hours than your usual schedule.",
+      exceptionsEmpty: "No exceptions added yet.",
+      exceptionDate: "Date",
+      exceptionType: "Type",
+      exceptionUnavailable: "Unavailable",
+      exceptionCustom: "Custom hours",
+      addException: "Add exception",
+      removeException: "Remove",
+      timezoneTitle: "Timezone",
+      timezoneDesc: "Used to show your hours in the right time for brands.",
+    },
   },
 };
 
@@ -239,6 +279,84 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
     Object.fromEntries(TALENT_SOCIAL_KEYS.map((k) => [k, sl[k] ?? ""])),
   );
   const [avail, setAvail] = useState(talentProfile?.availability ?? "available");
+  const [schedule, setSchedule] = useState<AvailabilitySchedule>(() =>
+    parseAvailabilitySchedule(talentProfile?.social_links?.availability_schedule),
+  );
+  // No stored timezone yet: fill in the browser's detected zone once we're on
+  // the client, instead of guessing on the server (which would hydration-
+  // mismatch against whatever zone the build/render machine happens to run in).
+  useEffect(() => {
+    if (schedule.timezone) return;
+    try {
+      const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (detected) setSchedule((s) => (s.timezone ? s : { ...s, timezone: detected }));
+    } catch {}
+    // Mount-only default fill — user edits to the select own it after that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const setDaySlots = (day: DayKey, slots: TimeSlot[]) =>
+    setSchedule((s) => ({ ...s, weekly: { ...s.weekly, [day]: { enabled: slots.length > 0, slots } } }));
+  const toggleDay = (day: DayKey) =>
+    setSchedule((s) => {
+      const wasEnabled = s.weekly[day].enabled;
+      return {
+        ...s,
+        weekly: {
+          ...s.weekly,
+          [day]: wasEnabled ? { enabled: false, slots: [] } : { enabled: true, slots: [{ start: "10:00", end: "18:00" }] },
+        },
+      };
+    });
+  const setSlotTime = (day: DayKey, slotIdx: number, field: "start" | "end", value: string) =>
+    setSchedule((s) => ({
+      ...s,
+      weekly: {
+        ...s.weekly,
+        [day]: { ...s.weekly[day], slots: s.weekly[day].slots.map((sl, i) => (i === slotIdx ? { ...sl, [field]: value } : sl)) },
+      },
+    }));
+  const addDaySlot = (day: DayKey) =>
+    setSchedule((s) => {
+      if (s.weekly[day].slots.length >= 2) return s;
+      return { ...s, weekly: { ...s.weekly, [day]: { ...s.weekly[day], slots: [...s.weekly[day].slots, { start: "10:00", end: "18:00" }] } } };
+    });
+  const removeDaySlot = (day: DayKey, slotIdx: number) =>
+    setSchedule((s) => {
+      const slots = s.weekly[day].slots.filter((_, i) => i !== slotIdx);
+      return { ...s, weekly: { ...s.weekly, [day]: { enabled: slots.length > 0, slots } } };
+    });
+
+  const [newExceptionDate, setNewExceptionDate] = useState("");
+  const [newExceptionType, setNewExceptionType] = useState<ExceptionType>("unavailable");
+  const [newExceptionStart, setNewExceptionStart] = useState("10:00");
+  const [newExceptionEnd, setNewExceptionEnd] = useState("18:00");
+
+  const addException = () => {
+    if (!newExceptionDate) return;
+    const next: AvailabilityException = newExceptionType === "unavailable"
+      ? { date: newExceptionDate, type: "unavailable" }
+      : { date: newExceptionDate, type: "custom", slots: [{ start: newExceptionStart, end: newExceptionEnd }] };
+    setSchedule((s) => ({
+      ...s,
+      exceptions: [...s.exceptions.filter((e) => e.date !== newExceptionDate), next].sort((a, b) => a.date.localeCompare(b.date)),
+    }));
+    setNewExceptionDate("");
+    setNewExceptionType("unavailable");
+  };
+  const removeException = (date: string) =>
+    setSchedule((s) => ({ ...s, exceptions: s.exceptions.filter((e) => e.date !== date) }));
+
+  // Full IANA list from the runtime itself — deterministic across server/client
+  // (unlike the *current* zone, this doesn't depend on the machine's local
+  // config), so no hydration-mismatch risk computing it at render time.
+  const timezoneOptions = useMemo(() => {
+    try {
+      const zones = (Intl as any).supportedValuesOf?.("timeZone") as string[] | undefined;
+      if (zones?.length) return zones;
+    } catch {}
+    return ["UTC", "Africa/Cairo", "Asia/Riyadh", "Asia/Dubai", "Europe/London", "Europe/Berlin", "America/New_York"];
+  }, []);
   const [physical, setPhysical] = useState({
     height: sl.height ?? "", weight: sl.weight ?? "", age: sl.age ?? "",
     hair_color: sl.hair_color ?? "", shoe_size: sl.shoe_size ?? "",
@@ -337,7 +455,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
       } else if (key === "presence") {
         if (Object.values(presence).some((v) => v.trim().length > 2)) await patchSection("social", presence);
       } else if (key === "availability") {
-        await patchSection("availability", { availability: avail });
+        await patchSection("availability", { availability: avail, availability_schedule: schedule });
       }
       await onUpdate();
     } catch {}
@@ -719,6 +837,124 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                     </button>
                   ))}
                 </div>
+
+                {avail === "available" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 28, marginTop: 24 }}>
+                    {/* ── Weekly Availability ── */}
+                    <div>
+                      <p style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 4px" }}>{t.avail.weeklyTitle}</p>
+                      <p style={{ color: MUTED, fontSize: 12, lineHeight: 1.6, margin: "0 0 14px" }}>{t.avail.weeklyDesc}</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {DAY_KEYS.map((day) => {
+                          const d = schedule.weekly[day];
+                          return (
+                            <div key={day} style={{ border: `1px solid ${BORDER}`, borderRadius: "var(--radius-md)", padding: 12, background: SURFACE }}>
+                              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                                <input type="checkbox" checked={d.enabled} onChange={() => toggleDay(day)} />
+                                <span style={{ color: TEXT, fontSize: 13, fontWeight: 700, minWidth: 76 }}>
+                                  {lang === "ar" ? DAY_LABELS[day].ar : DAY_LABELS[day].en}
+                                </span>
+                              </label>
+                              {d.enabled && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+                                  {d.slots.map((slot, i) => (
+                                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                      <input type="time" value={slot.start} dir="ltr"
+                                        onChange={(e) => setSlotTime(day, i, "start", e.target.value)}
+                                        style={{ ...inp, width: "auto" }} />
+                                      <span style={{ color: MUTED, fontSize: 12 }}>{t.avail.to}</span>
+                                      <input type="time" value={slot.end} dir="ltr"
+                                        onChange={(e) => setSlotTime(day, i, "end", e.target.value)}
+                                        style={{ ...inp, width: "auto" }} />
+                                      {d.slots.length > 1 && (
+                                        <button onClick={() => removeDaySlot(day, i)} aria-label={t.avail.removeSlot} style={{ background: "rgba(223,63,77,0.12)", border: "none", borderRadius: 6, color: RED, cursor: "pointer", padding: "6px 10px", fontSize: 12 }}>✕</button>
+                                      )}
+                                    </div>
+                                  ))}
+                                  {d.slots.length < 2 && (
+                                    <button onClick={() => addDaySlot(day)} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", background: "transparent", border: `1px dashed ${BORDER}`, borderRadius: 7, color: MUTED, fontSize: 12, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                                      + {t.avail.addSlot}
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* ── Date Exceptions ── */}
+                    <div>
+                      <p style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 4px" }}>{t.avail.exceptionsTitle}</p>
+                      <p style={{ color: MUTED, fontSize: 12, lineHeight: 1.6, margin: "0 0 14px" }}>{t.avail.exceptionsDesc}</p>
+
+                      {schedule.exceptions.length > 0 ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                          {schedule.exceptions.map((exc) => (
+                            <div key={exc.date} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: `1px solid ${BORDER}`, borderRadius: "var(--radius-sm)", padding: "10px 12px", background: SURFACE }}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                <span style={{ color: TEXT, fontSize: 13, fontWeight: 700, direction: "ltr" }}>{exc.date}</span>
+                                <span style={{ color: MUTED, fontSize: 11.5 }}>
+                                  {exc.type === "unavailable"
+                                    ? t.avail.exceptionUnavailable
+                                    : `${t.avail.exceptionCustom} · ${exc.slots?.[0]?.start}–${exc.slots?.[0]?.end}`}
+                                </span>
+                              </div>
+                              <button onClick={() => removeException(exc.date)} style={{ background: "rgba(223,63,77,0.12)", border: "none", borderRadius: 6, color: RED, cursor: "pointer", padding: "6px 10px", fontSize: 12, fontFamily: "var(--font-sans)" }}>
+                                {t.avail.removeException}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p style={{ color: MUTED, fontSize: 12.5, margin: "0 0 14px" }}>{t.avail.exceptionsEmpty}</p>
+                      )}
+
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "end" }}>
+                        <div>
+                          <label style={label}>{t.avail.exceptionDate}</label>
+                          <input type="date" value={newExceptionDate} dir="ltr"
+                            onChange={(e) => setNewExceptionDate(e.target.value)}
+                            style={{ ...inp, width: "auto" }} />
+                        </div>
+                        <div>
+                          <label style={label}>{t.avail.exceptionType}</label>
+                          <select value={newExceptionType} onChange={(e) => setNewExceptionType(e.target.value as ExceptionType)} style={{ ...inp, width: "auto" }}>
+                            <option value="unavailable">{t.avail.exceptionUnavailable}</option>
+                            <option value="custom">{t.avail.exceptionCustom}</option>
+                          </select>
+                        </div>
+                        {newExceptionType === "custom" && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <input type="time" value={newExceptionStart} dir="ltr" onChange={(e) => setNewExceptionStart(e.target.value)} style={{ ...inp, width: "auto" }} />
+                            <span style={{ color: MUTED, fontSize: 12 }}>{t.avail.to}</span>
+                            <input type="time" value={newExceptionEnd} dir="ltr" onChange={(e) => setNewExceptionEnd(e.target.value)} style={{ ...inp, width: "auto" }} />
+                          </div>
+                        )}
+                        <button onClick={addException} disabled={!newExceptionDate} style={primaryBtn(!newExceptionDate)}>
+                          + {t.avail.addException}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* ── Timezone ── */}
+                    <div>
+                      <p style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 4px" }}>{t.avail.timezoneTitle}</p>
+                      <p style={{ color: MUTED, fontSize: 12, lineHeight: 1.6, margin: "0 0 10px" }}>{t.avail.timezoneDesc}</p>
+                      <select
+                        value={schedule.timezone ?? ""}
+                        onChange={(e) => setSchedule((s) => ({ ...s, timezone: e.target.value || null }))}
+                        style={{ ...inp, direction: "ltr" }}
+                      >
+                        {!schedule.timezone && <option value="">—</option>}
+                        {timezoneOptions.map((tz) => (
+                          <option key={tz} value={tz}>{tz}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

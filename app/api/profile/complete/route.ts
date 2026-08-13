@@ -99,7 +99,15 @@ export async function PATCH(req: NextRequest) {
       );
       saveError = await saveTalentProfileSection(uid, { social_links: { ...existingSocialLinks, ...incoming } });
     } else if (section === "availability") {
-      saveError = await saveTalentProfileSection(uid, { availability: data.availability });
+      // availability_schedule is optional structured detail (weekly hours,
+      // date exceptions, timezone) — stored inside the same social_links
+      // JSONB blob as physical/usage_addons, merged the same way. The plain
+      // `availability` column stays the on/off switch, untouched.
+      const patch: Record<string, unknown> = { availability: data.availability };
+      if (data.availability_schedule !== undefined) {
+        patch.social_links = { ...existingSocialLinks, availability_schedule: data.availability_schedule };
+      }
+      saveError = await saveTalentProfileSection(uid, patch);
     } else if (section === "physical") {
       const incoming = Object.fromEntries(
         Object.entries(data as Record<string,string>).filter(([k,v]) => TALENT_PHYSICAL_KEYS.includes(k as any) && v && String(v).trim().length > 0),

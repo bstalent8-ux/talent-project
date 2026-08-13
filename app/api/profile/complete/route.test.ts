@@ -88,6 +88,27 @@ describe("PATCH /api/profile/complete — physical section allowlist", () => {
   });
 });
 
+describe("PATCH /api/profile/complete — availability section", () => {
+  it("writes only the plain availability column when no schedule is sent", async () => {
+    const res = await PATCH(patchRequest({ section: "availability", data: { availability: "available" } }));
+    expect(res.status).toBe(200);
+    expect(updateCoreForUser).toHaveBeenCalledWith("user-1", { availability: "available" });
+  });
+
+  it("merges availability_schedule into social_links, preserving existing keys", async () => {
+    const schedule = { timezone: "Africa/Cairo", weekly: {}, exceptions: [] };
+    const res = await PATCH(patchRequest({
+      section: "availability",
+      data: { availability: "available", availability_schedule: schedule },
+    }));
+    expect(res.status).toBe(200);
+    expect(updateCoreForUser).toHaveBeenCalledWith("user-1", {
+      availability: "available",
+      social_links: { instagram: "@existing", availability_schedule: schedule },
+    });
+  });
+});
+
 describe("PATCH /api/profile/complete — social section accepts new Professional Presence platforms", () => {
   it("merges a new platform key (telegram) with no server-side allowlist rejection", async () => {
     const res = await PATCH(patchRequest({ section: "social", data: { telegram: "https://t.me/example" } }));

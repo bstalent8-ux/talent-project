@@ -5,6 +5,7 @@ import { MapPin, Star, Eye, Shield, Zap, Crown, Heart, Share2, MessageCircle, Ca
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { TalentData } from "@/features/talent-profile/types";
+import { formatAvailabilitySummary } from "@/lib/availability-schedule";
 import { cdnImage } from "@/lib/images";
 import DirectBriefModal from "@/components/DirectBriefModal";
 import ProtectedAction from "@/components/auth/ProtectedAction";
@@ -34,8 +35,6 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
     escrowSteps: ar
       ? ["الدفع محجوز", "تسليم العمل", "الموافقة", "الإفراج عن الأموال"]
       : ["Payment Held", "Work Delivery", "Approval", "Fund Release"],
-    availableNow:   ar ? "متاح الآن" : "Available now",
-    unavailableNow: ar ? "غير متاح حالياً" : "Currently unavailable",
   };
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
@@ -44,6 +43,8 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
   const TEXT = dark ? "#FFFFFF" : "#0F172A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
   const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+
+  const availabilitySummary = formatAvailabilitySummary(talent.availability, talent.availabilitySchedule, lang);
 
   const displayName = talent.name.includes("@")
     ? talent.handle || talent.name.split("@")[0]
@@ -163,7 +164,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
           {/* Availability + languages — hero-adjacent identity line, hidden when both are empty */}
           {(talent.availability || talent.languages) && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              {talent.availability && (
+              {availabilitySummary && (
                 <span style={{
                   display: "flex", alignItems: "center", gap: 5,
                   backgroundColor: talent.availability === "available" ? "rgba(0,210,106,0.08)" : "rgba(148,163,184,0.12)",
@@ -171,7 +172,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
                   border: `1px solid ${talent.availability === "available" ? "rgba(0,210,106,0.2)" : BORDER}`,
                   borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 600,
                 }}>
-                  {talent.availability === "available" ? t.availableNow : t.unavailableNow}
+                  {availabilitySummary}
                 </span>
               )}
               {talent.languages && (

@@ -10,6 +10,7 @@
 
 import type { PublicProfileDTO, TalentPublicCore } from "@/features/profiles/types/dto";
 import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
+import { parseAvailabilitySchedule } from "@/lib/availability-schedule";
 import type {
   AddonItem,
   BookingStats,
@@ -51,6 +52,7 @@ export function toTalentData(dto: PublicProfileDTO): TalentData {
     specialties:  core.specialties ?? [],
     category:     core.category ?? null,
     availability: core.availability ?? null,
+    availabilitySchedule: parseAvailabilitySchedule(social.availability_schedule),
     languages:    typeof social.languages === "string" && social.languages.trim().length > 0
       ? social.languages.trim()
       : null,
