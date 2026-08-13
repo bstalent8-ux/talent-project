@@ -571,7 +571,12 @@ export default function DashboardPage() {
               </a>
             )}
             {!edit && (
-              <button onClick={() => setEdit(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+              // Routes to the dedicated guided flow instead of toggling the
+              // page's own inline edit mode — see /profile/me/complete.
+              // `edit` can no longer become true from this page; its inline
+              // form branches below are kept but unreachable rather than
+              // deleted, per the "demote, don't delete" instruction.
+              <button onClick={() => router.push("/profile/me/complete")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
                 <Pencil size={14} />{t.editProfile}
               </button>
             )}
@@ -793,8 +798,12 @@ export default function DashboardPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.physicalInfo}</h3>
                   {!edit && (
+                    // Routes to the guided flow's physical/measurements step
+                    // instead of this page's own quick-edit modal — avoids a
+                    // second, narrower physical-data editor living alongside
+                    // the wizard's (which also covers eye_color).
                     <button
-                      onClick={() => { setPhysForm({ height: form.height, weight: form.weight, age: form.age, hair_color: form.hair_color, shoe_size: form.shoe_size, languages: form.languages, dialect: form.dialect }); setPhysicalModal(true); }}
+                      onClick={() => router.push("/profile/me/complete?step=physical")}
                       style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", backgroundColor: "rgba(0,201,177,0.08)", border: `1px solid rgba(0,201,177,0.2)`, borderRadius: 8, color: "#00C9B1", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
                     >
                       ✏️ {lang === "ar" ? "تعديل" : "Edit"}
@@ -820,7 +829,7 @@ export default function DashboardPage() {
                     ))}
                     {!["height","weight","age","hair_color","shoe_size","languages","dialect"].some(k => form[k]) && (
                       <button
-                        onClick={() => setPhysicalModal(true)}
+                        onClick={() => router.push("/profile/me/complete?step=physical")}
                         style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: `1px dashed rgba(0,201,177,0.3)`, borderRadius: 10, color: "#00C9B1", fontSize: 13, fontWeight: 700, cursor: "pointer", background: "transparent", fontFamily: "'Cairo',sans-serif" }}
                       >
                         <span style={{ fontSize: 18 }}>📏</span>

@@ -20,6 +20,7 @@ import { cdnImage } from "@/lib/images";
 import { getWizardSteps, type WizardStepKey } from "@/components/profile/completion-wizard-steps";
 import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 import { calculateCompletion } from "@/lib/profile-completion";
+import { resumeStepIndex, stepDone, STEP_COMPLETION_KEYS } from "@/components/profile/complete/resume-step";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
 
 /* ─── translations ───────────────────────────────────────── */
@@ -164,33 +165,8 @@ const STEP_ICONS: Record<WizardStepKey, React.ComponentType<{ size?: number; col
   presence: Link2, availability: CalendarCheck, review: ClipboardCheck,
 };
 
-/**
- * Which CompletionDTO section keys must be `done` for a wizard step to count
- * as finished, for resume purposes. "review" has none — it is only reached
- * once every other step is.
- */
-const STEP_COMPLETION_KEYS: Record<WizardStepKey, string[]> = {
-  basic: ["avatar", "personal", "bio"],
-  physical: ["physical"],
-  professional: ["categories", "packages", "usage_addons"],
-  portfolio: ["portfolio"],
-  presence: ["social"],
-  availability: ["availability"],
-  review: [],
-};
-
-function resumeStepIndex(steps: WizardStepKey[], sections: CompletionDTO["sections"] | undefined): number {
-  if (!sections?.length) return 0;
-  const doneByKey = Object.fromEntries(sections.map((s) => [s.key, s.done]));
-  for (let i = 0; i < steps.length; i++) {
-    const key = steps[i];
-    if (key === "review") continue;
-    const required = STEP_COMPLETION_KEYS[key];
-    const allDone = required.every((k) => doneByKey[k]);
-    if (!allDone) return i;
-  }
-  return steps.length - 1; // everything done — land on Review
-}
+// STEP_COMPLETION_KEYS / resumeStepIndex / stepDone live in ./resume-step.ts
+// (pure, no JSX — importable from a vitest test without pulling in React).
 
 interface Props {
   profile: any;
@@ -223,7 +199,12 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const INP    = "var(--bg-card-muted)";
   const INK    = "var(--color-primary-ink)";
 
-  const steps = useMemo(() => getWizardSteps(talentProfile?.category), [talentProfile?.category]);
+  // Tracks the live in-progress selection, not just the last-saved
+  // talentProfile prop — so picking "Model" on the professional step inserts
+  // the Measurements step into the sidebar immediately, and a Save & Continue
+  // right after does not skip past it waiting for a save+refetch round trip.
+  const [category, setCategory] = useState(talentProfile?.category ?? "");
+  const steps = useMemo(() => getWizardSteps(category || talentProfile?.category), [category, talentProfile?.category]);
 
   const [stepIdx, setStepIdx] = useState(0);
   const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
@@ -254,7 +235,6 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const sl = talentProfile?.social_links ?? {};
   const [personal, setPersonal] = useState({ full_name: profile?.full_name ?? "", city: profile?.city ?? "" });
   const [bio, setBio] = useState(profile?.bio ?? talentProfile?.bio ?? "");
-  const [category, setCategory] = useState(talentProfile?.category ?? "");
   const [presence, setPresence] = useState<Record<string, string>>(
     Object.fromEntries(TALENT_SOCIAL_KEYS.map((k) => [k, sl[k] ?? ""])),
   );
@@ -375,12 +355,6 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const fallback = calculateCompletion(profile, talentProfile, portfolioItems);
   const score = completion?.score ?? fallback.score;
   const sections = completion?.sections ?? fallback.sections.map((s) => ({ ...s, progress: s.done ? 1 : 0 }));
-  const doneByKey = Object.fromEntries(sections.map((s) => [s.key, s.done]));
-
-  const stepDone = (key: WizardStepKey) => {
-    const required = STEP_COMPLETION_KEYS[key];
-    return required.length > 0 && required.every((k) => doneByKey[k]);
-  };
 
   const ordered = [...sections].sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
@@ -423,7 +397,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const stepRows = steps.map((key, i) => {
     const Icon = STEP_ICONS[key];
     const active = i === stepIdx;
-    const done = stepDone(key);
+    const done = stepDone(key, sections);
     return (
       <button
         key={key}
