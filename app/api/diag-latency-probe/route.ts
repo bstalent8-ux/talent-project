@@ -29,7 +29,6 @@ export async function GET(req: Request) {
         apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
       },
-      cache: "no-store",
     });
     const t1 = Date.now();
     await res.text();
