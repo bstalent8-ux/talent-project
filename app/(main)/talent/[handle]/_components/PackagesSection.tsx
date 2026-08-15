@@ -12,13 +12,20 @@ type Package = PackageItem;
 interface Props {
   onSelect: (pkg: Package) => void;
   packages?: Package[] | null;
+  /** "model" swaps the purple/orange gradient card system for the Navy/Teal/
+   * Gold tokens the rest of the Model profile uses, and caps the row at up
+   * to 3 equal-height cards instead of a fixed 3-column grid with empty
+   * cells when a talent has fewer packages. UGC keeps the exact prior card
+   * (unchanged code path below). */
+  variant?: "default" | "model";
 }
 
-export default function PackagesSection({ onSelect, packages }: Props) {
+export default function PackagesSection({ onSelect, packages, variant = "default" }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const { dark, lang } = useSite();
   const ar = lang === "ar";
+  const isModel = variant === "model";
   const data = packages ?? [];
 
   const card = dark ? "#0D1623" : "#FFFFFF";
@@ -37,6 +44,101 @@ export default function PackagesSection({ onSelect, packages }: Props) {
   // A talent who has not priced anything shows no pricing block at all. An
   // "no packages yet" card advertises an unfinished profile to the brand.
   if (data.length === 0) return null;
+
+  if (isModel) {
+    const shown = data.slice(0, 3);
+    const MCARD   = "var(--bg-card)";
+    const MBORDER = "var(--border-subtle)";
+    const MTEXT   = "var(--text-primary)";
+    const MMUTED  = "var(--text-muted)";
+    const TEAL    = "var(--color-primary)";
+    const GOLD    = "var(--color-secondary)";
+
+    return (
+      <section style={{
+        backgroundColor: MCARD, border: `1px solid ${MBORDER}`,
+        borderRadius: 16, padding: isMobile ? 16 : 24,
+      }}>
+        <h2 style={{ color: MTEXT, fontSize: 18, fontWeight: 800, margin: "0 0 18px" }}>
+          {ar ? "الباقات والأسعار" : "Packages & Prices"}
+        </h2>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : `repeat(${shown.length}, 1fr)`,
+          gap: 16, alignItems: "stretch",
+        }}>
+          {shown.map((pkg) => {
+            const selected = selectedPackageId === pkg.id;
+            return (
+              <article
+                key={pkg.id}
+                onClick={() => handleSelect(pkg)}
+                style={{
+                  position: "relative",
+                  display: "flex", flexDirection: "column", gap: 14,
+                  backgroundColor: "var(--bg-card-muted)",
+                  border: `1px solid ${selected ? TEAL : MBORDER}`,
+                  borderRadius: 14, padding: 20, cursor: "pointer",
+                }}
+              >
+                {pkg.popular && (
+                  <span style={{
+                    alignSelf: "flex-start",
+                    backgroundColor: "color-mix(in srgb, var(--color-secondary) 15%, transparent)",
+                    color: GOLD, border: `1px solid ${GOLD}`,
+                    borderRadius: 20, padding: "2px 10px", fontSize: 10.5, fontWeight: 800,
+                  }}>
+                    {ar ? "الأكثر طلباً" : "Most Popular"}
+                  </span>
+                )}
+
+                <div>
+                  <p style={{ color: MMUTED, fontSize: 12.5, fontWeight: 700, margin: "0 0 6px" }}>{pkg.name}</p>
+                  <p style={{ color: MTEXT, fontSize: 26, fontWeight: 900, margin: 0 }}>
+                    {pkg.price}
+                    <span style={{ color: MMUTED, fontSize: 12, fontWeight: 700 }}> {ar ? "جنيه" : "EGP"}</span>
+                  </p>
+                </div>
+
+                {pkg.features.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+                    {pkg.features.map((feature, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+                        <span style={{
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          width: 16, height: 16, borderRadius: 999, flexShrink: 0, marginTop: 1,
+                          backgroundColor: "color-mix(in srgb, var(--color-primary) 15%, transparent)",
+                        }}>
+                          <Check size={10} color={TEAL} />
+                        </span>
+                        <span style={{ color: MMUTED, fontSize: 12.5 }}>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleSelect(pkg); }}
+                  style={{
+                    marginTop: "auto",
+                    backgroundColor: selected ? TEAL : "transparent",
+                    color: selected ? "#fff" : TEAL,
+                    border: `1px solid ${TEAL}`,
+                    borderRadius: 10, padding: "10px 0", width: "100%",
+                    fontSize: 13, fontWeight: 800, cursor: "pointer",
+                    fontFamily: "'Cairo',sans-serif",
+                  }}
+                >
+                  {selected ? (ar ? "الباقة المختارة" : "Selected") : ar ? "اختر الباقة" : "Choose Package"}
+                </button>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

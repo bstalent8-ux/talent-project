@@ -216,6 +216,17 @@ describe("adapter output matches component prop requirements", () => {
     expect(onSelectPackage).toHaveBeenCalledWith(talentContext.packages![0]);
   });
 
+  it("packages defaults to variant 'default' for a non-model category", () => {
+    const plan = buildTalentCoreProps("packages", talentContext)!;
+    expect((plan.props as { variant: string }).variant).toBe("default");
+  });
+
+  it("packages maps to the model variant when talent.category is model", () => {
+    const modelContext: TalentProfileContext = { ...talentContext, talent: { ...talentContext.talent, category: "model" } };
+    const plan = buildTalentCoreProps("packages", modelContext)!;
+    expect((plan.props as { variant: string }).variant).toBe("model");
+  });
+
   it("usage_addons maps to UsageRightsSection with selectedPackage and addons", () => {
     const plan = buildTalentCoreProps("usage_addons", talentContext)!;
     expect(plan.component).toBe("UsageRightsSection");

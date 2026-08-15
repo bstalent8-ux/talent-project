@@ -61,7 +61,11 @@ export function buildTalentCoreProps(
     case "packages":
       return {
         component: "PackagesSection",
-        props: { onSelect: context.onSelectPackage, packages: context.packages },
+        props: {
+          onSelect: context.onSelectPackage,
+          packages: context.packages,
+          variant: context.talent.category === "model" ? "model" : "default",
+        },
       };
 
     case "usage_addons":
