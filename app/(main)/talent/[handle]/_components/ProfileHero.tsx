@@ -62,6 +62,153 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
     talent.premium      && { icon: <Crown size={11} />,  label: t.premium },
   ].filter(Boolean) as { icon: React.ReactNode; label: string }[];
 
+  const isModel = talent.category === "model";
+
+  // ─── Model hero — large 3:4 portrait + identity, current design-system
+  // tokens (var(--color-primary) teal / var(--color-secondary) gold), not
+  // this file's legacy hardcoded GREEN/GOLD which the UGC branch below keeps
+  // using untouched. Reuses every value computed above; renders none of its
+  // own new data. Booking modal is shared with the UGC branch (same
+  // `showBooking` state, same DirectBriefModal render below).
+  if (isModel) {
+    const TEAL   = "var(--color-primary)";
+    const MGOLD  = "var(--color-secondary)";
+    const MCARD  = "var(--bg-card)";
+    const MBORDER= "var(--border-subtle)";
+    const MTEXT  = "var(--text-primary)";
+    const MMUTED = "var(--text-muted)";
+
+    return (
+      <>
+        <div style={{
+          backgroundColor: MCARD, border: `1px solid ${MBORDER}`,
+          borderRadius: 16, padding: isMobile ? 16 : 24,
+          marginBottom: 24, overflow: "hidden",
+        }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "360px 1fr",
+            gap: isMobile ? 20 : 32,
+            alignItems: "start",
+          }}>
+            {/* Portrait */}
+            <div style={{ position: "relative" }}>
+              <div style={{
+                width: "100%", aspectRatio: "3 / 4", borderRadius: 14, overflow: "hidden",
+                background: dark
+                  ? "linear-gradient(160deg,#111C35,#0D1623,#050B12)"
+                  : "linear-gradient(160deg,#FFFFFF,#E2E8F0,#CBD5E1)",
+                border: `1px solid ${MBORDER}`, position: "relative",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {talent.avatarUrl ? (
+                  <img
+                    src={cdnImage(talent.avatarUrl, 480)}
+                    alt={displayName}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 84, height: 84, borderRadius: "50%",
+                    backgroundColor: "color-mix(in srgb, var(--color-primary) 20%, transparent)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 40, fontWeight: 900, color: TEAL,
+                  }}>
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {talent.verified && (
+                  <span style={{
+                    position: "absolute", top: 12, insetInlineStart: 12,
+                    display: "flex", alignItems: "center", gap: 4,
+                    backgroundColor: "rgba(5,11,18,0.72)", color: "#fff",
+                    border: `1px solid ${TEAL}`, borderRadius: 20,
+                    padding: "4px 10px", fontSize: 11, fontWeight: 700,
+                  }}>
+                    <Shield size={11} color={TEAL} />{t.verified}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Identity */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
+              <span style={{
+                alignSelf: "flex-start",
+                backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, transparent)",
+                color: TEAL, border: `1px solid ${TEAL}`, borderRadius: 20,
+                padding: "3px 12px", fontSize: 12, fontWeight: 800,
+              }}>
+                {ar ? "موديل" : "Model"}
+              </span>
+
+              <h1 style={{
+                color: MTEXT, fontSize: isMobile ? 22 : 28, fontWeight: 900, margin: 0,
+                overflow: "hidden", textOverflow: "ellipsis",
+              }}>
+                {displayName}
+              </h1>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 6, color: MMUTED, fontSize: 13, flexWrap: "wrap" }}>
+                <MapPin size={13} color={TEAL} />
+                <span>{talent.location}</span>
+              </div>
+
+              {talent.bio && (
+                <p style={{ color: MMUTED, fontSize: 13.5, lineHeight: 1.7, margin: 0 }}>
+                  {talent.bio}
+                </p>
+              )}
+
+              {availabilitySummary && (
+                <span style={{
+                  alignSelf: "flex-start",
+                  display: "flex", alignItems: "center", gap: 5,
+                  backgroundColor: talent.availability === "available"
+                    ? "color-mix(in srgb, var(--color-primary) 12%, transparent)"
+                    : "rgba(148,163,184,0.12)",
+                  color: talent.availability === "available" ? TEAL : MMUTED,
+                  border: `1px solid ${talent.availability === "available" ? TEAL : MBORDER}`,
+                  borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 600,
+                }}>
+                  {availabilitySummary}
+                </span>
+              )}
+
+              <ProtectedAction action="create_booking">
+                <motion.button
+                  onClick={() => setShowBooking(true)}
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                  style={{
+                    ...btn, marginTop: 4,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    backgroundColor: TEAL, color: "#fff",
+                    borderRadius: 12, padding: "13px 24px",
+                    fontSize: 14, fontWeight: 800, width: isMobile ? "100%" : "fit-content",
+                  }}>
+                  <Calendar size={15} />
+                  {ar ? "احجز / ادعُ لمشروع" : "Book / Invite to Project"}
+                </motion.button>
+              </ProtectedAction>
+            </div>
+          </div>
+        </div>
+        {showBooking && (
+          <DirectBriefModal
+            talentUserId={talent.id}
+            talentName={talent.name ?? ""}
+            talentAvatar={talent.avatarUrl ?? null}
+            talentCategory={talent.category ?? null}
+            dark={dark}
+            lang={lang}
+            onClose={() => setShowBooking(false)}
+            onSuccess={() => setShowBooking(false)}
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <>
     <div style={{
