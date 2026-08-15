@@ -40,12 +40,16 @@ const INIT: FormData = {
   agreeToTerms:    false,
 };
 
+// Canonical registration categories — just these two. This is a NEW-signup
+// gate only: existing talent_profiles rows with legacy category values
+// (influencer/fashion/food_reviewer/media_buyers/etc., set by this same
+// select before this change, or via the broader list still offered when
+// editing an existing profile in CompleteProfileShell's CATEGORIES) are
+// untouched — getWizardSteps() and the public-profile Model gate already key
+// off "model" alone, everything else already falls into the generic/UGC path.
 const TALENT_TYPES = [
-  { value: "ugc", ar: "UGC Creator", en: "UGC Creator" },
-  { value: "influencer", ar: "Influencer", en: "Influencer" },
-  { value: "fashion", ar: "Fashion", en: "Fashion" },
-  { value: "food_reviewer", ar: "Food Reviewer", en: "Food Reviewer" },
-  { value: "media_buyers", ar: "Media Buyers", en: "Media Buyers" },
+  { value: "ugc",   ar: "صانع محتوى UGC", en: "UGC Creator" },
+  { value: "model", ar: "موديل",           en: "Model" },
 ];
 
 const BRAND_CATEGORIES = [

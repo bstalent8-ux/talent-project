@@ -78,11 +78,11 @@ export type CoreSectionRenderPlan =
   | { component: "ProfileHero";        props: { talent: TalentData } }
   | { component: "ProfessionalPresenceSection"; props: { links: Record<string, string> } }
   | { component: "MeasurementsSection";         props: { measurements: Record<string, string> } }
-  | { component: "PortfolioSection";   props: { portfolioItems?: PortfolioItem[] } }
+  | { component: "PortfolioSection";   props: { portfolioItems?: PortfolioItem[]; variant?: "default" | "model" } }
   | { component: "PackagesSection";    props: { onSelect: (pkg: PackageItem) => void; packages?: PackageItem[] | null } }
   | { component: "UsageRightsSection"; props: { selectedPackage: PackageItem | null; addons?: AddonItem[] | null } }
   | { component: "ReviewsCard";        props: { reviews: Review[]; rating?: number } }
-  | { component: "ExperienceSection";  props: { experience?: ExperienceItem[] | null } }
+  | { component: "ExperienceSection";  props: { experience?: ExperienceItem[] | null; variant?: "default" | "model" } }
   | { component: "BrandsCard";         props: { brands: BrandItem[] } }
   | { component: "PerformanceSidebar"; props: { talent: TalentData; bookingStats?: BookingStats } }
   | { component: "TrustCard";          props: Record<string, never> }

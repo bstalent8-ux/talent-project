@@ -16,9 +16,12 @@ const COLORS = [
 
 interface Props {
   portfolioItems?: PortfolioItem[];
+  /** "model" swaps the 6-col/180px grid for a larger, portrait editorial one —
+   * matches an image-first profile without touching the UGC layout at all. */
+  variant?: "default" | "model";
 }
 
-export default function PortfolioSection({ portfolioItems }: Props) {
+export default function PortfolioSection({ portfolioItems, variant = "default" }: Props) {
   const isMobile = useIsMobile();
   const { dark } = useSite();
   const CARD = dark ? "#0D1623" : "#FFFFFF";
@@ -26,6 +29,7 @@ export default function PortfolioSection({ portfolioItems }: Props) {
   const GREEN = "#00D26A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
   const hasReal = portfolioItems && portfolioItems.length > 0;
+  const isModel = variant === "model";
 
   // Previously this fell back to decorative gradient tiles, which read as real
   // work to a brand. An unfinished portfolio now shows nothing instead.
@@ -65,11 +69,15 @@ export default function PortfolioSection({ portfolioItems }: Props) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(6,1fr)",
-          gap: 12,
+          gridTemplateColumns: isMobile
+            ? "repeat(2,1fr)"
+            : isModel
+              ? "repeat(3,1fr)"
+              : "repeat(6,1fr)",
+          gap: isModel ? 16 : 12,
         }}
       >
-        {portfolioItems.slice(0, 6).map((item, i) => (
+        {(isModel ? portfolioItems : portfolioItems.slice(0, 6)).map((item, i) => (
             <motion.div
               key={item.id ?? i}
               whileHover={{ scale: 1.04 }}
@@ -78,7 +86,8 @@ export default function PortfolioSection({ portfolioItems }: Props) {
               transition={{ delay: i * 0.06 }}
               style={{
                 position: "relative",
-                height: 180,
+                height: isModel ? (isMobile ? 260 : 340) : 180,
+                aspectRatio: isModel ? "3 / 4" : undefined,
                 borderRadius: 12,
                 overflow: "hidden",
                 cursor: "pointer",

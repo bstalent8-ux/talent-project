@@ -52,7 +52,10 @@ export function buildTalentCoreProps(
     case "portfolio":
       return {
         component: "PortfolioSection",
-        props: { portfolioItems: context.portfolioItems },
+        props: {
+          portfolioItems: context.portfolioItems,
+          variant: context.talent.category === "model" ? "model" : "default",
+        },
       };
 
     case "packages":
@@ -76,7 +79,10 @@ export function buildTalentCoreProps(
     case "experience":
       return {
         component: "ExperienceSection",
-        props: { experience: context.experience },
+        props: {
+          experience: context.experience,
+          variant: context.talent.category === "model" ? "model" : "default",
+        },
       };
 
     case "brands":

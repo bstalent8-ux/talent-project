@@ -8,12 +8,15 @@ import type { ExperienceItem } from "@/features/talent-profile/types";
 
 interface Props {
   experience?: ExperienceItem[] | null;
+  /** "model" swaps the heading to "Previous Shoots" — same data, same card. */
+  variant?: "default" | "model";
 }
 
-export default function ExperienceSection({ experience }: Props) {
+export default function ExperienceSection({ experience, variant = "default" }: Props) {
   const isMobile = useIsMobile();
   const { dark, lang } = useSite();
   const ar = lang === "ar";
+  const isModel = variant === "model";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const GREEN = "#00D26A";
@@ -48,7 +51,7 @@ export default function ExperienceSection({ experience }: Props) {
             margin: "0 0 16px",
           }}
         >
-          {ar ? "الخبرات السابقة" : "Previous Experience"}
+          {isModel ? (ar ? "التصويرات السابقة" : "Previous Shoots") : (ar ? "الخبرات السابقة" : "Previous Experience")}
         </h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {projects.map((p, i) => (

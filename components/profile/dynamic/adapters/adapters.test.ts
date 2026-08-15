@@ -166,10 +166,28 @@ describe("adapter output matches component prop requirements", () => {
     }
   });
 
-  it("portfolio maps to PortfolioSection with portfolioItems", () => {
+  it("portfolio maps to PortfolioSection with portfolioItems, default variant for a non-model category", () => {
     const plan = buildTalentCoreProps("portfolio", talentContext)!;
     expect(plan.component).toBe("PortfolioSection");
-    expect(plan.props).toEqual({ portfolioItems: talentContext.portfolioItems });
+    expect(plan.props).toEqual({ portfolioItems: talentContext.portfolioItems, variant: "default" });
+  });
+
+  it("portfolio maps to the model variant when talent.category is model", () => {
+    const modelContext: TalentProfileContext = { ...talentContext, talent: { ...talentContext.talent, category: "model" } };
+    const plan = buildTalentCoreProps("portfolio", modelContext)!;
+    expect((plan.props as { variant: string }).variant).toBe("model");
+  });
+
+  it("experience maps to ExperienceSection, default variant for a non-model category", () => {
+    const plan = buildTalentCoreProps("experience", talentContext)!;
+    expect(plan.component).toBe("ExperienceSection");
+    expect(plan.props).toEqual({ experience: talentContext.experience, variant: "default" });
+  });
+
+  it("experience maps to the model variant when talent.category is model", () => {
+    const modelContext: TalentProfileContext = { ...talentContext, talent: { ...talentContext.talent, category: "model" } };
+    const plan = buildTalentCoreProps("experience", modelContext)!;
+    expect((plan.props as { variant: string }).variant).toBe("model");
   });
 
   it("packages maps to PackagesSection with the onSelect callback wired", () => {
