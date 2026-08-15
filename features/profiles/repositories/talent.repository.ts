@@ -155,6 +155,27 @@ export const talentRepository = {
     return (data as RawReviewRow[]) ?? [];
   },
 
+  /**
+   * Whether this talent has an admin-approved talent_verifications row (ID
+   * document + selfie reviewed) — the real "Identity Verified" signal, a
+   * different thing from profiles.is_verified (a general trust badge).
+   * talent_verifications.talent_id references profiles.id (== this table's
+   * user_id, not its own id) — confirmed live before writing this, do not
+   * pass a talent_profiles.id here.
+   */
+  async findApprovedVerification(userId: string): Promise<boolean> {
+    const { data, error } = await adminClient
+      .from("talent_verifications")
+      .select("id")
+      .eq("talent_id", userId)
+      .eq("status", "approved")
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw fromSupabaseError(error);
+    return Boolean(data);
+  },
+
   async findBrands(talentProfileId: string): Promise<RawTalentBrandRow[]> {
     const { data, error } = await adminClient
       .from("talent_brands")

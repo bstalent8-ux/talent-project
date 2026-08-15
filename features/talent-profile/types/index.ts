@@ -141,6 +141,10 @@ export interface TalentData {
   /** Approved Model measurement fields (height/weight/shoe_size/hair_color/
    * eye_color), null unless category === "model" — see toMeasurements(). */
   measurements?: Record<string, string> | null;
+  /** True only when an admin has approved a talent_verifications row (ID
+   * document + selfie) — distinct from `verified` (the general is_verified
+   * trust badge). */
+  identityVerified?: boolean;
 }
 
 export interface BookingStats {

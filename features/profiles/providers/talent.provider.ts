@@ -131,10 +131,11 @@ function toBookingStats(rows: Array<{ status: string }>): BookingStatsDTO {
 }
 
 function buildPublicCore(core: RawTalentCore, parts: {
-  portfolio:    PortfolioItemDTO[];
-  reviews:      ReviewItemDTO[];
-  brands:       TalentBrandDTO[];
-  bookingStats: BookingStatsDTO;
+  portfolio:         PortfolioItemDTO[];
+  reviews:           ReviewItemDTO[];
+  brands:            TalentBrandDTO[];
+  bookingStats:      BookingStatsDTO;
+  identityVerified:  boolean;
 }): TalentPublicCore {
   return {
     kind:          "talent",
@@ -153,6 +154,7 @@ function buildPublicCore(core: RawTalentCore, parts: {
     reviews:       parts.reviews,
     brands:        parts.brands,
     bookingStats:  parts.bookingStats,
+    identityVerified: parts.identityVerified,
   };
 }
 
@@ -173,11 +175,12 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
     // it here is how it stops being forgotten (CLAUDE.md §8).
     if (core.status && core.status !== "approved") return null;
 
-    const [portfolio, reviews, brands, bookingRows] = await Promise.all([
+    const [portfolio, reviews, brands, bookingRows, identityVerified] = await Promise.all([
       talentRepository.findPortfolio(core.id, true),
       talentRepository.findReviews(core.id, true),
       talentRepository.findBrands(core.id),
       talentRepository.findBookingStatuses(core.id),
+      talentRepository.findApprovedVerification(core.user_id),
     ]);
 
     // Reviewer names: one batched profiles lookup keyed by reviews.brand_id,
@@ -191,6 +194,7 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
       reviews:      toReviews(reviews, authorByBrandId),
       brands:       toBrands(brands),
       bookingStats: toBookingStats(bookingRows),
+      identityVerified,
     });
   },
 
@@ -200,11 +204,12 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
 
     // No status gate: the owner always sees their own profile, including while
     // it is pending or rejected.
-    const [portfolio, reviews, brands, bookingRows] = await Promise.all([
+    const [portfolio, reviews, brands, bookingRows, identityVerified] = await Promise.all([
       talentRepository.findPortfolio(core.id, false),
       talentRepository.findReviews(core.id, false),
       talentRepository.findBrands(core.id),
       talentRepository.findBookingStatuses(core.id),
+      talentRepository.findApprovedVerification(core.user_id),
     ]);
 
     const authorByBrandId = await profileRepository.findDisplayNames(
@@ -216,6 +221,7 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
       reviews:      toReviews(reviews, authorByBrandId),
       brands:       toBrands(brands),
       bookingStats: toBookingStats(bookingRows),
+      identityVerified,
     });
 
     return {

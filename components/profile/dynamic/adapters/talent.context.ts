@@ -61,6 +61,7 @@ export function toTalentData(dto: PublicProfileDTO): TalentData {
     // Hero's copy and the (now-removed-for-model) sidebar card, if any
     // caller still renders it, can never disagree.
     measurements: toMeasurements(dto),
+    identityVerified: Boolean(core.identityVerified),
   };
 }
 

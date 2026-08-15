@@ -208,6 +208,10 @@ export interface TalentPublicCore {
    * (fetchBookingStatsByTalentId, app/(main)/talent/[handle]/page.tsx:41).
    */
   bookingStats:  BookingStatsDTO;
+  /** True only when talent_verifications has an admin-approved row (ID
+   * document + selfie reviewed) — distinct from the general `is_verified`
+   * trust badge on identity. */
+  identityVerified: boolean;
 }
 
 export type TalentPrivateCore = TalentPublicCore;

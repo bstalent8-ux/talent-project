@@ -69,6 +69,7 @@ const dto: PublicProfileDTO = {
     ],
     brands: [],
     bookingStats: { total: 7, completed: 5, pending: 1, cancelled: 1 },
+    identityVerified: false,
   },
   sections: [],
   layout: { main: [], sidebar: [] },

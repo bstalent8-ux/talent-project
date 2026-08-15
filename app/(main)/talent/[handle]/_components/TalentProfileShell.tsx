@@ -11,6 +11,7 @@
 //   ProfileHero       name, avatar, bio, categories, socials, physical
 //   TabsNavigation    scroll targets, derived from what actually rendered
 //   AvailabilityCard  weekly availability strip (Model only, sidebar footer)
+//   TrustVerificationCard  real trust/verification rows (Model only, sidebar footer)
 //   BriefCard         the booking CTA          (sidebar footer)
 //   QuestionCard      ask-a-question           (sidebar footer)
 //   StickyBookingBar  the persistent book bar
@@ -27,6 +28,7 @@ import { useSite } from "@/contexts/SiteContext";
 import DynamicProfileRenderer, { useDynamicProfile } from "@/components/profile/dynamic/DynamicProfileRenderer";
 import { anchorIdFor } from "@/components/profile/dynamic/anchors";
 import {
+  toBookingStats,
   toCampaignStats,
   toFeaturedCampaign,
   toTalentData,
@@ -38,6 +40,7 @@ import CampaignBanner from "./CampaignBanner";
 import ProfileHero from "./ProfileHero";
 import TabsNavigation, { type TabItem } from "./TabsNavigation";
 import AvailabilityCard from "./AvailabilityCard";
+import TrustVerificationCard from "./TrustVerificationCard";
 import BriefCard from "./BriefCard";
 import QuestionCard from "./QuestionCard";
 import StickyBookingBar from "./StickyBookingBar";
@@ -66,6 +69,7 @@ export default function TalentProfileShell({ profile }: { profile: PublicProfile
   const talent           = useMemo(() => toTalentData(profile), [profile]);
   const campaignStats    = useMemo(() => toCampaignStats(profile), [profile]);
   const featuredCampaign = useMemo(() => toFeaturedCampaign(profile), [profile]);
+  const bookingStats     = useMemo(() => toBookingStats(profile), [profile]);
 
   // Category-aware layout — client-side only, never written back to
   // profile_layouts. Same DTO, same sections, same renderer; only the main
@@ -115,7 +119,15 @@ export default function TalentProfileShell({ profile }: { profile: PublicProfile
             sidebarFooter={
               <>
                 {talent.category === "model" && (
-                  <AvailabilityCard availability={talent.availability} availabilitySchedule={talent.availabilitySchedule} />
+                  <>
+                    <AvailabilityCard availability={talent.availability} availabilitySchedule={talent.availabilitySchedule} />
+                    <TrustVerificationCard
+                      verified={talent.verified}
+                      identityVerified={talent.identityVerified}
+                      completedProjects={bookingStats.completed}
+                      reviewCount={talent.reviewCount}
+                    />
+                  </>
                 )}
                 <BriefCard
                   talentAvatar={talent.avatarUrl ?? null}
