@@ -11,7 +11,7 @@ import { profileService } from "@/features/profiles";
 // loaded through the provider, which selects a wider column set.
 // Consumers: app/(main)/profile/me/page.tsx, components/Navbar.tsx.
 const TALENT_PROFILE_KEYS = [
-  "id", "category", "specialties", "availability", "bio", "avg_rating",
+  "id", "category", "specialties", "availability", "availability_schedule", "bio", "avg_rating",
   "total_reviews", "total_bookings", "profile_views", "social_links",
   "packages", "is_featured",
 ] as const;

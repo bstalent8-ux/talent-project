@@ -101,34 +101,26 @@ export const talentRepository = {
    * A talent_profiles row is seeded with `category` at registration (CLAUDE.md
    * §5), so the UPDATE branch is the overwhelmingly common path; INSERT only
    * fires for the rare partial-signup row that never got created.
+   *
+   * No silent-column-drop fallback on this path (there was one; removed).
+   * `availability_schedule` is a real, migrated column now — a write that
+   * fails must surface as a thrown error so the caller shows it, not get
+   * quietly stripped and reported as success.
    */
   async upsert(userId: string, patch: Record<string, unknown>): Promise<void> {
-    let { data: updated, error } = await adminClient
+    const { data: updated, error } = await adminClient
       .from("talent_profiles")
       .update(patch)
       .eq("user_id", userId)
       .select("id");
 
-    if (error && isMissingScheduleColumn(error) && "availability_schedule" in patch) {
-      const { availability_schedule: _dropped, ...rest } = patch;
-      ({ data: updated, error } = await adminClient
-        .from("talent_profiles")
-        .update(rest)
-        .eq("user_id", userId)
-        .select("id"));
-    }
     if (error) throw fromSupabaseError(error);
     if (updated && updated.length > 0) return;
 
     // No existing row — first-ever save for this user.
-    let insertPatch: Record<string, unknown> = { ...patch, user_id: userId };
-    let insertError = (await adminClient.from("talent_profiles").insert(insertPatch)).error;
-
-    if (insertError && isMissingScheduleColumn(insertError) && "availability_schedule" in insertPatch) {
-      const { availability_schedule: _dropped, ...rest } = insertPatch;
-      insertPatch = rest;
-      insertError = (await adminClient.from("talent_profiles").insert(insertPatch)).error;
-    }
+    const { error: insertError } = await adminClient
+      .from("talent_profiles")
+      .insert({ ...patch, user_id: userId });
     if (insertError) throw fromSupabaseError(insertError);
   },
 

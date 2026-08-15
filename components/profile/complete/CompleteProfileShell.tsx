@@ -37,6 +37,7 @@ const TX = {
     saveContinue:"حفظ ومتابعة",
     completeBtn: "إنهاء الملف",
     saving:      "جاري الحفظ...",
+    saveError:   "تعذّر الحفظ. حاول مرة أخرى.",
     completion:  "نسبة الاكتمال",
     viewAllSteps:"عرض كل الخطوات",
     hideSteps:   "إخفاء الخطوات",
@@ -114,6 +115,7 @@ const TX = {
     saveContinue:"Save & Continue",
     completeBtn: "Complete Profile",
     saving:      "Saving...",
+    saveError:   "Couldn't save. Please try again.",
     completion:  "Profile Completion",
     viewAllSteps:"View all steps",
     hideSteps:   "Hide steps",
@@ -260,6 +262,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Resolve the starting step once: an explicit ?step= wins (deep link from
   // elsewhere in the app), otherwise resume at the first incomplete step per
@@ -276,6 +279,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const goToStep = (idx: number) => {
     const clamped = Math.max(0, Math.min(steps.length - 1, idx));
     setStepIdx(clamped);
+    setSaveError(null);
     syncUrl(clamped);
     setMobileStepsOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -484,8 +488,12 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
     await onUpdate();
   };
 
-  const saveStep = async (key: WizardStepKey) => {
+  /** Returns whether the save actually succeeded — callers must not advance
+   * the step or navigate away on a false, or a failed write (e.g. the
+   * availability_schedule write) silently reads as success. */
+  const saveStep = async (key: WizardStepKey): Promise<boolean> => {
     setSaving(true);
+    setSaveError(null);
     try {
       if (key === "basic") {
         if (personal.full_name.trim()) await patchSection("personal", { full_name: personal.full_name.trim(), city: personal.city.trim() });
@@ -502,16 +510,22 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
         await patchSection("availability", { availability: avail, availability_schedule: schedule });
       }
       await onUpdate();
-    } catch {}
-    setSaving(false);
+      setSaving(false);
+      return true;
+    } catch {
+      setSaving(false);
+      setSaveError(t.saveError);
+      return false;
+    }
   };
 
   const handleSaveContinue = async () => {
-    await saveStep(steps[stepIdx]);
+    const ok = await saveStep(steps[stepIdx]);
+    if (!ok) return;
     if (stepIdx < steps.length - 1) goToStep(stepIdx + 1);
     else router.push("/profile/me");
   };
-  const handleSaveDraft = async () => { await saveStep(steps[stepIdx]); router.push("/profile/me"); };
+  const handleSaveDraft = async () => { const ok = await saveStep(steps[stepIdx]); if (ok) router.push("/profile/me"); };
   const handleBack = () => { if (stepIdx > 0) goToStep(stepIdx - 1); else router.push("/profile/me"); };
 
   const fallback = calculateCompletion(profile, talentProfile, portfolioItems);
@@ -609,6 +623,20 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
           {saving ? t.saving : t.saveDraft}
         </button>
       </div>
+
+      {saveError && (
+        <div style={{
+          maxWidth: 1280, margin: "12px auto 0", padding: isMobile ? "0 16px" : "0 28px",
+        }}>
+          <div style={{
+            background: "rgba(239,68,68,0.1)",
+            border: `1px solid ${RED}`, borderRadius: 10,
+            padding: "10px 14px", color: RED, fontSize: 13, fontWeight: 700,
+          }}>
+            {saveError}
+          </div>
+        </div>
+      )}
 
       <div style={{
         maxWidth: 1280, margin: "0 auto", padding: isMobile ? "16px" : "28px",
