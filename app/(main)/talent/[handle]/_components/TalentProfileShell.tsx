@@ -10,6 +10,7 @@
 //   CampaignBanner    campaign copy from the social_links blob
 //   ProfileHero       name, avatar, bio, categories, socials, physical
 //   TabsNavigation    scroll targets, derived from what actually rendered
+//   AvailabilityCard  weekly availability strip (Model only, sidebar footer)
 //   BriefCard         the booking CTA          (sidebar footer)
 //   QuestionCard      ask-a-question           (sidebar footer)
 //   StickyBookingBar  the persistent book bar
@@ -36,6 +37,7 @@ import type { PublicProfileDTO } from "@/features/profiles/types/dto";
 import CampaignBanner from "./CampaignBanner";
 import ProfileHero from "./ProfileHero";
 import TabsNavigation, { type TabItem } from "./TabsNavigation";
+import AvailabilityCard from "./AvailabilityCard";
 import BriefCard from "./BriefCard";
 import QuestionCard from "./QuestionCard";
 import StickyBookingBar from "./StickyBookingBar";
@@ -112,6 +114,9 @@ export default function TalentProfileShell({ profile }: { profile: PublicProfile
             mainFooter={<StickyBookingBarSlot talent={talent} />}
             sidebarFooter={
               <>
+                {talent.category === "model" && (
+                  <AvailabilityCard availability={talent.availability} availabilitySchedule={talent.availabilitySchedule} />
+                )}
                 <BriefCard
                   talentAvatar={talent.avatarUrl ?? null}
                   talentCategory={talent.category ?? null}
