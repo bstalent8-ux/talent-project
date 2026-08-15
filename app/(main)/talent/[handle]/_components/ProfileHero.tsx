@@ -9,6 +9,7 @@ import { formatAvailabilitySummary } from "@/lib/availability-schedule";
 import { cdnImage } from "@/lib/images";
 import DirectBriefModal from "@/components/DirectBriefModal";
 import ProtectedAction from "@/components/auth/ProtectedAction";
+import { FIELD_LABELS as MODEL_FIELD_LABELS, FIELD_ORDER as MODEL_FIELD_ORDER } from "./MeasurementsSection";
 
 const btn: React.CSSProperties = {
   cursor: "pointer", fontFamily: "'Cairo',sans-serif",
@@ -174,6 +175,44 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
                   {availabilitySummary}
                 </span>
               )}
+
+              {(() => {
+                const entries = MODEL_FIELD_ORDER.filter((key) => talent.measurements?.[key]);
+                if (!entries.length) return null;
+                return (
+                  <div style={{
+                    display: "grid",
+                    // Each row is itself the "2-column" layout (label | value,
+                    // per the spec's example). On mobile, if the viewport is
+                    // wide enough for two ~150px columns the 5 rows wrap into
+                    // two columns; otherwise they fall back to one.
+                    gridTemplateColumns: isMobile ? "repeat(auto-fit, minmax(150px, 1fr))" : "1fr",
+                    columnGap: 20,
+                    padding: "10px 14px",
+                    backgroundColor: "color-mix(in srgb, var(--color-primary) 6%, transparent)",
+                    border: `1px solid ${MBORDER}`, borderRadius: 12,
+                  }}>
+                    {entries.map((key, i) => {
+                      const meta = MODEL_FIELD_LABELS[key];
+                      return (
+                        <div
+                          key={key}
+                          style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "6px 0",
+                            borderTop: !isMobile && i > 0 ? `1px solid ${MBORDER}` : undefined,
+                          }}
+                        >
+                          <span style={{ color: MMUTED, fontSize: 12 }}>{ar ? meta.ar : meta.en}</span>
+                          <span style={{ color: "var(--color-secondary)", fontSize: 13, fontWeight: 800 }} dir="ltr">
+                            {talent.measurements![key]}{meta.unit ? ` ${meta.unit}` : ""}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               <ProtectedAction action="create_booking">
                 <motion.button

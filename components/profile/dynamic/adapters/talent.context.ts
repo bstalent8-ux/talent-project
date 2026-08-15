@@ -56,6 +56,11 @@ export function toTalentData(dto: PublicProfileDTO): TalentData {
     languages:    typeof social.languages === "string" && social.languages.trim().length > 0
       ? social.languages.trim()
       : null,
+    // Reuses toMeasurements() below rather than re-deriving — same 5-field
+    // allowlist, same category==="model" gate, single source of truth so the
+    // Hero's copy and the (now-removed-for-model) sidebar card, if any
+    // caller still renders it, can never disagree.
+    measurements: toMeasurements(dto),
   };
 }
 

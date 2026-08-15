@@ -7,9 +7,15 @@
 //
 // Placement, Model only:
 //   - Presence sits right after Portfolio (both ugc and model agree on this).
-//   - Measurements ("physical") moves to the SIDEBAR, as a compact card —
-//     it used to sit full-width in main right before Portfolio; too large
-//     for what is 5 short stat rows. See MeasurementsSection.tsx.
+//   - Measurements ("physical") is dropped from BOTH main and sidebar. It
+//     used to lead the sidebar as a compact card; now ProfileHero renders
+//     the same 5 fields (via TalentData.measurements, itself built from
+//     toMeasurements()) directly inside the Model hero, so keeping the
+//     "physical" layout section too would show the same data twice. Nothing
+//     else changes about the section: MeasurementsSection.tsx and the
+//     "physical" adapter case still exist for a profile_layouts row that
+//     configures it explicitly — this function just never re-adds it for
+//     model anymore.
 //   - Brand Collaborations ("brands") moves out of the sidebar into main,
 //     right after Experience/Previous Shoots — every other category still
 //     gets it in the sidebar, unchanged.
@@ -49,11 +55,6 @@ export function applyCategoryTalentLayout(
     if (isModel && entry.key === "brands") return false;
     return true;
   });
-
-  if (isModel) {
-    // Compact Measurements card leads the sidebar rail.
-    sidebar.unshift({ key: "physical", width: "full" });
-  }
 
   const experienceIdx = main.findIndex((entry) => entry.key === "experience");
   if (isModel) {

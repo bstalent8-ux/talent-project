@@ -18,9 +18,12 @@ interface Props {
   measurements: Record<string, string>;
 }
 
-const FIELD_ORDER = ["height", "weight", "shoe_size", "hair_color", "eye_color"];
+// Exported so ProfileHero's Model branch (which now renders these same 5
+// fields inline) uses the identical labels/units/order — one source of
+// truth, never two copies that could drift.
+export const FIELD_ORDER = ["height", "weight", "shoe_size", "hair_color", "eye_color"];
 
-const FIELD_LABELS: Record<string, { ar: string; en: string; unit?: string }> = {
+export const FIELD_LABELS: Record<string, { ar: string; en: string; unit?: string }> = {
   height:     { ar: "الطول",       en: "Height",    unit: "cm" },
   weight:     { ar: "الوزن",       en: "Weight",    unit: "kg" },
   shoe_size:  { ar: "مقاس الحذاء", en: "Shoe Size", unit: "EU" },

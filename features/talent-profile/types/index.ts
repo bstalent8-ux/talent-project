@@ -138,6 +138,9 @@ export interface TalentData {
   /** Structured weekly hours + exceptions, when the talent has filled it in. */
   availabilitySchedule?: import("@/lib/availability-schedule").AvailabilitySchedule | null;
   languages?: string | null;
+  /** Approved Model measurement fields (height/weight/shoe_size/hair_color/
+   * eye_color), null unless category === "model" — see toMeasurements(). */
+  measurements?: Record<string, string> | null;
 }
 
 export interface BookingStats {

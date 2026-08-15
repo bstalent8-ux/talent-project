@@ -43,11 +43,12 @@ describe("applyCategoryTalentLayout", () => {
     expect(result.main.find((e) => e.key === "experience")?.width).toBe("full");
   });
 
-  it("model: sidebar leads with the compact Measurements card, brands removed", () => {
+  it("model: sidebar has neither physical (moved into the Hero) nor brands (moved into main)", () => {
     const result = applyCategoryTalentLayout(baseLayout, "model");
     const keys = result.sidebar.map((e) => e.key);
-    expect(keys).toEqual(["physical", "performance", "reviews", "trust"]);
+    expect(keys).toEqual(["performance", "reviews", "trust"]);
     expect(keys).not.toContain("brands");
+    expect(keys).not.toContain("physical");
   });
 
   it("ugc: inserts social after portfolio, no physical, brands stays in the sidebar", () => {
@@ -91,7 +92,7 @@ describe("applyCategoryTalentLayout", () => {
     const result = applyCategoryTalentLayout(bare, "model");
     expect(result.main.map((e) => e.key)).toEqual(["bio", "brands", "social"]);
     expect(result.main.find((e) => e.key === "brands")?.width).toBe("half");
-    expect(result.sidebar.map((e) => e.key)).toEqual(["physical"]);
+    expect(result.sidebar).toEqual([]);
   });
 
   it("preserves widths on entries it does not touch", () => {
