@@ -246,13 +246,20 @@ describe("adapter output matches component prop requirements", () => {
       .toEqual(talentContext.packages![0]);
   });
 
-  it("reviews maps to ReviewsCard with reviews and the talent rating", () => {
+  it("reviews maps to ReviewsCard with reviews, the talent rating, default variant for a non-model category", () => {
     const plan = buildTalentCoreProps("reviews", talentContext)!;
     expect(plan.component).toBe("ReviewsCard");
     expect(plan.props).toEqual({
       reviews: talentContext.reviews,
       rating:  talentContext.talent.rating,
+      variant: "default",
     });
+  });
+
+  it("reviews maps to the model variant when talent.category is model", () => {
+    const modelContext: TalentProfileContext = { ...talentContext, talent: { ...talentContext.talent, category: "model" } };
+    const plan = buildTalentCoreProps("reviews", modelContext)!;
+    expect((plan.props as { variant: string }).variant).toBe("model");
   });
 
   it("social maps to ProfessionalPresenceSection with the filled presence links", () => {

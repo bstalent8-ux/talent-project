@@ -3,16 +3,24 @@ import { useState } from "react";
 import { Star, ChevronRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSite } from "@/contexts/SiteContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { Review } from "@/features/talent-profile/types";
 
 interface Props {
   reviews: Review[];
   rating?: number;
+  /** "model" swaps the sidebar one-at-a-time carousel for a full-width main-
+   * column block showing a concise set of reviews as cards — meant to sit
+   * beneath Packages, same visual weight. UGC/legacy keep the exact prior
+   * carousel card (unchanged code path below). */
+  variant?: "default" | "model";
 }
 
-export default function ReviewsCard({ reviews, rating = 0 }: Props) {
+export default function ReviewsCard({ reviews, rating = 0, variant = "default" }: Props) {
   const { dark, lang } = useSite();
+  const isMobile = useIsMobile();
   const ar = lang === "ar";
+  const isModel = variant === "model";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const GREEN = "#00D26A";
@@ -24,6 +32,68 @@ export default function ReviewsCard({ reviews, rating = 0 }: Props) {
 
   // No reviews means no rating either, so the whole card would be a zero.
   if (reviews.length === 0) return null;
+
+  if (isModel) {
+    const TEAL = "var(--color-primary)";
+    const MGOLD = "var(--color-secondary)";
+    const MCARD = "var(--bg-card)";
+    const MBORDER = "var(--border-subtle)";
+    const MTEXT = "var(--text-primary)";
+    const MMUTED = "var(--text-muted)";
+    const shown = reviews.slice(0, 3);
+
+    return (
+      <section style={{ backgroundColor: MCARD, border: `1px solid ${MBORDER}`, borderRadius: 16, padding: isMobile ? 16 : 24 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <h2 style={{ color: MTEXT, fontSize: 18, fontWeight: 800, margin: "0 0 2px" }}>
+              {ar ? "التقييمات" : "Reviews"}
+            </h2>
+            <span style={{ color: MMUTED, fontSize: 12 }}>{reviews.length} {ar ? "تقييم" : "reviews"}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ color: MGOLD, fontSize: 20, fontWeight: 900 }}>{rating.toFixed(1)}</span>
+            <div style={{ display: "flex" }}>
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star key={s} size={13} color={MGOLD} fill={s <= Math.round(rating) ? MGOLD : "transparent"} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : `repeat(${shown.length}, 1fr)`, gap: 14 }}>
+          {shown.map((r) => (
+            <div key={r.id} style={{ backgroundColor: "var(--bg-card-muted)", border: `1px solid ${MBORDER}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                  backgroundColor: "color-mix(in srgb, var(--color-primary) 15%, transparent)",
+                  border: `1px solid ${TEAL}`, display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 800, color: TEAL,
+                }}>
+                  {r.author[0]}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ color: MTEXT, fontSize: 12.5, fontWeight: 700, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {r.author}
+                  </p>
+                  {r.date && <p style={{ color: MMUTED, fontSize: 11, margin: 0 }}>{r.date}</p>}
+                </div>
+                <div style={{ marginInlineStart: "auto", display: "flex", flexShrink: 0 }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} size={10} color={s <= r.rating ? MGOLD : MMUTED} fill={s <= r.rating ? MGOLD : "transparent"} />
+                  ))}
+                </div>
+              </div>
+              {r.text && (
+                <p style={{ color: MMUTED, fontSize: 12.5, lineHeight: 1.6, margin: 0 }}>&quot;{r.text}&quot;</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div

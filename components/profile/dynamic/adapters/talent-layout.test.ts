@@ -21,13 +21,14 @@ const baseLayout: ProfileLayoutDTO = {
 };
 
 describe("applyCategoryTalentLayout", () => {
-  it("model: social right after portfolio, brands right after experience, no physical in main", () => {
+  it("model: social right after portfolio, brands right after experience, reviews right after packages, no physical in main", () => {
     const result = applyCategoryTalentLayout(baseLayout, "model");
     const keys = result.main.map((e) => e.key);
     expect(keys).toEqual([
-      "bio", "portfolio", "social", "experience", "brands", "packages", "usage_addons", "equipment", "awards",
+      "bio", "portfolio", "social", "experience", "brands", "packages", "reviews", "usage_addons", "equipment", "awards",
     ]);
     expect(keys).not.toContain("physical");
+    expect(result.main.find((e) => e.key === "reviews")?.width).toBe("full");
   });
 
   it("model: experience and brands are both half-width, so they sit in one row", () => {
@@ -43,11 +44,12 @@ describe("applyCategoryTalentLayout", () => {
     expect(result.main.find((e) => e.key === "experience")?.width).toBe("full");
   });
 
-  it("model: sidebar has neither physical (moved into the Hero) nor brands (moved into main)", () => {
+  it("model: sidebar has neither physical (moved into the Hero) nor brands/reviews (moved into main)", () => {
     const result = applyCategoryTalentLayout(baseLayout, "model");
     const keys = result.sidebar.map((e) => e.key);
-    expect(keys).toEqual(["performance", "reviews", "trust"]);
+    expect(keys).toEqual(["performance", "trust"]);
     expect(keys).not.toContain("brands");
+    expect(keys).not.toContain("reviews");
     expect(keys).not.toContain("physical");
   });
 
@@ -90,8 +92,9 @@ describe("applyCategoryTalentLayout", () => {
       sidebar: [],
     };
     const result = applyCategoryTalentLayout(bare, "model");
-    expect(result.main.map((e) => e.key)).toEqual(["bio", "brands", "social"]);
+    expect(result.main.map((e) => e.key)).toEqual(["bio", "brands", "social", "reviews"]);
     expect(result.main.find((e) => e.key === "brands")?.width).toBe("half");
+    expect(result.main.find((e) => e.key === "reviews")?.width).toBe("full");
     expect(result.sidebar).toEqual([]);
   });
 

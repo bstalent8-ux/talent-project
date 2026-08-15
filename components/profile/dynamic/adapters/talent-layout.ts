@@ -24,11 +24,14 @@
 //     "Previous Shoots | Brand Collaborations" — instead of each stacking
 //     full-width. Every other category's "experience" entry keeps whatever
 //     width the stored layout gives it (full, today).
+//   - Reviews moves out of the sidebar into main, right after Packages, so
+//     it reads as a full-width closing block instead of a narrow one-at-a-
+//     time sidebar carousel. Every other category keeps it in the sidebar.
 //
-// Idempotent: any pre-existing "social"/"physical"/"brands" entry is dropped
-// from wherever it currently sits and reinserted at the anchor, so calling
-// this twice (or on a layout an admin later configures explicitly) never
-// produces a duplicate or drifts order.
+// Idempotent: any pre-existing "social"/"physical"/"brands"/"reviews" entry
+// is dropped from wherever it currently sits and reinserted at the anchor,
+// so calling this twice (or on a layout an admin later configures
+// explicitly) never produces a duplicate or drifts order.
 //
 // Legacy/unknown categories (fashion, null, anything but "model") get
 // Presence inserted the same way and NOTHING else touched — no bespoke
@@ -46,13 +49,13 @@ export function applyCategoryTalentLayout(
 
   const main: LayoutEntry[] = layout.main.filter((entry) => {
     if (entry.key === "social" || entry.key === "physical") return false;
-    if (isModel && entry.key === "brands") return false;
+    if (isModel && (entry.key === "brands" || entry.key === "reviews")) return false;
     return true;
   });
 
   const sidebar: LayoutEntry[] = layout.sidebar.filter((entry) => {
     if (isModel && entry.key === "physical") return false;
-    if (isModel && entry.key === "brands") return false;
+    if (isModel && (entry.key === "brands" || entry.key === "reviews")) return false;
     return true;
   });
 
@@ -66,6 +69,11 @@ export function applyCategoryTalentLayout(
 
   const portfolioIdxAfter = main.findIndex((entry) => entry.key === "portfolio");
   main.splice(portfolioIdxAfter >= 0 ? portfolioIdxAfter + 1 : main.length, 0, { key: "social", width: "full" });
+
+  if (isModel) {
+    const packagesIdx = main.findIndex((entry) => entry.key === "packages");
+    main.splice(packagesIdx >= 0 ? packagesIdx + 1 : main.length, 0, { key: "reviews", width: "full" });
+  }
 
   return { ...layout, main, sidebar };
 }

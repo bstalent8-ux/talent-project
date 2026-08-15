@@ -77,7 +77,11 @@ export function buildTalentCoreProps(
     case "reviews":
       return {
         component: "ReviewsCard",
-        props: { reviews: context.reviews, rating: context.talent.rating },
+        props: {
+          reviews: context.reviews,
+          rating: context.talent.rating,
+          variant: context.talent.category === "model" ? "model" : "default",
+        },
       };
 
     case "experience":
