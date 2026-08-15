@@ -30,6 +30,19 @@ describe("applyCategoryTalentLayout", () => {
     expect(keys).not.toContain("physical");
   });
 
+  it("model: experience and brands are both half-width, so they sit in one row", () => {
+    const result = applyCategoryTalentLayout(baseLayout, "model");
+    expect(result.main.find((e) => e.key === "experience")?.width).toBe("half");
+    expect(result.main.find((e) => e.key === "brands")?.width).toBe("half");
+    // everything else keeps the stored layout's width (full, in the fixture)
+    expect(result.main.find((e) => e.key === "portfolio")?.width).toBe("full");
+  });
+
+  it("ugc: experience keeps the stored layout's width (full) — only model pairs it with brands", () => {
+    const result = applyCategoryTalentLayout(baseLayout, "ugc");
+    expect(result.main.find((e) => e.key === "experience")?.width).toBe("full");
+  });
+
   it("model: sidebar leads with the compact Measurements card, brands removed", () => {
     const result = applyCategoryTalentLayout(baseLayout, "model");
     const keys = result.sidebar.map((e) => e.key);
@@ -77,6 +90,7 @@ describe("applyCategoryTalentLayout", () => {
     };
     const result = applyCategoryTalentLayout(bare, "model");
     expect(result.main.map((e) => e.key)).toEqual(["bio", "brands", "social"]);
+    expect(result.main.find((e) => e.key === "brands")?.width).toBe("half");
     expect(result.sidebar.map((e) => e.key)).toEqual(["physical"]);
   });
 

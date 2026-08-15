@@ -88,7 +88,10 @@ export function buildTalentCoreProps(
     case "brands":
       return {
         component: "BrandsCard",
-        props: { brands: context.brands },
+        props: {
+          brands: context.brands,
+          variant: context.talent.category === "model" ? "model" : "default",
+        },
       };
 
     case "performance":

@@ -11,8 +11,13 @@
 //     it used to sit full-width in main right before Portfolio; too large
 //     for what is 5 short stat rows. See MeasurementsSection.tsx.
 //   - Brand Collaborations ("brands") moves out of the sidebar into main,
-//     right after Experience — every other category still gets it in the
-//     sidebar, unchanged.
+//     right after Experience/Previous Shoots — every other category still
+//     gets it in the sidebar, unchanged.
+//   - Experience and brands both go to width "half", so the flex-wrap main
+//     column (DynamicSectionRenderer) sits them side by side as one row —
+//     "Previous Shoots | Brand Collaborations" — instead of each stacking
+//     full-width. Every other category's "experience" entry keeps whatever
+//     width the stored layout gives it (full, today).
 //
 // Idempotent: any pre-existing "social"/"physical"/"brands" entry is dropped
 // from wherever it currently sits and reinserted at the anchor, so calling
@@ -52,8 +57,10 @@ export function applyCategoryTalentLayout(
 
   const experienceIdx = main.findIndex((entry) => entry.key === "experience");
   if (isModel) {
-    // Brand Collaborations, right after Experience/Previous Shoots.
-    main.splice(experienceIdx >= 0 ? experienceIdx + 1 : main.length, 0, { key: "brands", width: "full" });
+    if (experienceIdx >= 0) main[experienceIdx] = { key: "experience", width: "half" };
+    // Brand Collaborations, right after Experience/Previous Shoots, same width
+    // so the two sit in one row.
+    main.splice(experienceIdx >= 0 ? experienceIdx + 1 : main.length, 0, { key: "brands", width: "half" });
   }
 
   const portfolioIdxAfter = main.findIndex((entry) => entry.key === "portfolio");

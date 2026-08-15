@@ -190,6 +190,18 @@ describe("adapter output matches component prop requirements", () => {
     expect((plan.props as { variant: string }).variant).toBe("model");
   });
 
+  it("brands maps to BrandsCard, default variant for a non-model category", () => {
+    const plan = buildTalentCoreProps("brands", talentContext)!;
+    expect(plan.component).toBe("BrandsCard");
+    expect(plan.props).toEqual({ brands: talentContext.brands, variant: "default" });
+  });
+
+  it("brands maps to the model variant when talent.category is model", () => {
+    const modelContext: TalentProfileContext = { ...talentContext, talent: { ...talentContext.talent, category: "model" } };
+    const plan = buildTalentCoreProps("brands", modelContext)!;
+    expect((plan.props as { variant: string }).variant).toBe("model");
+  });
+
   it("packages maps to PackagesSection with the onSelect callback wired", () => {
     const plan = buildTalentCoreProps("packages", talentContext)!;
     expect(plan.component).toBe("PackagesSection");

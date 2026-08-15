@@ -83,7 +83,7 @@ export type CoreSectionRenderPlan =
   | { component: "UsageRightsSection"; props: { selectedPackage: PackageItem | null; addons?: AddonItem[] | null } }
   | { component: "ReviewsCard";        props: { reviews: Review[]; rating?: number } }
   | { component: "ExperienceSection";  props: { experience?: ExperienceItem[] | null; variant?: "default" | "model" } }
-  | { component: "BrandsCard";         props: { brands: BrandItem[] } }
+  | { component: "BrandsCard";         props: { brands: BrandItem[]; variant?: "default" | "model" } }
   | { component: "PerformanceSidebar"; props: { talent: TalentData; bookingStats?: BookingStats } }
   | { component: "TrustCard";          props: Record<string, never> }
   // Brand core sections. `logo` is absent: it is carried by BrandHero, which the

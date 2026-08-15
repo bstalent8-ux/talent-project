@@ -5,9 +5,19 @@ import type { BrandItem } from "@/features/talent-profile/types";
 
 const COLORS = ["#FFB800", "#1565C0", "#D32F2F", "#00D26A", "#9C27B0", "#E91E63"];
 
-export default function BrandsCard({ brands }: { brands: BrandItem[] }) {
+interface Props {
+  brands: BrandItem[];
+  /** "model" shows the real logo_url/year_collaborated fields this card
+   * already receives but previously ignored, and stretches to fill its flex
+   * row (see talent-layout.ts's half-width pairing with Previous Shoots).
+   * UGC/legacy keep the exact prior initial-circle, name-only card. */
+  variant?: "default" | "model";
+}
+
+export default function BrandsCard({ brands, variant = "default" }: Props) {
   const { dark, lang } = useSite();
   const ar = lang === "ar";
+  const isModel = variant === "model";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
@@ -16,7 +26,7 @@ export default function BrandsCard({ brands }: { brands: BrandItem[] }) {
   if (brands.length === 0) return null;
 
   return (
-    <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
+    <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, height: isModel ? "100%" : undefined }}>
       <h3 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
         {ar ? "التعاون مع البراندات" : "Brand Collaborations"}
       </h3>
@@ -36,19 +46,30 @@ export default function BrandsCard({ brands }: { brands: BrandItem[] }) {
                 cursor: "pointer",
               }}
             >
-              <div style={{
-                width: 36, height: 36, borderRadius: "50%",
-                backgroundColor: COLORS[i % COLORS.length] + "22",
-                border: `1px solid ${COLORS[i % COLORS.length]}44`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 11, fontWeight: 900,
-                color: COLORS[i % COLORS.length],
-              }}>
-                {brand.name[0]}
-              </div>
+              {isModel && brand.logo_url ? (
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%", overflow: "hidden",
+                  border: `1px solid ${BORDER}`, flexShrink: 0,
+                  background: `url(${brand.logo_url}) center/cover`,
+                }} />
+              ) : (
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  backgroundColor: isModel ? "color-mix(in srgb, var(--color-primary) 15%, transparent)" : COLORS[i % COLORS.length] + "22",
+                  border: isModel ? "1px solid var(--color-primary)" : `1px solid ${COLORS[i % COLORS.length]}44`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: 900,
+                  color: isModel ? "var(--color-primary)" : COLORS[i % COLORS.length],
+                }}>
+                  {brand.name[0]}
+                </div>
+              )}
               <span style={{ color: MUTED, fontSize: 11, fontWeight: 600, textAlign: "center" }}>
                 {brand.name}
               </span>
+              {isModel && brand.year_collaborated && (
+                <span style={{ color: MUTED, fontSize: 10, opacity: 0.8 }}>{brand.year_collaborated}</span>
+              )}
             </motion.div>
           ))}
       </div>

@@ -25,6 +25,63 @@ export default function ExperienceSection({ experience, variant = "default" }: P
   const projects = experience ?? [];
   if (!projects.length) return null;
 
+  // Model gets a single compact card (this is now one half of a
+  // "Previous Shoots | Brand Collaborations" row — see talent-layout.ts —
+  // not the two-panel UGC composition below). The "Verified on Talents"
+  // placeholder panel is dropped here on purpose: that concept is the
+  // explicitly-deferred "Verified Through Talents" feature, not something to
+  // half-build as a side effect of this layout change.
+  if (isModel) {
+    return (
+      <div
+        style={{
+          backgroundColor: CARD,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 16,
+          padding: 22,
+          height: "100%",
+        }}
+      >
+        <h3 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
+          {ar ? "التصويرات السابقة" : "Previous Shoots"}
+        </h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {projects.map((p, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.07 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "10px 14px",
+                backgroundColor: SURFACE,
+                borderRadius: 10,
+                border: `1px solid ${BORDER}`,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <Calendar size={14} color={MUTED} style={{ flexShrink: 0 }} />
+                <span style={{
+                  color: dark ? "#fff" : "#0F172A", fontSize: 13, fontWeight: 600,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {p.name}
+                </span>
+                {p.year && <span style={{ color: MUTED, fontSize: 12, flexShrink: 0 }}>· {p.year}</span>}
+              </div>
+              {p.verified && (
+                <CheckCircle size={15} color="var(--color-primary)" fill="color-mix(in srgb, var(--color-primary) 15%, transparent)" style={{ flexShrink: 0 }} />
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -51,7 +108,7 @@ export default function ExperienceSection({ experience, variant = "default" }: P
             margin: "0 0 16px",
           }}
         >
-          {isModel ? (ar ? "التصويرات السابقة" : "Previous Shoots") : (ar ? "الخبرات السابقة" : "Previous Experience")}
+          {ar ? "الخبرات السابقة" : "Previous Experience"}
         </h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {projects.map((p, i) => (
