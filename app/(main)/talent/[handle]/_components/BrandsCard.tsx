@@ -18,7 +18,7 @@ export default function BrandsCard({ brands }: { brands: BrandItem[] }) {
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
       <h3 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
-        {ar ? "براندات تعاونت معها" : "Collaborated Brands"}
+        {ar ? "التعاون مع البراندات" : "Brand Collaborations"}
       </h3>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>

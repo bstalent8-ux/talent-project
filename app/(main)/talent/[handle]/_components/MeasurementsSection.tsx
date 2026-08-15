@@ -7,9 +7,12 @@
 // already restricts this section to category === "model", so `measurements`
 // is never non-null for any other category — see talent.context.ts's
 // toMeasurements().
+//
+// Lives in the sidebar (talent-layout.ts puts "physical" there for model,
+// never in main), so the layout is a compact row list — a 5-column grid
+// would be cramped in a ~280px rail.
 
 import { useSite } from "@/contexts/SiteContext";
-import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface Props {
   measurements: Record<string, string>;
@@ -27,41 +30,38 @@ const FIELD_LABELS: Record<string, { ar: string; en: string; unit?: string }> = 
 
 export default function MeasurementsSection({ measurements }: Props) {
   const { dark, lang } = useSite();
-  const isMobile = useIsMobile();
   const ar = lang === "ar";
 
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const TEXT   = dark ? "#FFFFFF" : "#0F172A";
   const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE= dark ? "#0A121C" : "#F8FAFC";
   const GOLD   = "#F4B740";
 
   const entries = FIELD_ORDER.filter((key) => measurements[key]);
   if (!entries.length) return null;
 
   return (
-    <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
-      <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
-        {ar ? "المقاسات" : "Measurements"}
+    <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20 }}>
+      <h3 style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 12px" }}>
+        {ar ? "بيانات الموديل" : "Model Details"}
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5, 1fr)", gap: 10 }}>
-        {entries.map((key) => {
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {entries.map((key, i) => {
           const meta = FIELD_LABELS[key];
           return (
             <div
               key={key}
               style={{
-                backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12,
-                padding: "12px 10px", textAlign: "center",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "9px 0",
+                borderTop: i > 0 ? `1px solid ${BORDER}` : undefined,
               }}
             >
-              <p style={{ color: MUTED, fontSize: 11, fontWeight: 600, margin: "0 0 6px" }}>
-                {ar ? meta.ar : meta.en}
-              </p>
-              <p style={{ color: GOLD, fontSize: 15, fontWeight: 800, margin: 0 }} dir="ltr">
+              <span style={{ color: MUTED, fontSize: 12.5 }}>{ar ? meta.ar : meta.en}</span>
+              <span style={{ color: GOLD, fontSize: 13, fontWeight: 800 }} dir="ltr">
                 {measurements[key]}{meta.unit ? ` ${meta.unit}` : ""}
-              </p>
+              </span>
             </div>
           );
         })}
