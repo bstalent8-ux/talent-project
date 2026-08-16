@@ -3,9 +3,8 @@
 import { useMemo, useState } from "react";
 import { CreditCard, ShieldCheck, Sparkles } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
-import { useGuestGuard } from "@/contexts/GuestGuard";
-import { canPerformAction } from "@/lib/permissions";
-import type { MarketplacePackage, PackagePlan } from "@/features/packages/types";
+import type { MarketplacePackage } from "@/features/packages/types";
+import { FREE_PACKAGE_ID } from "@/features/packages/services/package.service";
 import PackageCard from "@/components/packages/PackageCard";
 import BillingDurationSelector from "@/components/packages/BillingDurationSelector";
 import packageStyles from "@/components/packages/PackagePricing.module.css";
@@ -19,76 +18,41 @@ function choosePlan(pkg: MarketplacePackage, duration: number) {
     ?? null;
 }
 
-function packageAudience(pkg: MarketplacePackage) {
-  const categoryTarget = pkg.categories.find((item) => item.category?.role_type) ?? pkg.categories[0];
-  return {
-    talentType: categoryTarget?.category_id ?? null,
-    audience: categoryTarget?.category?.role_type ?? "talent",
-  };
-}
-
 export default function PackagesClient({
   initialPackages,
+  freePackage,
 }: {
   initialPackages: MarketplacePackage[];
+  freePackage: MarketplacePackage | null;
 }) {
   const { lang } = useSite();
-  const { user, requestAuth } = useGuestGuard();
   const [duration, setDuration] = useState(1);
-  const [submittingPlan, setSubmittingPlan] = useState<string | null>(null);
-  const [selectedPackageId, setSelectedPackageId] = useState(initialPackages[0]?.id ?? null);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState(
+    freePackage?.id ?? initialPackages[0]?.id ?? null,
+  );
 
   const visiblePackages = useMemo(() => initialPackages.slice(0, 3), [initialPackages]);
+  const cards = useMemo(
+    () => [
+      ...(freePackage ? [{ pkg: freePackage, locked: false, isFree: true }] : []),
+      ...visiblePackages.map((pkg) => ({ pkg, locked: pkg.id !== FREE_PACKAGE_ID, isFree: false })),
+    ],
+    [freePackage, visiblePackages],
+  );
+
   const availableDurations = useMemo(
     () => [
       ...new Set(
-        visiblePackages.flatMap((pkg) => (
+        cards.flatMap(({ pkg }) => (
           pkg.plans
             .filter((plan) => plan.is_active && BILLING_DURATIONS.includes(plan.duration_months))
             .map((plan) => plan.duration_months)
         )),
       ),
     ].sort((a, b) => a - b),
-    [visiblePackages],
+    [cards],
   );
   const selectedDuration = availableDurations.includes(duration) ? duration : availableDurations[0] ?? 1;
-
-  async function subscribe(plan: PackagePlan, pkg: MarketplacePackage) {
-    if (!canPerformAction("subscribe", user).allowed) {
-      requestAuth("subscribe");
-      return;
-    }
-
-    setSubmittingPlan(plan.id);
-    setMessage(null);
-    const audience = packageAudience(pkg);
-
-    try {
-      const res = await fetch("/api/subscriptions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planId: plan.id,
-          talentType: audience.talentType,
-          audience: audience.audience,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Subscription failed");
-      setMessage({
-        type: "success",
-        text: lang === "ar" ? "تم تفعيل اشتراكك بنجاح." : "Your subscription is now active.",
-      });
-    } catch (error) {
-      setMessage({
-        type: "error",
-        text: error instanceof Error ? error.message : lang === "ar" ? "تعذر إنشاء الاشتراك" : "Could not create subscription",
-      });
-    } finally {
-      setSubmittingPlan(null);
-    }
-  }
 
   return (
     <div className={styles.page} dir={lang === "ar" ? "rtl" : "ltr"}>
@@ -108,23 +72,23 @@ export default function PackagesClient({
             </h1>
             <p>
               {lang === "ar"
-                ? "ثلاث خطط واضحة للمقارنة السريعة، مع تبديل مباشر بين الدفع الشهري والسنوي."
-                : "Three clear plans for quick comparison, with a simple monthly or yearly billing switch."}
+                ? "الباقة المجانية متاحة الآن. باقي الباقات قيد التجهيز وستتوفر قريبًا."
+                : "The Free plan is available now. The other plans are being finalized and will open up soon."}
             </p>
           </div>
 
           <aside className={styles.summaryPanel} aria-label={lang === "ar" ? "ملخص الباقات" : "Pricing summary"}>
             <div className={styles.summaryItem}>
               <span>{lang === "ar" ? "عدد الخطط" : "Plans"}</span>
-              <strong>{visiblePackages.length}</strong>
+              <strong>{cards.length}</strong>
             </div>
             <div className={styles.summaryItem}>
               <span>{lang === "ar" ? "الدفع" : "Billing"}</span>
               <strong>{selectedDuration === 12 ? (lang === "ar" ? "سنوي" : "Yearly") : (lang === "ar" ? "شهري" : "Monthly")}</strong>
             </div>
             <div className={styles.summaryItem}>
-              <span>{lang === "ar" ? "التفعيل" : "Activation"}</span>
-              <strong>{lang === "ar" ? "فوري" : "Immediate"}</strong>
+              <span>{lang === "ar" ? "المتاح الآن" : "Available now"}</span>
+              <strong>{lang === "ar" ? "المجانية فقط" : "Free only"}</strong>
             </div>
           </aside>
         </section>
@@ -135,8 +99,8 @@ export default function PackagesClient({
               <h2 id="available-packages">{lang === "ar" ? "الباقات المتاحة" : "Available packages"}</h2>
               <p>
                 {lang === "ar"
-                  ? "اضغط على أي كارت لاختياره؛ الكارت المختار يظهر أكبر وبألوان البراند."
-                  : "Select any card to highlight it with the brand colors and a slightly larger size."}
+                  ? "الباقة المجانية هي باقتك الحالية. الباقات المدفوعة معروضة للاطلاع فقط حتى إطلاقها."
+                  : "The Free plan is your current plan. Paid plans are shown for preview only until launch."}
               </p>
             </div>
             <div className={styles.headerControls}>
@@ -158,20 +122,14 @@ export default function PackagesClient({
               ) : null}
               <span className={styles.badge}>
                 <ShieldCheck size={15} />
-                {lang === "ar" ? "اشتراك آمن" : "Safe subscription"}
+                {lang === "ar" ? "بياناتك بأمان" : "Your data stays safe"}
               </span>
             </div>
           </div>
 
-          {message ? (
-            <div className={`${styles.status} ${message.type === "success" ? styles.success : styles.error}`} role="status">
-              {message.text}
-            </div>
-          ) : null}
-
-          {visiblePackages.length ? (
+          {cards.length ? (
             <div className={packageStyles.packageGrid}>
-              {visiblePackages.map((pkg) => {
+              {cards.map(({ pkg, locked, isFree }) => {
                 const selectedPlan = choosePlan(pkg, selectedDuration);
                 const selected = selectedPackageId === pkg.id;
                 return (
@@ -180,11 +138,11 @@ export default function PackagesClient({
                     pkg={pkg}
                     lang={lang}
                     selected={selected}
-                    onSelectPackage={(item) => setSelectedPackageId(item.id)}
+                    onSelectPackage={locked ? undefined : (item) => setSelectedPackageId(item.id)}
                     selectedPlanId={selectedPlan?.id}
-                    onSubscribe={subscribe}
                     showPlanSelector={false}
-                    subscribing={submittingPlan === selectedPlan?.id}
+                    locked={locked}
+                    isFree={isFree}
                   />
                 );
               })}

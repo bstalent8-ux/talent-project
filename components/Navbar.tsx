@@ -36,6 +36,7 @@ const NAV_LINKS = {
     { label: "المجتمع", href: "/community" },
     { label: "وظائف", href: "/jobs" },
     { label: "للشركات", href: "/brands" },
+    { label: "الباقات", href: "/packages" },
     { label: "مشاريعي", href: "/bookings" },
   ],
   en: [
@@ -44,6 +45,7 @@ const NAV_LINKS = {
     { label: "Community", href: "/community" },
     { label: "Jobs", href: "/jobs" },
     { label: "Brands", href: "/brands" },
+    { label: "Packages", href: "/packages" },
     { label: "Projects", href: "/bookings" },
   ],
 };

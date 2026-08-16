@@ -28,6 +28,8 @@ const PACKAGE_SELECT = `
   )
 `;
 
+export const FREE_PACKAGE_ID = "00000000-0000-4000-8000-000000000000";
+
 const ALL_TALENTS_TARGET_ID = "all";
 const ALL_ROLES_TARGET_ID = "all";
 const BRAND_TARGET_ID = "brand";
@@ -239,6 +241,24 @@ export async function fetchAdminPackages(): Promise<MarketplacePackage[]> {
 
   if (error) throw new Error(error.message);
   return withSubscriberCounts((data ?? []).map((row) => mapPackage(row as Record<string, unknown>)));
+}
+
+/**
+ * The Free package is seeded with is_active = false (CLAUDE.md §7) so it never
+ * competes with real paid plans in fetchPublicPackages. The pricing page still
+ * needs it shown normally, so it is fetched separately by its known seed id.
+ */
+export async function fetchFreePackage(): Promise<MarketplacePackage | null> {
+  const { data, error } = await adminClient
+    .from("packages")
+    .select(PACKAGE_SELECT)
+    .eq("id", FREE_PACKAGE_ID)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  const pkg = mapPackage(data as Record<string, unknown>);
+  return { ...pkg, plans: pkg.plans.filter((plan) => plan.is_active) };
 }
 
 export async function fetchPublicPackagesByTalentType(

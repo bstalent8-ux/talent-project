@@ -84,6 +84,43 @@
    `selected` prop). No colour, border, or background change — selecting a card must not
    alter its appearance, only its size. A hovered selected card still gets `.packageCard:hover`. */
 
+.packageCardLocked {
+  cursor: default;
+}
+
+.packageCardLocked:hover {
+  border-color: color-mix(in srgb, var(--border-subtle) 72%, transparent);
+  background: color-mix(in srgb, #ffffff 92%, var(--bg-card));
+  box-shadow: 0 6px 8px rgba(15, 23, 42, 0.06);
+}
+
+/* Blurs everything except the footer button and the Coming Soon badge, so the
+   plan is still legible enough to know it exists without being usable. */
+.blurredContent {
+  filter: blur(3px);
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+}
+
+.comingSoonBadge {
+  position: absolute;
+  top: 0.9rem;
+  inset-inline-end: 0.9rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.32rem 0.7rem;
+  border-radius: var(--radius-pill);
+  background: #241447;
+  color: #ffffff;
+  font-size: var(--text-xs);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+}
+
 .packageHeader {
   display: grid;
   gap: 0.55rem;
