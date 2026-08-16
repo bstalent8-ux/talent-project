@@ -29,6 +29,7 @@ export default defineConfig({
       "components/profile/**/*.test.ts",
       "lib/**/*.test.ts",
       "app/api/profile/**/*.test.ts",
+      "app/\\(auth\\)/register/**/*.test.ts",
     ],
   },
 });

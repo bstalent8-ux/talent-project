@@ -549,6 +549,15 @@
   text-align: center;
 }
 
+/* Field-level error, sits directly under its input — left/start aligned,
+   unlike the centered form-level .errorText banner above. */
+.fieldError {
+  margin: var(--space-1) 0 0;
+  color: var(--color-error);
+  font-size: var(--text-xs);
+  text-align: start;
+}
+
 /* ─── Actions ─────────────────────────────────────────────────────────────── */
 
 .submitButton {

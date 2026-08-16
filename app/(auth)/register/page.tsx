@@ -1,7 +1,7 @@
 "use client";
 export const runtime = "edge";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,22 +11,16 @@ import { useSite } from "@/contexts/SiteContext";
 import styles from "../auth.module.css";
 import PhoneInput from "../phone/PhoneInput";
 import { detectDefaultCountryIso, findCountry, rememberCountryIso } from "../phone/countries";
-
-type Role = "talent" | "brand";
-
-interface FormData {
-  fullName:        string;
-  email:           string;
-  /** LOCAL number only — the dial code lives in `phoneCountryIso` state below,
-   *  never merged in here. See handleSubmit for where they're composed. */
-  phoneNumber:     string;
-  password:        string;
-  confirmPassword: string;
-  role:            Role;
-  talentType:      string;
-  brandCategory:   string;
-  agreeToTerms:    boolean;
-}
+import {
+  FIELD_IDS,
+  FIELD_ORDER,
+  FORM_TO_FIELD,
+  mapSignUpError,
+  validateRegisterForm,
+  type FieldKey,
+  type Role,
+  type RegisterFormData as FormData,
+} from "./registerValidation";
 
 const INIT: FormData = {
   fullName:        "",
@@ -89,15 +83,25 @@ const TX = {
     loading:         "جاري الإنشاء...",
     haveAccount:     "لديك حساب؟",
     signIn:          "تسجيل الدخول",
-    errRequired:     "الرجاء إكمال جميع الحقول",
-    errEmail:        "البريد الإلكتروني غير صحيح",
-    errPassShort:    "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
-    errPassMismatch: "كلمتا المرور غير متطابقتين",
-    errTerms:        "يجب الموافقة على الشروط والأحكام",
-    errPhone:        "الرجاء إدخال رقم هاتف صحيح",
-    errTalentType:   "اختار نوع الموهبة",
-    errBrandCat:     "اختار تصنيف البراند",
-    errGeneric:      "حدث خطأ ما. برجاء المحاولة مرة أخرى.",
+    // Field-level errors
+    errFullNameRequired: "الاسم الكامل مطلوب.",
+    errEmailRequired:    "البريد الإلكتروني مطلوب.",
+    errEmailInvalid:     "أدخل بريدًا إلكترونيًا صحيحًا، مثل: name@example.com.",
+    errPhoneRequired:    "رقم الهاتف مطلوب.",
+    errPhoneInvalid:     "أدخل رقم هاتف صحيح.",
+    errPasswordRequired: "كلمة المرور مطلوبة.",
+    errPasswordWeak:     "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+    errConfirmRequired:  "الرجاء تأكيد كلمة المرور.",
+    errPassMismatch:     "كلمتا المرور غير متطابقتين.",
+    errTerms:            "يجب الموافقة على الشروط والأحكام وسياسة الخصوصية.",
+    errCategoryTalent:   "اختر نوع حسابك: صانع محتوى UGC أو موديل.",
+    errCategoryBrand:    "اختار تصنيف البراند.",
+    // Server-level errors
+    errExisting:      "يوجد حساب مسجل بالفعل بهذا البريد الإلكتروني. سجل الدخول أو استخدم بريدًا إلكترونيًا آخر.",
+    errNetwork:       "تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مرة أخرى.",
+    errRateLimit:     "تم إجراء محاولات تسجيل كثيرة. انتظر قليلًا ثم حاول مرة أخرى.",
+    errProfileFailure: "تعذر إكمال إنشاء حسابك. حاول مرة أخرى.",
+    errUnknown:       "تعذر إنشاء الحساب. راجع بياناتك وحاول مرة أخرى.",
     showPass:        "إظهار كلمة المرور",
     hidePass:        "إخفاء كلمة المرور",
     langBtn:         "تغيير اللغة",
@@ -136,15 +140,25 @@ const TX = {
     loading:         "Creating...",
     haveAccount:     "Already have an account?",
     signIn:          "Sign in",
-    errRequired:     "Please complete all required fields",
-    errEmail:        "Please enter a valid email address",
-    errPassShort:    "Password must be at least 8 characters",
-    errPassMismatch: "Passwords do not match",
-    errTerms:        "You must agree to the terms and conditions",
-    errPhone:        "Please enter a valid phone number",
-    errTalentType:   "Please choose a talent type",
-    errBrandCat:     "Please choose a brand category",
-    errGeneric:      "Something went wrong. Please try again.",
+    // Field-level errors
+    errFullNameRequired: "Full name is required.",
+    errEmailRequired:    "Email address is required.",
+    errEmailInvalid:     "Enter a valid email address, for example: name@example.com.",
+    errPhoneRequired:    "Phone number is required.",
+    errPhoneInvalid:     "Enter a valid phone number.",
+    errPasswordRequired: "Password is required.",
+    errPasswordWeak:     "Password must be at least 8 characters.",
+    errConfirmRequired:  "Please confirm your password.",
+    errPassMismatch:     "Passwords do not match.",
+    errTerms:            "You must agree to the Terms of Service and Privacy Policy.",
+    errCategoryTalent:   "Choose whether you are registering as a UGC Creator or Model.",
+    errCategoryBrand:    "Please choose a brand category.",
+    // Server-level errors
+    errExisting:      "An account with this email already exists. Sign in instead or use a different email.",
+    errNetwork:       "We couldn't connect to the server. Check your connection and try again.",
+    errRateLimit:     "Too many registration attempts. Please wait a moment and try again.",
+    errProfileFailure: "Your account could not be completed. Please try again.",
+    errUnknown:       "We couldn't create your account. Check your information and try again.",
     showPass:        "Show password",
     hidePass:        "Hide password",
     langBtn:         "Toggle language",
@@ -157,6 +171,8 @@ const TX = {
     stat3: "Talents",
   },
 };
+
+type Tx = typeof TX["en"];
 
 // Accent classes come from the design tokens, not literal hex values.
 const floatingTalents = [
@@ -179,11 +195,19 @@ export default function RegisterPage() {
   // Same provider the rest of the site uses — no local theme/lang state.
   const { lang, dark, toggleLang, toggleMode } = useSite();
 
-  const [form,     setForm]     = useState<FormData>(INIT);
-  const [loading,  setLoading]  = useState(false);
-  const [showPass, setShowPass] = useState(false);
-  const [showConf, setShowConf] = useState(false);
-  const [error,    setError]    = useState("");
+  const [form,        setForm]        = useState<FormData>(INIT);
+  const [loading,     setLoading]     = useState(false);
+  const [showPass,    setShowPass]    = useState(false);
+  const [showConf,    setShowConf]    = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [signInPrompt, setSignInPrompt] = useState(false);
+
+  // Synchronous re-entrancy guard: React state (`loading`) only disables the
+  // button after a re-render, which leaves a real window for a second click
+  // to fire a second signUp() before that render commits. A ref updates
+  // instantly, so the second call bails out before touching the network.
+  const isSubmittingRef = useRef(false);
 
   // SSR-safe default ("SA", matching the field's previous static default) —
   // detectDefaultCountryIso() reads navigator/localStorage, which don't exist
@@ -203,37 +227,46 @@ export default function RegisterPage() {
 
   const tx = TX[lang];
 
-  const set = (k: keyof FormData, v: FormData[keyof FormData]) =>
-    setForm((f) => ({ ...f, [k]: v }));
+  function focusField(key: FieldKey) {
+    document.getElementById(FIELD_IDS[key])?.focus();
+  }
 
-  const validate = (): string => {
-    if (!form.fullName.trim() || !form.email.trim() || !form.phoneNumber.trim() || !form.password || !form.confirmPassword)
-      return tx.errRequired;
-    if (!form.email.includes("@") || !form.email.includes("."))
-      return tx.errEmail;
-    // Same rule as before (>=9 digits), now checked against the LOCAL number
-    // alone — the dial code used to live inside this same string (whatever
-    // the user happened to type), so this is the same check applied to a
-    // smaller, more precisely-scoped field, not a new rule.
-    if (form.phoneNumber.replace(/\D/g, "").length < 9)
-      return tx.errPhone;
-    if (form.role === "talent" && !form.talentType)
-      return tx.errTalentType;
-    if (form.role === "brand" && !form.brandCategory)
-      return tx.errBrandCat;
-    if (form.password.length < 8)
-      return tx.errPassShort;
-    if (form.password !== form.confirmPassword)
-      return tx.errPassMismatch;
-    if (!form.agreeToTerms)
-      return tx.errTerms;
-    return "";
+  function clearFieldError(key: FieldKey) {
+    setFieldErrors((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    if (key === "email") setSignInPrompt(false);
+  }
+
+  const set = (k: keyof FormData, v: FormData[keyof FormData]) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    const fieldKey = FORM_TO_FIELD[k];
+    if (fieldKey) clearFieldError(fieldKey);
+    // A stale server-level banner (network/rate-limit/profile-failure/unknown)
+    // no longer describes the form once the user starts changing it.
+    setServerError(null);
   };
 
   const handleSubmit = async () => {
-    const err = validate();
-    if (err) { setError(err); return; }
-    setError(""); setLoading(true);
+    if (isSubmittingRef.current) return;
+
+    const errs = validateRegisterForm(form, tx);
+    if (Object.keys(errs).length) {
+      setFieldErrors(errs);
+      setServerError(null);
+      const firstInvalid = FIELD_ORDER.find((key) => errs[key]);
+      if (firstInvalid) focusField(firstInvalid);
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setFieldErrors({});
+    setServerError(null);
+    setSignInPrompt(false);
+    setLoading(true);
 
     try {
       const supabase = createClient();
@@ -244,10 +277,26 @@ export default function RegisterPage() {
         options:  { data: { role: form.role, full_name: form.fullName.trim() } },
       });
 
-      if (signUpErr) { setError(signUpErr.message); setLoading(false); return; }
+      if (signUpErr) {
+        const mapped = mapSignUpError(signUpErr, tx, (unmapped) => {
+          console.error("[register] unmapped signUp error", unmapped);
+        });
+        if (mapped.field) {
+          setFieldErrors({ [mapped.field]: mapped.message });
+          setSignInPrompt(mapped.action === "signin");
+          focusField(mapped.field);
+        } else {
+          setServerError(mapped.message);
+        }
+        return;
+      }
 
       const uid = data.user?.id;
-      if (!uid) { setError(tx.errGeneric); setLoading(false); return; }
+      if (!uid) {
+        console.error("[register] signUp succeeded with no user id", data);
+        setServerError(tx.errUnknown);
+        return;
+      }
 
       const handle = form.email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-");
 
@@ -260,7 +309,7 @@ export default function RegisterPage() {
       const dialCode    = findCountry(phoneCountryIso).dialCode;
       const phoneNumber = `+${dialCode}${form.phoneNumber.replace(/\D/g, "")}`;
 
-      await fetch("/api/profile", {
+      const profileRes = await fetch("/api/profile", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
@@ -292,11 +341,32 @@ export default function RegisterPage() {
         }),
       });
 
+      if (!profileRes.ok) {
+        // The auth account now exists even though profile creation failed —
+        // this used to be swallowed silently and the user was redirected
+        // anyway, which is exactly how a genuinely-new signup turns into a
+        // confusing "already registered" on the next attempt. Surface a safe
+        // message and stop here instead of pretending it worked.
+        let detail = "";
+        try { detail = JSON.stringify(await profileRes.json()); } catch { /* ignore */ }
+        console.error("[register] profile creation failed", profileRes.status, detail);
+        setServerError(tx.errProfileFailure);
+        return;
+      }
+
       router.push("/profile/me");
     } catch (e) {
-      setError(e instanceof Error ? e.message : tx.errGeneric);
+      const message = e instanceof Error ? e.message : "";
+      if (/fetch|network/i.test(message)) {
+        setServerError(tx.errNetwork);
+      } else {
+        console.error("[register] unexpected error", e);
+        setServerError(tx.errUnknown);
+      }
+    } finally {
+      isSubmittingRef.current = false;
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const passStrength = form.password.length === 0 ? 0 :
@@ -343,6 +413,10 @@ export default function RegisterPage() {
           <h1 className={styles.heading}>{tx.headline}</h1>
           <p className={styles.subheading}>{tx.sub}</p>
 
+          {serverError && (
+            <p className={styles.errorBanner} role="alert">{serverError}</p>
+          )}
+
           {/* Role toggle */}
           <div className={styles.field}>
             <span className={styles.label}>{tx.iAm}</span>
@@ -371,8 +445,9 @@ export default function RegisterPage() {
             </label>
             <select
               id="register-category"
-              className={styles.select}
+              className={`${styles.select} ${fieldErrors.category ? styles.inputInvalid : ""}`}
               value={form.role === "talent" ? form.talentType : form.brandCategory}
+              aria-invalid={Boolean(fieldErrors.category) || undefined}
               onChange={(event) => {
                 if (form.role === "talent") set("talentType", event.target.value);
                 else set("brandCategory", event.target.value);
@@ -384,6 +459,9 @@ export default function RegisterPage() {
                 </option>
               ))}
             </select>
+            {fieldErrors.category && (
+              <p className={styles.fieldError} role="alert">{fieldErrors.category}</p>
+            )}
           </div>
 
           {/* Fields */}
@@ -392,26 +470,42 @@ export default function RegisterPage() {
               <label className={styles.label} htmlFor="register-name">{tx.fullName}</label>
               <input
                 id="register-name"
-                className={styles.input}
+                className={`${styles.input} ${fieldErrors.fullName ? styles.inputInvalid : ""}`}
                 type="text"
                 placeholder={tx.fullNamePH}
                 value={form.fullName}
                 autoComplete="name"
+                aria-invalid={Boolean(fieldErrors.fullName) || undefined}
                 onChange={(e) => set("fullName", e.target.value)}
               />
+              {fieldErrors.fullName && (
+                <p className={styles.fieldError} role="alert">{fieldErrors.fullName}</p>
+              )}
             </div>
 
             <div>
               <label className={styles.label} htmlFor="register-email">{tx.email}</label>
               <input
                 id="register-email"
-                className={styles.input}
+                className={`${styles.input} ${fieldErrors.email ? styles.inputInvalid : ""}`}
                 type="email"
                 placeholder={tx.emailPH}
                 value={form.email}
                 autoComplete="email"
+                aria-invalid={Boolean(fieldErrors.email) || undefined}
                 onChange={(e) => set("email", e.target.value)}
               />
+              {fieldErrors.email && (
+                <p className={styles.fieldError} role="alert">
+                  {fieldErrors.email}
+                  {signInPrompt && (
+                    <>
+                      {" "}
+                      <Link className={styles.textLink} href="/login">{tx.signIn}</Link>
+                    </>
+                  )}
+                </p>
+              )}
             </div>
 
             <div>
@@ -423,9 +517,13 @@ export default function RegisterPage() {
                 numberAutoComplete="tel-national"
                 numberInputId="register-phone"
                 numberPlaceholder={tx.phonePH}
+                invalid={Boolean(fieldErrors.phone)}
                 onCountryChange={handleCountryChange}
                 onNumberChange={(value) => set("phoneNumber", value)}
               />
+              {fieldErrors.phone && (
+                <p className={styles.fieldError} role="alert">{fieldErrors.phone}</p>
+              )}
             </div>
 
             <div>
@@ -433,11 +531,12 @@ export default function RegisterPage() {
               <div className={styles.inputWrap}>
                 <input
                   id="register-password"
-                  className={`${styles.input} ${styles.inputWithAffix}`}
+                  className={`${styles.input} ${styles.inputWithAffix} ${fieldErrors.password ? styles.inputInvalid : ""}`}
                   type={showPass ? "text" : "password"}
                   placeholder={tx.passwordPH}
                   value={form.password}
                   autoComplete="new-password"
+                  aria-invalid={Boolean(fieldErrors.password) || undefined}
                   onChange={(e) => set("password", e.target.value)}
                 />
                 <button
@@ -460,6 +559,9 @@ export default function RegisterPage() {
                   ))}
                 </div>
               )}
+              {fieldErrors.password && (
+                <p className={styles.fieldError} role="alert">{fieldErrors.password}</p>
+              )}
             </div>
 
             <div>
@@ -467,11 +569,12 @@ export default function RegisterPage() {
               <div className={styles.inputWrap}>
                 <input
                   id="register-confirm"
-                  className={`${styles.input} ${styles.inputWithAffix} ${confirmState}`}
+                  className={`${styles.input} ${styles.inputWithAffix} ${fieldErrors.confirmPassword ? styles.inputInvalid : confirmState}`}
                   type={showConf ? "text" : "password"}
                   placeholder={tx.confirmPH}
                   value={form.confirmPassword}
                   autoComplete="new-password"
+                  aria-invalid={Boolean(fieldErrors.confirmPassword) || undefined}
                   onChange={(e) => set("confirmPassword", e.target.value)}
                 />
                 <button
@@ -483,14 +586,19 @@ export default function RegisterPage() {
                   {showConf ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
                 </button>
               </div>
+              {fieldErrors.confirmPassword && (
+                <p className={styles.fieldError} role="alert">{fieldErrors.confirmPassword}</p>
+              )}
             </div>
 
             {/* Terms */}
             <label className={styles.termsRow}>
               <input
+                id="register-terms"
                 className={styles.checkbox}
                 type="checkbox"
                 checked={form.agreeToTerms}
+                aria-invalid={Boolean(fieldErrors.terms) || undefined}
                 onChange={(e) => set("agreeToTerms", e.target.checked)}
               />
               <span className={styles.termsText}>
@@ -500,8 +608,9 @@ export default function RegisterPage() {
                 <Link className={styles.textLink} href="/privacy">{tx.privacyLink}</Link>
               </span>
             </label>
-
-            {error && <p className={styles.errorText} role="alert">{error}</p>}
+            {fieldErrors.terms && (
+              <p className={styles.fieldError} role="alert">{fieldErrors.terms}</p>
+            )}
 
             <button
               type="button"
