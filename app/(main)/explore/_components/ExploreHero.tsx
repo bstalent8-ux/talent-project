@@ -43,8 +43,9 @@ export default function ExploreHero({
             : "Verified influencers, UGC creators, models and photographers — everything your campaign needs, in one place."}
         </p>
 
-        {/* Search */}
-        <div className={styles.searchBar}>
+        {/* Search — already live-filters on every keystroke via onSearch;
+            the submit button/Enter key just re-affirm the current value. */}
+        <form className={styles.searchBar} onSubmit={(e) => { e.preventDefault(); onSearch(search); }}>
           <Search size={18} />
           <input
             type="text"
@@ -55,11 +56,11 @@ export default function ExploreHero({
           {search && (
             <button type="button" className={styles.searchClear} onClick={() => onSearch("")} aria-label="clear">×</button>
           )}
-          <button type="button" className={styles.searchSubmit}>
+          <button type="submit" className={styles.searchSubmit}>
             <Search size={15} />
             {ar ? "بحث" : "Search"}
           </button>
-        </div>
+        </form>
 
         {/* Quick type pills */}
         <div className={styles.heroPills}>

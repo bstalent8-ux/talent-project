@@ -135,7 +135,7 @@ export default function TalentProfileShell({ profile }: { profile: PublicProfile
                   talentName={talent.name ?? ""}
                   talentUserId={talent.id}
                 />
-                <QuestionCard />
+                <QuestionCard talentId={talent.id} />
               </>
             }
           />

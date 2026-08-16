@@ -88,6 +88,7 @@ export function buildTalentCoreProps(
       return {
         component: "ExperienceSection",
         props: {
+          talent: context.talent,
           experience: context.experience,
           variant: context.talent.category === "model" ? "model" : "default",
         },

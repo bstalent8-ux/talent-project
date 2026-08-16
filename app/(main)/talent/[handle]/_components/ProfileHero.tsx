@@ -45,11 +45,32 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
   const MUTED = dark ? "#A8B3C2" : "#64748B";
   const SURFACE = dark ? "#0A121C" : "#F8FAFC";
 
+  const [shareCopied, setShareCopied] = useState(false);
+
   const availabilitySummary = formatAvailabilitySummary(talent.availability, talent.availabilitySchedule, lang);
 
   const displayName = talent.name.includes("@")
     ? talent.handle || talent.name.split("@")[0]
     : talent.name;
+
+  // No share endpoint needed — the profile URL itself is the shareable link.
+  // Falls back to clipboard copy wherever the Web Share API isn't available
+  // (most desktop browsers).
+  async function handleShare() {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (!url) return;
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ title: displayName, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      // Share sheet dismissed or clipboard denied — nothing to surface.
+    }
+  }
 
   const tags = talent.specialties?.length
     ? talent.specialties.slice(0, 3)
@@ -427,21 +448,29 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <ProtectedAction action="favorite_talent">
-              <motion.button whileHover={{ scale: 1.02 }} style={{
+            {/* Favoriting isn't implemented yet (no saved-talents table/API) —
+                disabled rather than a silent dead click. */}
+            <button
+              type="button"
+              disabled
+              title={ar ? "قريبًا" : "Coming soon"}
+              style={{
+                ...btn, cursor: "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+                color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13, opacity: 0.5,
+              }}>
+              <Heart size={13} />{t.favorite}
+            </button>
+            <motion.button
+              type="button"
+              onClick={handleShare}
+              whileHover={{ scale: 1.02 }}
+              style={{
                 ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                 backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
                 color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13,
               }}>
-                <Heart size={13} />{t.favorite}
-              </motion.button>
-            </ProtectedAction>
-            <motion.button whileHover={{ scale: 1.02 }} style={{
-              ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-              backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
-              color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13,
-            }}>
-              <Share2 size={13} />{t.share}
+              <Share2 size={13} />{shareCopied ? (ar ? "تم النسخ" : "Copied") : t.share}
             </motion.button>
           </div>
 

@@ -181,7 +181,7 @@ describe("adapter output matches component prop requirements", () => {
   it("experience maps to ExperienceSection, default variant for a non-model category", () => {
     const plan = buildTalentCoreProps("experience", talentContext)!;
     expect(plan.component).toBe("ExperienceSection");
-    expect(plan.props).toEqual({ experience: talentContext.experience, variant: "default" });
+    expect(plan.props).toEqual({ talent: talentContext.talent, experience: talentContext.experience, variant: "default" });
   });
 
   it("experience maps to the model variant when talent.category is model", () => {

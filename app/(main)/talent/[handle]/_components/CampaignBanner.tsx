@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { TrendingUp, Play, FileText } from "lucide-react";
+import { TrendingUp, Play } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { CampaignStats, FeaturedCampaign } from "@/features/talent-profile/types";
@@ -175,44 +175,9 @@ export default function CampaignBanner({ campaignStats, featuredCampaign }: Prop
             </div>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              backgroundColor: "rgba(0,210,106,0.1)",
-              color: GREEN,
-              border: "1px solid rgba(0,210,106,0.2)",
-              borderRadius: 8,
-              padding: "6px 12px",
-              fontSize: 12,
-              cursor: "pointer",
-              fontFamily: "'Cairo',sans-serif",
-            }}
-          >
-            <Play size={11} />{t.watch}
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              backgroundColor: SURFACE,
-              color: MUTED,
-              border: `1px solid ${BORDER}`,
-              borderRadius: 8,
-              padding: "6px 12px",
-              fontSize: 12,
-              cursor: "pointer",
-              fontFamily: "'Cairo',sans-serif",
-            }}
-          >
-            <FileText size={11} />{t.caseStudy}
-          </motion.button>
-        </div>
+        {/* "Watch" / "Case Study" buttons removed — FeaturedCampaign has no
+            video_url/case_study_url, so there was never a real destination
+            for either click. */}
       </div>}
     </div>
   );
