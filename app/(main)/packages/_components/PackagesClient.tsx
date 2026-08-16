@@ -31,11 +31,14 @@ export default function PackagesClient({
     freePackage?.id ?? initialPackages[0]?.id ?? null,
   );
 
-  const visiblePackages = useMemo(() => initialPackages.slice(0, 3), [initialPackages]);
+  const visiblePackages = useMemo(
+    () => initialPackages.filter((pkg) => pkg.id !== FREE_PACKAGE_ID).slice(0, 3),
+    [initialPackages],
+  );
   const cards = useMemo(
     () => [
       ...(freePackage ? [{ pkg: freePackage, locked: false, isFree: true }] : []),
-      ...visiblePackages.map((pkg) => ({ pkg, locked: pkg.id !== FREE_PACKAGE_ID, isFree: false })),
+      ...visiblePackages.map((pkg) => ({ pkg, locked: true, isFree: false })),
     ],
     [freePackage, visiblePackages],
   );
