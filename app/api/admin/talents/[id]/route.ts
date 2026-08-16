@@ -80,9 +80,27 @@ export async function PATCH(
     }
   }
 
+  // The detail-page cache tag is keyed by HANDLE (talent:${handle}) — see
+  // app/(main)/talent/[handle]/page.tsx and /api/profile's own invalidateTalent
+  // call. Passing the talent_profiles.id or user_id here (as this route used
+  // to) invalidates a tag nobody reads: a handle that a guest had already
+  // hit while pending (and got cached as "not found") would stay 404 for up
+  // to CACHE_SECONDS.tenMinutes after approval instead of going live
+  // immediately.
+  let handle: string | null = null;
+  if (updated?.user_id) {
+    const { data: ownerProfile } = await adminClient
+      .from("profiles")
+      .select("handle")
+      .eq("id", updated.user_id)
+      .maybeSingle();
+    handle = ownerProfile?.handle ?? null;
+  }
+
   revalidatePath("/admin/talents");
   revalidatePath("/explore");
-  invalidateTalent(updated?.user_id ?? id);
+  invalidateTalent(handle ?? updated?.user_id ?? id);
+  if (handle) revalidatePath(`/talent/${handle}`);
 
   return NextResponse.json({ ok: true }, { headers: privateNoStoreHeaders() });
 }
@@ -96,6 +114,23 @@ export async function DELETE(
 
   const { id } = await params;
 
+  // Handle must be read BEFORE the delete — same tag-key reasoning as PATCH
+  // above (talent:${handle}, not talent:${id}).
+  const { data: existing } = await adminClient
+    .from("talent_profiles")
+    .select("user_id")
+    .eq("id", id)
+    .maybeSingle();
+  let handle: string | null = null;
+  if (existing?.user_id) {
+    const { data: ownerProfile } = await adminClient
+      .from("profiles")
+      .select("handle")
+      .eq("id", existing.user_id)
+      .maybeSingle();
+    handle = ownerProfile?.handle ?? null;
+  }
+
   const { error } = await adminClient
     .from("talent_profiles")
     .delete()
@@ -105,7 +140,8 @@ export async function DELETE(
 
   revalidatePath("/admin/talents");
   revalidatePath("/explore");
-  invalidateTalent(id);
+  invalidateTalent(handle ?? id);
+  if (handle) revalidatePath(`/talent/${handle}`);
 
   return NextResponse.json({ ok: true }, { headers: privateNoStoreHeaders() });
 }

@@ -32,7 +32,7 @@ export async function fetchAdminTalents(statusFilter?: string): Promise<AdminTal
       id, handle, full_name, avatar_url, city, created_at,
       is_approved, is_suspended, is_verified, balance,
       talent_profiles (
-        id, category, avg_rating, total_reviews
+        id, category, avg_rating, total_reviews, status, approved_at, rejection_reason
       )
     `)
     .eq("role", "talent")
@@ -45,7 +45,7 @@ export async function fetchAdminTalents(statusFilter?: string): Promise<AdminTal
     const isApproved   = (p as Record<string, unknown>).is_approved   as boolean ?? true;
     const isSuspended  = (p as Record<string, unknown>).is_suspended  as boolean ?? false;
     const accountStatus = isSuspended ? "suspended" : isApproved ? "active" : "pending";
-    const status: AdminTalent["status"] = "approved";
+    const status: AdminTalent["status"] = (tp.status as AdminTalent["status"]) ?? "pending";
     if (statusFilter && statusFilter !== "all" && status !== statusFilter) return [];
 
     return [{
@@ -58,8 +58,8 @@ export async function fetchAdminTalents(statusFilter?: string): Promise<AdminTal
       city:            p.city,
       createdAt:       p.created_at,
       status,
-      approvedAt:      null,
-      rejectionReason: null,
+      approvedAt:      tp.approved_at      ?? null,
+      rejectionReason: tp.rejection_reason ?? null,
       avgRating:       tp.avg_rating    ?? null,
       totalReviews:    tp.total_reviews ?? null,
       accountStatus,

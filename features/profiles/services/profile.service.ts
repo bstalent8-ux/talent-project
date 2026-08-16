@@ -34,7 +34,7 @@ import type {
   UpdateSharedInput,
 } from "../types/dto";
 import type { ProfileProvider, ProviderMetadata } from "../types/provider";
-import type { RawProfileType, RawSharedProfile } from "../types/raw";
+import type { ModerationStatus, RawProfileType, RawSharedProfile } from "../types/raw";
 
 // ─── Dependencies (constructor injection with a production default) ───────────
 
@@ -291,6 +291,56 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
     },
 
     // ─── Owner reads ────────────────────────────────────────────────────────
+
+    /**
+     * Read-only preview of how the PUBLIC profile will look, for the owner of
+     * a listing that hasn't cleared the approval gate yet (talent/brand:
+     * status !== "approved"). Same PublicProfileDTO shape and same section
+     * data an approved visitor would eventually see — not the owner's private
+     * editing view, and not a draft including unapproved child rows.
+     *
+     * Caller MUST have already verified that userId is the signed-in user —
+     * exactly the same contract as getOwnProfile.
+     *
+     * moderationStatus is returned ALONGSIDE the DTO, never inside it: the
+     * public core types have no status field by design (TalentPublicCore has
+     * none), so a caller cannot accidentally leak it into the shared renderer
+     * just by rendering this profile.
+     */
+    async getOwnerPreviewProfile(userId: string): Promise<{
+      profile:          PublicProfileDTO;
+      moderationStatus: ModerationStatus | null;
+    }> {
+      const ctx = await resolveContext(await deps.profiles.findIdentityByUserId(userId));
+      const { profile } = ctx.identity;
+
+      // Same account-level check buildPublic applies — a blocked/suspended
+      // ACCOUNT gets no preview either, regardless of listing status.
+      if (!isPublicallyVisible(profile)) throw ProfileError.notFound({ profileId: profile.id });
+
+      const [core, sections, layout, rawCore] = await Promise.all([
+        ctx.provider.getPublicProfile({ shared: profile, bypassApprovalGate: true }),
+        deps.dynamic.getSectionsForProfile(profile.id, ctx.typeSlug, "public"),
+        deps.dynamic.getLayout(ctx.typeSlug),
+        ctx.provider.loadCore(profile.id),
+      ]);
+
+      if (!core) throw ProfileError.notFound({ profileId: profile.id, reason: "core row missing" });
+
+      const dto: PublicProfileDTO = {
+        identity:   toIdentityDTO(profile, ctx.typeSlug),
+        meta:       toMetaDTO(ctx.provider.meta),
+        core:       core as AnyPublicCore,
+        sections:   mergeSections(sections),
+        layout,
+        isBookable: ctx.provider.meta.bookable,
+      };
+      dto.sections = dto.sections.filter((section) => ctx.provider.hasContent(section, dto));
+
+      const moderationStatus = (rawCore as { status?: ModerationStatus | null } | null)?.status ?? null;
+
+      return { profile: dto, moderationStatus };
+    },
 
     /** Caller MUST have already verified that userId is the signed-in user. */
     async getOwnProfile(userId: string): Promise<PrivateProfileDTO> {

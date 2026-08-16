@@ -69,12 +69,20 @@ export async function POST(req: NextRequest) {
     }
 
     // profiles columns: id, handle, full_name, avatar_url, city, bio, role, brand_category
-    const { error: profileErr } = await adminClient
-      .from("profiles")
-      .upsert({ ...pick(profileData, PROFILE_FIELDS), id: targetId, role: effectiveRole });
+    const profilePayload: Record<string, unknown> = { ...pick(profileData, PROFILE_FIELDS), id: targetId, role: effectiveRole };
+    let { error: profileErr } = await adminClient.from("profiles").upsert(profilePayload);
+
+    // handle is UNIQUE — two different signups can derive the same slug from
+    // their email local-part (e.g. two "ahmed@..." addresses). Retry once with
+    // a short random suffix instead of failing the whole registration outright.
+    if (profileErr?.code === "23505" && typeof profilePayload.handle === "string") {
+      profilePayload.handle = `${profilePayload.handle}-${Math.random().toString(36).slice(2, 6)}`;
+      ({ error: profileErr } = await adminClient.from("profiles").upsert(profilePayload));
+    }
 
     if (profileErr) {
-      return NextResponse.json({ error: `profiles: ${profileErr.message}` }, { status: 500, headers: privateNoStoreHeaders() });
+      console.error("[profile] profiles upsert failed", profileErr.code, profileErr.message);
+      return NextResponse.json({ error: "profile save failed" }, { status: 500, headers: privateNoStoreHeaders() });
     }
 
     // Typed core row, written through the provider layer.
@@ -131,10 +139,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const savedHandle = (profilePayload.handle as string | undefined) ?? existing?.handle ?? targetId;
     if (effectiveRole === "talent") {
-      invalidateTalent(profileData?.handle ?? existing?.handle ?? targetId);
+      invalidateTalent(savedHandle);
     } else if (effectiveRole === "brand") {
-      invalidateBrand(profileData?.handle ?? existing?.handle ?? targetId);
+      invalidateBrand(savedHandle);
     }
 
     return NextResponse.json({ success: true }, { headers: privateNoStoreHeaders() });

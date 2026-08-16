@@ -17,9 +17,45 @@ export const runtime = 'edge';
 
 import { notFound } from "next/navigation";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
+import { createClient } from "@/lib/supabase/server";
 import { ProfileError, profileService } from "@/features/profiles";
 import type { PublicProfileDTO } from "@/features/profiles/types/dto";
+import type { ModerationStatus } from "@/features/profiles/types/raw";
 import TalentProfileShell from "./_components/TalentProfileShell";
+import PendingPreviewBanner from "./_components/PendingPreviewBanner";
+
+/**
+ * The public gate hid this handle. Before returning a plain 404, check
+ * whether the CURRENT signed-in visitor is the handle's own owner — if so,
+ * they get the full read-only preview of their own not-yet-approved listing
+ * instead of a bare "not found".
+ *
+ * Never runs the ungated preview lookup for anyone but a session whose own
+ * handle matches the route param, so it cannot be used to probe another
+ * profile's moderation status or content. Every other visitor (no session,
+ * or a session that owns a different handle) still falls through to
+ * notFound() exactly as before — this NEVER makes a pending profile public.
+ */
+async function getOwnerPreviewIfMatches(
+  handle: string,
+): Promise<{ profile: PublicProfileDTO; moderationStatus: ModerationStatus | null } | null> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { profile, moderationStatus } = await profileService.getOwnerPreviewProfile(user.id);
+    if (profile.meta.typeSlug !== "talent") return null;
+    if ((profile.identity.handle ?? "").toLowerCase() !== handle.toLowerCase()) return null;
+
+    return { profile, moderationStatus };
+  } catch {
+    // No session, no core row, blocked account, or the lookup failed — same
+    // as "not the owner" from this function's point of view. The caller
+    // still 404s.
+    return null;
+  }
+}
 
 export default async function TalentPage({
   params,
@@ -48,7 +84,18 @@ export default async function TalentPage({
     },
   );
 
-  if (!profile) notFound();
+  if (!profile) {
+    const owner = await getOwnerPreviewIfMatches(handle);
+    if (owner) {
+      return (
+        <>
+          <PendingPreviewBanner status={owner.moderationStatus} />
+          <TalentProfileShell profile={owner.profile} />
+        </>
+      );
+    }
+    notFound();
+  }
 
   // A brand handle must not render through the talent shell.
   if (profile.meta.typeSlug !== "talent") notFound();

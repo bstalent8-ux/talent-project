@@ -36,6 +36,14 @@ export interface ProviderMetadata {
 
 export interface ProviderLoadInput {
   shared: RawSharedProfile;
+  /**
+   * Skips the type's own public-listing gate (talent/brand: status !==
+   * "approved") — used ONLY for the profile owner's read-only preview of
+   * their not-yet-approved listing. The caller (ProfileService) is
+   * responsible for verifying the requester actually owns this profile
+   * before ever setting this; a provider must never infer ownership itself.
+   */
+  bypassApprovalGate?: boolean;
 }
 
 export interface ProviderCompletionInput<TCore = unknown> {

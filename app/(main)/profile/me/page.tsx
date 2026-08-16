@@ -104,7 +104,8 @@ const TX = {
     share:          "مشاركة",
     escrowTitle:    "نظام الدفع الآمن (Escrow)",
     escrowSteps:    ["الدفع محجوز","تسليم العمل","الموافقة","الإفراج عن الأموال"],
-    viewPublic:     "عرض الصفحة العامة",
+    viewPublic:     "عرض الملف العام",
+    previewPublic:  "معاينة الملف العام",
     brands:         "العلامات التجارية المتعاونة",
     brandPlaceholder: "اسم البراند...",
     addBrand:       "إضافة",
@@ -120,6 +121,8 @@ const TX = {
     addAddon:       "إضافة حق",
     addonLabel:     "الاسم",
     addonPrice:     "السعر (جنيه)",
+    pendingApproval: "قيد المراجعة",
+    rejectedApproval: "غير موافق عليه",
   },
   en: {
     dashboard:      "Dashboard",
@@ -171,7 +174,8 @@ const TX = {
     share:          "Share",
     escrowTitle:    "Secure Payment System (Escrow)",
     escrowSteps:    ["Payment Held","Work Delivery","Approval","Fund Release"],
-    viewPublic:     "View Public Page",
+    viewPublic:     "View Public Profile",
+    previewPublic:  "Preview Public Profile",
     brands:         "Collaborated Brands",
     brandPlaceholder: "Brand name...",
     addBrand:       "Add",
@@ -187,6 +191,8 @@ const TX = {
     addAddon:       "Add Add-on",
     addonLabel:     "Name",
     addonPrice:     "Price (EGP)",
+    pendingApproval: "Pending Approval",
+    rejectedApproval: "Not Approved",
   },
 };
 
@@ -567,7 +573,23 @@ export default function DashboardPage() {
           <div style={{ display: "flex", gap: 10 }}>
             {profile.handle && (
               <a href={`/talent/${profile.handle}`} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 8, color: MUTED, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
-                <Eye size={14} />{t.viewPublic}
+                <Eye size={14} />
+                {/* Talent listing approval — talent_profiles.status. Not yet
+                    approved opens the full read-only preview (banner on top,
+                    real shared renderer below) instead of a 404 — the label
+                    says "Preview" so the owner knows what they're about to
+                    see is not what the public sees yet. */}
+                {(tp?.status === "pending" || tp?.status === "rejected") ? t.previewPublic : t.viewPublic}
+                {tp?.status === "pending" && (
+                  <span style={{ padding: "2px 8px", borderRadius: 999, backgroundColor: "rgba(244,183,64,0.15)", color: GOLD, fontSize: 11, fontWeight: 800 }}>
+                    {t.pendingApproval}
+                  </span>
+                )}
+                {tp?.status === "rejected" && (
+                  <span style={{ padding: "2px 8px", borderRadius: 999, backgroundColor: "rgba(239,68,68,0.15)", color: "#ef4444", fontSize: 11, fontWeight: 800 }}>
+                    {t.rejectedApproval}
+                  </span>
+                )}
               </a>
             )}
             {!edit && (

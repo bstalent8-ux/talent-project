@@ -167,13 +167,14 @@ export const talentProvider: ProfileProvider<RawTalentCore, TalentPublicCore, Ta
     return talentRepository.findByUserId(profileId);
   },
 
-  async getPublicProfile({ shared }: ProviderLoadInput) {
+  async getPublicProfile({ shared, bypassApprovalGate }: ProviderLoadInput) {
     const core = await talentRepository.findByUserId(shared.id);
     if (!core) return null;
 
     // The public gate. Today this filter is reapplied per-route; centralizing
-    // it here is how it stops being forgotten (CLAUDE.md §8).
-    if (core.status && core.status !== "approved") return null;
+    // it here is how it stops being forgotten (CLAUDE.md §8). Skipped only for
+    // the owner's own read-only preview — see ProviderLoadInput's doc comment.
+    if (!bypassApprovalGate && core.status && core.status !== "approved") return null;
 
     const [portfolio, reviews, brands, bookingRows, identityVerified] = await Promise.all([
       talentRepository.findPortfolio(core.id, true),

@@ -13,7 +13,7 @@ import { profileService } from "@/features/profiles";
 const TALENT_PROFILE_KEYS = [
   "id", "category", "specialties", "availability", "availability_schedule", "bio", "avg_rating",
   "total_reviews", "total_bookings", "profile_views", "social_links",
-  "packages", "is_featured",
+  "packages", "is_featured", "status",
 ] as const;
 
 // Ditto for portfolio items — no is_approved key, and no is_approved filter.
