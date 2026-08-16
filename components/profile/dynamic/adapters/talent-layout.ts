@@ -5,8 +5,13 @@
 // Model get a different information hierarchy from the SAME single
 // DynamicProfileRenderer path — not a second hardcoded profile system.
 //
+// Placement, every category (not model-specific):
+//   - Presence ("social") is a compact sidebar card, not a main-content
+//     section — moved out of main and into the sidebar, positioned right
+//     before Trust (the generic "trust" TrustCard, present for every
+//     category) when Trust is part of the sidebar at all.
+//
 // Placement, Model only:
-//   - Presence sits right after Portfolio (both ugc and model agree on this).
 //   - Measurements ("physical") is dropped from BOTH main and sidebar. It
 //     used to lead the sidebar as a compact card; now ProfileHero renders
 //     the same 5 fields (via TalentData.measurements, itself built from
@@ -54,6 +59,7 @@ export function applyCategoryTalentLayout(
   });
 
   const sidebar: LayoutEntry[] = layout.sidebar.filter((entry) => {
+    if (entry.key === "social") return false;
     if (isModel && entry.key === "physical") return false;
     if (isModel && (entry.key === "brands" || entry.key === "reviews")) return false;
     return true;
@@ -67,8 +73,11 @@ export function applyCategoryTalentLayout(
     main.splice(experienceIdx >= 0 ? experienceIdx + 1 : main.length, 0, { key: "brands", width: "half" });
   }
 
-  const portfolioIdxAfter = main.findIndex((entry) => entry.key === "portfolio");
-  main.splice(portfolioIdxAfter >= 0 ? portfolioIdxAfter + 1 : main.length, 0, { key: "social", width: "full" });
+  // Presence moved out of main into the sidebar (compact card, not a full
+  // content section) — same anchor point for every category: right before
+  // Trust (TrustCard), when Trust is part of the sidebar at all.
+  const trustIdx = sidebar.findIndex((entry) => entry.key === "trust");
+  sidebar.splice(trustIdx >= 0 ? trustIdx : sidebar.length, 0, { key: "social", width: "full" });
 
   if (isModel) {
     const packagesIdx = main.findIndex((entry) => entry.key === "packages");

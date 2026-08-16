@@ -12,7 +12,6 @@
 
 import { ExternalLink } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
-import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface Props {
   links: Record<string, string>;
@@ -61,25 +60,27 @@ function toHref(key: string, value: string): string {
 
 export default function ProfessionalPresenceSection({ links }: Props) {
   const { dark, lang } = useSite();
-  const isMobile = useIsMobile();
   const ar = lang === "ar";
 
+  // Compact sidebar card now (moved out of the main column — see
+  // talent-layout.ts) — a dense list of rows rather than the roomier
+  // 2-column grid of large buttons a main-content section could afford.
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const TEXT   = dark ? "#FFFFFF" : "#0F172A";
   const MUTED  = dark ? "#A8B3C2" : "#64748B";
   const SURFACE= dark ? "#0A121C" : "#F8FAFC";
-  const GREEN  = "#00D26A";
+  const TEAL   = "#00D26A";
 
   const entries = PLATFORM_ORDER.filter((key) => links[key]);
   if (!entries.length) return null;
 
   return (
-    <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
-      <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
-        {ar ? "الحضور المهني" : "Professional Presence"}
+    <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16 }}>
+      <h3 style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 10px" }}>
+        {ar ? "التواجد المهني" : "Professional Presence"}
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
+      <div style={{ display: "grid", gap: 6 }}>
         {entries.map((key) => {
           const meta = PLATFORM_META[key];
           const value = links[key];
@@ -90,33 +91,20 @@ export default function ProfessionalPresenceSection({ links }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-                padding: "12px 14px", backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
-                borderRadius: 12, textDecoration: "none", minWidth: 0,
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                padding: "8px 10px", backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+                borderRadius: 10, textDecoration: "none", minWidth: 0,
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = TEAL; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; }}
             >
-              <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                <span style={{ fontSize: 18, flexShrink: 0 }}>{meta.icon}</span>
-                <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                  <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{meta.label}</span>
-                  <span
-                    dir="ltr"
-                    style={{
-                      color: MUTED, fontSize: 11, overflow: "hidden", textOverflow: "ellipsis",
-                      whiteSpace: "nowrap", maxWidth: isMobile ? 160 : 200,
-                    }}
-                  >
-                    {value}
-                  </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <span style={{ fontSize: 15, flexShrink: 0 }}>{meta.icon}</span>
+                <span style={{ color: TEXT, fontSize: 12.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {meta.label}
                 </span>
               </span>
-              <span style={{
-                display: "flex", alignItems: "center", gap: 4, color: GREEN,
-                fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0,
-              }}>
-                {ar ? "عرض الملف" : "View Profile"}
-                <ExternalLink size={13} />
-              </span>
+              <ExternalLink size={13} color={MUTED} style={{ flexShrink: 0 }} />
             </a>
           );
         })}
