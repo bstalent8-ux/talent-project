@@ -1,23 +1,18 @@
 "use client";
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Calendar, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
-import type { ExperienceItem, TalentData } from "@/features/talent-profile/types";
-import DirectBriefModal from "@/components/DirectBriefModal";
-import ProtectedAction from "@/components/auth/ProtectedAction";
+import type { ExperienceItem } from "@/features/talent-profile/types";
 
 
 interface Props {
-  talent: TalentData;
   experience?: ExperienceItem[] | null;
   /** "model" swaps the heading to "Previous Shoots" — same data, same card. */
   variant?: "default" | "model";
 }
 
-export default function ExperienceSection({ talent, experience, variant = "default" }: Props) {
-  const [showBooking, setShowBooking] = useState(false);
+export default function ExperienceSection({ experience, variant = "default" }: Props) {
   const isMobile = useIsMobile();
   const { dark, lang } = useSite();
   const ar = lang === "ar";
@@ -193,40 +188,24 @@ export default function ExperienceSection({ talent, experience, variant = "defau
           <p style={{ color: MUTED, fontSize: 13, marginBottom: 16 }}>
             {ar ? "لا توجد مشاريع مكتملة عبر المنصة بعد" : "No completed projects on the platform yet"}
           </p>
-          <ProtectedAction action="create_booking">
-            <motion.button
-              type="button"
-              onClick={() => setShowBooking(true)}
-              whileHover={{ scale: 1.02, translateY: -2 }}
-              style={{
-                backgroundColor: GREEN,
-                color: "#000",
-                border: "none",
-                borderRadius: 10,
-                padding: "10px 20px",
-                fontSize: 13,
-                fontWeight: 800,
-                cursor: "pointer",
-                fontFamily: "'Cairo',sans-serif",
-              }}
-            >
-              {ar ? "احجز أول حملة" : "Book First Campaign"}
-            </motion.button>
-          </ProtectedAction>
+          <motion.button
+            whileHover={{ scale: 1.02, translateY: -2 }}
+            style={{
+              backgroundColor: GREEN,
+              color: "#000",
+              border: "none",
+              borderRadius: 10,
+              padding: "10px 20px",
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: "pointer",
+              fontFamily: "'Cairo',sans-serif",
+            }}
+          >
+            {ar ? "احجز أول حملة" : "Book First Campaign"}
+          </motion.button>
         </div>
       </div>
-      {showBooking && (
-        <DirectBriefModal
-          talentUserId={talent.id}
-          talentName={talent.name ?? ""}
-          talentAvatar={talent.avatarUrl ?? null}
-          talentCategory={talent.category ?? null}
-          dark={dark}
-          lang={lang}
-          onClose={() => setShowBooking(false)}
-          onSuccess={() => setShowBooking(false)}
-        />
-      )}
     </div>
   );
 }

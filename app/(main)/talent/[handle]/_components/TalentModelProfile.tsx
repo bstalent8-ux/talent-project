@@ -96,7 +96,7 @@ export default function TalentModelProfile({
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             <div id="section-about" />
             <div id="section-portfolio"><PortfolioSection portfolioItems={portfolioItems} /></div>
-            <div id="section-experience"><ExperienceSection talent={talent} experience={experience} /></div>
+            <div id="section-experience"><ExperienceSection experience={experience} /></div>
             <div id="section-packages"><PackagesSection onSelect={setSelectedPackage} packages={packages} /></div>
             <div id="section-usage"><UsageRightsSection selectedPackage={selectedPackage} addons={addons} /></div>
           </div>
@@ -106,7 +106,7 @@ export default function TalentModelProfile({
             <BrandsCard brands={brands} />
             <TrustCard />
             <BriefCard talentUserId={talent.id} talentName={talent.name ?? ""} talentAvatar={talent.avatarUrl ?? null} talentCategory={talent.category ?? null} />
-            <QuestionCard talentId={talent.id} />
+            <QuestionCard />
           </div>
         </div>
       </div>

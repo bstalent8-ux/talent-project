@@ -82,7 +82,7 @@ export type CoreSectionRenderPlan =
   | { component: "PackagesSection";    props: { onSelect: (pkg: PackageItem) => void; packages?: PackageItem[] | null; variant?: "default" | "model" } }
   | { component: "UsageRightsSection"; props: { selectedPackage: PackageItem | null; addons?: AddonItem[] | null } }
   | { component: "ReviewsCard";        props: { reviews: Review[]; rating?: number; variant?: "default" | "model" } }
-  | { component: "ExperienceSection";  props: { talent: TalentData; experience?: ExperienceItem[] | null; variant?: "default" | "model" } }
+  | { component: "ExperienceSection";  props: { experience?: ExperienceItem[] | null; variant?: "default" | "model" } }
   | { component: "BrandsCard";         props: { brands: BrandItem[]; variant?: "default" | "model" } }
   | { component: "PerformanceSidebar"; props: { talent: TalentData; bookingStats?: BookingStats } }
   | { component: "TrustCard";          props: Record<string, never> }

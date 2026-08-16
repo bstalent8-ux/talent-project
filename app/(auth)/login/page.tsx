@@ -184,8 +184,9 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* "Forgot password" hidden — no /forgot-password route or reset
-              flow exists yet; a link there was a dead 404. */}
+          <div className={styles.forgotRow}>
+            <Link className={styles.textLink} href="/forgot-password">{t.forgot}</Link>
+          </div>
 
           {error && <p className={styles.errorText} role="alert">{error}</p>}
 

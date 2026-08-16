@@ -85,15 +85,11 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
 
       {/* Action buttons */}
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        {/* Favoriting isn't implemented yet (no saved-talents table/API) —
-            disabled rather than a silent dead click. */}
-        <button
-          type="button"
-          disabled
-          title={ar ? "قريبًا" : "Coming soon"}
-          style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: "rgba(0,210,106,0.08)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "not-allowed", opacity: 0.5 }}>
-          <Heart size={18} color={MUTED} />
-        </button>
+        <ProtectedAction action="favorite_talent">
+          <motion.button whileHover={{ scale: 1.05 }} style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: "rgba(0,210,106,0.08)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <Heart size={18} color={MUTED} />
+          </motion.button>
+        </ProtectedAction>
 
         {/* Contact button — only for brands */}
         {brandUser && canChat && (

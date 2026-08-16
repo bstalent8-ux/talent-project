@@ -42,14 +42,13 @@ export default function PortfolioSection({ portfolioItems, variant = "default" }
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: i * 0.05 }}
-      onClick={item.url ? () => window.open(item.url, "_blank", "noopener,noreferrer") : undefined}
       style={{
         position: "relative",
         height: heightPx,
         aspectRatio: isModel ? "3 / 4" : undefined,
         borderRadius: 12,
         overflow: "hidden",
-        cursor: item.url ? "pointer" : "default",
+        cursor: "pointer",
         background: item.url
           ? `url(${item.url}) center/cover`
           : `linear-gradient(160deg, ${COLORS[i % COLORS.length][0]}, ${COLORS[i % COLORS.length][1]})`,
@@ -133,9 +132,19 @@ export default function PortfolioSection({ portfolioItems, variant = "default" }
           marginBottom: 20,
         }}
       >
-        {/* "View all" removed — the grid below already renders every
-            portfolio item, so the link had no additional content to reveal. */}
         <h2 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 18, fontWeight: 800, margin: 0 }}>البورتفوليو</h2>
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            color: isModel ? TEAL : GREEN,
+            fontSize: 13,
+            cursor: "pointer",
+            fontFamily: "'Cairo',sans-serif",
+          }}
+        >
+          عرض الكل ›
+        </button>
       </div>
 
       {isModel && !isMobile ? (
