@@ -1,8 +1,10 @@
 "use client";
-import { Star, MapPin, BadgeCheck, Zap, Crown, Send, SearchX } from "lucide-react";
+import { Star, MapPin, BadgeCheck, Zap, Crown, Send, SearchX, Heart } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { TalentCard } from "../page";
 import { cdnImage } from "@/lib/images";
+import { useGuestGuard } from "@/contexts/GuestGuard";
 import styles from "./ExplorePage.module.css";
 
 interface Props {
@@ -10,18 +12,41 @@ interface Props {
   talents: TalentCard[];
   myRole?: string | null;
   myId?: string | null;
+  favoriteIds?: Set<string>;
+  onToggleFavorite?: (talentId: string) => void;
   onSendBrief?: (talent: TalentCard) => void;
 }
 
 function TalentCardItem({
-  talent, lang, myRole, onSendBrief,
+  talent, lang, myRole, favoriteIds, onToggleFavorite, onSendBrief,
 }: {
   talent: TalentCard;
   lang: "ar" | "en";
   myRole?: string | null;
+  favoriteIds?: Set<string>;
+  onToggleFavorite?: (talentId: string) => void;
   onSendBrief?: (t: TalentCard) => void;
 }) {
   const initial = talent.name.charAt(0).toUpperCase();
+  const favorited = favoriteIds?.has(talent.id) ?? false;
+  const router = useRouter();
+  const { isGuest } = useGuestGuard();
+
+  // Explore lists many talents on one page, so the generic guest-auth
+  // redirect (which returns to the CURRENT page — see GuestGuard.tsx's
+  // go()) can't carry "which card" through the round trip. Sending a guest
+  // straight to this talent's own profile with the same next/resume
+  // convention every profile page already consumes preserves that context
+  // without touching the shared auth gate itself.
+  function handleFavoriteClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isGuest) {
+      router.push(`/login?next=${encodeURIComponent(`/talent/${talent.handle}?resume=favorite_talent`)}`);
+      return;
+    }
+    onToggleFavorite?.(talent.id);
+  }
 
   return (
     <Link href={`/talent/${talent.handle}`} className={styles.talentCard}>
@@ -47,6 +72,17 @@ function TalentCardItem({
             </span>
           )}
         </div>
+
+        {onToggleFavorite && (
+          <button
+            type="button"
+            className={styles.heartBtn}
+            aria-label={favorited ? (lang === "ar" ? "في المفضلة" : "Favorited") : (lang === "ar" ? "إضافة للمفضلة" : "Favorite")}
+            onClick={handleFavoriteClick}
+          >
+            <Heart size={15} className={favorited ? styles.heartActive : undefined} fill={favorited ? "currentColor" : "none"} />
+          </button>
+        )}
 
         {talent.rating > 0 && (
           <span className={styles.ratingChip}>
@@ -108,7 +144,7 @@ function TalentCardItem({
   );
 }
 
-export default function ExploreGrid({ lang, talents, myRole, onSendBrief }: Props) {
+export default function ExploreGrid({ lang, talents, myRole, favoriteIds, onToggleFavorite, onSendBrief }: Props) {
   if (talents.length === 0) {
     return (
       <div className={styles.emptyState}>
@@ -131,6 +167,8 @@ export default function ExploreGrid({ lang, talents, myRole, onSendBrief }: Prop
           talent={talent}
           lang={lang}
           myRole={myRole}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={onToggleFavorite}
           onSendBrief={onSendBrief}
         />
       ))}

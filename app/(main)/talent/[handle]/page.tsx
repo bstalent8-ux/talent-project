@@ -23,17 +23,21 @@ import type { PublicProfileDTO, TalentPublicCore } from "@/features/profiles/typ
 import type { ModerationStatus } from "@/features/profiles/types/raw";
 import TalentProfileShell from "./_components/TalentProfileShell";
 import UgcProfileShell from "./_components/ugc/UgcProfileShell";
+import ModelProfileShell from "./_components/model/ModelProfileShell";
 import PendingPreviewBanner from "./_components/PendingPreviewBanner";
 
 /**
- * category === "ugc" renders through the ready UGC shell (a direct port of
- * ugc/untitled/app/page.tsx's own composition, wired to real data) instead
- * of the generic layout-driven TalentProfileShell. Every other category
- * (model, legacy, null) is unaffected — TalentProfileShell is untouched.
+ * category === "ugc" renders UgcProfileShell. category === "model" or the
+ * legacy "fashion" value (pre-dates the "model" category and describes the
+ * same talent type) both render ModelProfileShell. Every other category
+ * (legacy, null) is unaffected — TalentProfileShell is untouched. Stored
+ * category values are not migrated — this is UI routing only.
  */
 function renderTalentShell(profile: PublicProfileDTO) {
   const category = (profile.core as TalentPublicCore).category;
-  return category === "ugc" ? <UgcProfileShell profile={profile} /> : <TalentProfileShell profile={profile} />;
+  if (category === "ugc") return <UgcProfileShell profile={profile} />;
+  if (category === "model" || category === "fashion") return <ModelProfileShell profile={profile} />;
+  return <TalentProfileShell profile={profile} />;
 }
 
 /**

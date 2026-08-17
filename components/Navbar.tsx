@@ -6,13 +6,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   CalendarCheck,
+  Heart,
   LayoutDashboard,
   Languages,
   LogIn,
   LogOut,
+  MessageCircle,
   Menu,
   Moon,
   Search,
+  Settings,
   ShieldCheck,
   Sun,
   UserRoundPlus,
@@ -55,6 +58,12 @@ const TX = {
     search: "ابحث عن مواهب أو خدمات...",
     book: "احجز الآن",
     editProfile: "تعديل الملف الشخصي",
+    accountSettings: "إعدادات الحساب",
+    favorites: "المفضلة",
+    messages: "الرسائل",
+    dashboardTalent: "لوحة التحكم",
+    dashboardBrand: "لوحة تحكم البراند",
+    dashboardAdmin: "لوحة الإدارة",
     logout: "تسجيل الخروج",
     login: "دخول",
     register: "حساب جديد",
@@ -67,6 +76,12 @@ const TX = {
     search: "Search talents or services...",
     book: "Book Now",
     editProfile: "Edit Profile",
+    accountSettings: "Account Settings",
+    favorites: "Favorites",
+    messages: "Messages",
+    dashboardTalent: "Dashboard",
+    dashboardBrand: "Brand Dashboard",
+    dashboardAdmin: "Admin Panel",
     logout: "Log Out",
     login: "Login",
     register: "Register",
@@ -110,6 +125,15 @@ export default function Navbar() {
         : role === "brand" || role === "client"
           ? { href: "/explore", label: t.book, Icon: CalendarCheck }
           : { href: "/register", label: t.register, Icon: UserRoundPlus };
+
+  // Same role-aware destinations as `cta` above, relabeled for the account
+  // dropdown menu context (e.g. "Book Now" as a top-bar CTA vs. "Brand
+  // Dashboard" as a menu item) — routing logic is unchanged, only the label.
+  const dashboardMenuItem = role === "admin"
+    ? { href: "/admin", label: t.dashboardAdmin, Icon: ShieldCheck }
+    : role === "brand" || role === "client"
+      ? { href: "/explore", label: t.dashboardBrand, Icon: LayoutDashboard }
+      : { href: "/profile/me", label: t.dashboardTalent, Icon: LayoutDashboard };
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -252,12 +276,22 @@ export default function Navbar() {
 
               {dropdownOpen && (
                 <div className={styles.dropdown}>
-                  <ProtectedAction action="access_profile_management">
-                    <Link className={styles.dropdownItem} href="/profile/me">
-                      <UserPen size={16} />
-                      {t.editProfile}
-                    </Link>
-                  </ProtectedAction>
+                  <Link className={styles.dropdownItem} href={dashboardMenuItem.href}>
+                    <dashboardMenuItem.Icon size={16} />
+                    {dashboardMenuItem.label}
+                  </Link>
+                  <Link className={styles.dropdownItem} href="/favorites">
+                    <Heart size={16} />
+                    {t.favorites}
+                  </Link>
+                  <Link className={styles.dropdownItem} href="/chat">
+                    <MessageCircle size={16} />
+                    {t.messages}
+                  </Link>
+                  <Link className={styles.dropdownItem} href="/profile/me">
+                    <Settings size={16} />
+                    {t.accountSettings}
+                  </Link>
                   <button className={cx(styles.dropdownItem, styles.dangerItem)} onClick={handleLogout} type="button">
                     <LogOut size={16} />
                     {t.logout}

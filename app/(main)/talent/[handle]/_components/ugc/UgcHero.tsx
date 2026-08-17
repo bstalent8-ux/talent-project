@@ -67,9 +67,10 @@ interface Props {
   onOpenVideo: (item: PortfolioItem) => void;
   isFavorited: boolean;
   onToggleFavorite: () => void;
+  favoriteError?: boolean;
 }
 
-export default function UgcHero({ talent, presenceLinks, portfolioItems, bookingStats, onOpenBrief, onOpenVideo, isFavorited, onToggleFavorite }: Props) {
+export default function UgcHero({ talent, presenceLinks, portfolioItems, bookingStats, onOpenBrief, onOpenVideo, isFavorited, onToggleFavorite, favoriteError }: Props) {
   const isMobile = useIsMobile();
   const { lang } = useSite();
   const ar = lang !== "en";
@@ -299,13 +300,18 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
                   color: isFavorited ? "#FB7185" : "#94A3B8",
                 }}
               >
-                <Heart size={13} fill={isFavorited ? "#FB7185" : "none"} />{isFavorited ? (ar ? "محفوظ" : "Saved") : (ar ? "حفظ" : "Save")}
+                <Heart size={13} fill={isFavorited ? "#FB7185" : "none"} />{isFavorited ? (ar ? "في المفضلة" : "Favorited") : (ar ? "إضافة للمفضلة" : "Favorite")}
               </button>
             </ProtectedAction>
             <button onClick={handleShare} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 0", borderRadius: 10, border: "1px solid #1E293B", backgroundColor: "transparent", color: "#94A3B8", fontSize: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
               <Share2 size={13} />{copied ? (ar ? "تم النسخ" : "Copied!") : ar ? "مشاركة" : "Share"}
             </button>
           </div>
+          {favoriteError && (
+            <p style={{ margin: "4px 0 0", fontSize: 11, color: "#FB7185" }}>
+              {ar ? "تعذر تحديث المفضلة، حاول مرة أخرى" : "Couldn't update favorites, try again"}
+            </p>
+          )}
         </div>
       </div>
       </div>

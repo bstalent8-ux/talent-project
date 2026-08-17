@@ -78,13 +78,15 @@ export function toPresenceLinks(dto: PublicProfileDTO): Record<string, string> {
 }
 
 /**
- * Null unless category is "model" AND at least one of the 5 approved fields is
- * filled — mirrors section-content.ts's `physical` rule exactly, so this never
- * hands the component data the section itself decided not to show.
+ * Null unless category is "model" (or the legacy "fashion" value that
+ * ModelProfileShell also renders — see talent/[handle]/page.tsx) AND at
+ * least one of the 5 approved fields is filled. For "model" this mirrors
+ * section-content.ts's `physical` rule exactly; "fashion" never goes
+ * through that gate since it bypasses DynamicProfileRenderer entirely.
  */
 export function toMeasurements(dto: PublicProfileDTO): Record<string, string> | null {
   const core = dto.core as TalentPublicCore;
-  if (core.category !== "model") return null;
+  if (core.category !== "model" && core.category !== "fashion") return null;
   const links = (core.socialLinks ?? {}) as Record<string, unknown>;
   const out: Record<string, string> = {};
   for (const key of MODEL_PHYSICAL_FIELDS) {

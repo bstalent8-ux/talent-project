@@ -20,12 +20,6 @@ const SERVICE_TYPES = ["hourly", "daily", "fixed_project"] as const;
 
 type ServiceType = typeof SERVICE_TYPES[number];
 
-function budgetTypeFor(serviceType: ServiceType) {
-  if (serviceType === "hourly") return "hourly_rate";
-  if (serviceType === "daily") return "daily_rate";
-  return "project_budget";
-}
-
 function dateOnly(value: unknown) {
   if (typeof value !== "string" || !value) return null;
   const date = new Date(`${value}T00:00:00.000Z`);
@@ -116,22 +110,33 @@ export async function POST(req: NextRequest) {
       ? "Daily booking request"
       : "Fixed project booking request";
 
+  // bookings has no budget_type/budget_amount/start_date/duration/deadline/
+  // updated_at columns (confirmed against the live schema — CLAUDE.md §7
+  // lists id/talent_id/brand_id/status/service_type/amount/notes/brief_url/
+  // paid_at/completed_at, nothing else). Writing those non-existent columns
+  // made every real submit 500 with "Could not find the 'budget_amount'
+  // column of 'bookings' in the schema cache" — this was broken for every
+  // brand on every talent profile, not a UGC-specific or auth-continuation
+  // bug. `amount` is the one real budget column; deadline is already
+  // captured correctly below in booking_briefs.deadline (a real column).
+  // status "pending" also violates bookings_status_check — the live check
+  // constraint only allows CLAUDE.md §10.1's documented flow (contacting →
+  // brief_sent → accepted → payment_pending → in_progress → completed →
+  // paid, plus cancelled). "brief_sent" is that flow's documented starting
+  // status for a fresh direct brief, confirmed against real rows in the
+  // table (no row anywhere has status "pending").
+  // start_date/duration have no live column to hold them and are dropped
+  // rather than invented a home for.
   const { data: booking, error: bookErr } = await adminClient
     .from("bookings")
     .insert({
       brand_id:       user.id,
       talent_id:      tp.id,
       talent_user_id: talent_user_id,
-      status:         "pending",
+      status:         "brief_sent",
       service_type:   serviceType,
-      budget_type:    budgetTypeFor(serviceType),
-      budget_amount:  numericBudget,
       amount:         numericBudget,
-      start_date:     startDate,
-      duration:       serviceType === "fixed_project" ? null : numericDuration,
-      deadline:       deadlineDate,
       notes:          briefText.trim(),
-      updated_at:     now,
     })
     .select("id")
     .single();
@@ -193,5 +198,5 @@ export async function POST(req: NextRequest) {
     title:       brief?.title ?? null,
   });
 
-  return NextResponse.json({ booking_id: bookingId, brief, status: "pending" }, { status: 201 });
+  return NextResponse.json({ booking_id: bookingId, brief, status: "brief_sent" }, { status: 201 });
 }

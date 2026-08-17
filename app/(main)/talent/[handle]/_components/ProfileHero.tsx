@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Star, Eye, Shield, Zap, Crown, Heart, Share2, MessageCircle, Calendar } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useFavoriteTalent } from "@/hooks/useFavoriteTalent";
 import { useSite } from "@/contexts/SiteContext";
 import type { TalentData } from "@/features/talent-profile/types";
 import { formatAvailabilitySummary } from "@/lib/availability-schedule";
@@ -36,7 +37,11 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
     escrowSteps: ar
       ? ["الدفع محجوز", "تسليم العمل", "الموافقة", "الإفراج عن الأموال"]
       : ["Payment Held", "Work Delivery", "Approval", "Fund Release"],
+    favorited: ar ? "في المفضلة" : "Favorited",
+    favoriteError: ar ? "تعذر تحديث المفضلة" : "Couldn't update favorites",
   };
+
+  const { isFavorited, error: favoriteError, toggle: toggleFavorite } = useFavoriteTalent(talent.id);
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const GREEN = "#00D26A";
@@ -428,12 +433,13 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <ProtectedAction action="favorite_talent">
-              <motion.button whileHover={{ scale: 1.02 }} style={{
+              <motion.button onClick={toggleFavorite} whileHover={{ scale: 1.02 }} style={{
                 ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
-                color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13,
+                backgroundColor: isFavorited ? "rgba(244,63,94,0.1)" : SURFACE,
+                border: `1px solid ${isFavorited ? "#f43f5e80" : BORDER}`,
+                color: isFavorited ? "#fb7185" : MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13,
               }}>
-                <Heart size={13} />{t.favorite}
+                <Heart size={13} fill={isFavorited ? "#fb7185" : "none"} />{isFavorited ? t.favorited : t.favorite}
               </motion.button>
             </ProtectedAction>
             <motion.button whileHover={{ scale: 1.02 }} style={{
@@ -444,6 +450,10 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
               <Share2 size={13} />{t.share}
             </motion.button>
           </div>
+
+          {favoriteError && (
+            <p style={{ margin: 0, fontSize: 11, color: "#fb7185" }}>{t.favoriteError}</p>
+          )}
 
           {/* Escrow flow */}
           <div style={{

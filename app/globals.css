@@ -16,16 +16,23 @@
   --color-error: #df3f4d;
   --color-info: #3a82f6;
 
-  --bg-page: #070b10;
-  --bg-page-subtle: #0c1219;
-  --bg-surface: #101720;
-  --bg-card: #141d27;
-  --bg-card-muted: #192431;
-  --bg-muted: #111922;
+  /* Dark surface language adopted from the ready Model source
+     (model/app/globals.css: --bg-main #0a0d14, --card-bg #111622,
+     --card-border #1e2638, body #080b11/#f1f5f9). Only DARK-facing tokens
+     move — [data-theme="light"] redefines all of these separately below and
+     is untouched, so light mode is pixel-identical to before. Brand colors
+     (--color-primary/secondary/success/...) are shared across both themes
+     and are deliberately left alone for the same reason. */
+  --bg-page: #080b11;
+  --bg-page-subtle: #0a0d14;
+  --bg-surface: #0d121c;
+  --bg-card: #111622;
+  --bg-card-muted: #121826;
+  --bg-muted: #141b29;
 
-  --text-primary: #f7fafc;
-  --text-secondary: #c4ccd6;
-  --text-muted: #8996a5;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
   --text-inverse: #081016;
   /* Text on a solid --color-primary fill. Deliberately NOT --text-inverse:
      that token flips with the theme (near-black in dark mode), but the teal
@@ -33,9 +40,9 @@
      modes. White clears 5.47:1 on #0f766e. */
   --color-primary-ink: #ffffff;
 
-  --border-subtle: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.18);
-  --divider: rgba(255, 255, 255, 0.08);
+  --border-subtle: #1b2436;
+  --border-strong: #2a374e;
+  --divider: #182030;
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.14);
   --shadow-sm: 0 6px 14px rgba(0, 0, 0, 0.16);

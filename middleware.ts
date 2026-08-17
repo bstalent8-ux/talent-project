@@ -20,6 +20,7 @@ const PROTECTED_PREFIXES = [
   "/notifications",
   "/settings",
   "/payments",
+  "/favorites",
 ];
 
 const PROTECTED_EXACT_PATHS = ["/jobs/create"];

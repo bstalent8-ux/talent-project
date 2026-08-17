@@ -22,6 +22,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { useGuestGuard } from "@/contexts/GuestGuard";
+import { useFavoriteTalent } from "@/hooks/useFavoriteTalent";
 import type { PermissionAction } from "@/lib/permissions";
 import DirectBriefModal from "@/components/DirectBriefModal";
 import {
@@ -71,8 +72,7 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
   const [activeTab, setActiveTab] = useState("portfolio");
   const [lightboxItem, setLightboxItem] = useState<PortfolioItem | null>(null);
   const [showBrief, setShowBrief] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [favoritePending, setFavoritePending] = useState(false);
+  const { isFavorited, error: favoriteError, toggle: toggleFavorite } = useFavoriteTalent(talent.id);
 
   const hasPerformance = talent.rating > 0 || talent.reviewCount > 0 || bookingStats.total > 0;
 
@@ -84,34 +84,6 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
       },
     }));
   }
-
-  async function toggleFavorite() {
-    if (guard.isGuest || favoritePending) return;
-    setFavoritePending(true);
-    const next = !isFavorited;
-    setIsFavorited(next); // optimistic — reverted below on failure
-    try {
-      const res = await fetch(`/api/favorites/${talent.id}`, { method: next ? "PUT" : "DELETE" });
-      if (!res.ok) setIsFavorited(!next);
-    } catch {
-      setIsFavorited(!next);
-    } finally {
-      setFavoritePending(false);
-    }
-  }
-
-  // Hydrate the heart's saved state once we know who's looking — real
-  // per-user persistence via GET /api/favorites/[talentUserId], not
-  // localStorage (task requirement: no local-only favorites).
-  useEffect(() => {
-    if (guard.loading || guard.isGuest) { setIsFavorited(false); return; }
-    let cancelled = false;
-    fetch(`/api/favorites/${talent.id}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (!cancelled && data) setIsFavorited(Boolean(data.favorited)); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [guard.loading, guard.isGuest, talent.id]);
 
   // Resume-after-auth: GuestGuard's modal sends the user to /login or
   // /register with `?next=<this page>&resume=<action>` baked into `next`
@@ -131,7 +103,15 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
     const action = resume as PermissionAction;
     if (guard.can(action)) {
       if (action === "create_booking") setShowBrief(true);
-      else if (action === "start_conversation") openMessage();
+      else if (action === "start_conversation") {
+        // GlobalChat/FloatingChatWidget mounts AFTER this page in the layout
+        // tree (Navbar → main → Footer → GlobalChat), so on the very render
+        // where auth just resolved post-login, its "open-chat-widget"
+        // listener hasn't attached yet — dispatching synchronously here
+        // fires into an empty room. Deferring a tick lets that mount finish
+        // first.
+        setTimeout(openMessage, 0);
+      }
       else if (action === "favorite_talent") toggleFavorite();
     } else {
       guard.requestAuth(action);
@@ -178,6 +158,7 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
         onOpenVideo={setLightboxItem}
         isFavorited={isFavorited}
         onToggleFavorite={toggleFavorite}
+        favoriteError={favoriteError}
       />
 
       <div style={{ width: "min(var(--container-max), 100%)", margin: "0 auto", padding: "24px var(--container-pad)" }}>

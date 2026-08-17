@@ -27,7 +27,7 @@
 }
 
 .darkChrome {
-  --nav-bg: color-mix(in srgb, var(--color-primary) 12%, rgba(7, 11, 16, 0.9));
+  --nav-bg: color-mix(in srgb, var(--color-primary) 12%, rgba(8, 11, 17, 0.9));
   --nav-panel: rgba(255, 255, 255, 0.065);
   --nav-panel-hover: rgba(255, 255, 255, 0.11);
   --nav-border: rgba(255, 255, 255, 0.13);
@@ -548,12 +548,12 @@
 }
 
 .footerDark {
-  --footer-bg-top: #081016;
-  --footer-bg-bottom: #05080d;
+  --footer-bg-top: #0a0d14;
+  --footer-bg-bottom: #060810;
   --footer-panel: rgba(255, 255, 255, 0.06);
   --footer-border: rgba(255, 255, 255, 0.1);
-  --footer-text: #f7fafc;
-  --footer-muted: #aab4bf;
+  --footer-text: #f1f5f9;
+  --footer-muted: #94a3b8;
   --footer-glow: rgba(215, 168, 79, 0.1);
 }
 

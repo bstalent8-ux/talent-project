@@ -755,6 +755,37 @@
   border: 1px solid color-mix(in srgb, var(--color-secondary) 40%, transparent);
 }
 
+.heartBtn {
+  position: absolute;
+  inset-block-start: 0.6rem;
+  inset-inline-end: 0.6rem;
+  width: 2.1rem;
+  height: 2.1rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: none;
+  background: rgba(5, 9, 12, 0.6);
+  color: #fff;
+  cursor: pointer;
+  z-index: 2;
+  backdrop-filter: blur(8px);
+  transition: background-color var(--duration-base) var(--ease-standard), opacity var(--duration-base) var(--ease-standard);
+}
+
+.heartBtn:hover {
+  background: rgba(5, 9, 12, 0.8);
+}
+
+.heartBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.heartActive {
+  color: var(--color-secondary);
+}
+
 .ratingChip {
   position: absolute;
   inset-block-end: 0.7rem;

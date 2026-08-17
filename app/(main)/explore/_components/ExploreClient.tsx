@@ -73,6 +73,8 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
 
   const [myRole, setMyRole] = useState<string | null>(null);
   const [myId,   setMyId]   = useState<string | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [favoriteError, setFavoriteError] = useState(false);
   const [briefTarget, setBriefTarget] = useState<TalentCard | null>(null);
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -88,6 +90,46 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
       setMyRole(d.role);
     })();
   }, []);
+
+  // One list fetch for the whole grid's favorited state, instead of a GET
+  // per card — same canonical /api/favorites source /favorites (the page)
+  // and the talent profile shells read, so a favorite toggled anywhere
+  // shows up here on next load.
+  useEffect(() => {
+    if (!myId) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/favorites");
+        if (!res.ok) return;
+        const { data } = await res.json();
+        setFavoriteIds(new Set((data ?? []).map((f: { id: string }) => f.id)));
+      } catch {
+        // Non-fatal — cards just render unfavorited.
+      }
+    })();
+  }, [myId]);
+
+  async function toggleFavorite(talentId: string) {
+    const wasFavorited = favoriteIds.has(talentId);
+    setFavoriteError(false);
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (wasFavorited) next.delete(talentId); else next.add(talentId);
+      return next;
+    });
+    try {
+      const res = await fetch(`/api/favorites/${talentId}`, { method: wasFavorited ? "DELETE" : "PUT" });
+      if (!res.ok) throw new Error(`favorite toggle failed: ${res.status}`);
+    } catch (e) {
+      setFavoriteIds((prev) => {
+        const next = new Set(prev);
+        if (wasFavorited) next.add(talentId); else next.delete(talentId);
+        return next;
+      });
+      setFavoriteError(true);
+      console.error("[favorites] toggle failed", { talentId, error: e });
+    }
+  }
 
   useEffect(() => { setPage(1); }, [search, type, sort, minPrice, maxPrice, verified, sex]);
 
@@ -268,6 +310,11 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
             />
 
             <div>
+              {favoriteError && (
+                <p style={{ margin: "0 0 0.75rem", color: "var(--color-error)", fontSize: "var(--text-sm)", fontWeight: 700 }}>
+                  {ar ? "تعذر تحديث المفضلة، حاول مرة أخرى" : "Couldn't update favorites, try again"}
+                </p>
+              )}
               <div className={styles.resultsBar}>
                 <span className={styles.resultsCount}>
                   {ar ? <><strong>{filtered.length}</strong> نتيجة</> : <><strong>{filtered.length}</strong> results</>}
@@ -301,6 +348,7 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
               <ExploreGrid
                 lang={lang} talents={paginated}
                 myRole={myRole} myId={myId}
+                favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite}
                 onSendBrief={(t) => setBriefTarget(t)}
               />
 
