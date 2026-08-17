@@ -471,6 +471,10 @@
   line-height: 1.65;
 }
 
+.categoryRailWrap {
+  position: relative;
+}
+
 .categoryGrid {
   display: grid;
   grid-auto-flow: column;
@@ -481,9 +485,58 @@
   overflow-x: auto;
   overscroll-behavior-inline: contain;
   padding: 0.1rem 0 0.85rem;
-  scroll-padding-inline: max(1rem, calc((100vw - 1180px) / 2));
-  scroll-snap-type: inline proximity;
   scrollbar-width: none;
+  /* No scroll-snap here on purpose — this rail auto-loops via small
+     per-frame scrollLeft increments (see CategoriesSection's rAF loop),
+     and scroll-snap-type actively fights that: with proximity snapping,
+     the browser pulls scrollLeft back to the nearest card edge before the
+     next 0.6px frame can accumulate, so the loop never visibly moves. */
+}
+
+.categoryNavBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #fff 16%, transparent);
+  background: color-mix(in srgb, var(--bg-page, #080b11) 78%, transparent);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
+  cursor: pointer;
+}
+
+.categoryRailWrap:hover .categoryNavBtn,
+.categoryRailWrap:focus-within .categoryNavBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.categoryNavBtn:hover {
+  transform: translateY(-50%) scale(1.07);
+}
+
+.categoryNavBtnLeft {
+  left: -0.25rem;
+}
+
+.categoryNavBtnRight {
+  right: -0.25rem;
+}
+
+@media (max-width: 720px) {
+  .categoryNavBtn {
+    display: none;
+  }
 }
 
 .categoryGrid::-webkit-scrollbar,

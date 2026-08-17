@@ -179,7 +179,7 @@ export const talentRepository = {
   async findBrands(talentProfileId: string): Promise<RawTalentBrandRow[]> {
     const { data, error } = await adminClient
       .from("talent_brands")
-      .select("id, brand_name, logo_url, year_collaborated, sort_order")
+      .select("id, brand_name, logo_url, year_collaborated, sort_order, verified")
       .eq("talent_profile_id", talentProfileId)
       .order("sort_order", { ascending: true });
 

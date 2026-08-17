@@ -28,7 +28,19 @@ export default function UgcBrands({ brands }: { brands: BrandItem[] }) {
       </h3>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
         {brands.slice(0, 9).map((b, i) => (
-          <div key={b.id} style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "12px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+          <div key={b.id} style={{ position: "relative", backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "12px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            {b.verified && (
+              <span style={{
+                position: "absolute", top: 4, insetInlineEnd: 4,
+                display: "inline-flex", alignItems: "center", gap: 3,
+                backgroundColor: "rgba(0,210,106,0.14)", color: "#00D26A",
+                border: "1px solid rgba(0,210,106,0.35)",
+                borderRadius: 999, padding: "1px 5px",
+                fontSize: 8, fontWeight: 800,
+              }}>
+                {ar ? "موثّق" : "VERIFIED"}
+              </span>
+            )}
             {b.logo_url ? (
               <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", border: `1px solid ${BORDER}`, backgroundImage: `url(${b.logo_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
             ) : (

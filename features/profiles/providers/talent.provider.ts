@@ -118,6 +118,7 @@ function toBrands(rows: RawTalentBrandRow[]): TalentBrandDTO[] {
     logoUrl:          r.logo_url ?? null,
     yearCollaborated: r.year_collaborated ?? null,
     sortOrder:        r.sort_order ?? 0,
+    verified:         Boolean(r.verified),
   }));
 }
 

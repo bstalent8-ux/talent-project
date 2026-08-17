@@ -186,4 +186,5 @@ export interface RawTalentBrandRow {
   logo_url:          string | null;
   year_collaborated: string | null;
   sort_order:        number | null;
+  verified:          boolean | null;
 }

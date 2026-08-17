@@ -177,6 +177,7 @@ export interface TalentBrandDTO {
   logoUrl:          string | null;
   yearCollaborated: string | null;
   sortOrder:        number;
+  verified:         boolean;
 }
 
 export interface BookingStatsDTO {

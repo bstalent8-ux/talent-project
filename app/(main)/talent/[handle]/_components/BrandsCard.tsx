@@ -37,6 +37,7 @@ export default function BrandsCard({ brands, variant = "default" }: Props) {
               key={brand.id}
               whileHover={{ scale: 1.04 }}
               style={{
+                position: "relative",
                 backgroundColor: SURFACE,
                 border: `1px solid ${BORDER}`,
                 borderRadius: 10,
@@ -46,6 +47,18 @@ export default function BrandsCard({ brands, variant = "default" }: Props) {
                 cursor: "pointer",
               }}
             >
+              {brand.verified && (
+                <span style={{
+                  position: "absolute", top: 6, insetInlineEnd: 6,
+                  display: "inline-flex", alignItems: "center", gap: 3,
+                  backgroundColor: "rgba(0,210,106,0.14)", color: "#00D26A",
+                  border: "1px solid rgba(0,210,106,0.35)",
+                  borderRadius: 999, padding: "1px 6px",
+                  fontSize: 8.5, fontWeight: 800, letterSpacing: 0.2,
+                }}>
+                  {ar ? "موثّق" : "VERIFIED"}
+                </span>
+              )}
               {isModel && brand.logo_url ? (
                 <div style={{
                   width: 36, height: 36, borderRadius: "50%", overflow: "hidden",

@@ -481,6 +481,36 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
 
 function CategoriesSection({ lang }: { lang: LandingLang }) {
   const t = pageCopy[lang];
+  const ar = lang === "ar";
+  const railRef = useRef<HTMLDivElement>(null);
+  const [hovering, setHovering] = useState(false);
+
+  // Auto-loop: the rail's content is rendered twice back-to-back, so
+  // "one set" is exactly half of scrollWidth — wrapping scrollLeft across
+  // that half-point at the seam is invisible because both halves are
+  // identical. Paused on hover/focus (see the .categoryNavBtn reveal) and
+  // skipped entirely for prefers-reduced-motion.
+  useEffect(() => {
+    const el = railRef.current;
+    if (!el || hovering) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // RTL scrollLeft direction follows the modern spec (Chrome/Firefox/Safari
+    // 15+): it runs 0 → -maxScroll instead of 0 → +maxScroll.
+    const dirSign = ar ? -1 : 1;
+    let raf = requestAnimationFrame(function tick() {
+      const singleSetWidth = el.scrollWidth / 2;
+      el.scrollLeft += dirSign * 0.6;
+      if (dirSign > 0 && el.scrollLeft >= singleSetWidth) el.scrollLeft -= singleSetWidth;
+      else if (dirSign < 0 && el.scrollLeft <= -singleSetWidth) el.scrollLeft += singleSetWidth;
+      raf = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [ar, hovering]);
+
+  function nudge(px: number) {
+    railRef.current?.scrollBy({ left: px, behavior: "smooth" });
+  }
 
   return (
     <section className={`${styles.section} ${styles.sectionMuted}`} aria-labelledby="landing-categories">
@@ -496,23 +526,48 @@ function CategoriesSection({ lang }: { lang: LandingLang }) {
           }
         />
 
-        <div className={styles.categoryGrid}>
-          {categories.map((category) => {
-            const Icon = category.icon;
-            return (
-              <Link className={styles.categoryCard} href="/explore" key={category.title.en}>
-                <img src={category.image} alt="" loading="lazy" />
-                <div className={styles.categoryContent}>
-                  <span className={styles.iconBubble}>
-                    <Icon size={20} />
-                  </span>
-                  <h3 className={styles.categoryTitle}>{localize(category.title, lang)}</h3>
-                  <p className={styles.categoryMeta}>{localize(category.description, lang)}</p>
-                  <p className={styles.categoryMeta}>{category.count} {lang === "ar" ? "موهبة" : "talents"}</p>
-                </div>
-              </Link>
-            );
-          })}
+        <div
+          className={styles.categoryRailWrap}
+          onMouseEnter={() => setHovering(true)}
+          onMouseLeave={() => setHovering(false)}
+          onFocus={() => setHovering(true)}
+          onBlur={() => setHovering(false)}
+        >
+          <div className={styles.categoryGrid} ref={railRef}>
+            {[...categories, ...categories].map((category, i) => {
+              const Icon = category.icon;
+              return (
+                <Link className={styles.categoryCard} href="/explore" key={`${category.title.en}-${i}`} tabIndex={i < categories.length ? 0 : -1}>
+                  <img src={category.image} alt="" loading="lazy" />
+                  <div className={styles.categoryContent}>
+                    <span className={styles.iconBubble}>
+                      <Icon size={20} />
+                    </span>
+                    <h3 className={styles.categoryTitle}>{localize(category.title, lang)}</h3>
+                    <p className={styles.categoryMeta}>{localize(category.description, lang)}</p>
+                    <p className={styles.categoryMeta}>{category.count} {lang === "ar" ? "موهبة" : "talents"}</p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            aria-label={ar ? "التالي يمين" : "Scroll right"}
+            className={`${styles.categoryNavBtn} ${styles.categoryNavBtnRight}`}
+            onClick={() => nudge(300)}
+          >
+            <ArrowRight size={18} />
+          </button>
+          <button
+            type="button"
+            aria-label={ar ? "التالي يسار" : "Scroll left"}
+            className={`${styles.categoryNavBtn} ${styles.categoryNavBtnLeft}`}
+            onClick={() => nudge(-300)}
+          >
+            <ArrowLeft size={18} />
+          </button>
         </div>
       </div>
     </section>

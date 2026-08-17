@@ -92,6 +92,7 @@ export interface BrandItem {
   logo_url?: string | null;
   year_collaborated?: string | null;
   sort_order: number;
+  verified?: boolean;
 }
 
 export interface PackageItem {

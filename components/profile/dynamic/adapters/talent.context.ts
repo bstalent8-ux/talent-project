@@ -177,6 +177,7 @@ export function toBrandItems(dto: PublicProfileDTO): BrandItem[] {
     logo_url:          brand.logoUrl,
     year_collaborated: brand.yearCollaborated,
     sort_order:        brand.sortOrder,
+    verified:          brand.verified,
   }));
 }
 
