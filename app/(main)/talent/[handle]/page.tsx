@@ -19,10 +19,22 @@ import { notFound } from "next/navigation";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileError, profileService } from "@/features/profiles";
-import type { PublicProfileDTO } from "@/features/profiles/types/dto";
+import type { PublicProfileDTO, TalentPublicCore } from "@/features/profiles/types/dto";
 import type { ModerationStatus } from "@/features/profiles/types/raw";
 import TalentProfileShell from "./_components/TalentProfileShell";
+import UgcProfileShell from "./_components/ugc/UgcProfileShell";
 import PendingPreviewBanner from "./_components/PendingPreviewBanner";
+
+/**
+ * category === "ugc" renders through the ready UGC shell (a direct port of
+ * ugc/untitled/app/page.tsx's own composition, wired to real data) instead
+ * of the generic layout-driven TalentProfileShell. Every other category
+ * (model, legacy, null) is unaffected — TalentProfileShell is untouched.
+ */
+function renderTalentShell(profile: PublicProfileDTO) {
+  const category = (profile.core as TalentPublicCore).category;
+  return category === "ugc" ? <UgcProfileShell profile={profile} /> : <TalentProfileShell profile={profile} />;
+}
 
 /**
  * The public gate hid this handle. Before returning a plain 404, check
@@ -90,7 +102,7 @@ export default async function TalentPage({
       return (
         <>
           <PendingPreviewBanner status={owner.moderationStatus} />
-          <TalentProfileShell profile={owner.profile} />
+          {renderTalentShell(owner.profile)}
         </>
       );
     }
@@ -100,5 +112,5 @@ export default async function TalentPage({
   // A brand handle must not render through the talent shell.
   if (profile.meta.typeSlug !== "talent") notFound();
 
-  return <TalentProfileShell profile={profile} />;
+  return renderTalentShell(profile);
 }

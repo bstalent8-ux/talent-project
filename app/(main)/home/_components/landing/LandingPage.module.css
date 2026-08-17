@@ -72,7 +72,7 @@
 }
 
 .container {
-  width: min(1180px, 100%);
+  width: min(var(--container-max), 100%);
   max-width: 100%;
   margin: 0 auto;
 }

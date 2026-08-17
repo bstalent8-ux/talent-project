@@ -7,7 +7,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0 0.8rem 0 1rem;
+  /* Content aligns to the same edge as the centered .site-container below
+     it: base gutter on narrow/medium screens, growing past --container-max
+     so the bar's logo/controls never sit closer to the true viewport edge
+     than the page content does. The bar's own background stays full-bleed —
+     only the inner content padding scales. */
+  padding-inline: max(0.8rem, calc((100vw - var(--container-max)) / 2 + 0.8rem));
   border: 0;
   border-radius: 0;
   background: var(--nav-bg);
@@ -401,7 +406,7 @@
 }
 
 .footerInner {
-  width: min(1180px, 100%);
+  width: min(var(--container-max), 100%);
   margin: 0 auto;
 }
 

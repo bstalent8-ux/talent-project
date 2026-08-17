@@ -87,6 +87,14 @@
   --z-toast: 90;
   --z-tooltip: 100;
 
+  /* Shared page container — the single source of truth for content width.
+     Previously every page hardcoded its own value (1180/1240/1440px), so
+     Navbar/Footer/page edges never lined up. New pages/components should
+     use `.site-container` (or var(--container-max)/var(--container-pad)
+     directly) instead of a fresh literal. */
+  --container-max: 1440px;
+  --container-pad: clamp(1rem, 4vw, 2rem);
+
   /* Backward-compatible aliases while older pages are migrated. */
   --color-teal: var(--color-primary);
   --color-blue: var(--color-info);
@@ -212,6 +220,14 @@
   background: color-mix(in srgb, var(--bg-card) 74%, transparent);
   border: 1px solid var(--border-subtle);
   backdrop-filter: blur(16px);
+}
+
+/* Shared page container. width: min(...) rather than max-width so a
+   narrow viewport isn't forced to 100% + the padding overflowing it. */
+.site-container {
+  width: min(var(--container-max), 100%);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
 }
 
 .glass-panel-hover {
