@@ -21,15 +21,16 @@ const baseLayout: ProfileLayoutDTO = {
 };
 
 describe("applyCategoryTalentLayout", () => {
-  it("model: brands right after experience, reviews right after packages, no physical or social in main", () => {
+  it("model: brands right after experience, performance right after portfolio, reviews right after packages, no physical or social in main", () => {
     const result = applyCategoryTalentLayout(baseLayout, "model");
     const keys = result.main.map((e) => e.key);
     expect(keys).toEqual([
-      "bio", "portfolio", "experience", "brands", "packages", "reviews", "usage_addons", "equipment", "awards",
+      "bio", "portfolio", "performance", "experience", "brands", "packages", "reviews", "usage_addons", "equipment", "awards",
     ]);
     expect(keys).not.toContain("physical");
     expect(keys).not.toContain("social");
     expect(result.main.find((e) => e.key === "reviews")?.width).toBe("full");
+    expect(result.main.find((e) => e.key === "performance")?.width).toBe("full");
   });
 
   it("model: experience and brands are both half-width, so they sit in one row", () => {
@@ -45,34 +46,36 @@ describe("applyCategoryTalentLayout", () => {
     expect(result.main.find((e) => e.key === "experience")?.width).toBe("full");
   });
 
-  it("model: sidebar has social right before trust, neither physical (moved into the Hero) nor brands/reviews (moved into main)", () => {
+  it("model: sidebar has social right before trust, nothing else (physical moved into the Hero; brands/reviews/performance moved into main)", () => {
     const result = applyCategoryTalentLayout(baseLayout, "model");
     const keys = result.sidebar.map((e) => e.key);
-    expect(keys).toEqual(["performance", "social", "trust"]);
+    expect(keys).toEqual(["social", "trust"]);
     expect(keys).not.toContain("brands");
     expect(keys).not.toContain("reviews");
+    expect(keys).not.toContain("performance");
     expect(keys).not.toContain("physical");
   });
 
-  it("ugc: no physical/social in main, brands stays in the sidebar, social inserted into the sidebar right before trust", () => {
+  it("ugc: no physical/social/performance/reviews in main's original positions — performance right after portfolio, reviews right after packages, brands stays in the sidebar", () => {
     const result = applyCategoryTalentLayout(baseLayout, "ugc");
     const mainKeys = result.main.map((e) => e.key);
     expect(mainKeys).toEqual([
-      "bio", "portfolio", "experience", "packages", "usage_addons", "equipment", "awards",
+      "bio", "portfolio", "performance", "experience", "packages", "reviews", "usage_addons", "equipment", "awards",
     ]);
     expect(mainKeys).not.toContain("physical");
     expect(mainKeys).not.toContain("social");
     expect(mainKeys).not.toContain("brands");
-    expect(result.sidebar.map((e) => e.key)).toEqual(["performance", "reviews", "brands", "social", "trust"]);
+    expect(result.sidebar.map((e) => e.key)).toEqual(["brands", "social", "trust"]);
   });
 
   it("legacy category (fashion): behaves exactly like ugc — no bespoke section invented", () => {
     const result = applyCategoryTalentLayout(baseLayout, "fashion");
     const mainKeys = result.main.map((e) => e.key);
     expect(mainKeys).not.toContain("physical");
-    expect(mainKeys).not.toContain("brands");
     expect(mainKeys).not.toContain("social");
-    expect(result.sidebar.map((e) => e.key)).toEqual(["performance", "reviews", "brands", "social", "trust"]);
+    expect(mainKeys).toContain("performance");
+    expect(mainKeys).toContain("reviews");
+    expect(result.sidebar.map((e) => e.key)).toEqual(["brands", "social", "trust"]);
   });
 
   it("null/undefined category: no physical or social in main, social inserted into the sidebar", () => {
@@ -88,13 +91,13 @@ describe("applyCategoryTalentLayout", () => {
     expect(twice.sidebar.map((e) => e.key)).toEqual(once.sidebar.map((e) => e.key));
   });
 
-  it("falls back to appending at the end when portfolio/experience are absent from the layout", () => {
+  it("falls back to appending at the end when portfolio/experience/packages are absent from the layout", () => {
     const bare: ProfileLayoutDTO = {
       main: [{ key: "bio", width: "full" }],
       sidebar: [],
     };
     const result = applyCategoryTalentLayout(bare, "model");
-    expect(result.main.map((e) => e.key)).toEqual(["bio", "brands", "reviews"]);
+    expect(result.main.map((e) => e.key)).toEqual(["bio", "brands", "performance", "reviews"]);
     expect(result.main.find((e) => e.key === "brands")?.width).toBe("half");
     expect(result.main.find((e) => e.key === "reviews")?.width).toBe("full");
     expect(result.sidebar.map((e) => e.key)).toEqual(["social"]);

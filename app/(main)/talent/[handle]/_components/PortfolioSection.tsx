@@ -23,11 +23,13 @@ interface Props {
 
 export default function PortfolioSection({ portfolioItems, variant = "default" }: Props) {
   const isMobile = useIsMobile();
-  const { dark } = useSite();
+  const { dark, lang } = useSite();
+  const ar = lang === "ar";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const GREEN = "#00D26A";
   const TEAL  = "var(--color-primary)";
+  const VIOLET = "#7C3AED";
   const hasReal = portfolioItems && portfolioItems.length > 0;
   const isModel = variant === "model";
 
@@ -132,7 +134,14 @@ export default function PortfolioSection({ portfolioItems, variant = "default" }
           marginBottom: 20,
         }}
       >
-        <h2 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 18, fontWeight: 800, margin: 0 }}>البورتفوليو</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <h2 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 18, fontWeight: 800, margin: 0 }}>
+            {isModel ? (ar ? "المعرض" : "Portfolio") : (ar ? "معرض الفيديوهات" : "Video Portfolio")}
+          </h2>
+          <span style={{ backgroundColor: `${VIOLET}22`, color: VIOLET, fontSize: 12, fontWeight: 700, padding: "2px 9px", borderRadius: 999 }}>
+            {portfolioItems!.length}
+          </span>
+        </div>
         <button
           style={{
             background: "none",
@@ -143,7 +152,7 @@ export default function PortfolioSection({ portfolioItems, variant = "default" }
             fontFamily: "'Cairo',sans-serif",
           }}
         >
-          عرض الكل ›
+          {ar ? "عرض الكل ›" : "View All ›"}
         </button>
       </div>
 

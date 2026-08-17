@@ -22,20 +22,22 @@ import { ProfileError, profileService } from "@/features/profiles";
 import type { PublicProfileDTO, TalentPublicCore } from "@/features/profiles/types/dto";
 import type { ModerationStatus } from "@/features/profiles/types/raw";
 import TalentProfileShell from "./_components/TalentProfileShell";
-import UgcProfileShell from "./_components/ugc/UgcProfileShell";
 import ModelProfileShell from "./_components/model/ModelProfileShell";
 import PendingPreviewBanner from "./_components/PendingPreviewBanner";
 
 /**
- * category === "ugc" renders UgcProfileShell. category === "model" or the
- * legacy "fashion" value (pre-dates the "model" category and describes the
- * same talent type) both render ModelProfileShell. Every other category
- * (legacy, null) is unaffected — TalentProfileShell is untouched. Stored
- * category values are not migrated — this is UI routing only.
+ * category === "model" or the legacy "fashion" value (pre-dates the "model"
+ * category and describes the same talent type) render ModelProfileShell.
+ * Every other category — including "ugc" — renders the layout-driven
+ * TalentProfileShell. category === "ugc" previously routed to a standalone
+ * UgcProfileShell; that file is kept as reference but is no longer used —
+ * the approved visual target is TalentProfileShell/ProfileHero's generic
+ * composition (see TalentProfileShell.tsx's module comment for what was
+ * added to reach it). Stored category values are not migrated — this is
+ * UI routing only.
  */
 function renderTalentShell(profile: PublicProfileDTO) {
   const category = (profile.core as TalentPublicCore).category;
-  if (category === "ugc") return <UgcProfileShell profile={profile} />;
   if (category === "model" || category === "fashion") return <ModelProfileShell profile={profile} />;
   return <TalentProfileShell profile={profile} />;
 }

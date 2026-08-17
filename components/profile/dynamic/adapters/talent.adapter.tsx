@@ -20,8 +20,14 @@ import UsageRightsSection from "@/app/(main)/talent/[handle]/_components/UsageRi
 import ReviewsCard from "@/app/(main)/talent/[handle]/_components/ReviewsCard";
 import ExperienceSection from "@/app/(main)/talent/[handle]/_components/ExperienceSection";
 import BrandsCard from "@/app/(main)/talent/[handle]/_components/BrandsCard";
-import PerformanceSidebar from "@/app/(main)/talent/[handle]/_components/PerformanceSidebar";
 import TrustCard from "@/app/(main)/talent/[handle]/_components/TrustCard";
+// Reused as-is for the non-model "performance"/"reviews" placement (now the
+// only path that reaches this adapter — see talent-layout.ts's header
+// comment). Their own logic is already category-agnostic despite the file
+// names; PerformanceSidebar/ReviewsCard's default branch stays only for the
+// dead isModel-variant test path.
+import PerformanceMetricsGrid from "@/app/(main)/talent/[handle]/_components/ugc/UgcPerformanceMetrics";
+import ReviewsList from "@/app/(main)/talent/[handle]/_components/ugc/UgcReviews";
 
 import type { ProfileSectionDTO } from "@/features/profiles/types/dto";
 import {
@@ -42,10 +48,14 @@ function renderPlan(plan: CoreSectionRenderPlan) {
     case "PortfolioSection":   return <PortfolioSection {...plan.props} />;
     case "PackagesSection":    return <PackagesSection {...plan.props} />;
     case "UsageRightsSection": return <UsageRightsSection {...plan.props} />;
-    case "ReviewsCard":        return <ReviewsCard {...plan.props} />;
+    case "ReviewsCard":
+      return plan.props.variant === "model"
+        ? <ReviewsCard {...plan.props} />
+        : <ReviewsList reviews={plan.props.reviews} rating={plan.props.rating ?? 0} />;
     case "ExperienceSection":  return <ExperienceSection {...plan.props} />;
     case "BrandsCard":         return <BrandsCard {...plan.props} />;
-    case "PerformanceSidebar": return <PerformanceSidebar {...plan.props} />;
+    case "PerformanceSidebar":
+      return <PerformanceMetricsGrid talent={plan.props.talent} bookingStats={plan.props.bookingStats ?? { total: 0, completed: 0, pending: 0, cancelled: 0 }} />;
     case "TrustCard":          return <TrustCard />;
     default:                   return null;
   }

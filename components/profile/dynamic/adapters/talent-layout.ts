@@ -5,11 +5,25 @@
 // Model get a different information hierarchy from the SAME single
 // DynamicProfileRenderer path — not a second hardcoded profile system.
 //
+// category === "model" routes to ModelProfileShell entirely (its own
+// composition, bypassing this file) — the isModel branches below are
+// consequently dead in production today, kept only because
+// applyCategoryTalentLayout is still called with "model" in tests. Every
+// other category, including "ugc", reaches TalentProfileShell and this
+// function.
+//
 // Placement, every category (not model-specific):
 //   - Presence ("social") is a compact sidebar card, not a main-content
 //     section — moved out of main and into the sidebar, positioned right
 //     before Trust (the generic "trust" TrustCard, present for every
 //     category) when Trust is part of the sidebar at all.
+//   - Performance ("performance") is a full-width KPI-grid block, not a
+//     sidebar summary — moved out of the sidebar and into main, right after
+//     Portfolio, matching the approved reference layout.
+//   - Reviews ("reviews") is a full-width closing block, not a narrow
+//     sidebar carousel — moved out of the sidebar and into main, right
+//     after Packages. Brand Collaborations ("brands") stays in the sidebar
+//     for every category — the reference keeps it there.
 //
 // Placement, Model only:
 //   - Measurements ("physical") is dropped from BOTH main and sidebar. It
@@ -54,14 +68,15 @@ export function applyCategoryTalentLayout(
 
   const main: LayoutEntry[] = layout.main.filter((entry) => {
     if (entry.key === "social" || entry.key === "physical") return false;
-    if (isModel && (entry.key === "brands" || entry.key === "reviews")) return false;
+    if (entry.key === "performance" || entry.key === "reviews") return false;
+    if (isModel && entry.key === "brands") return false;
     return true;
   });
 
   const sidebar: LayoutEntry[] = layout.sidebar.filter((entry) => {
-    if (entry.key === "social") return false;
+    if (entry.key === "social" || entry.key === "performance" || entry.key === "reviews") return false;
     if (isModel && entry.key === "physical") return false;
-    if (isModel && (entry.key === "brands" || entry.key === "reviews")) return false;
+    if (isModel && entry.key === "brands") return false;
     return true;
   });
 
@@ -73,16 +88,22 @@ export function applyCategoryTalentLayout(
     main.splice(experienceIdx >= 0 ? experienceIdx + 1 : main.length, 0, { key: "brands", width: "half" });
   }
 
+  // Performance, right after Portfolio — a full-width KPI-grid block, every
+  // category (model included, though it never reaches this function).
+  const portfolioIdx = main.findIndex((entry) => entry.key === "portfolio");
+  main.splice(portfolioIdx >= 0 ? portfolioIdx + 1 : main.length, 0, { key: "performance", width: "full" });
+
   // Presence moved out of main into the sidebar (compact card, not a full
   // content section) — same anchor point for every category: right before
   // Trust (TrustCard), when Trust is part of the sidebar at all.
   const trustIdx = sidebar.findIndex((entry) => entry.key === "trust");
   sidebar.splice(trustIdx >= 0 ? trustIdx : sidebar.length, 0, { key: "social", width: "full" });
 
-  if (isModel) {
-    const packagesIdx = main.findIndex((entry) => entry.key === "packages");
-    main.splice(packagesIdx >= 0 ? packagesIdx + 1 : main.length, 0, { key: "reviews", width: "full" });
-  }
+  // Reviews, right after Packages — a full-width closing block, every
+  // category. Brand Collaborations (non-model) stays wherever the stored
+  // layout put it (sidebar today) — untouched.
+  const packagesIdx = main.findIndex((entry) => entry.key === "packages");
+  main.splice(packagesIdx >= 0 ? packagesIdx + 1 : main.length, 0, { key: "reviews", width: "full" });
 
   return { ...layout, main, sidebar };
 }
