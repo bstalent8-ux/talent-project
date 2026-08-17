@@ -175,9 +175,35 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
 
   // listen for "open-chat-widget" fired from any page
   useEffect(() => {
+    type OpenChatDetail = {
+      otherUserId?: string;
+      conversationId?: string;
+      /** Optional fast-path so the header shows the right name/avatar
+       * immediately instead of a generic "Messages" title — the caller
+       * (e.g. the UGC hero) already has this on screen. Falls back to a
+       * conversations-list lookup below when the caller doesn't pass it,
+       * so every existing caller (ProfileHero, StickyBookingBar,
+       * BrandsGrid, ...) keeps working unchanged. */
+      otherUser?: Conversation["other_user"];
+    };
+
+    async function resolveOtherUser(convId: string, targetUserId?: string) {
+      // Cheap fallback: the conversations list already joins other_user.
+      const res = await fetch("/api/chat/conversations");
+      if (!res.ok) return;
+      const { conversations } = await res.json();
+      const match = (conversations ?? []).find((c: Conversation) =>
+        c.id === convId || c.other_user?.id === targetUserId,
+      );
+      if (match?.other_user) setActiveOther(match.other_user);
+    }
+
     async function handler(e: Event) {
-      const detail = (e as CustomEvent<{ otherUserId?: string; conversationId?: string }>).detail;
+      const detail = (e as CustomEvent<OpenChatDetail>).detail;
       setOpen(true);
+      setApiError(null);
+
+      if (detail?.otherUser) setActiveOther(detail.otherUser);
 
       if (detail?.conversationId) {
         // direct open by conversation id
@@ -185,6 +211,7 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
         setActiveConvId(convId);
         setView("chat");
         loadMessages(convId);
+        if (!detail.otherUser) resolveOtherUser(convId);
         return;
       }
 
@@ -203,7 +230,16 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
             setActiveConvId(conv.id);
             setView("chat");
             loadMessages(conv.id);
+            if (!detail.otherUser) resolveOtherUser(conv.id, targetId);
+          } else {
+            // Previously silent — the widget opened to a blank list with no
+            // explanation on 401/403/500 (unapproved talent, wrong role,
+            // suspended account, ...). The list view already renders
+            // apiError in a banner; it just never received one.
+            setApiError(body?.error ?? "failed to open chat");
           }
+        } catch {
+          setApiError("failed to open chat");
         } finally {
           setOpeningChat(false);
         }

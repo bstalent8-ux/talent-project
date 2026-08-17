@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #0a0d14;
+    --card-bg: #111622;
+    --card-border: #1e2638;
+    --gold-primary: #d89b37;
+    --gold-hover: #e8ab48;
+    --gold-dark: #a17020;
+    --emerald-accent: #10b981;
+    --font-arabic: 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    background-color: #080b11;
+    color: #f1f5f9;
+    font-family: var(--font-arabic);
+    direction: rtl;
+    text-align: right;
+    overflow-x: hidden;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0d111a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #252e42;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #d89b37;
+  }
+}
+
+/* Glassmorphism and glow utilities */
+.gold-gradient-btn {
+  background: linear-gradient(135deg, #e5a93c 0%, #c88924 100%);
+  color: #0b0d13;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.gold-gradient-btn:hover {
+  background: linear-gradient(135deg, #f0b74e 0%, #d89832 100%);
+  box-shadow: 0 4px 20px rgba(216, 155, 55, 0.25);
+  transform: translateY(-1px);
+}
+
+.gold-gradient-btn:active {
+  transform: translateY(0);
+}
+
+.card-dark {
+  background-color: #101520;
+  border: 1px solid #1c2436;
+}
+
+.card-dark-hover {
+  transition: all 0.2s ease;
+}
+.card-dark-hover:hover {
+  border-color: #2e3b56;
+}
+
+.gold-border-card {
+  border: 1px solid #d89b37;
+  background-color: #121824;
+}
+
+/* Circular gauge animations */
+@keyframes dash {
+  from {
+    stroke-dashoffset: 283;
+  }
+  to {
+    stroke-dashoffset: 22.6;
+  }
+}
+
+.circle-progress-bar {
+  animation: dash 1.5s ease-out forwards;
+}

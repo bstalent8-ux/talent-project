@@ -17,10 +17,12 @@ const VIOLET = "#7C3AED";
 
 interface Props {
   talentUserId: string;
+  talentName: string;
+  talentAvatar: string | null;
   onOpenBrief: () => void;
 }
 
-export default function UgcSafetyTrust({ talentUserId, onOpenBrief }: Props) {
+export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar, onOpenBrief }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
@@ -33,7 +35,12 @@ export default function UgcSafetyTrust({ talentUserId, onOpenBrief }: Props) {
     : ["100% Secure Payments", "Manual Review for Every Order", "Fast Dispute Resolution"];
 
   function askQuestion() {
-    window.dispatchEvent(new CustomEvent("open-chat-widget", { detail: { otherUserId: talentUserId } }));
+    window.dispatchEvent(new CustomEvent("open-chat-widget", {
+      detail: {
+        otherUserId: talentUserId,
+        otherUser: { id: talentUserId, full_name: talentName, avatar_url: talentAvatar, handle: null },
+      },
+    }));
   }
 
   return (

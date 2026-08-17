@@ -1,0 +1,6 @@
+{
+  "name": "Talents - Maya Khaled Model Profile",
+  "description": "منصة مواهب - الملف التعريفي للموديل الاحترافي مايا خالد مع استعراض الأعمال، الباقات، التقييمات والحجز المباشر",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -65,9 +65,11 @@ interface Props {
   bookingStats: BookingStats;
   onOpenBrief: () => void;
   onOpenVideo: (item: PortfolioItem) => void;
+  isFavorited: boolean;
+  onToggleFavorite: () => void;
 }
 
-export default function UgcHero({ talent, presenceLinks, portfolioItems, bookingStats, onOpenBrief, onOpenVideo }: Props) {
+export default function UgcHero({ talent, presenceLinks, portfolioItems, bookingStats, onOpenBrief, onOpenVideo, isFavorited, onToggleFavorite }: Props) {
   const isMobile = useIsMobile();
   const { lang } = useSite();
   const ar = lang !== "en";
@@ -104,8 +106,9 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
         gridTemplateColumns: isMobile ? "1fr" : "5fr 4fr 3fr",
         gap: isMobile ? 20 : 24, alignItems: "start",
       }}>
-        {/* Identity */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* Identity — explicit gridColumn so it always lands in track 1,
+            never shifted by the reel-preview column below being absent. */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, gridColumn: isMobile ? undefined : 1 }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
             <div style={{ position: "relative", flexShrink: 0 }}>
               <div style={{
@@ -210,9 +213,12 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           )}
         </div>
 
-        {/* Reel preview strip */}
+        {/* Reel preview strip — explicit gridColumn 2. Conditionally
+            rendered (no portfolio yet), so without an explicit column the
+            actions block below it would auto-place into this track and
+            visually end up in the middle instead of on the far side. */}
         {reelThumbs.length > 0 && (
-          <div>
+          <div style={{ gridColumn: isMobile ? undefined : 2 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>
               <Play size={12} color={VIOLET} fill={VIOLET} />
               {ar ? "نماذج فيديو مختارة" : "Featured Video Snippets"}
@@ -240,8 +246,10 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           </div>
         )}
 
-        {/* CTAs */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* CTAs — explicit gridColumn 3 (the "far" track: left in RTL,
+            right in LTR), so the action column always lands there and
+            never collapses into the middle track when reelThumbs is empty. */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, gridColumn: isMobile ? undefined : 3 }}>
           <ProtectedAction action="create_booking">
             <motion.button
               onClick={onOpenBrief}
@@ -266,7 +274,12 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
 
           <ProtectedAction action="start_conversation">
             <motion.button
-              onClick={() => window.dispatchEvent(new CustomEvent("open-chat-widget", { detail: { otherUserId: talent.id } }))}
+              onClick={() => window.dispatchEvent(new CustomEvent("open-chat-widget", {
+                detail: {
+                  otherUserId: talent.id,
+                  otherUser: { id: talent.id, full_name: talent.name, avatar_url: talent.avatarUrl, handle: talent.handle },
+                },
+              }))}
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", borderRadius: 12, border: "1px solid #1E293B", backgroundColor: "rgba(15,23,42,0.7)", color: "#fff", fontWeight: 700, fontSize: 12.5, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
             >
@@ -276,8 +289,17 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
 
           <div style={{ display: "flex", gap: 8 }}>
             <ProtectedAction action="favorite_talent">
-              <button style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 0", borderRadius: 10, border: "1px solid #1E293B", backgroundColor: "transparent", color: "#94A3B8", fontSize: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
-                <Heart size={13} />{ar ? "حفظ" : "Save"}
+              <button
+                onClick={onToggleFavorite}
+                style={{
+                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  padding: "8px 0", borderRadius: 10, cursor: "pointer", fontFamily: "'Cairo',sans-serif", fontSize: 12,
+                  border: isFavorited ? "1px solid #F43F5E" : "1px solid #1E293B",
+                  backgroundColor: isFavorited ? "rgba(244,63,94,0.12)" : "transparent",
+                  color: isFavorited ? "#FB7185" : "#94A3B8",
+                }}
+              >
+                <Heart size={13} fill={isFavorited ? "#FB7185" : "none"} />{isFavorited ? (ar ? "محفوظ" : "Saved") : (ar ? "حفظ" : "Save")}
               </button>
             </ProtectedAction>
             <button onClick={handleShare} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 0", borderRadius: 10, border: "1px solid #1E293B", backgroundColor: "transparent", color: "#94A3B8", fontSize: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>

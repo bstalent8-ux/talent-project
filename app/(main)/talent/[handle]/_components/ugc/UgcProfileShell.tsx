@@ -18,8 +18,11 @@
 // Insights & Recent Activity, "Verified Through Talents" escrow-contract
 // grid, campaign banner chrome (not part of the source composition).
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
+import { useGuestGuard } from "@/contexts/GuestGuard";
+import type { PermissionAction } from "@/lib/permissions";
 import DirectBriefModal from "@/components/DirectBriefModal";
 import {
   toTalentData,
@@ -46,9 +49,15 @@ import UgcBrands from "./UgcBrands";
 import UgcReviews from "./UgcReviews";
 import UgcSafetyTrust from "./UgcSafetyTrust";
 
+/** The three actions this shell can resume after an auth round-trip —
+ * anything else in `?resume=` is ignored rather than trusted blindly. */
+const RESUMABLE_ACTIONS: readonly PermissionAction[] = ["create_booking", "start_conversation", "favorite_talent"];
+
 export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO }) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
+  const router = useRouter();
+  const guard = useGuestGuard();
 
   const talent          = useMemo(() => toTalentData(profile), [profile]);
   const presenceLinks   = useMemo(() => toPresenceLinks(profile), [profile]);
@@ -62,8 +71,80 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
   const [activeTab, setActiveTab] = useState("portfolio");
   const [lightboxItem, setLightboxItem] = useState<PortfolioItem | null>(null);
   const [showBrief, setShowBrief] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoritePending, setFavoritePending] = useState(false);
 
   const hasPerformance = talent.rating > 0 || talent.reviewCount > 0 || bookingStats.total > 0;
+
+  function openMessage() {
+    window.dispatchEvent(new CustomEvent("open-chat-widget", {
+      detail: {
+        otherUserId: talent.id,
+        otherUser: { id: talent.id, full_name: talent.name, avatar_url: talent.avatarUrl, handle: talent.handle },
+      },
+    }));
+  }
+
+  async function toggleFavorite() {
+    if (guard.isGuest || favoritePending) return;
+    setFavoritePending(true);
+    const next = !isFavorited;
+    setIsFavorited(next); // optimistic — reverted below on failure
+    try {
+      const res = await fetch(`/api/favorites/${talent.id}`, { method: next ? "PUT" : "DELETE" });
+      if (!res.ok) setIsFavorited(!next);
+    } catch {
+      setIsFavorited(!next);
+    } finally {
+      setFavoritePending(false);
+    }
+  }
+
+  // Hydrate the heart's saved state once we know who's looking — real
+  // per-user persistence via GET /api/favorites/[talentUserId], not
+  // localStorage (task requirement: no local-only favorites).
+  useEffect(() => {
+    if (guard.loading || guard.isGuest) { setIsFavorited(false); return; }
+    let cancelled = false;
+    fetch(`/api/favorites/${talent.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (!cancelled && data) setIsFavorited(Boolean(data.favorited)); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [guard.loading, guard.isGuest, talent.id]);
+
+  // Resume-after-auth: GuestGuard's modal sends the user to /login or
+  // /register with `?next=<this page>&resume=<action>` baked into `next`
+  // (see GuestGuard.tsx's go()). Once auth has resolved, re-fire the exact
+  // action they originally clicked instead of leaving them back on a page
+  // where they have to find the button again. If they're STILL not allowed
+  // (e.g. registered as Talent from the Hire gate), surface the same
+  // role-specific message GuestGuard already shows on a blocked click,
+  // rather than silently doing nothing.
+  useEffect(() => {
+    if (guard.loading) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const resume = params.get("resume");
+    if (!resume || !RESUMABLE_ACTIONS.includes(resume as PermissionAction)) return;
+
+    const action = resume as PermissionAction;
+    if (guard.can(action)) {
+      if (action === "create_booking") setShowBrief(true);
+      else if (action === "start_conversation") openMessage();
+      else if (action === "favorite_talent") toggleFavorite();
+    } else {
+      guard.requestAuth(action);
+    }
+
+    params.delete("resume");
+    params.delete("next");
+    const qs = params.toString();
+    router.replace(`${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    // Fires once per mount when auth finishes resolving — re-running on
+    // every guard/talent identity change would re-trigger the action.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guard.loading]);
 
   const tabs = useMemo<UgcTab[]>(() => {
     const list: UgcTab[] = [];
@@ -95,6 +176,8 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
         bookingStats={bookingStats}
         onOpenBrief={() => setShowBrief(true)}
         onOpenVideo={setLightboxItem}
+        isFavorited={isFavorited}
+        onToggleFavorite={toggleFavorite}
       />
 
       <div style={{ width: "min(var(--container-max), 100%)", margin: "0 auto", padding: "24px var(--container-pad)" }}>
@@ -112,7 +195,12 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <UgcContentSpecialties specialties={talent.specialties ?? []} />
             <UgcBrands brands={brands} />
-            <UgcSafetyTrust talentUserId={talent.id} onOpenBrief={() => setShowBrief(true)} />
+            <UgcSafetyTrust
+              talentUserId={talent.id}
+              talentName={talent.name}
+              talentAvatar={talent.avatarUrl ?? null}
+              onOpenBrief={() => setShowBrief(true)}
+            />
           </div>
         </div>
       </div>

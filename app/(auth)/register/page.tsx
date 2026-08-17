@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Eye, EyeOff, Languages, Moon, Sun } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
+import { safeNextPath } from "@/lib/safe-next-path";
 import styles from "../auth.module.css";
 import PhoneInput from "../phone/PhoneInput";
 import { detectDefaultCountryIso, findCountry, rememberCountryIso } from "../phone/countries";
@@ -354,7 +355,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/profile/me");
+      router.push(safeNextPath() ?? "/profile/me");
     } catch (e) {
       const message = e instanceof Error ? e.message : "";
       if (/fetch|network/i.test(message)) {
