@@ -124,18 +124,22 @@
   z-index: -1;
   width: clamp(16rem, 28vw, 28rem);
   aspect-ratio: 1;
-  left: var(--hero-cursor-x);
-  top: var(--hero-cursor-y);
+  left: 0;
+  top: 0;
   pointer-events: none;
   border-radius: 999px;
   background:
     radial-gradient(circle, color-mix(in srgb, var(--color-secondary) 20%, transparent), color-mix(in srgb, var(--color-primary) 10%, transparent) 44%, transparent 70%);
   filter: blur(8px);
   opacity: 0.82;
-  translate: -50% -50%;
+  /* Perf: was `left`/`top` (layout-triggering, recalculated on every
+     mousemove tick) with a separate `translate: -50% -50%` centering
+     offset. Combined into one `translate` — a compositor-only property,
+     same fast path as `transform: translate()` — so cursor-follow no
+     longer forces layout+paint per frame. */
+  translate: calc(var(--hero-cursor-x) - 50%) calc(var(--hero-cursor-y) - 50%);
   transition:
-    left 180ms var(--ease-standard),
-    top 180ms var(--ease-standard),
+    translate 180ms var(--ease-standard),
     opacity var(--duration-base) var(--ease-standard);
 }
 

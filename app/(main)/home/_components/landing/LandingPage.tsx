@@ -319,19 +319,58 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
     router.push(`/explore?q=${encodeURIComponent(trimmed)}`);
   }
 
-  function handlePointerMove(event: PointerEvent<HTMLElement>) {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+  // Perf: pointermove can fire far faster than the display refreshes (up to
+  // 1000Hz on some mice/trackpads). The old handler ran a matchMedia() query
+  // AND a layout-forcing getBoundingClientRect() on every single event, then
+  // wrote CSS vars that heroCursorGlow read via `left`/`top` — a
+  // layout-triggering property, so every tick paid for a full
+  // layout+paint+composite. Fixed by: caching bounds once per hover session
+  // (recomputed lazily if missing, e.g. after a resize), checking
+  // prefers-reduced-motion once via a listener instead of per-event, and
+  // coalescing writes to one requestAnimationFrame per display frame.
+  // heroCursorGlow itself was moved from `left`/`top` to the `translate`
+  // property (see LandingPage.module.css) so these writes are compositor-only.
+  const boundsRef = useRef<DOMRect | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const reducedMotionRef = useRef(false);
 
-    event.currentTarget.style.setProperty("--hero-mx", x.toFixed(3));
-    event.currentTarget.style.setProperty("--hero-my", y.toFixed(3));
-    event.currentTarget.style.setProperty("--hero-cursor-x", `${event.clientX - bounds.left}px`);
-    event.currentTarget.style.setProperty("--hero-cursor-y", `${event.clientY - bounds.top}px`);
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    reducedMotionRef.current = query.matches;
+    const onChange = () => { reducedMotionRef.current = query.matches; };
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+
+  function handlePointerEnter(event: PointerEvent<HTMLElement>) {
+    boundsRef.current = event.currentTarget.getBoundingClientRect();
+  }
+
+  function handlePointerMove(event: PointerEvent<HTMLElement>) {
+    if (reducedMotionRef.current) return;
+    const target = event.currentTarget;
+    const clientX = event.clientX;
+    const clientY = event.clientY;
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const bounds = boundsRef.current ?? (boundsRef.current = target.getBoundingClientRect());
+      const x = (clientX - bounds.left) / bounds.width - 0.5;
+      const y = (clientY - bounds.top) / bounds.height - 0.5;
+
+      target.style.setProperty("--hero-mx", x.toFixed(3));
+      target.style.setProperty("--hero-my", y.toFixed(3));
+      target.style.setProperty("--hero-cursor-x", `${clientX - bounds.left}px`);
+      target.style.setProperty("--hero-cursor-y", `${clientY - bounds.top}px`);
+    });
   }
 
   function handlePointerLeave(event: PointerEvent<HTMLElement>) {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    boundsRef.current = null;
     event.currentTarget.style.setProperty("--hero-mx", "0");
     event.currentTarget.style.setProperty("--hero-my", "0");
     event.currentTarget.style.setProperty("--hero-cursor-x", "50%");
@@ -343,6 +382,7 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
       ref={heroRef}
       className={styles.hero}
       aria-labelledby="landing-hero-title"
+      onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}
     >
