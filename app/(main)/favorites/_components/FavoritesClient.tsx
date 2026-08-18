@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Star, MapPin, BadgeCheck, Heart, Search, Sparkles } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
+import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import type { FavoriteTalentCard } from "@/features/favorites/service";
 import styles from "./FavoritesPage.module.css";
 
@@ -163,7 +164,7 @@ export default function FavoritesClient({ initialFavorites }: { initialFavorites
               const initial = talent.name.charAt(0).toUpperCase();
               const badge = categoryBadgeLabel(talent.category, t);
               return (
-                <Link key={talent.id} href={`/talent/${talent.handle}`} className={styles.card}>
+                <Link key={talent.id} href={canonicalTalentPath(talent.category, talent.handle)} className={styles.card}>
                   <div className={styles.media}>
                     {talent.avatar_url ? (
                       <img src={cdnImage(talent.avatar_url, 400)} alt={talent.name} loading="lazy" />

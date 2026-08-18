@@ -10,6 +10,7 @@
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { calculateCompletion } from "@/lib/profile-completion";
+import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
 
 const TX = {
@@ -89,7 +90,7 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
         <p style={{ color: dark ? "#94a3b8" : "#64748b", fontSize: 14, margin: "0 0 20px", lineHeight: 1.7 }}>
           {t.congrats.body}
         </p>
-        <a href={`/talent/${profile?.handle}`} style={{
+        <a href={canonicalTalentPath(talentProfile?.category, profile?.handle)} style={{
           display: "inline-block", padding: "11px 28px",
           background: "#00C9B1", color: "#fff", borderRadius: 10,
           fontSize: 14, fontWeight: 700, textDecoration: "none",

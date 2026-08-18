@@ -13,6 +13,7 @@ import {
 import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { createClient } from "@/lib/supabase/client";
+import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import ProfileCompletionCard from "@/components/profile/ProfileCompletionCard";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
 
@@ -572,7 +573,7 @@ export default function DashboardPage() {
           <h1 style={{ color: TEXT, fontSize: 20, fontWeight: 900, margin: 0 }}>{t.dashboard}</h1>
           <div style={{ display: "flex", gap: 10 }}>
             {profile.handle && (
-              <a href={`/talent/${profile.handle}`} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 8, color: MUTED, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+              <a href={canonicalTalentPath(tp?.category, profile.handle)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 8, color: MUTED, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
                 <Eye size={14} />
                 {/* Talent listing approval — talent_profiles.status. Not yet
                     approved opens the full read-only preview (banner on top,

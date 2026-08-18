@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { TalentCard } from "../page";
 import { cdnImage } from "@/lib/images";
+import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import { useGuestGuard } from "@/contexts/GuestGuard";
 import styles from "./ExplorePage.module.css";
 
@@ -38,18 +39,20 @@ function TalentCardItem({
   // straight to this talent's own profile with the same next/resume
   // convention every profile page already consumes preserves that context
   // without touching the shared auth gate itself.
+  const profileHref = canonicalTalentPath(talent.category, talent.handle);
+
   function handleFavoriteClick(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     if (isGuest) {
-      router.push(`/login?next=${encodeURIComponent(`/talent/${talent.handle}?resume=favorite_talent`)}`);
+      router.push(`/login?next=${encodeURIComponent(`${profileHref}?resume=favorite_talent`)}`);
       return;
     }
     onToggleFavorite?.(talent.id);
   }
 
   return (
-    <Link href={`/talent/${talent.handle}`} className={styles.talentCard}>
+    <Link href={profileHref} className={styles.talentCard}>
       {/* Media */}
       <div className={styles.talentMedia}>
         {talent.avatar_url ? (
