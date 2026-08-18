@@ -20,7 +20,7 @@ interface Props {
 
 export default function UgcTabs({ tabs, active, onChange }: Props) {
   const { dark } = useSite();
-  const VIOLET = "#7C3AED";
+  const VIOLET = "#16a3a3"; // site --color-accent, was violet
 
   if (tabs.length < 2) return null;
 

@@ -14,9 +14,12 @@
 //
 // Dropped vs. source (no real feature/data behind them — see integration
 // report): Navbar (project already renders one globally), currency
-// switcher (EGP-only), Top Content Types donut chart, AI Match Score,
-// Insights & Recent Activity, "Verified Through Talents" escrow-contract
-// grid, campaign banner chrome (not part of the source composition).
+// switcher (EGP-only), campaign banner chrome (not part of the source
+// composition). Top Content Types donut, AI Match Score, Insights & Recent
+// Activity, and "Verified Through Talents" are now included — HARDCODED
+// per explicit user request to match the reference visually (see
+// UgcContentChart.tsx / UgcInsightsActivity.tsx / UgcHero.tsx /
+// UgcPreviousShoots.tsx for what's real vs. fixed).
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -44,10 +47,12 @@ import UgcVideoPortfolio from "./UgcVideoPortfolio";
 import UgcVideoLightbox from "./UgcVideoLightbox";
 import UgcPerformanceMetrics from "./UgcPerformanceMetrics";
 import UgcContentSpecialties from "./UgcContentSpecialties";
+import UgcContentChart from "./UgcContentChart";
 import UgcPreviousShoots from "./UgcPreviousShoots";
 import UgcPackages from "./UgcPackages";
 import UgcBrands from "./UgcBrands";
 import UgcReviews from "./UgcReviews";
+import UgcInsightsActivity from "./UgcInsightsActivity";
 import UgcSafetyTrust from "./UgcSafetyTrust";
 
 /** The three actions this shell can resume after an auth round-trip —
@@ -168,14 +173,16 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
           <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
             <UgcVideoPortfolio portfolioItems={portfolioItems} onSelectVideo={setLightboxItem} />
             {hasPerformance && <UgcPerformanceMetrics talent={talent} bookingStats={bookingStats} />}
-            <UgcPreviousShoots experience={experience} />
+            <UgcPreviousShoots experience={experience} brands={brands} />
             <UgcPackages packages={packages} onSelectPackage={() => setShowBrief(true)} />
             <UgcReviews reviews={reviews} rating={talent.rating} />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <UgcContentSpecialties specialties={talent.specialties ?? []} />
+            <UgcContentChart hasPortfolio={portfolioItems.length > 0} />
             <UgcBrands brands={brands} />
+            <UgcInsightsActivity show={reviews.length > 0 || bookingStats.completed > 0} />
             <UgcSafetyTrust
               talentUserId={talent.id}
               talentName={talent.name}

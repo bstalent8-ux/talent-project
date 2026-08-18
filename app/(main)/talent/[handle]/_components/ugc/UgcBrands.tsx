@@ -7,8 +7,8 @@ import { Building2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import type { BrandItem } from "@/features/talent-profile/types";
 
-const VIOLET = "#7C3AED";
-const COLORS = ["#7C3AED", "#0EA5E9", "#F59E0B", "#10B981", "#EC4899", "#3B82F6"];
+const VIOLET = "#16a3a3"; // site --color-accent, was violet
+const COLORS = ["#16a3a3", "#0EA5E9", "#F59E0B", "#10B981", "#EC4899", "#3B82F6"];
 
 export default function UgcBrands({ brands }: { brands: BrandItem[] }) {
   const { dark, lang } = useSite();

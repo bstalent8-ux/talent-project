@@ -13,7 +13,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
-const VIOLET = "#7C3AED";
+const VIOLET = "#16a3a3"; // site --color-accent, was violet
 
 interface Props {
   portfolioItems: PortfolioItem[];

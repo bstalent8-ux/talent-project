@@ -11,7 +11,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { Review } from "@/features/talent-profile/types";
 
-const VIOLET = "#7C3AED";
+const VIOLET = "#16a3a3"; // site --color-accent, was violet
 const GOLD = "#F4B740";
 
 export default function UgcReviews({ reviews, rating }: { reviews: Review[]; rating: number }) {

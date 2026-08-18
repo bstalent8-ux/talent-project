@@ -14,7 +14,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { PackageItem } from "@/features/talent-profile/types";
 
-const VIOLET = "#7C3AED";
+const VIOLET = "#16a3a3"; // site --color-accent, was violet
 const EMERALD = "#10B981";
 
 interface Props {
@@ -48,13 +48,13 @@ export default function UgcPackages({ packages, onSelectPackage }: Props) {
             key={pkg.id}
             style={{
               position: "relative", borderRadius: 18, padding: 20, display: "flex", flexDirection: "column", gap: 14,
-              background: pkg.popular ? `linear-gradient(160deg, #1C1438, ${VIOLET}, #160E2E)` : SURFACE,
+              background: pkg.popular ? `linear-gradient(160deg, #0d2321, ${VIOLET}, #0a1a17)` : SURFACE,
               border: pkg.popular ? `1px solid ${VIOLET}` : `1px solid ${BORDER}`,
               color: pkg.popular ? "#fff" : TEXT,
             }}
           >
             {pkg.popular && (
-              <span style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: 20, background: `linear-gradient(90deg, ${VIOLET}, #4F46E5)`, color: "#fff", fontSize: 10.5, fontWeight: 800, display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+              <span style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: 20, background: `linear-gradient(90deg, ${VIOLET}, #0f766e)`, color: "#fff", fontSize: 10.5, fontWeight: 800, display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
                 <Sparkles size={11} />{ar ? "الأكثر طلباً" : "Most Popular"}
               </span>
             )}

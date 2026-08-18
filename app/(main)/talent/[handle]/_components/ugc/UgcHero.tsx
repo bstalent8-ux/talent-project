@@ -7,10 +7,14 @@
 // Tailwind classes, and wired to real TalentData / real portfolio items
 // instead of ugc/untitled/data/creatorData.ts.
 //
+// AI Match Score / Response Time / On-Time Delivery are HARDCODED per
+// explicit request to match the reference visually — none of the three are
+// tracked anywhere in the schema (no scoring model, no response-time or
+// on-time-delivery metric column). Completion Rate and Availability stay
+// real (bookingStats, talent.availability).
+//
 // Dropped vs. source (no real feature behind them — see integration report):
 //   - multi-currency switcher (project is EGP-only)
-//   - "AI Match Score" widget (no matching feature exists)
-//   - Avg Response Time / On-Time Delivery quick-stat tiles (not tracked)
 //   - follower counts on social links (only the URL is stored)
 // "Add to Campaign" stays visible but does nothing — no campaign-roster
 // feature exists on the brand side today.
@@ -19,7 +23,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin, Globe, Award, Star, ShieldCheck, MessageSquare, FolderPlus,
-  Heart, Share2, Play, ExternalLink, Check, CheckCircle2, Sparkles,
+  Heart, Share2, Play, ExternalLink, Check, Clock, Zap, Sparkles,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
@@ -27,7 +31,10 @@ import { cdnImage } from "@/lib/images";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 import type { TalentData, BookingStats, PortfolioItem } from "@/features/talent-profile/types";
 
-const VIOLET = "#7C3AED";
+// Site accent (globals.css --color-accent) — was "#7C3AED" (violet), off the
+// site's teal/gold palette. Kept the const name to avoid touching every call
+// site below.
+const VIOLET = "#16a3a3";
 const EMERALD = "#10B981";
 const AMBER = "#F4B740";
 
@@ -168,29 +175,58 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           {tags.length > 0 && (
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {tags.map((tag) => (
-                <span key={tag} style={{ padding: "4px 10px", borderRadius: 20, backgroundColor: `${VIOLET}22`, border: `1px solid ${VIOLET}55`, color: "#C4B5FD", fontSize: 11.5 }}>{tag}</span>
+                <span key={tag} style={{ padding: "4px 10px", borderRadius: 20, backgroundColor: `${VIOLET}22`, border: `1px solid ${VIOLET}55`, color: "#7dd3c0", fontSize: 11.5 }}>{tag}</span>
               ))}
             </div>
           )}
 
-          {(completedPct !== null || talent.availability) && (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(2, minmax(0,1fr))", gap: 8 }}>
-              {completedPct !== null && (
-                <div style={{ backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 8 }}>
+            {/* Response time isn't tracked anywhere in the schema — hardcoded
+                to match the reference tile, same as ModelKeyStats does for
+                its own non-derivable admin-only metrics before an admin sets
+                them. */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
+              <div style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: `${VIOLET}1f`, color: VIOLET, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Clock size={13} /></div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800 }}>{ar ? "2-3 أيام" : "2-3 Days"}</div>
+                <div style={{ fontSize: 10, color: "#94A3B8" }}>{ar ? "وقت الرد" : "Avg. Response Time"}</div>
+              </div>
+            </div>
+
+            {completedPct !== null && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: `${EMERALD}1f`, color: EMERALD, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Check size={13} /></div>
+                <div>
                   <div style={{ fontSize: 13, fontWeight: 800 }}>{completedPct}%</div>
                   <div style={{ fontSize: 10, color: "#94A3B8" }}>{ar ? "نسبة الإنجاز" : "Completion Rate"}</div>
                 </div>
-              )}
-              {talent.availability && (
-                <div style={{ backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
+              </div>
+            )}
+
+            {/* On-time delivery isn't tracked either — hardcoded, matches
+                reference's static "100%" tile. */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
+              <div style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: "rgba(14,165,233,0.12)", color: "#0EA5E9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Zap size={13} /></div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800 }}>100%</div>
+                <div style={{ fontSize: 10, color: "#94A3B8" }}>{ar ? "في الموعد" : "On-Time Delivery"}</div>
+              </div>
+            </div>
+
+            {talent.availability && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: `${EMERALD}1f`, color: EMERALD, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: EMERALD }} />
+                </div>
+                <div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: talent.availability === "available" ? EMERALD : "#94A3B8" }}>
                     {talent.availability === "available" ? (ar ? "متاح" : "Available") : (ar ? "غير متاح" : "Unavailable")}
                   </div>
                   <div style={{ fontSize: 10, color: "#94A3B8" }}>{ar ? "استقبال طلبات" : "Accepting Projects"}</div>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
 
           {socialEntries.length > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -244,6 +280,21 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
                 </div>
               ))}
             </div>
+
+            {/* AI Match Score — hardcoded, no scoring model exists. Same
+                treatment as the reference widget, teal instead of violet. */}
+            <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 16, background: `linear-gradient(90deg, ${VIOLET}22, rgba(15,23,42,0.4) 60%, ${EMERALD}1a)`, border: `1px solid ${VIOLET}44` }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#7dd3c0", fontWeight: 700 }}>
+                  <Sparkles size={13} color={VIOLET} />{ar ? "نسبة التطابق الذكي" : "AI Match Score"}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, fontSize: 11, color: "#CBD5E1", fontWeight: 600 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: EMERALD }} />
+                  {ar ? "تطابق ممتاز لمشاريع الـ UGC" : "Excellent Match for UGC & Ads"}
+                </div>
+              </div>
+              <div style={{ fontSize: 26, fontWeight: 900, color: EMERALD }}>96%</div>
+            </div>
           </div>
         )}
 
@@ -255,7 +306,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
             <motion.button
               onClick={onOpenBrief}
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px 16px", borderRadius: 12, border: "none", background: `linear-gradient(90deg, ${VIOLET}, #4F46E5)`, color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px 16px", borderRadius: 12, border: "none", background: `linear-gradient(90deg, ${VIOLET}, #0f766e)`, color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
             >
               <ShieldCheck size={16} color={EMERALD} />{ar ? "وظف الآن" : "Hire Now"}
             </motion.button>

@@ -13,7 +13,7 @@ import { Star, MessageSquare, CheckCircle2, CalendarCheck, Eye, TrendingUp } fro
 import { useSite } from "@/contexts/SiteContext";
 import type { TalentData, BookingStats } from "@/features/talent-profile/types";
 
-const VIOLET = "#7C3AED";
+const VIOLET = "#16a3a3"; // site --color-accent, was violet
 
 interface Props {
   talent: TalentData;

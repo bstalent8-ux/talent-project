@@ -7,7 +7,7 @@
 import { Tag } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 
-const VIOLET = "#7C3AED";
+const VIOLET = "#16a3a3"; // site --color-accent, was violet
 
 export default function UgcContentSpecialties({ specialties }: { specialties: string[] }) {
   const { dark, lang } = useSite();
@@ -25,7 +25,7 @@ export default function UgcContentSpecialties({ specialties }: { specialties: st
       </h3>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {specialties.map((s) => (
-          <span key={s} style={{ padding: "6px 12px", borderRadius: 12, backgroundColor: `${VIOLET}14`, border: `1px solid ${VIOLET}44`, color: dark ? "#C4B5FD" : "#6D28D9", fontSize: 12, fontWeight: 600 }}>
+          <span key={s} style={{ padding: "6px 12px", borderRadius: 12, backgroundColor: `${VIOLET}14`, border: `1px solid ${VIOLET}44`, color: dark ? "#7dd3c0" : "#0f766e", fontSize: 12, fontWeight: 600 }}>
             {s}
           </span>
         ))}

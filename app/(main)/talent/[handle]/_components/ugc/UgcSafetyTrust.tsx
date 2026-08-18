@@ -13,7 +13,7 @@ import { useSite } from "@/contexts/SiteContext";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 
 const EMERALD = "#10B981";
-const VIOLET = "#7C3AED";
+const VIOLET = "#16a3a3"; // site --color-accent, was violet
 
 interface Props {
   talentUserId: string;
