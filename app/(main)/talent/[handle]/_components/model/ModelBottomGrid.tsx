@@ -1,49 +1,26 @@
 "use client";
 
-// Port of model/components/BottomStatsGrid.tsx — 3-col row: compact Reviews
-// (REAL, first review), Career Timeline (HARD-CODED — no achievement/
-// milestone log table exists), Performance (HARD-CODED — repeat-clients/
-// cancellation/on-time/no-show/late-arrival/response rates are not tracked
-// anywhere; see CLAUDE.md's model-profile report).
+// 2-col row: compact Reviews (REAL, first review — real brand/reviewer name,
+// see talent.context.ts's toReviews fix) and Performance (real cancellation
+// rate from bookingStats + admin-managed talent_profiles.model_metrics —
+// every other row renders only when the admin actually entered a value; see
+// CLAUDE.md's model-profile report). Career Timeline was dropped entirely —
+// no achievement/milestone log table exists to back it.
 
 import { Star } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
-import type { Review } from "@/features/talent-profile/types";
+import type { BookingStats, ModelMetrics, Review } from "@/features/talent-profile/types";
 
 const GOLD = "#d89b37";
 
-const TIMELINE_AR = [
-  { title: "تم الانضمام إلى Talents", date: "يونيو 2026", highlight: true },
-  { title: "8 مشاريع مع TechStore", date: "مايو 2026", highlight: false },
-  { title: "Glow Beauty Campaign", date: "أبريل 2026", highlight: false },
-  { title: "الحصول على Gold Model", date: "مارس 2026", highlight: true },
-  { title: "Top Rated Model", date: "فبراير 2026", highlight: true },
-];
-const TIMELINE_EN = [
-  { title: "Joined Talents", date: "Jun 2026", highlight: true },
-  { title: "8 projects with TechStore", date: "May 2026", highlight: false },
-  { title: "Glow Beauty Campaign", date: "Apr 2026", highlight: false },
-  { title: "Earned Gold Model", date: "Mar 2026", highlight: true },
-  { title: "Top Rated Model", date: "Feb 2026", highlight: true },
-];
-const PERF_AR = [
-  { label: "عملاء متكررون", value: "82%", pct: 82 },
-  { label: "معدل الإلغاء", value: "0%", pct: 0 },
-  { label: "تسليم في الموعد", value: "100%", pct: 100 },
-  { label: "معدل عدم الحضور", value: "0%", pct: 0 },
-  { label: "التأخر عن الموعد", value: "1%", pct: 1 },
-  { label: "معدل الاستجابة", value: "98%", pct: 98 },
-];
-const PERF_EN = [
-  { label: "Repeat Clients", value: "82%", pct: 82 },
-  { label: "Cancellation Rate", value: "0%", pct: 0 },
-  { label: "On-time Delivery", value: "100%", pct: 100 },
-  { label: "No Show Rate", value: "0%", pct: 0 },
-  { label: "Late Arrival Rate", value: "1%", pct: 1 },
-  { label: "Response Rate", value: "98%", pct: 98 },
-];
+interface Props {
+  reviews: Review[];
+  reviewCount: number;
+  bookingStats: BookingStats;
+  modelMetrics?: ModelMetrics;
+}
 
-export default function ModelBottomGrid({ reviews, reviewCount }: { reviews: Review[]; reviewCount: number }) {
+export default function ModelBottomGrid({ reviews, reviewCount, bookingStats, modelMetrics }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const CARD = dark ? "var(--bg-card)" : "#FFFFFF";
@@ -51,13 +28,31 @@ export default function ModelBottomGrid({ reviews, reviewCount }: { reviews: Rev
   const SURFACE = dark ? "var(--bg-card-muted)" : "#F8FAFC";
   const TEXT = dark ? "var(--text-primary)" : "#0F172A";
   const MUTED = dark ? "var(--text-muted)" : "#64748B";
-  const timeline = ar ? TIMELINE_AR : TIMELINE_EN;
-  const performance = ar ? PERF_AR : PERF_EN;
   const featured = reviews[0] ?? null;
 
+  const cancellationRate = bookingStats.total > 0
+    ? Math.round((bookingStats.cancelled / bookingStats.total) * 100)
+    : 0;
+
+  const performance: { label: string; pct: number }[] = [
+    { label: ar ? "معدل الإلغاء" : "Cancellation Rate", pct: cancellationRate },
+  ];
+  if (modelMetrics?.repeatClientRate !== null && modelMetrics?.repeatClientRate !== undefined) {
+    performance.push({ label: ar ? "عملاء متكررون" : "Repeat Clients", pct: modelMetrics.repeatClientRate });
+  }
+  if (modelMetrics?.onTimeRate !== null && modelMetrics?.onTimeRate !== undefined) {
+    performance.push({ label: ar ? "تسليم في الموعد" : "On-time Delivery", pct: modelMetrics.onTimeRate });
+  }
+  if (modelMetrics?.noShowRate !== null && modelMetrics?.noShowRate !== undefined) {
+    performance.push({ label: ar ? "معدل عدم الحضور" : "No Show Rate", pct: modelMetrics.noShowRate });
+  }
+  if (modelMetrics?.responseRate !== null && modelMetrics?.responseRate !== undefined) {
+    performance.push({ label: ar ? "معدل الاستجابة" : "Response Rate", pct: modelMetrics.responseRate });
+  }
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
-      <style>{`@media (max-width:900px){.model-bottom-grid{grid-template-columns:1fr !important}}`}</style>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16 }}>
+      <style>{`@media (max-width:700px){.model-bottom-grid{grid-template-columns:1fr !important}}`}</style>
       <div className="model-bottom-grid" style={{ display: "contents" }}>
 
         {/* Reviews */}
@@ -93,31 +88,7 @@ export default function ModelBottomGrid({ reviews, reviewCount }: { reviews: Rev
           )}
         </div>
 
-        {/* Career Timeline — hardcoded */}
-        <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>
-          <h3 style={{ color: TEXT, fontSize: 13.5, fontWeight: 800, margin: "0 0 14px" }}>{ar ? "المسار المهني" : "Career Timeline"}</h3>
-          <div style={{ position: "relative", paddingInlineStart: 16 }}>
-            <div style={{ position: "absolute", insetInlineStart: 5, top: 6, bottom: 6, width: 2, backgroundColor: BORDER }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {timeline.map((item, i) => (
-                <div key={i} style={{ position: "relative" }}>
-                  <span style={{
-                    position: "absolute", insetInlineStart: -16, top: 3, width: 11, height: 11, borderRadius: "50%",
-                    backgroundColor: item.highlight ? GOLD : SURFACE,
-                    border: `2px solid ${item.highlight ? GOLD : MUTED}`,
-                    boxShadow: item.highlight ? `0 0 0 3px ${GOLD}33` : "none",
-                  }} />
-                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
-                    <span style={{ color: TEXT, fontSize: 12, fontWeight: 700 }}>{item.title}</span>
-                    <span style={{ color: MUTED, fontSize: 10.5, whiteSpace: "nowrap" }}>{item.date}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Performance — hardcoded */}
+        {/* Performance — real cancellation rate + admin-managed metrics */}
         <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>
           <h3 style={{ color: TEXT, fontSize: 13.5, fontWeight: 800, margin: "0 0 14px" }}>{ar ? "الأداء" : "Performance"}</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -127,7 +98,7 @@ export default function ModelBottomGrid({ reviews, reviewCount }: { reviews: Rev
                   <span style={{ color: MUTED, fontSize: 11.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
                     <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GOLD }} />{m.label}
                   </span>
-                  <span style={{ color: TEXT, fontSize: 12, fontWeight: 800 }}>{m.value}</span>
+                  <span style={{ color: TEXT, fontSize: 12, fontWeight: 800 }}>{m.pct}%</span>
                 </div>
                 <div style={{ width: "100%", height: 6, borderRadius: 999, backgroundColor: SURFACE, overflow: "hidden" }}>
                   <div style={{ width: `${m.pct}%`, height: "100%", borderRadius: 999, backgroundColor: "#10b981" }} />

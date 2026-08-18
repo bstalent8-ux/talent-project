@@ -146,6 +146,20 @@ export interface TalentData {
    * document + selfie) — distinct from `verified` (the general is_verified
    * trust badge). */
   identityVerified?: boolean;
+  /** Admin-only Model/Fashion trust metrics — every field optional, a
+   * missing field must render as "not shown", never a fabricated number.
+   * See supabase/migrations/20260820_talent_model_metrics.sql. */
+  modelMetrics?: ModelMetrics;
+}
+
+export interface ModelMetrics {
+  responseTimeLabel: string | null;
+  responseRate:      number | null;
+  repeatClientRate:  number | null;
+  onTimeRate:        number | null;
+  avgProjectValue:   number | null;
+  noShowRate:        number | null;
+  tier:              string | null;
 }
 
 export interface BookingStats {

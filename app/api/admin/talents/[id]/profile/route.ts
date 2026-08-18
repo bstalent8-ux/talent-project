@@ -30,6 +30,13 @@ export async function PATCH(
     availability?: string;
     packages?: unknown;
     social_links?: Record<string, unknown>;
+    // Admin-only trust metrics (Model/Fashion). Deliberately NOT part of
+    // tpFields/updateCoreForUser below — that path is shared with the
+    // self-serve talent editor (provider.meta.writableCoreFields), and a
+    // talent must never be able to write their own trust metrics. Written
+    // directly to talent_profiles by id instead, same pattern as the
+    // `profiles` row update further down.
+    model_metrics?: Record<string, unknown>;
     // profile fields
     full_name?: string;
     city?: string;
@@ -37,7 +44,15 @@ export async function PATCH(
     profile_user_id?: string;
   };
 
-  const { profile_user_id, full_name, city, handle, ...tpFields } = body;
+  const { profile_user_id, full_name, city, handle, model_metrics, ...tpFields } = body;
+
+  if (model_metrics !== undefined) {
+    const { error } = await adminClient
+      .from("talent_profiles")
+      .update({ model_metrics })
+      .eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
+  }
 
   // Update the typed core row through the provider layer.
   //

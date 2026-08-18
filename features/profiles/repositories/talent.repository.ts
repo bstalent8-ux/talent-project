@@ -15,61 +15,62 @@ import type {
 } from "../types/raw";
 
 const CORE_COLUMNS =
-  "id, user_id, category, specialties, bio, availability, availability_schedule, packages, social_links, profile_views, avg_rating, total_reviews, total_bookings, is_featured, status, approved_at, approved_by, rejection_reason";
+  "id, user_id, category, specialties, bio, availability, availability_schedule, model_metrics, packages, social_links, profile_views, avg_rating, total_reviews, total_bookings, is_featured, status, approved_at, approved_by, rejection_reason";
 
-// availability_schedule ships in supabase/migrations/20260813_talent_availability_schedule.sql,
-// which is a human-applied SQL-editor migration (CLAUDE.md §6) — the column
-// can lag a deploy that already selects it. Every query/write below tolerates
-// that gap instead of 500ing every talent read: on the specific "column does
-// not exist" error, retry without the column rather than failing the request.
-const CORE_COLUMNS_NO_SCHEDULE = CORE_COLUMNS.replace("availability, availability_schedule,", "availability,");
+// availability_schedule and model_metrics ship in human-applied SQL-editor
+// migrations (CLAUDE.md §6) — either column can lag a deploy that already
+// selects it. Every core read below tolerates that gap instead of 500ing
+// every talent view: on "column does not exist", drop that one column from
+// the select and retry, rather than failing the request. Default values
+// (null / {}) mirror what the column would hold once the migration runs.
+const OPTIONAL_CORE_COLUMNS: { name: string; fallback: unknown }[] = [
+  { name: "availability_schedule", fallback: null },
+  { name: "model_metrics", fallback: {} },
+];
 
 // Reads hit PostgREST's query planner (42703 "column does not exist"); writes
 // hit its schema-cache check instead (PGRST204 "could not find the column") —
 // same root cause, different code depending on which PostgREST layer sees it.
-function isMissingScheduleColumn(error: { code?: string; message?: string } | null): boolean {
-  return (error?.code === "42703" || error?.code === "PGRST204") && !!error.message?.includes("availability_schedule");
+function isMissingColumn(error: { code?: string; message?: string } | null, column: string): boolean {
+  return (error?.code === "42703" || error?.code === "PGRST204") && !!error?.message?.includes(column);
+}
+
+async function selectCoreWithFallback(
+  query: (columns: string) => PromiseLike<{ data: unknown; error: { code?: string; message?: string } | null }>,
+): Promise<RawTalentCore | null> {
+  let columns = CORE_COLUMNS;
+  const dropped: string[] = [];
+
+  for (;;) {
+    const { data, error } = await query(columns);
+    if (!error) {
+      if (data) {
+        for (const name of dropped) {
+          const fallback = OPTIONAL_CORE_COLUMNS.find((c) => c.name === name)!.fallback;
+          (data as Record<string, unknown>)[name] = fallback;
+        }
+      }
+      return (data as RawTalentCore) ?? null;
+    }
+
+    const missing = OPTIONAL_CORE_COLUMNS.find((c) => !dropped.includes(c.name) && isMissingColumn(error, c.name));
+    if (!missing) throw fromSupabaseError(error);
+    dropped.push(missing.name);
+    columns = columns.replace(new RegExp(`,\\s*${missing.name}(?=,)`), "");
+  }
 }
 
 export const talentRepository = {
   async findByUserId(userId: string): Promise<RawTalentCore | null> {
-    let { data, error } = await adminClient
-      .from("talent_profiles")
-      .select(CORE_COLUMNS)
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (error && isMissingScheduleColumn(error)) {
-      ({ data, error } = await adminClient
-        .from("talent_profiles")
-        .select(CORE_COLUMNS_NO_SCHEDULE)
-        .eq("user_id", userId)
-        .maybeSingle());
-      if (data) (data as Record<string, unknown>).availability_schedule = null;
-    }
-
-    if (error) throw fromSupabaseError(error);
-    return (data as RawTalentCore) ?? null;
+    return selectCoreWithFallback((columns) =>
+      adminClient.from("talent_profiles").select(columns).eq("user_id", userId).maybeSingle(),
+    );
   },
 
   async findById(talentProfileId: string): Promise<RawTalentCore | null> {
-    let { data, error } = await adminClient
-      .from("talent_profiles")
-      .select(CORE_COLUMNS)
-      .eq("id", talentProfileId)
-      .maybeSingle();
-
-    if (error && isMissingScheduleColumn(error)) {
-      ({ data, error } = await adminClient
-        .from("talent_profiles")
-        .select(CORE_COLUMNS_NO_SCHEDULE)
-        .eq("id", talentProfileId)
-        .maybeSingle());
-      if (data) (data as Record<string, unknown>).availability_schedule = null;
-    }
-
-    if (error) throw fromSupabaseError(error);
-    return (data as RawTalentCore) ?? null;
+    return selectCoreWithFallback((columns) =>
+      adminClient.from("talent_profiles").select(columns).eq("id", talentProfileId).maybeSingle(),
+    );
   },
 
   /** Class A lookup: user_id → talent_profiles.id. One indexed query. */

@@ -6,13 +6,15 @@
 // rebuilt with this project's inline-style + useSite() token convention and
 // wired to real TalentData/presenceLinks instead of model/lib/model-data.ts.
 //
-// "TOP RATED" ribbon maps to the real talent_profiles.social_links.premium
-// flag (same source as ProfileHero's other "premium" badges elsewhere) —
-// not a fake designation, just a different label for an existing field.
-// Dropped vs. source: follower counts on social links (only the URL is
+// Dropped vs. source: the "TOP RATED" ribbon, which read talent_profiles.
+// social_links.premium — an unmoderated jsonb flag with no rating/review
+// rule behind it (P1 fix). No trustworthy replacement exists yet: the admin
+// tier badge below already surfaces talent_profiles.model_metrics.tier
+// verbatim, so it isn't repurposed into a second, differently-worded claim.
+// Also dropped vs. source: follower counts on social links (only the URL is
 // stored, not a follower count).
 
-import { CheckCircle2, Award, MapPin, Maximize2, ExternalLink, Sparkle } from "lucide-react";
+import { CheckCircle2, Award, MapPin, Maximize2, ExternalLink } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
@@ -89,17 +91,6 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
               </div>
             )}
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent 40%, rgba(0,0,0,0.15))", pointerEvents: "none" }} />
-            {talent.premium && (
-              <span style={{
-                position: "absolute", top: 12, insetInlineStart: 12, zIndex: 2,
-                display: "flex", alignItems: "center", gap: 4,
-                backgroundColor: "rgba(10,13,20,0.85)", color: GOLD,
-                border: `1px solid ${GOLD}66`, borderRadius: 8, padding: "4px 10px",
-                fontSize: 10.5, fontWeight: 900, letterSpacing: "0.02em", backdropFilter: "blur(6px)",
-              }}>
-                <Sparkle size={11} fill={GOLD} />{ar ? "الأعلى تقييماً" : "TOP RATED"}
-              </span>
-            )}
             {firstPortfolioItem && (
               <button
                 onClick={onOpenGallery}
@@ -126,9 +117,11 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
                   <CheckCircle2 size={13} />{ar ? "موثّق" : "VERIFIED"}
                 </span>
               )}
-              <span style={{ display: "flex", alignItems: "center", gap: 5, backgroundColor: "rgba(216,155,55,0.14)", color: GOLD, border: `1px solid ${GOLD}66`, borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 800 }}>
-                <Award size={13} />{ar ? "موديل ذهبي" : "GOLD MODEL"}
-              </span>
+              {talent.modelMetrics?.tier && (
+                <span style={{ display: "flex", alignItems: "center", gap: 5, backgroundColor: "rgba(216,155,55,0.14)", color: GOLD, border: `1px solid ${GOLD}66`, borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 800 }}>
+                  <Award size={13} />{talent.modelMetrics.tier}
+                </span>
+              )}
             </div>
 
             <h1 style={{ color: TEXT, fontSize: isMobile ? 24 : 32, fontWeight: 900, margin: "0 0 6px", letterSpacing: "-0.01em" }}>{displayName}</h1>

@@ -7,7 +7,7 @@
 // Brief" opens the real DirectBriefModal instead of the source's own
 // BookingBriefModal mock.
 
-import { ShieldCheck, UserCheck, ArrowLeft } from "lucide-react";
+import { UserCheck, ArrowLeft } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 import { parsePrice } from "@/lib/utils";
@@ -52,11 +52,7 @@ export default function ModelStickyBar({ selectedPackage, addonsTotal = 0, ident
             </span>
           </div>
 
-          <div style={{ width: 1, height: 28, backgroundColor: BORDER }} />
-
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: MUTED }}>
-            <ShieldCheck size={15} color={GOLD} />{ar ? "دفع آمن" : "Secure Payment"}
-          </div>
+          {identityVerified && <div style={{ width: 1, height: 28, backgroundColor: BORDER }} />}
           {identityVerified && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: MUTED }}>
               <UserCheck size={15} color="#34d399" />{ar ? "هوية موثّقة" : "Identity Verified"}

@@ -1,12 +1,10 @@
 "use client";
 
-// Port of model/components/KeyStats.tsx's 6-cell strip, matching the
-// source's exact 6 labels this time (rating / cancellation / response time /
-// response rate / projects / avg. project price). Real where the schema
-// supports it: rating, reviewCount and cancellationRate (cancelled/total
-// from real bookingStats) and projectsCount (completed bookings). responseTime,
-// responseRate and avgProjectPrice have no backing column or aggregate
-// anywhere — HARD-CODED placeholders, see CLAUDE.md's model-profile report.
+// Port of model/components/KeyStats.tsx's 6-cell strip. Every cell is either
+// a real, automatically-derived number, or an admin-entered
+// talent_profiles.model_metrics field — a cell renders only when its value
+// actually exists; nothing here is a hardcoded fallback number (see
+// CLAUDE.md's model-profile report on the removal of the old placeholders).
 
 import { Star } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
@@ -27,24 +25,32 @@ export default function ModelKeyStats({ talent, bookingStats, onOpenReviews }: P
   const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
   const TEXT = dark ? "var(--text-primary)" : "#0F172A";
   const MUTED = dark ? "var(--text-muted)" : "#64748B";
+  const metrics = talent.modelMetrics;
 
-  // HARD-CODED — no tracked source (see module comment above).
-  const RESPONSE_TIME = ar ? "~1.8 ساعة" : "~1.8h";
-  const RESPONSE_RATE = "95%";
-  const AVG_PROJECT_PRICE = 5200;
-
+  // Real, always derivable.
   const cancellationRate = bookingStats.total > 0
     ? `${Math.round((bookingStats.cancelled / bookingStats.total) * 100)}%`
     : "0%";
 
-  const cells = [
+  const cells: { label: string; value: string; sub?: string; onClick?: () => void; star?: boolean; accent?: boolean }[] = [
     { label: ar ? "تقييم عام" : "Rating", value: talent.rating > 0 ? talent.rating.toFixed(1) : "—", sub: `(${talent.reviewCount} ${ar ? "تقييم" : "reviews"})`, onClick: onOpenReviews, star: true },
     { label: ar ? "معدل الإلغاء" : "Cancellation Rate", value: cancellationRate },
-    { label: ar ? "معدل الوصول" : "Response Time", value: RESPONSE_TIME },
-    { label: ar ? "معدل الاستجابة" : "Response Rate", value: RESPONSE_RATE, accent: true },
-    { label: ar ? "عدد المشاريع" : "Projects", value: String(bookingStats.completed) },
-    { label: ar ? "متوسط قيمة المشروع" : "Avg. Project Value", value: `${AVG_PROJECT_PRICE.toLocaleString()} EGP` },
+    { label: ar ? "المشاريع المكتملة" : "Completed Projects", value: String(bookingStats.completed) },
+    { label: ar ? "إجمالي الحجوزات" : "Total Bookings", value: String(bookingStats.total) },
+    { label: ar ? "مشاهدات الملف" : "Profile Views", value: talent.views },
   ];
+
+  // Admin-managed (talent_profiles.model_metrics) — only rendered when the
+  // admin has actually entered a value for that field.
+  if (metrics?.responseTimeLabel) {
+    cells.push({ label: ar ? "معدل الوصول" : "Response Time", value: metrics.responseTimeLabel });
+  }
+  if (metrics?.responseRate !== null && metrics?.responseRate !== undefined) {
+    cells.push({ label: ar ? "معدل الاستجابة" : "Response Rate", value: `${metrics.responseRate}%`, accent: true });
+  }
+  if (metrics?.avgProjectValue !== null && metrics?.avgProjectValue !== undefined) {
+    cells.push({ label: ar ? "متوسط قيمة المشروع" : "Avg. Project Value", value: `${metrics.avgProjectValue.toLocaleString()} EGP` });
+  }
 
   return (
     <div style={{ width: "100%", backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>

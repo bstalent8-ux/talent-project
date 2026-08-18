@@ -8,8 +8,8 @@
 //
 // REAL when any talent_brands row has verified = true (admin-flagged).
 // Until an admin verifies a real collaboration, falls back to 3 HARD-CODED
-// placeholder rows (matching model/lib/model-data.ts's verifiedWork) so the
-// card isn't empty — swap this out once verification is actually used.
+// placeholder rows so the card isn't empty — restored on request; remove
+// again once verification is actually in use for this talent.
 
 import { CheckCircle } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
@@ -36,10 +36,9 @@ export default function ModelVerifiedBrands({ brands }: { brands: BrandItem[] })
   const SURFACE = dark ? "#0A121C" : "#F8FAFC";
 
   const verifiedReal = brands.filter((b) => b.verified);
-  const isFallback = verifiedReal.length === 0;
-  const rows = isFallback
-    ? (ar ? FALLBACK_AR : FALLBACK_EN).map((r, i) => ({ id: `fallback-${i}`, name: r.name, year: r.year }))
-    : verifiedReal.map((b) => ({ id: b.id, name: b.name, year: b.year_collaborated }));
+  const rows = verifiedReal.length > 0
+    ? verifiedReal.map((b) => ({ id: b.id, name: b.name, year: b.year_collaborated }))
+    : (ar ? FALLBACK_AR : FALLBACK_EN).map((r, i) => ({ id: `fallback-${i}`, name: r.name, year: r.year }));
 
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, height: "100%" }}>

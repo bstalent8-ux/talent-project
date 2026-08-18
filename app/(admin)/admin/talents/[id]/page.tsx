@@ -13,22 +13,39 @@ export default async function AdminTalentEditorPage({
 }) {
   const { id } = await params;
 
-  const { data } = await adminClient
+  // model_metrics ships in a human-applied SQL-editor migration (CLAUDE.md
+  // §6, supabase/migrations/20260820_talent_model_metrics.sql) — tolerate it
+  // not existing yet rather than 500ing this whole editor page.
+  let { data, error } = await adminClient
     .from("profiles")
     .select(`
       id, full_name, handle, city,
       talent_profiles!inner (
-        id, category, bio, specialties, availability, packages, social_links
+        id, category, bio, specialties, availability, packages, social_links, model_metrics
       )
     `)
     .eq("talent_profiles.id", id)
     .single();
+
+  if (error && (error.code === "42703" || error.code === "PGRST204") && error.message?.includes("model_metrics")) {
+    ({ data, error } = await adminClient
+      .from("profiles")
+      .select(`
+        id, full_name, handle, city,
+        talent_profiles!inner (
+          id, category, bio, specialties, availability, packages, social_links
+        )
+      `)
+      .eq("talent_profiles.id", id)
+      .single());
+  }
 
   if (!data) notFound();
 
   const tp = Array.isArray(data.talent_profiles)
     ? data.talent_profiles[0]
     : data.talent_profiles;
+  const tpRecord = (tp ?? {}) as Record<string, unknown>;
 
   return (
     <TalentEditorClient
@@ -44,6 +61,7 @@ export default async function AdminTalentEditorPage({
         availability: tp?.availability ?? "available",
         packages:     JSON.stringify(tp?.packages ?? [], null, 2),
         social_links: JSON.stringify(tp?.social_links ?? {}, null, 2),
+        model_metrics: (tpRecord.model_metrics ?? {}) as Record<string, unknown>,
       }}
     />
   );

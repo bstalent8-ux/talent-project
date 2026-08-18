@@ -73,6 +73,10 @@ export interface RawTalentCore {
   bio:              string | null;
   availability:     string | null;
   availability_schedule: unknown;
+  /** Admin-only trust/performance metrics (Model/Fashion) — see
+   * supabase/migrations/20260820_talent_model_metrics.sql. Never
+   * user-writable; not part of provider.meta.writableCoreFields. */
+  model_metrics:    unknown;
   packages:         unknown;
   social_links:     Record<string, unknown> | null;
   profile_views:    number | null;

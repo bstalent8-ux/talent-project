@@ -23,6 +23,7 @@ import type {
   CompletionSectionDTO,
   CoreSectionState,
   DynamicValidationResult,
+  ModelMetricsDTO,
   PackageItemDTO,
   PortfolioItemDTO,
   ProfileSectionDTO,
@@ -131,6 +132,21 @@ function toBookingStats(rows: Array<{ status: string }>): BookingStatsDTO {
   };
 }
 
+function toModelMetrics(raw: unknown): ModelMetricsDTO {
+  const r = (raw && typeof raw === "object") ? raw as Record<string, unknown> : {};
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+  return {
+    responseTimeLabel: str(r.response_time_label),
+    responseRate:      num(r.response_rate),
+    repeatClientRate:  num(r.repeat_client_rate),
+    onTimeRate:        num(r.on_time_rate),
+    avgProjectValue:   num(r.avg_project_value),
+    noShowRate:        num(r.no_show_rate),
+    tier:              str(r.tier),
+  };
+}
+
 function buildPublicCore(core: RawTalentCore, parts: {
   portfolio:         PortfolioItemDTO[];
   reviews:           ReviewItemDTO[];
@@ -144,6 +160,7 @@ function buildPublicCore(core: RawTalentCore, parts: {
     specialties:   core.specialties ?? [],
     availability:  core.availability,
     availabilitySchedule: core.availability_schedule ?? null,
+    modelMetrics:  toModelMetrics(core.model_metrics),
     packages:      toPackages(core.packages),
     socialLinks:   core.social_links ?? {},
     rating:        core.avg_rating ?? 0,

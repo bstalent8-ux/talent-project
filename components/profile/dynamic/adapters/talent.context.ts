@@ -53,6 +53,7 @@ export function toTalentData(dto: PublicProfileDTO): TalentData {
     category:     core.category ?? null,
     availability: core.availability ?? null,
     availabilitySchedule: parseAvailabilitySchedule(core.availabilitySchedule),
+    modelMetrics: core.modelMetrics,
     languages:    typeof social.languages === "string" && social.languages.trim().length > 0
       ? social.languages.trim()
       : null,
@@ -142,7 +143,10 @@ export function toReviews(dto: PublicProfileDTO, locale = "ar-EG"): Review[] {
   return (core.reviews ?? []).map((review) => ({
     id:     review.id,
     author: review.author,
-    brand:  "",
+    // review.author is already the real brand/reviewer profiles.full_name
+    // (see talent.provider.ts's authorByBrandId lookup) — this used to be
+    // hardcoded "", which is why Model/UGC review cards never showed a name.
+    brand:  review.author,
     rating: review.rating,
     text:   review.text,
     date:   new Date(review.createdAt).toLocaleDateString(locale, {

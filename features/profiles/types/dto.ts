@@ -187,6 +187,25 @@ export interface BookingStatsDTO {
   cancelled: number;
 }
 
+/**
+ * Admin-only trust/performance metrics (Model/Fashion profiles) — every
+ * field is optional because none of these are derivable from tracked data;
+ * an admin enters them by hand at /admin/talents/[id]. A missing field must
+ * render as "not shown" on the public profile, never a fabricated number.
+ * Never user-writable — see talent.provider.ts's meta.writableCoreFields
+ * comment and the admin-only write path in
+ * app/api/admin/talents/[id]/profile/route.ts.
+ */
+export interface ModelMetricsDTO {
+  responseTimeLabel: string | null;
+  responseRate:      number | null;
+  repeatClientRate:  number | null;
+  onTimeRate:        number | null;
+  avgProjectValue:   number | null;
+  noShowRate:        number | null;
+  tier:              string | null;
+}
+
 export interface TalentPublicCore {
   kind:          "talent";
   category:      string | null;
@@ -194,6 +213,7 @@ export interface TalentPublicCore {
   availability:  string | null;
   /** Structured detail (dates/slots/timezone/exceptions) shown when availability === "available". Raw jsonb, parsed by the caller. */
   availabilitySchedule: unknown;
+  modelMetrics:  ModelMetricsDTO;
   packages:      PackageItemDTO[];
   socialLinks:   Record<string, unknown>;
   rating:        number;

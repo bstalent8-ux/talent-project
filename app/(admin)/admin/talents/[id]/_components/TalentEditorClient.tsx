@@ -14,6 +14,15 @@ const TX = {
     save: "حفظ التغييرات", saving: "جاري الحفظ...", back: "رجوع",
     saved: "تم الحفظ بنجاح", error: "حدث خطأ",
     availableOpts: { available: "متاح", busy: "مشغول", unavailable: "غير متاح" },
+    modelMetricsTitle: "مقاييس الموديل (يديرها الأدمن فقط)",
+    modelMetricsHint: "تظهر هذه القيم في صفحة الموديل العامة كما هي. أي حقل فارغ لا يظهر إطلاقاً — لا تُعرض أرقام وهمية.",
+    responseTimeLabel: "مدة الرد (نص، مثال: ~1.8 ساعة)",
+    responseRate: "معدل الاستجابة (%)",
+    repeatClientRate: "نسبة العملاء المتكررين (%)",
+    onTimeRate: "نسبة التسليم في الموعد (%)",
+    avgProjectValue: "متوسط قيمة المشروع (EGP)",
+    noShowRate: "نسبة عدم الحضور (%)",
+    tier: "الفئة/الشارة (فارغ = بدون شارة)",
   },
   en: {
     title: "Edit Talent Profile",
@@ -23,13 +32,33 @@ const TX = {
     save: "Save Changes", saving: "Saving...", back: "Back",
     saved: "Saved successfully", error: "An error occurred",
     availableOpts: { available: "Available", busy: "Busy", unavailable: "Unavailable" },
+    modelMetricsTitle: "Model Metrics (admin-managed only)",
+    modelMetricsHint: "These values render on the public Model profile exactly as entered. Any blank field is hidden entirely — never a fabricated number.",
+    responseTimeLabel: "Response time (text, e.g. ~1.8h)",
+    responseRate: "Response rate (%)",
+    repeatClientRate: "Repeat client rate (%)",
+    onTimeRate: "On-time delivery rate (%)",
+    avgProjectValue: "Avg. project value (EGP)",
+    noShowRate: "No-show rate (%)",
+    tier: "Tier / badge (blank = no badge)",
   },
 };
+
+interface ModelMetricsForm {
+  response_time_label: string;
+  response_rate: string;
+  repeat_client_rate: string;
+  on_time_rate: string;
+  avg_project_value: string;
+  no_show_rate: string;
+  tier: string;
+}
 
 interface InitialData {
   full_name: string; handle: string; city: string;
   category: string; bio: string; specialties: string;
   availability: string; packages: string; social_links: string;
+  model_metrics: Record<string, unknown>;
 }
 
 interface Props {
@@ -47,6 +76,21 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
   const [form, setForm]       = useState(initialData);
   const [status, setStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [jsonErr, setJsonErr] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<ModelMetricsForm>(() => {
+    const m = initialData.model_metrics ?? {};
+    const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
+    return {
+      response_time_label: str(m.response_time_label),
+      response_rate:       str(m.response_rate),
+      repeat_client_rate:  str(m.repeat_client_rate),
+      on_time_rate:        str(m.on_time_rate),
+      avg_project_value:   str(m.avg_project_value),
+      no_show_rate:        str(m.no_show_rate),
+      tier:                str(m.tier),
+    };
+  });
+
+  const isModel = form.category === "model" || form.category === "fashion";
 
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "#1e293b" : "#E2E8F0";
@@ -67,11 +111,20 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
     setJsonErr(null);
   }
 
+  function setMetric(k: keyof ModelMetricsForm, v: string) {
+    setMetrics(m => ({ ...m, [k]: v }));
+    setStatus("idle");
+  }
+
   async function handleSave() {
     // Validate JSON fields
     let parsedPackages: unknown, parsedSocialLinks: unknown;
     try { parsedPackages = JSON.parse(form.packages); } catch { setJsonErr("packages"); return; }
     try { parsedSocialLinks = JSON.parse(form.social_links); } catch { setJsonErr("social_links"); return; }
+
+    // Blank field → null, never a fabricated 0/"" reaching the public page.
+    const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
+    const strOrNull = (v: string) => (v.trim() === "" ? null : v.trim());
 
     setStatus("saving");
     const res = await fetch(`/api/admin/talents/${talentProfileId}/profile`, {
@@ -90,6 +143,19 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
         availability: form.availability,
         packages:     parsedPackages,
         social_links: parsedSocialLinks,
+        // Admin-only Model/Fashion trust metrics — omitted entirely unless
+        // this talent is currently a Model/Fashion profile.
+        ...(isModel ? {
+          model_metrics: {
+            response_time_label: strOrNull(metrics.response_time_label),
+            response_rate:       numOrNull(metrics.response_rate),
+            repeat_client_rate:  numOrNull(metrics.repeat_client_rate),
+            on_time_rate:        numOrNull(metrics.on_time_rate),
+            avg_project_value:   numOrNull(metrics.avg_project_value),
+            no_show_rate:        numOrNull(metrics.no_show_rate),
+            tier:                strOrNull(metrics.tier),
+          },
+        } : {}),
       }),
     });
 
@@ -164,6 +230,47 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
                 <option key={v} value={v}>{l}</option>
               ))}
             </select>
+          </div>
+        </div>
+      ))}
+
+      {/* Model/Fashion trust metrics — admin-only, never self-serve editable */}
+      {isModel && section(t.modelMetricsTitle, (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <p style={{ color: MUTED, fontSize: 12.5, lineHeight: 1.6, margin: "-6px 0 4px" }}>{t.modelMetricsHint}</p>
+          <div style={grid2}>
+            <div>
+              {label(t.responseTimeLabel)}
+              <input style={inp} value={metrics.response_time_label} onChange={e => setMetric("response_time_label", e.target.value)} />
+            </div>
+            <div>
+              {label(t.tier)}
+              <input style={inp} value={metrics.tier} onChange={e => setMetric("tier", e.target.value)} />
+            </div>
+          </div>
+          <div style={grid2}>
+            <div>
+              {label(t.responseRate)}
+              <input type="number" min={0} max={100} style={inp} value={metrics.response_rate} onChange={e => setMetric("response_rate", e.target.value)} />
+            </div>
+            <div>
+              {label(t.repeatClientRate)}
+              <input type="number" min={0} max={100} style={inp} value={metrics.repeat_client_rate} onChange={e => setMetric("repeat_client_rate", e.target.value)} />
+            </div>
+          </div>
+          <div style={grid2}>
+            <div>
+              {label(t.onTimeRate)}
+              <input type="number" min={0} max={100} style={inp} value={metrics.on_time_rate} onChange={e => setMetric("on_time_rate", e.target.value)} />
+            </div>
+            <div>
+              {label(t.noShowRate)}
+              <input type="number" min={0} max={100} style={inp} value={metrics.no_show_rate} onChange={e => setMetric("no_show_rate", e.target.value)} />
+            </div>
+          </div>
+          <div>
+            {label(t.avgProjectValue)}
+            <input type="number" min={0} style={inp} value={metrics.avg_project_value} onChange={e => setMetric("avg_project_value", e.target.value)} />
           </div>
         </div>
       ))}

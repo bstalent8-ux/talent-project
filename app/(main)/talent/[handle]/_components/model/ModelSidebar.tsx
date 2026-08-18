@@ -1,9 +1,11 @@
 "use client";
 
-// Right sidebar — port of model/components/RightSidebar.tsx's 5-card stack.
-// Real: MeasurementsSection (measurements + languages). Hard-coded (no real
-// data source — see CLAUDE.md's model-profile report): ModelMatchScore,
-// ModelAiInsights, ModelWeeklyAvailability, ModelRecentActivity.
+// Right sidebar. Real: ModelKeyStats (rating/cancellation/bookings/views +
+// admin-managed model_metrics), ModelWeeklyAvailability (real
+// availability + availability_schedule), MeasurementsSection (measurements +
+// languages). Placeholder ("Coming Soon", no fake numbers): ModelMatchScore,
+// ModelAiInsights — no matching algorithm or recommendation engine exists.
+// Recent Activity was dropped entirely — no activity-log table exists.
 
 import type { TalentData, BookingStats } from "@/features/talent-profile/types";
 import MeasurementsSection from "../MeasurementsSection";
@@ -11,7 +13,6 @@ import ModelKeyStats from "./ModelKeyStats";
 import ModelMatchScore from "./ModelMatchScore";
 import ModelAiInsights from "./ModelAiInsights";
 import ModelWeeklyAvailability from "./ModelWeeklyAvailability";
-import ModelRecentActivity from "./ModelRecentActivity";
 
 interface Props {
   talent: TalentData;
@@ -24,9 +25,8 @@ export default function ModelSidebar({ talent, bookingStats }: Props) {
       <ModelKeyStats talent={talent} bookingStats={bookingStats} />
       <ModelMatchScore />
       <ModelAiInsights />
-      <ModelWeeklyAvailability />
+      <ModelWeeklyAvailability availability={talent.availability} schedule={talent.availabilitySchedule} />
       {talent.measurements && <MeasurementsSection measurements={talent.measurements} languages={talent.languages} />}
-      <ModelRecentActivity talentName={talent.name} />
     </div>
   );
 }

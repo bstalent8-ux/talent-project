@@ -19,18 +19,19 @@
 // MeasurementsSection — all already wired to real data by the adapters this
 // file imports from directly.
 //
-// 2026-08 update: full visual parity pass against the `model/` reference
-// folder, per explicit instruction to match its layout/detail exactly even
-// where that means hard-coded placeholders. See CLAUDE.md's model-profile
-// report for the real-vs-hardcoded breakdown of every section added here
-// (ModelMatchScore, ModelAiInsights, ModelWeeklyAvailability,
-// ModelRecentActivity, ModelBottomGrid's timeline+performance — all
-// hard-coded; ModelVerifiedBrands, the Quick Bio languages row, and the
-// KeyStats cancellation rate — real).
+// 2026-08 real-data pass: every section is now either a real, automatically
+// derived value, or an admin-managed talent_profiles.model_metrics field —
+// no hardcoded numbers left in this shell. See CLAUDE.md's model-profile
+// report for the full real-vs-admin-managed breakdown. ModelMatchScore and
+// ModelAiInsights are honest "Coming Soon" placeholders (no matching
+// algorithm / recommendation engine exists); Career Timeline, Recent
+// Activity, the ModelVerifiedBrands fallback rows, and the sticky bar's
+// "Secure Payment" claim were removed outright — there was nothing real
+// behind any of them (CLAUDE.md §10.1: no escrow, no payment provider).
 //
 // Dropped vs. source: Navbar (project renders one globally), the full
-// interactive Calendar modal (Weekly Availability card links out to it, but
-// the modal itself isn't built).
+// interactive Calendar modal (Weekly Availability shows the real current
+// week instead).
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -205,7 +206,7 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
             />
 
             <div id="model-performance">
-              <ModelBottomGrid reviews={reviews} reviewCount={talent.reviewCount} />
+              <ModelBottomGrid reviews={reviews} reviewCount={talent.reviewCount} bookingStats={bookingStats} modelMetrics={talent.modelMetrics} />
             </div>
           </div>
 
