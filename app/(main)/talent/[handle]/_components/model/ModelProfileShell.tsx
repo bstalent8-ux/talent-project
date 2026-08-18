@@ -210,7 +210,7 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
             </div>
           </div>
 
-          <ModelSidebar talent={talent} bookingStats={bookingStats} />
+          <ModelSidebar talent={talent} bookingStats={bookingStats} brands={brands} />
         </div>
       </div>
 

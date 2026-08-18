@@ -1,6 +1,6 @@
 "use client";
 
-// Real replacement for model/components/modals/GalleryModal.tsx — navigates
+// Real replacement for model/components/modals/GalleryModal.tsx - navigates
 // the real portfolioItems array (url/media_type/caption only, no fabricated
 // per-photo metadata).
 
@@ -14,6 +14,23 @@ interface Props {
   index: number | null;
   onClose: () => void;
   onNavigate: (index: number) => void;
+}
+
+function isVideoItem(item: PortfolioItem): boolean {
+  return item.media_type?.toLowerCase() === "video";
+}
+
+function cloudinaryVideoPoster(url: string | null): string | undefined {
+  if (!url || !url.includes("res.cloudinary.com") || !url.includes("/video/upload/")) return undefined;
+  const [beforeHash] = url.split("#");
+  const [withoutQuery] = beforeHash.split("?");
+  const marker = "/video/upload/";
+  const markerIndex = withoutQuery.indexOf(marker);
+  if (markerIndex === -1) return undefined;
+
+  const prefix = withoutQuery.slice(0, markerIndex + marker.length);
+  const publicId = withoutQuery.slice(markerIndex + marker.length).replace(/\.[a-z0-9]+$/i, ".jpg");
+  return `${prefix}so_0.5,f_jpg,q_auto,w_900/${publicId}`;
 }
 
 export default function ModelGalleryLightbox({ items, index, onClose, onNavigate }: Props) {
@@ -32,16 +49,25 @@ export default function ModelGalleryLightbox({ items, index, onClose, onNavigate
           <motion.div
             initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             onClick={(e) => e.stopPropagation()}
-            style={{ position: "relative", maxWidth: 480, width: "100%", maxHeight: "85vh", borderRadius: 14, overflow: "hidden", backgroundColor: "#000", border: `1px solid ${BORDER}` }}
+            style={{ position: "relative", maxWidth: 760, width: "100%", maxHeight: "85vh", borderRadius: 14, overflow: "hidden", backgroundColor: "#000", border: `1px solid ${BORDER}` }}
           >
-            {item.media_type === "video" ? (
-              <video src={item.url ?? undefined} controls autoPlay playsInline style={{ width: "100%", maxHeight: "85vh", display: "block" }} />
+            {isVideoItem(item) ? (
+              <video
+                key={item.id}
+                src={item.url ?? undefined}
+                poster={cloudinaryVideoPoster(item.url)}
+                controls
+                autoPlay
+                playsInline
+                preload="metadata"
+                style={{ width: "100%", maxHeight: "85vh", objectFit: "contain", display: "block", backgroundColor: "#000" }}
+              />
             ) : (
               <img src={item.url ?? undefined} alt={item.caption ?? ""} style={{ width: "100%", maxHeight: "85vh", objectFit: "contain", display: "block" }} />
             )}
 
             {item.caption && (
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "24px 16px 14px", background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent)" }}>
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "24px 16px 14px", background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent)", pointerEvents: "none" }}>
                 <p style={{ color: "#fff", fontSize: 13, margin: 0 }}>{item.caption}</p>
               </div>
             )}
