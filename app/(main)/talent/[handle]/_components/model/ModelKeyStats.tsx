@@ -53,20 +53,20 @@ export default function ModelKeyStats({ talent, bookingStats, onOpenReviews }: P
   }
 
   return (
-    <div style={{ width: "100%", backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+    <div style={{ width: "100%", backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "12px 10px" }}>
+      <div style={{ display: "grid", gridAutoFlow: "column", gridAutoColumns: "1fr", gap: 4 }}>
         {cells.map((c) => (
           <div
             key={c.label}
             onClick={c.onClick}
-            style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 10, borderRadius: 10, cursor: c.onClick ? "pointer" : undefined, textAlign: "center" }}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4px 2px", borderRadius: 10, cursor: c.onClick ? "pointer" : undefined, textAlign: "center", minWidth: 0 }}
           >
-            <span style={{ fontSize: 11, color: MUTED, fontWeight: 600, marginBottom: 4 }}>{c.label}</span>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-              {c.star && <Star size={14} color={GOLD} fill={GOLD} />}
-              <span style={{ fontSize: 19, fontWeight: 900, color: c.accent ? "#34d399" : TEXT }}>{c.value}</span>
+            <span style={{ fontSize: 9, color: MUTED, fontWeight: 600, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{c.label}</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+              {c.star && <Star size={11} color={GOLD} fill={GOLD} />}
+              <span style={{ fontSize: 14, fontWeight: 900, color: c.accent ? "#34d399" : TEXT, whiteSpace: "nowrap" }}>{c.value}</span>
             </div>
-            {c.sub && <span style={{ fontSize: 10, color: MUTED, marginTop: 2 }}>{c.sub}</span>}
+            {c.sub && <span style={{ fontSize: 8, color: MUTED, marginTop: 1, whiteSpace: "nowrap" }}>{c.sub}</span>}
           </div>
         ))}
       </div>

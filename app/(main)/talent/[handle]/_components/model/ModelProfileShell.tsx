@@ -59,6 +59,7 @@ import ExperienceSection from "../ExperienceSection";
 import UsageRightsSection from "../UsageRightsSection";
 
 import ModelHero from "./ModelHero";
+import ModelKeyStats from "./ModelKeyStats";
 import ModelActionBar from "./ModelActionBar";
 import ModelPortfolioBento from "./ModelPortfolioBento";
 import ModelGalleryLightbox from "./ModelGalleryLightbox";
@@ -182,6 +183,7 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
               firstPortfolioItem={portfolioItems[0] ?? null}
               onOpenGallery={() => setGalleryIndex(0)}
             />
+            <ModelKeyStats talent={talent} bookingStats={bookingStats} />
             <ModelTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
             <div id="model-portfolio">
@@ -210,7 +212,7 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
             </div>
           </div>
 
-          <ModelSidebar talent={talent} bookingStats={bookingStats} brands={brands} />
+          <ModelSidebar talent={talent} brands={brands} />
         </div>
       </div>
 
