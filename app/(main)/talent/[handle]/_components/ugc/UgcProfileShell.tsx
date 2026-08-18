@@ -37,9 +37,10 @@ import {
   toExperience,
   toBrandItems,
   toBookingStats,
+  toAddons,
 } from "@/components/profile/dynamic/adapters/talent.context";
 import type { PublicProfileDTO } from "@/features/profiles/types/dto";
-import type { PortfolioItem } from "@/features/talent-profile/types";
+import type { PackageItem, PortfolioItem } from "@/features/talent-profile/types";
 
 import UgcHero from "./UgcHero";
 import UgcTabs, { type UgcTab } from "./UgcTabs";
@@ -54,10 +55,26 @@ import UgcBrands from "./UgcBrands";
 import UgcReviews from "./UgcReviews";
 import UgcInsightsActivity from "./UgcInsightsActivity";
 import UgcSafetyTrust from "./UgcSafetyTrust";
+import UsageRightsSection from "../UsageRightsSection";
+import ModelStickyBar from "../model/ModelStickyBar";
 
 /** The three actions this shell can resume after an auth round-trip —
  * anything else in `?resume=` is ignored rather than trusted blindly. */
 const RESUMABLE_ACTIONS: readonly PermissionAction[] = ["create_booking", "start_conversation", "favorite_talent"];
+
+// HARD-CODED fallback for UsageRightsSection — same content as
+// model/ModelProfileShell.tsx's, shown only when the talent has no real
+// talent_profiles.social_links.usage_addons entries.
+const FALLBACK_ADDONS_AR = [
+  { key: "raw-material", label: "تسليم المواد الخام (Raw Footage)", price: 800 },
+  { key: "extra-hour", label: "ساعة تصوير إضافية", price: 500 },
+  { key: "extra-transition", label: "لوكيشن / انتقال إضافي", price: 600 },
+];
+const FALLBACK_ADDONS_EN = [
+  { key: "raw-material", label: "Raw footage delivery", price: 800 },
+  { key: "extra-hour", label: "Extra shooting hour", price: 500 },
+  { key: "extra-transition", label: "Extra location / transition", price: 600 },
+];
 
 export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO }) {
   const { dark, lang } = useSite();
@@ -73,11 +90,21 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
   const experience      = useMemo(() => toExperience(profile), [profile]);
   const brands          = useMemo(() => toBrandItems(profile), [profile]);
   const bookingStats    = useMemo(() => toBookingStats(profile), [profile]);
+  const realAddons      = useMemo(() => toAddons(profile), [profile]);
+  const addons          = useMemo(
+    () => (realAddons && realAddons.length > 0 ? realAddons : (ar ? FALLBACK_ADDONS_AR : FALLBACK_ADDONS_EN)),
+    [realAddons, ar],
+  );
 
   const [activeTab, setActiveTab] = useState("portfolio");
   const [lightboxItem, setLightboxItem] = useState<PortfolioItem | null>(null);
   const [showBrief, setShowBrief] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
+  const [checkedAddons, setCheckedAddons] = useState<Record<string, boolean>>({});
   const { isFavorited, error: favoriteError, toggle: toggleFavorite } = useFavoriteTalent(talent.id);
+
+  const toggleAddon = (key: string) => setCheckedAddons((prev) => ({ ...prev, [key]: !prev[key] }));
+  const addonsTotal = addons.reduce((sum, a) => sum + (checkedAddons[a.key] ? a.price : 0), 0);
 
   const hasPerformance = talent.rating > 0 || talent.reviewCount > 0 || bookingStats.total > 0;
 
@@ -148,7 +175,7 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
         fontFamily: "'Cairo', sans-serif",
         backgroundColor: dark ? "#050B12" : "#F1F5F9",
         minHeight: "100vh",
-        paddingBottom: 60,
+        paddingBottom: 90,
       }}
     >
       {/* Full-bleed band — deliberately OUTSIDE the centered container below,
@@ -174,7 +201,14 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
             <UgcVideoPortfolio portfolioItems={portfolioItems} onSelectVideo={setLightboxItem} />
             {hasPerformance && <UgcPerformanceMetrics talent={talent} bookingStats={bookingStats} />}
             <UgcPreviousShoots experience={experience} brands={brands} />
-            <UgcPackages packages={packages} onSelectPackage={() => setShowBrief(true)} />
+            <UgcPackages packages={packages} selectedId={selectedPackage?.id} onSelectPackage={setSelectedPackage} />
+            <UsageRightsSection
+              selectedPackage={selectedPackage}
+              addons={addons}
+              checked={checkedAddons}
+              onToggle={toggleAddon}
+              showBookButton={false}
+            />
             <UgcReviews reviews={reviews} rating={talent.rating} />
           </div>
 
@@ -194,6 +228,13 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
       </div>
 
       <UgcVideoLightbox item={lightboxItem} onClose={() => setLightboxItem(null)} />
+
+      <ModelStickyBar
+        selectedPackage={selectedPackage}
+        addonsTotal={addonsTotal}
+        identityVerified={Boolean(talent.identityVerified)}
+        onContinueToBrief={() => setShowBrief(true)}
+      />
 
       {showBrief && (
         <DirectBriefModal

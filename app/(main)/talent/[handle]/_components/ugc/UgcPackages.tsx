@@ -19,10 +19,11 @@ const EMERALD = "#10B981";
 
 interface Props {
   packages: PackageItem[] | null;
+  selectedId?: string | null;
   onSelectPackage: (pkg: PackageItem) => void;
 }
 
-export default function UgcPackages({ packages, onSelectPackage }: Props) {
+export default function UgcPackages({ packages, selectedId, onSelectPackage }: Props) {
   const isMobile = useIsMobile();
   const { dark, lang } = useSite();
   const ar = lang !== "en";
@@ -80,12 +81,14 @@ export default function UgcPackages({ packages, onSelectPackage }: Props) {
               onClick={() => onSelectPackage(pkg)}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "11px 0", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "'Cairo',sans-serif",
-                background: pkg.popular ? `linear-gradient(90deg, ${EMERALD}, #14B8A6)` : "#0F172A",
-                color: pkg.popular ? "#052e16" : "#fff", fontWeight: 800, fontSize: 13,
+                padding: "11px 0", borderRadius: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+                border: selectedId === pkg.id ? `1px solid ${EMERALD}` : "none",
+                background: selectedId === pkg.id ? "transparent" : (pkg.popular ? `linear-gradient(90deg, ${EMERALD}, #14B8A6)` : "#0F172A"),
+                color: selectedId === pkg.id ? EMERALD : (pkg.popular ? "#052e16" : "#fff"),
+                fontWeight: 800, fontSize: 13,
               }}
             >
-              {ar ? "اختيار الباقة" : "Select Package"}<ArrowRight size={14} />
+              {selectedId === pkg.id ? (ar ? "تم الاختيار" : "Selected") : <>{ar ? "اختيار الباقة" : "Select Package"}<ArrowRight size={14} /></>}
             </button>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 10, opacity: 0.7 }}>
               <Shield size={11} color={EMERALD} />{ar ? "حماية دفع كاملة" : "Full payment protection"}
