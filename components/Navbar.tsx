@@ -16,7 +16,6 @@ import {
   Moon,
   Search,
   Settings,
-  ShieldCheck,
   Sun,
   UserRoundPlus,
   UserPen,
@@ -63,7 +62,6 @@ const TX = {
     messages: "الرسائل",
     dashboardTalent: "لوحة التحكم",
     dashboardBrand: "لوحة تحكم البراند",
-    dashboardAdmin: "لوحة الإدارة",
     logout: "تسجيل الخروج",
     login: "دخول",
     register: "حساب جديد",
@@ -81,7 +79,6 @@ const TX = {
     messages: "Messages",
     dashboardTalent: "Dashboard",
     dashboardBrand: "Brand Dashboard",
-    dashboardAdmin: "Admin Panel",
     logout: "Log Out",
     login: "Login",
     register: "Register",
@@ -114,12 +111,11 @@ export default function Navbar() {
   const t = TX[lang];
   const links = NAV_LINKS[lang].filter((item) => !item.href.startsWith("/bookings") || !isGuest);
   const dashboardLabel = lang === "ar" ? "\u0645\u0644\u0641\u064a" : "My Profile";
-  const adminPanelLabel = lang === "ar" ? "\u0644\u0648\u062d\u0629 \u0627\u0644\u0625\u062f\u0627\u0631\u0629" : "Admin Panel";
   const role = user?.role ?? null;
   const cta = authLoading
     ? null
     : role === "admin"
-      ? { href: "/admin", label: adminPanelLabel, Icon: ShieldCheck }
+      ? null
       : role === "talent"
         ? { href: "/profile/me", label: dashboardLabel, Icon: LayoutDashboard }
         : role === "brand" || role === "client"
@@ -130,7 +126,7 @@ export default function Navbar() {
   // dropdown menu context (e.g. "Book Now" as a top-bar CTA vs. "Brand
   // Dashboard" as a menu item) — routing logic is unchanged, only the label.
   const dashboardMenuItem = role === "admin"
-    ? { href: "/admin", label: t.dashboardAdmin, Icon: ShieldCheck }
+    ? null
     : role === "brand" || role === "client"
       ? { href: "/explore", label: t.dashboardBrand, Icon: LayoutDashboard }
       : { href: "/profile/me", label: t.dashboardTalent, Icon: LayoutDashboard };
@@ -276,10 +272,12 @@ export default function Navbar() {
 
               {dropdownOpen && (
                 <div className={styles.dropdown}>
-                  <Link className={styles.dropdownItem} href={dashboardMenuItem.href}>
-                    <dashboardMenuItem.Icon size={16} />
-                    {dashboardMenuItem.label}
-                  </Link>
+                  {dashboardMenuItem && (
+                    <Link className={styles.dropdownItem} href={dashboardMenuItem.href}>
+                      <dashboardMenuItem.Icon size={16} />
+                      {dashboardMenuItem.label}
+                    </Link>
+                  )}
                   <Link className={styles.dropdownItem} href="/favorites">
                     <Heart size={16} />
                     {t.favorites}

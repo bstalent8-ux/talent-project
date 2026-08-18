@@ -396,6 +396,9 @@
 }
 
 .footer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   border-top: 1px solid var(--footer-border);
   background:
     radial-gradient(circle at 15% 0%, var(--footer-glow), transparent 28rem),
@@ -405,7 +408,30 @@
   padding: clamp(3rem, 6vw, 4.5rem) clamp(1rem, 4vw, 2rem) 2rem;
 }
 
+.footer::before,
+.footer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.footer::before {
+  background-image: url("/assets/footer-img.png");
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: var(--footer-image-opacity);
+}
+
+.footer::after {
+  background: var(--footer-overlay);
+}
+
 .footerInner {
+  position: relative;
+  z-index: 1;
   width: min(var(--container-max), 100%);
   margin: 0 auto;
 }
@@ -548,23 +574,36 @@
 }
 
 .footerDark {
-  --footer-bg-top: #0a0d14;
-  --footer-bg-bottom: #060810;
-  --footer-panel: rgba(255, 255, 255, 0.06);
-  --footer-border: rgba(255, 255, 255, 0.1);
-  --footer-text: #f1f5f9;
-  --footer-muted: #94a3b8;
-  --footer-glow: rgba(215, 168, 79, 0.1);
+  --footer-bg-top: #08111d;
+  --footer-bg-bottom: #050912;
+  --footer-panel: rgba(255, 255, 255, 0.08);
+  --footer-border: rgba(255, 255, 255, 0.14);
+  --footer-text: #ffffff;
+  --footer-muted: rgba(255, 255, 255, 0.7);
+  --footer-glow: rgba(215, 168, 79, 0.14);
+  --footer-image-opacity: 0.22;
+  --footer-overlay: linear-gradient(180deg, rgba(5, 10, 18, 0.5), rgba(5, 9, 18, 0.78));
+}
+
+.footerDark .footerTagline,
+.footerDark .footerLink {
+  color: #ffffff;
+}
+
+.footerDark .footerBottom {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .footerLight {
   --footer-bg-top: #ffffff;
-  --footer-bg-bottom: #eef2f3;
-  --footer-panel: rgba(255, 255, 255, 0.85);
+  --footer-bg-bottom: #ffffff;
+  --footer-panel: rgba(255, 255, 255, 0.86);
   --footer-border: rgba(16, 24, 32, 0.1);
   --footer-text: #101820;
   --footer-muted: #607080;
-  --footer-glow: rgba(15, 118, 110, 0.09);
+  --footer-glow: rgba(15, 118, 110, 0.08);
+  --footer-image-opacity: 0.05;
+  --footer-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.94));
 }
 
 .desktopOnly {
@@ -660,6 +699,10 @@
   .footerTop {
     grid-template-columns: 1fr 1fr;
   }
+
+  .footer::before {
+    background-position: 55% bottom;
+  }
 }
 
 @media (max-width: 620px) {
@@ -708,6 +751,11 @@
 
   .footerBrand {
     grid-column: 1 / -1;
+  }
+
+  .footer::before {
+    background-position: center bottom;
+    background-size: auto 100%;
   }
 
   .footerBottom {
