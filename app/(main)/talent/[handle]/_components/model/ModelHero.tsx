@@ -6,11 +6,13 @@
 // rebuilt with this project's inline-style + useSite() token convention and
 // wired to real TalentData/presenceLinks instead of model/lib/model-data.ts.
 //
-// Dropped vs. source (no real feature/data behind them — see integration
-// report): "TOP RATED" badge (not a tracked designation), follower counts on
-// social links (only the URL is stored).
+// "TOP RATED" ribbon maps to the real talent_profiles.social_links.premium
+// flag (same source as ProfileHero's other "premium" badges elsewhere) —
+// not a fake designation, just a different label for an existing field.
+// Dropped vs. source: follower counts on social links (only the URL is
+// stored, not a follower count).
 
-import { CheckCircle2, Award, MapPin, Maximize2, ExternalLink } from "lucide-react";
+import { CheckCircle2, Award, MapPin, Maximize2, ExternalLink, Sparkle } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
@@ -87,6 +89,17 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
               </div>
             )}
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent 40%, rgba(0,0,0,0.15))", pointerEvents: "none" }} />
+            {talent.premium && (
+              <span style={{
+                position: "absolute", top: 12, insetInlineStart: 12, zIndex: 2,
+                display: "flex", alignItems: "center", gap: 4,
+                backgroundColor: "rgba(10,13,20,0.85)", color: GOLD,
+                border: `1px solid ${GOLD}66`, borderRadius: 8, padding: "4px 10px",
+                fontSize: 10.5, fontWeight: 900, letterSpacing: "0.02em", backdropFilter: "blur(6px)",
+              }}>
+                <Sparkle size={11} fill={GOLD} />{ar ? "الأعلى تقييماً" : "TOP RATED"}
+              </span>
+            )}
             {firstPortfolioItem && (
               <button
                 onClick={onOpenGallery}

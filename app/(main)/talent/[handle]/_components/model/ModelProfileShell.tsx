@@ -15,17 +15,22 @@
 // TalentProfileShell is untouched, and UgcProfileShell is untouched.
 //
 // Reuses real, already-model-aware components rather than rebuilding them:
-// PackagesSection/ReviewsCard/ExperienceSection/BrandsCard's "model"
-// variants, and MeasurementsSection as-is — all already wired to real data
-// by the adapters this file imports from directly.
+// PackagesSection/ReviewsCard/ExperienceSection's "model" variants, and
+// MeasurementsSection — all already wired to real data by the adapters this
+// file imports from directly.
 //
-// Dropped vs. source (no real feature/data behind them — see integration
-// report): Navbar (project renders one globally), Match Score gauge, AI
-// Insights, Recent Activity feed, Career Timeline, the 6-metric Performance
-// panel (repeat-clients/cancellation/on-time/no-show/late-arrival rates —
-// none tracked), "Verified Through Talents" escrow-contract grid, the full
-// interactive Calendar modal (no per-day booking target exists — Availability
-// already shows the real weekly summary in the sidebar).
+// 2026-08 update: full visual parity pass against the `model/` reference
+// folder, per explicit instruction to match its layout/detail exactly even
+// where that means hard-coded placeholders. See CLAUDE.md's model-profile
+// report for the real-vs-hardcoded breakdown of every section added here
+// (ModelMatchScore, ModelAiInsights, ModelWeeklyAvailability,
+// ModelRecentActivity, ModelBottomGrid's timeline+performance — all
+// hard-coded; ModelVerifiedBrands, the Quick Bio languages row, and the
+// KeyStats cancellation rate — real).
+//
+// Dropped vs. source: Navbar (project renders one globally), the full
+// interactive Calendar modal (Weekly Availability card links out to it, but
+// the modal itself isn't built).
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -43,23 +48,40 @@ import {
   toExperience,
   toBrandItems,
   toBookingStats,
+  toAddons,
 } from "@/components/profile/dynamic/adapters/talent.context";
 import type { PublicProfileDTO } from "@/features/profiles/types/dto";
 import type { PackageItem } from "@/features/talent-profile/types";
 
 import PackagesSection from "../PackagesSection";
-import ReviewsCard from "../ReviewsCard";
 import ExperienceSection from "../ExperienceSection";
+import UsageRightsSection from "../UsageRightsSection";
 
 import ModelHero from "./ModelHero";
 import ModelActionBar from "./ModelActionBar";
-import ModelKeyStats from "./ModelKeyStats";
 import ModelPortfolioBento from "./ModelPortfolioBento";
 import ModelGalleryLightbox from "./ModelGalleryLightbox";
 import ModelSidebar from "./ModelSidebar";
 import ModelStickyBar from "./ModelStickyBar";
+import ModelVerifiedBrands from "./ModelVerifiedBrands";
+import ModelBottomGrid from "./ModelBottomGrid";
+import ModelTabs, { type ModelTab } from "./ModelTabs";
 
 const RESUMABLE_ACTIONS: readonly PermissionAction[] = ["create_booking", "start_conversation", "favorite_talent"];
+
+// HARD-CODED fallback for UsageRightsSection — shown only when the talent
+// has no real talent_profiles.social_links.usage_addons entries, so the
+// section isn't empty. Swap out once addons are actually seeded/editable.
+const FALLBACK_ADDONS_AR = [
+  { key: "raw-material", label: "تسليم المواد الخام (Raw Footage)", price: 800 },
+  { key: "extra-hour", label: "ساعة تصوير إضافية", price: 500 },
+  { key: "extra-transition", label: "لوكيشن / انتقال إضافي", price: 600 },
+];
+const FALLBACK_ADDONS_EN = [
+  { key: "raw-material", label: "Raw footage delivery", price: 800 },
+  { key: "extra-hour", label: "Extra shooting hour", price: 500 },
+  { key: "extra-transition", label: "Extra location / transition", price: 600 },
+];
 
 export default function ModelProfileShell({ profile }: { profile: PublicProfileDTO }) {
   const { dark, lang } = useSite();
@@ -75,11 +97,30 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
   const experience     = useMemo(() => toExperience(profile), [profile]);
   const brands         = useMemo(() => toBrandItems(profile), [profile]);
   const bookingStats   = useMemo(() => toBookingStats(profile), [profile]);
+  const realAddons     = useMemo(() => toAddons(profile), [profile]);
+  const addons         = useMemo(
+    () => (realAddons && realAddons.length > 0 ? realAddons : (ar ? FALLBACK_ADDONS_AR : FALLBACK_ADDONS_EN)),
+    [realAddons, ar],
+  );
 
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [showBrief, setShowBrief] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
+  const [checkedAddons, setCheckedAddons] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState("portfolio");
   const { isFavorited, error: favoriteError, toggle: toggleFavorite } = useFavoriteTalent(talent.id);
+
+  const toggleAddon = (key: string) => setCheckedAddons((prev) => ({ ...prev, [key]: !prev[key] }));
+  const addonsTotal = addons.reduce((sum, a) => sum + (checkedAddons[a.key] ? a.price : 0), 0);
+
+  const tabs = useMemo<ModelTab[]>(() => {
+    const list: ModelTab[] = [];
+    if (portfolioItems.length > 0) list.push({ key: "portfolio", anchor: "model-portfolio", label: ar ? "Portfolio" : "Portfolio" });
+    if ((experience ?? []).length > 0 || brands.some((b) => b.verified)) list.push({ key: "shoots", anchor: "model-shoots", label: ar ? "أعمال سابقة" : "Previous Work" });
+    if ((packages ?? []).length > 0) list.push({ key: "packages", anchor: "model-packages", label: ar ? "باقات وأسعار" : "Packages & Prices" });
+    list.push({ key: "performance", anchor: "model-performance", label: ar ? "أداء وتقييم" : "Performance & Reviews" });
+    return list;
+  }, [portfolioItems.length, experience, brands, packages, ar]);
 
   function openMessage() {
     window.dispatchEvent(new CustomEvent("open-chat-widget", {
@@ -140,19 +181,41 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
               firstPortfolioItem={portfolioItems[0] ?? null}
               onOpenGallery={() => setGalleryIndex(0)}
             />
-            <ModelKeyStats talent={talent} bookingStats={bookingStats} />
-            <ModelPortfolioBento portfolioItems={portfolioItems} onOpenGallery={setGalleryIndex} />
-            <ExperienceSection experience={experience} variant="model" />
-            <PackagesSection packages={packages} variant="model" onSelect={setSelectedPackage} />
-            <ReviewsCard reviews={reviews} rating={talent.rating} variant="model" />
+            <ModelTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+
+            <div id="model-portfolio">
+              <ModelPortfolioBento portfolioItems={portfolioItems} onOpenGallery={setGalleryIndex} />
+            </div>
+
+            <div id="model-shoots" className="model-shoots-row" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+              <ExperienceSection experience={experience} variant="model" />
+              <ModelVerifiedBrands brands={brands} />
+            </div>
+
+            <div id="model-packages">
+              <PackagesSection packages={packages} variant="model" onSelect={setSelectedPackage} />
+            </div>
+
+            <UsageRightsSection
+              selectedPackage={selectedPackage}
+              addons={addons}
+              checked={checkedAddons}
+              onToggle={toggleAddon}
+              showBookButton={false}
+            />
+
+            <div id="model-performance">
+              <ModelBottomGrid reviews={reviews} reviewCount={talent.reviewCount} />
+            </div>
           </div>
 
-          <ModelSidebar talent={talent} brands={brands} />
+          <ModelSidebar talent={talent} bookingStats={bookingStats} />
         </div>
       </div>
 
       <ModelStickyBar
         selectedPackage={selectedPackage}
+        addonsTotal={addonsTotal}
         identityVerified={Boolean(talent.identityVerified)}
         onContinueToBrief={() => setShowBrief(true)}
       />
@@ -177,7 +240,7 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
         />
       )}
 
-      <style>{`@media (min-width:1024px){.model-shell-grid{grid-template-columns:minmax(0,1fr) minmax(280px,0.4fr) !important}}`}</style>
+      <style>{`@media (min-width:1024px){.model-shell-grid{grid-template-columns:minmax(0,1fr) minmax(280px,0.4fr) !important}}@media (min-width:640px){.model-shoots-row{grid-template-columns:1fr 1fr !important}}`}</style>
     </main>
   );
 }

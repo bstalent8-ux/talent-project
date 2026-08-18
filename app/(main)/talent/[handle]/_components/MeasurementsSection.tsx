@@ -16,6 +16,8 @@ import { useSite } from "@/contexts/SiteContext";
 
 interface Props {
   measurements: Record<string, string>;
+  /** Real talent_profiles.social_links.languages string, e.g. "Arabic, English". */
+  languages?: string | null;
 }
 
 // Exported so ProfileHero's Model branch (which now renders these same 5
@@ -31,7 +33,7 @@ export const FIELD_LABELS: Record<string, { ar: string; en: string; unit?: strin
   eye_color:  { ar: "لون العين",   en: "Eye Color" },
 };
 
-export default function MeasurementsSection({ measurements }: Props) {
+export default function MeasurementsSection({ measurements, languages }: Props) {
   const { dark, lang } = useSite();
   const ar = lang === "ar";
 
@@ -42,14 +44,20 @@ export default function MeasurementsSection({ measurements }: Props) {
   const GOLD   = "#F4B740";
 
   const entries = FIELD_ORDER.filter((key) => measurements[key]);
-  if (!entries.length) return null;
+  if (!entries.length && !languages) return null;
 
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20 }}>
       <h3 style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 12px" }}>
-        {ar ? "بيانات الموديل" : "Model Details"}
+        {ar ? "نبذة سريعة" : "Quick Bio"}
       </h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {languages && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0" }}>
+            <span style={{ color: MUTED, fontSize: 12.5 }}>{ar ? "اللغات" : "Languages"}</span>
+            <span style={{ color: GOLD, fontSize: 13, fontWeight: 800 }}>{languages}</span>
+          </div>
+        )}
         {entries.map((key, i) => {
           const meta = FIELD_LABELS[key];
           return (
@@ -58,7 +66,7 @@ export default function MeasurementsSection({ measurements }: Props) {
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "9px 0",
-                borderTop: i > 0 ? `1px solid ${BORDER}` : undefined,
+                borderTop: (i > 0 || languages) ? `1px solid ${BORDER}` : undefined,
               }}
             >
               <span style={{ color: MUTED, fontSize: 12.5 }}>{ar ? meta.ar : meta.en}</span>

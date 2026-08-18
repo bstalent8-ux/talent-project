@@ -2,22 +2,26 @@
 
 // Port of model/components/StickyBottomBar.tsx. Price shows the real
 // selected package (PackagesSection's "model" variant already lifts this
-// same selection state up — see ModelProfileShell.tsx). "Continue to
+// same selection state up — see ModelProfileShell.tsx) plus any checked
+// UsageRightsSection add-ons (also lifted, same file). "Continue to
 // Brief" opens the real DirectBriefModal instead of the source's own
 // BookingBriefModal mock.
 
 import { ShieldCheck, UserCheck, ArrowLeft } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import ProtectedAction from "@/components/auth/ProtectedAction";
+import { parsePrice } from "@/lib/utils";
 import type { PackageItem } from "@/features/talent-profile/types";
 
 interface Props {
   selectedPackage: PackageItem | null;
+  /** Sum of checked UsageRightsSection add-on prices, EGP. */
+  addonsTotal?: number;
   identityVerified: boolean;
   onContinueToBrief: () => void;
 }
 
-export default function ModelStickyBar({ selectedPackage, identityVerified, onContinueToBrief }: Props) {
+export default function ModelStickyBar({ selectedPackage, addonsTotal = 0, identityVerified, onContinueToBrief }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
@@ -37,12 +41,14 @@ export default function ModelStickyBar({ selectedPackage, identityVerified, onCo
           <div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
               <span style={{ fontSize: 18, fontWeight: 900, color: TEXT, fontFamily: "monospace" }}>
-                {selectedPackage ? selectedPackage.price : "—"}
+                {selectedPackage ? (parsePrice(selectedPackage.price) + addonsTotal).toLocaleString("en-US") : "—"}
               </span>
               <span style={{ fontSize: 12, fontWeight: 800, color: GOLD }}>EGP</span>
             </div>
             <span style={{ fontSize: 10.5, color: MUTED }}>
-              {selectedPackage ? selectedPackage.name : (ar ? "اختر باقة" : "Choose a package")}
+              {selectedPackage
+                ? (addonsTotal > 0 ? `${selectedPackage.name} + ${ar ? "إضافات" : "add-ons"}` : selectedPackage.name)
+                : (ar ? "اختر باقة" : "Choose a package")}
             </span>
           </div>
 

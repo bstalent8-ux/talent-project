@@ -4,27 +4,37 @@ import { motion } from "framer-motion";
 import { Shield } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
+import { parsePrice } from "@/lib/utils";
 import type { PackageItem, AddonItem } from "@/features/talent-profile/types";
 
 interface Props {
   selectedPackage: PackageItem | null;
   addons?: AddonItem[] | null;
+  /** Lift the checked-addons map to a parent (e.g. so a sticky booking bar
+   * can add it into a combined total) instead of owning it internally. */
+  checked?: Record<string, boolean>;
+  onToggle?: (key: string) => void;
+  /** Hide the built-in "Book Now" button when a page already has its own
+   * booking CTA (e.g. the Model page's sticky bar) — avoids two competing
+   * calls to action pricing the same thing. */
+  showBookButton?: boolean;
 }
 
-export default function UsageRightsSection({ selectedPackage, addons: addonsProp }: Props) {
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
+export default function UsageRightsSection({ selectedPackage, addons: addonsProp, checked: checkedProp, onToggle, showBookButton = true }: Props) {
+  const [checkedState, setCheckedState] = useState<Record<string, boolean>>({});
   const isMobile = useIsMobile();
   const { dark, lang } = useSite();
   const ar = lang === "ar";
   const addons = addonsProp ?? [];
+  const checked = checkedProp ?? checkedState;
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const GREEN = "#00D26A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
   const SURFACE = dark ? "#0A121C" : "#F8FAFC";
 
-  const toggle = (k: string) => setChecked(p => ({ ...p, [k]: !p[k] }));
-  const basePrice = selectedPackage ? (parseInt(selectedPackage.price.replace(/[^\d]/g, ""), 10) || 0) : 0;
+  const toggle = (k: string) => (onToggle ? onToggle(k) : setCheckedState(p => ({ ...p, [k]: !p[k] })));
+  const basePrice = selectedPackage ? parsePrice(selectedPackage.price) : 0;
   const addonTotal = addons.reduce((sum, a) => sum + (checked[a.key] ? a.price : 0), 0);
   const total = basePrice + addonTotal;
 
@@ -71,9 +81,11 @@ export default function UsageRightsSection({ selectedPackage, addons: addonsProp
             <span style={{ color: dark ? "#fff" : "#0F172A", fontWeight: 700, fontSize: 14 }}>{ar ? "الإجمالي" : "Total"}</span>
             <span style={{ color: GREEN, fontWeight: 900, fontSize: 18 }}>{fmt(total)} EGP</span>
           </div>
-          <motion.button whileHover={{ scale: 1.02 }} style={{ backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", width: "100%", fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif", marginTop: 4 }}>
-            {ar ? "احجز الآن" : "Book Now"}
-          </motion.button>
+          {showBookButton && (
+            <motion.button whileHover={{ scale: 1.02 }} style={{ backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", width: "100%", fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif", marginTop: 4 }}>
+              {ar ? "احجز الآن" : "Book Now"}
+            </motion.button>
+          )}
         </div>
       </div>}
     </div>
