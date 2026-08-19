@@ -187,17 +187,14 @@ const TX = {
   },
 };
 
+// Platform-wide restriction: talents are UGC or Model only (matches
+// app/(auth)/register/page.tsx's TALENT_TYPES). Existing accounts with a
+// legacy category value (actor/photographer/influencer/etc.) simply show
+// no active button here until re-picked — their stored category is
+// untouched by this list shrinking.
 const CATEGORIES = [
-  { value: "ugc",              ar: "صانع محتوى UGC",   en: "UGC Creator" },
-  { value: "model",            ar: "موديل",             en: "Model" },
-  { value: "actor",            ar: "ممثل / ممثلة",      en: "Actor" },
-  { value: "photographer",     ar: "مصور",              en: "Photographer" },
-  { value: "influencer",       ar: "مؤثر / مؤثرة",      en: "Influencer" },
-  { value: "videographer",     ar: "مصور فيديو",        en: "Videographer" },
-  { value: "graphic_designer", ar: "مصمم جرافيك",       en: "Graphic Designer" },
-  { value: "voice_artist",     ar: "فنان مؤثرات صوتية", en: "Voice Artist" },
-  { value: "comedian",         ar: "كوميديان",          en: "Comedian" },
-  { value: "animator",         ar: "موشن جرافيك",       en: "Animator" },
+  { value: "ugc",   ar: "صانع محتوى UGC", en: "UGC Creator" },
+  { value: "model", ar: "موديل",           en: "Model" },
 ];
 
 /** Icon/emoji per platform — same set the public ProfessionalPresenceSection uses. */

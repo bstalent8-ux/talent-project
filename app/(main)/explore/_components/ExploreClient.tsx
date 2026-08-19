@@ -22,31 +22,20 @@ const PAGE_SIZE = 8;
 
 export type SortOption = "price_asc" | "price_desc" | "rating" | "newest";
 
+// Platform restricted to UGC + Model talents only (matches
+// app/(auth)/register/page.tsx's TALENT_TYPES and
+// CompleteProfileShell.tsx's CATEGORIES). Influencer/host/actor were UI-only
+// filter buckets that matched on specialty keywords, not the real
+// `category` column — dropped along with every other legacy category.
 const TALENT_TYPES = [
-  { key: "all",        label_ar: "الكل",           label_en: "All" },
-  { key: "ugc",        label_ar: "مبدع محتوى UGC", label_en: "UGC Creator" },
-  { key: "influencer", label_ar: "مؤثر",           label_en: "Influencer" },
-  { key: "host",       label_ar: "مذيع / مقدم",    label_en: "Host / Presenter" },
-  { key: "model",      label_ar: "موديل",           label_en: "Model" },
-  { key: "actor",      label_ar: "ممثل",            label_en: "Actor" },
+  { key: "all",   label_ar: "الكل",           label_en: "All" },
+  { key: "ugc",   label_ar: "مبدع محتوى UGC", label_en: "UGC Creator" },
+  { key: "model", label_ar: "موديل",          label_en: "Model" },
 ];
 
 function matchesType(talent: TalentCard, type: string): boolean {
   if (type === "all") return true;
-  const specialties = (talent.specialties ?? []).join(" ").toLowerCase();
-  const category = (talent.category ?? "").toLowerCase();
-  const map: Record<string, { specs: string[]; cats: string[] }> = {
-    ugc:        { specs: ["ugc", "content creator", "محتوى", "مبدع", "كونتنت"], cats: ["ugc"] },
-    influencer: { specs: ["مؤثر", "مؤثرة", "influencer", "تأثير"],              cats: [] },
-    host:       { specs: ["مذيع", "مقدم", "مقدمة", "host", "presenter"],        cats: [] },
-    model:      { specs: ["موديل", "model", "أزياء", "فاشن"],                   cats: [] },
-    actor:      { specs: ["ممثل", "ممثلة", "actor", "acting", "تمثيل"],         cats: [] },
-  };
-  const rule = map[type];
-  if (!rule) return false;
-  if (rule.specs.some((kw) => specialties.includes(kw))) return true;
-  if (rule.cats.length && rule.cats.includes(category)) return true;
-  return false;
+  return (talent.category ?? "").toLowerCase() === type;
 }
 
 interface Props {
@@ -166,6 +155,10 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
 
   const filtered = useMemo(() => {
     let list = talents.filter((t) => {
+      // Platform restriction, independent of the Type dropdown: Explore
+      // only ever surfaces ugc/model talents, even when "All" is selected.
+      const category = (t.category ?? "").toLowerCase();
+      if (category !== "ugc" && category !== "model") return false;
       if (search) {
         const q = search.toLowerCase();
         if (!t.name.toLowerCase().includes(q) && !(t.category ?? "").toLowerCase().includes(q)) return false;
