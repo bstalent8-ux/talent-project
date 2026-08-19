@@ -16,7 +16,10 @@ import { categoryMatchRank, MATCH_RANK_NONE } from "@/features/categories/matchi
 import DirectBriefModal from "@/components/DirectBriefModal";
 import styles from "./ExplorePage.module.css";
 
-const PAGE_SIZE = 12;
+// 9 = a clean 3-column x 3-row grid at desktop width (see .talentGrid),
+// keeping the first page's height roughly matched to the sticky filter
+// sidebar instead of the old 12-per-page (4 rows) running well past it.
+const PAGE_SIZE = 9;
 
 export type SortOption = "price_asc" | "price_desc" | "rating" | "newest";
 
@@ -195,19 +198,15 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // ── Derived stats for the hero strip ──────────────────
-  const heroStats = useMemo(() => {
-    const verifiedCount = talents.filter((t) => t.verified).length;
-    const categoryCount = new Set(talents.map((t) => t.category).filter(Boolean)).size;
-    const rated = talents.filter((t) => t.rating > 0);
-    const avg = rated.length ? (rated.reduce((s, t) => s + t.rating, 0) / rated.length) : 0;
-    return [
-      { value: `${talents.length.toLocaleString()}`, label: ar ? "موهبة متاحة" : "Talents listed" },
-      { value: `${verifiedCount.toLocaleString()}`,   label: ar ? "موهبة موثّقة" : "Verified" },
-      { value: `${categoryCount || TALENT_TYPES.length - 1}+`, label: ar ? "فئة إبداعية" : "Categories" },
-      { value: avg ? avg.toFixed(1) : "4.9", label: ar ? "متوسط التقييم" : "Avg. rating" },
-    ];
-  }, [talents, ar]);
+  // ── Featured talents for the hero marquee ─────────────
+  // Top-rated first (verified as a tiebreaker), avatar required — a blank
+  // initial-letter tile in a fast-moving strip reads as a loading glitch.
+  const featuredTalents = useMemo(() => {
+    return [...talents]
+      .filter((t) => t.avatar_url)
+      .sort((a, b) => (b.rating - a.rating) || (Number(b.verified) - Number(a.verified)))
+      .slice(0, 10);
+  }, [talents]);
 
   // ── Category shortcut counts ──────────────────────────
   const categoryCards = useMemo(
@@ -243,52 +242,14 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
       <ExploreHero
         lang={lang}
         search={search} onSearch={setSearch}
-        types={TALENT_TYPES}
-        activeType={type} onTypeChange={setType}
         resultCount={filtered.length}
-        stats={heroStats}
+        featured={featuredTalents}
       />
 
-      {/* ── Category shortcuts ─────────────────────────── */}
-      <section className={styles.section}>
-        <div className={styles.container}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionHeaderText}>
-              <p className={styles.sectionKicker}>{ar ? "تصفّح بسرعة" : "Browse fast"}</p>
-              <h2 className={styles.sectionTitle}>{ar ? "اختر فئة الموهبة" : "Pick a talent category"}</h2>
-              <p className={styles.sectionDescription}>
-                {ar
-                  ? "اختصارات سريعة لأكثر الفئات طلبًا — اضغط لعرض المواهب المطابقة فورًا."
-                  : "Quick shortcuts to the most requested categories — tap one to jump straight to matching talent."}
-              </p>
-            </div>
-          </div>
-
-          <div className={styles.categoryScroll}>
-            {categoryCards.map((c) => {
-              const Icon = c.icon;
-              const active = type === c.key;
-              return (
-                <button
-                  key={c.key}
-                  type="button"
-                  className={`${styles.categoryCard} ${active ? styles.categoryCardActive : ""}`}
-                  onClick={() => selectCategory(c.key)}
-                >
-                  <span className={styles.categoryIcon}><Icon size={20} /></span>
-                  <p className={styles.categoryName}>{ar ? c.label_ar : c.label_en}</p>
-                  <p className={styles.categoryCount}>
-                    {c.count} {ar ? "موهبة" : "talents"}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Results: filters + grid ────────────────────── */}
-      <section className={styles.section} style={{ paddingTop: 0 }} ref={resultsRef}>
+      {/* ── Results: filters + grid — right below the hero, on request
+          (was preceded by the category-shortcuts section, pushing filters
+          past the fold). That section still exists, just moved after. ── */}
+      <section className={styles.section} style={{ paddingTop: "clamp(1.25rem, 3vw, 2rem)" }} ref={resultsRef}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <div className={styles.sectionHeaderText}>
@@ -392,6 +353,44 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
         className={`${styles.drawerBackdrop} ${filtersOpen ? styles.drawerBackdropOpen : ""}`}
         onClick={() => setFiltersOpen(false)}
       />
+
+      {/* ── Category shortcuts ─────────────────────────── */}
+      <section className={styles.section}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionHeaderText}>
+              <p className={styles.sectionKicker}>{ar ? "تصفّح بسرعة" : "Browse fast"}</p>
+              <h2 className={styles.sectionTitle}>{ar ? "اختر فئة الموهبة" : "Pick a talent category"}</h2>
+              <p className={styles.sectionDescription}>
+                {ar
+                  ? "اختصارات سريعة لأكثر الفئات طلبًا — اضغط لعرض المواهب المطابقة فورًا."
+                  : "Quick shortcuts to the most requested categories — tap one to jump straight to matching talent."}
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.categoryScroll}>
+            {categoryCards.map((c) => {
+              const Icon = c.icon;
+              const active = type === c.key;
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  className={`${styles.categoryCard} ${active ? styles.categoryCardActive : ""}`}
+                  onClick={() => selectCategory(c.key)}
+                >
+                  <span className={styles.categoryIcon}><Icon size={20} /></span>
+                  <p className={styles.categoryName}>{ar ? c.label_ar : c.label_en}</p>
+                  <p className={styles.categoryCount}>
+                    {c.count} {ar ? "موهبة" : "talents"}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {/* ── Trust / features band ──────────────────────── */}
       <section className={`${styles.section} ${styles.featureBand}`}>
