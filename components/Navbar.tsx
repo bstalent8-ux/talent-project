@@ -110,17 +110,14 @@ export default function Navbar() {
   const dir = lang === "ar" ? "rtl" : "ltr";
   const t = TX[lang];
   const links = NAV_LINKS[lang].filter((item) => !item.href.startsWith("/bookings") || !isGuest);
-  const dashboardLabel = lang === "ar" ? "\u0645\u0644\u0641\u064a" : "My Profile";
   const role = user?.role ?? null;
   const cta = authLoading
     ? null
-    : role === "admin"
+    : role === "admin" || role === "talent"
       ? null
-      : role === "talent"
-        ? { href: "/profile/me", label: dashboardLabel, Icon: LayoutDashboard }
-        : role === "brand" || role === "client"
-          ? { href: "/explore", label: t.book, Icon: CalendarCheck }
-          : { href: "/register", label: t.register, Icon: UserRoundPlus };
+      : role === "brand" || role === "client"
+        ? { href: "/explore", label: t.book, Icon: CalendarCheck }
+        : { href: "/register", label: t.register, Icon: UserRoundPlus };
 
   // Same role-aware destinations as `cta` above, relabeled for the account
   // dropdown menu context (e.g. "Book Now" as a top-bar CTA vs. "Brand
