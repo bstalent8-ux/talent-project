@@ -3,8 +3,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  SlidersHorizontal, Camera, UsersRound, Mic2, Sparkles, Clapperboard, LayoutGrid,
-  ShieldCheck, Wallet, MessagesSquare, Star, type LucideIcon,
+  SlidersHorizontal, ShieldCheck, Wallet, MessagesSquare, Star, type LucideIcon,
 } from "lucide-react";
 
 import type { TalentCard } from "../page";
@@ -16,20 +15,20 @@ import { categoryMatchRank, MATCH_RANK_NONE } from "@/features/categories/matchi
 import DirectBriefModal from "@/components/DirectBriefModal";
 import styles from "./ExplorePage.module.css";
 
-// 9 = a clean 3-column x 3-row grid at desktop width (see .talentGrid),
-// keeping the first page's height roughly matched to the sticky filter
-// sidebar instead of the old 12-per-page (4 rows) running well past it.
-const PAGE_SIZE = 9;
+// 8 = ~2 rows at the grid's primary 4-column desktop width (see
+// .talentGrid's minmax(188px)), matching the now-compact filter sidebar's
+// height instead of running several rows past it.
+const PAGE_SIZE = 8;
 
 export type SortOption = "price_asc" | "price_desc" | "rating" | "newest";
 
 const TALENT_TYPES = [
-  { key: "all",        label_ar: "الكل",           label_en: "All",              icon: LayoutGrid },
-  { key: "ugc",        label_ar: "مبدع محتوى UGC", label_en: "UGC Creator",      icon: Camera },
-  { key: "influencer", label_ar: "مؤثر",           label_en: "Influencer",       icon: UsersRound },
-  { key: "host",       label_ar: "مذيع / مقدم",    label_en: "Host / Presenter", icon: Mic2 },
-  { key: "model",      label_ar: "موديل",           label_en: "Model",            icon: Sparkles },
-  { key: "actor",      label_ar: "ممثل",            label_en: "Actor",            icon: Clapperboard },
+  { key: "all",        label_ar: "الكل",           label_en: "All" },
+  { key: "ugc",        label_ar: "مبدع محتوى UGC", label_en: "UGC Creator" },
+  { key: "influencer", label_ar: "مؤثر",           label_en: "Influencer" },
+  { key: "host",       label_ar: "مذيع / مقدم",    label_en: "Host / Presenter" },
+  { key: "model",      label_ar: "موديل",           label_en: "Model" },
+  { key: "actor",      label_ar: "ممثل",            label_en: "Actor" },
 ];
 
 function matchesType(talent: TalentCard, type: string): boolean {
@@ -208,22 +207,8 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
       .slice(0, 10);
   }, [talents]);
 
-  // ── Category shortcut counts ──────────────────────────
-  const categoryCards = useMemo(
-    () => TALENT_TYPES.filter((c) => c.key !== "all").map((c) => ({
-      ...c,
-      count: talents.filter((t) => matchesType(t, c.key)).length,
-    })),
-    [talents],
-  );
-
   const scrollToResults = () => {
     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const selectCategory = (key: string) => {
-    setType(key);
-    setTimeout(scrollToResults, 60);
   };
 
   const features: { icon: LucideIcon; title: string; text: string }[] = [
@@ -353,44 +338,6 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
         className={`${styles.drawerBackdrop} ${filtersOpen ? styles.drawerBackdropOpen : ""}`}
         onClick={() => setFiltersOpen(false)}
       />
-
-      {/* ── Category shortcuts ─────────────────────────── */}
-      <section className={styles.section}>
-        <div className={styles.container}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionHeaderText}>
-              <p className={styles.sectionKicker}>{ar ? "تصفّح بسرعة" : "Browse fast"}</p>
-              <h2 className={styles.sectionTitle}>{ar ? "اختر فئة الموهبة" : "Pick a talent category"}</h2>
-              <p className={styles.sectionDescription}>
-                {ar
-                  ? "اختصارات سريعة لأكثر الفئات طلبًا — اضغط لعرض المواهب المطابقة فورًا."
-                  : "Quick shortcuts to the most requested categories — tap one to jump straight to matching talent."}
-              </p>
-            </div>
-          </div>
-
-          <div className={styles.categoryScroll}>
-            {categoryCards.map((c) => {
-              const Icon = c.icon;
-              const active = type === c.key;
-              return (
-                <button
-                  key={c.key}
-                  type="button"
-                  className={`${styles.categoryCard} ${active ? styles.categoryCardActive : ""}`}
-                  onClick={() => selectCategory(c.key)}
-                >
-                  <span className={styles.categoryIcon}><Icon size={20} /></span>
-                  <p className={styles.categoryName}>{ar ? c.label_ar : c.label_en}</p>
-                  <p className={styles.categoryCount}>
-                    {c.count} {ar ? "موهبة" : "talents"}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {/* ── Trust / features band ──────────────────────── */}
       <section className={`${styles.section} ${styles.featureBand}`}>

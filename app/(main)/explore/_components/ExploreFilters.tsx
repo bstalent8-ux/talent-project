@@ -1,5 +1,5 @@
 "use client";
-import { SlidersHorizontal, BadgeCheck, X } from "lucide-react";
+import { SlidersHorizontal, BadgeCheck, ChevronDown, X } from "lucide-react";
 import type { SortOption } from "./ExploreClient";
 import styles from "./ExplorePage.module.css";
 
@@ -54,6 +54,7 @@ export default function ExploreFilters({
     female:   ar ? "أنثى"         : "Female",
     all:      ar ? "الكل"         : "All",
     currency: ar ? "ج.م"         : "EGP",
+    more:     ar ? "فلاتر إضافية" : "More filters",
   };
 
   const handleReset = () => {
@@ -69,7 +70,7 @@ export default function ExploreFilters({
     <aside className={`${styles.filters} ${open ? styles.filtersOpen : ""}`}>
       <div className={styles.filtersHeader}>
         <span className={styles.filtersTitle}>
-          <SlidersHorizontal size={16} />
+          <SlidersHorizontal size={15} />
           {t.filters}
         </span>
         <button type="button" className={styles.filtersReset} onClick={handleReset}>{t.reset}</button>
@@ -84,41 +85,38 @@ export default function ExploreFilters({
         </button>
       </div>
 
-      {/* Sort */}
+      {/* Sort — a single select, not 4 stacked radio-style boxes */}
       <div className={styles.filterGroup}>
         <p className={styles.filterLabel}>{t.sort_by}</p>
-        {SORT_OPTIONS.map((opt) => {
-          const active = sort === opt.key;
-          return (
-            <button
-              key={opt.key}
-              type="button"
-              className={`${styles.filterOption} ${active ? styles.filterOptionActive : ""}`}
-              onClick={() => onSort(opt.key)}
-            >
-              <span className={styles.radioDot}>{active && <span />}</span>
-              {ar ? opt.label_ar : opt.label_en}
-            </button>
-          );
-        })}
+        <select
+          className={styles.sortSelect}
+          value={sort}
+          onChange={(e) => onSort(e.target.value as SortOption)}
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt.key} value={opt.key}>{ar ? opt.label_ar : opt.label_en}</option>
+          ))}
+        </select>
       </div>
 
-      {/* Talent type */}
+      {/* Talent type — wrapping chips instead of one full-width row per option */}
       <div className={styles.filterGroup}>
         <p className={styles.filterLabel}>{t.type}</p>
-        {types.map((tab) => {
-          const active = activeType === tab.key;
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              className={`${styles.filterOption} ${active ? styles.filterOptionActive : ""}`}
-              onClick={() => onTypeChange(tab.key)}
-            >
-              {ar ? tab.label_ar : tab.label_en}
-            </button>
-          );
-        })}
+        <div className={styles.typeChips}>
+          {types.map((tab) => {
+            const active = activeType === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                className={`${styles.filterOption} ${active ? styles.filterOptionActive : ""}`}
+                onClick={() => onTypeChange(tab.key)}
+              >
+                {ar ? tab.label_ar : tab.label_en}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Price */}
@@ -142,44 +140,49 @@ export default function ExploreFilters({
         <p className={styles.rangeValue}>0 — {maxPrice.toLocaleString()} {t.currency}</p>
       </div>
 
-      {/* Gender */}
-      <div className={styles.filterGroup}>
-        <p className={styles.filterLabel}>{t.sex}</p>
-        <div className={styles.chipRow}>
-          {[
-            { key: "all", label: t.all },
-            { key: "male", label: t.male },
-            { key: "female", label: t.female },
-          ].map(({ key, label }) => {
-            const active = sex === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                className={`${styles.filterOption} ${active ? styles.filterOptionActive : ""}`}
-                onClick={() => onSexChange(key)}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Secondary filters — collapsed by default, no extra JS state (native <details>) */}
+      <details className={styles.moreFilters}>
+        <summary className={styles.moreFiltersSummary}>
+          {t.more}
+          <ChevronDown size={14} />
+        </summary>
+        <div className={styles.moreFiltersBody}>
+          <div>
+            <p className={styles.filterLabel}>{t.sex}</p>
+            <div className={styles.chipRow}>
+              {[
+                { key: "all", label: t.all },
+                { key: "male", label: t.male },
+                { key: "female", label: t.female },
+              ].map(({ key, label }) => {
+                const active = sex === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`${styles.filterOption} ${active ? styles.filterOptionActive : ""}`}
+                    onClick={() => onSexChange(key)}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-      {/* Verified toggle */}
-      <div className={styles.filterGroup}>
-        <button
-          type="button"
-          className={`${styles.toggle} ${verified ? styles.toggleActive : ""}`}
-          onClick={() => onVerified(!verified)}
-        >
-          <BadgeCheck size={17} />
-          {t.verified}
-          <span className={`${styles.toggleTrack} ${verified ? styles.toggleTrackOn : ""}`}>
-            <span className={`${styles.toggleKnob} ${verified ? styles.toggleKnobOn : ""}`} />
-          </span>
-        </button>
-      </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${verified ? styles.toggleActive : ""}`}
+            onClick={() => onVerified(!verified)}
+          >
+            <BadgeCheck size={16} />
+            {t.verified}
+            <span className={`${styles.toggleTrack} ${verified ? styles.toggleTrackOn : ""}`}>
+              <span className={`${styles.toggleKnob} ${verified ? styles.toggleKnobOn : ""}`} />
+            </span>
+          </button>
+        </div>
+      </details>
     </aside>
   );
 }

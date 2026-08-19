@@ -83,13 +83,13 @@ function TalentCardItem({
             aria-label={favorited ? (lang === "ar" ? "في المفضلة" : "Favorited") : (lang === "ar" ? "إضافة للمفضلة" : "Favorite")}
             onClick={handleFavoriteClick}
           >
-            <Heart size={15} className={favorited ? styles.heartActive : undefined} fill={favorited ? "currentColor" : "none"} />
+            <Heart size={12} className={favorited ? styles.heartActive : undefined} fill={favorited ? "currentColor" : "none"} />
           </button>
         )}
 
         {talent.rating > 0 && (
           <span className={styles.ratingChip}>
-            <Star size={11} fill="currentColor" />
+            <Star size={9} fill="currentColor" />
             {talent.rating.toFixed(1)}
             <span className={styles.ratingCount}>({talent.review_count})</span>
           </span>
@@ -100,23 +100,22 @@ function TalentCardItem({
       <div className={styles.talentBody}>
         <h3 className={styles.talentName}>
           <span>{talent.name}</span>
-          {talent.verified && <BadgeCheck size={15} />}
+          {talent.verified && <BadgeCheck size={13} />}
         </h3>
 
         {talent.category && <span className={styles.talentCategory}>{talent.category}</span>}
 
         {talent.location && (
           <span className={styles.talentLocation}>
-            <MapPin size={11} />
+            <MapPin size={10} />
             {talent.location}
           </span>
         )}
 
+        {/* One tag — the single key specialty, not a 2-tag row */}
         {talent.specialties.length > 0 && (
           <div className={styles.specialtyRow}>
-            {talent.specialties.slice(0, 2).map((s) => (
-              <span key={s} className={styles.specialtyTag}>{s}</span>
-            ))}
+            <span className={styles.specialtyTag}>{talent.specialties[0]}</span>
           </div>
         )}
 
