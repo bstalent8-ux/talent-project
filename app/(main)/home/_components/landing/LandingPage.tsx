@@ -7,27 +7,26 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
-  Bookmark,
   Camera,
   ChevronDown,
   CircleDollarSign,
   Eye,
   FileText,
   MapPin,
-  Play,
   Search,
   ShieldCheck,
   Star,
 } from "lucide-react";
 import type { TalentCard as ServerTalentCard } from "../../../explore/page";
+import type { PublicTestimonial, PublicBrandMoment } from "@/features/landing/services/landing-content.service";
 import TrustedBrands from "@/components/home/TrustedBrands";
+import TestimonialSubmitPanel from "./TestimonialSubmitPanel";
+import BrandMomentSubmitPanel from "./BrandMomentSubmitPanel";
 import styles from "./LandingPage.module.css";
 import {
-  brandMoments,
   brandSteps,
   categories,
   checkIcon,
-  demoTalents,
   faqs,
   features,
   floatingChips,
@@ -36,7 +35,6 @@ import {
   quoteIcon,
   stats,
   talentSteps,
-  testimonials,
   type LandingLang,
 } from "./content";
 
@@ -44,6 +42,11 @@ type Props = {
   lang: LandingLang;
   talents: ServerTalentCard[];
   totalTalents: number;
+  completedProjects: number;
+  avgRating: number;
+  categoryCounts: Record<"ugc" | "model", number>;
+  testimonials: PublicTestimonial[];
+  brandMoments: PublicBrandMoment[];
 };
 
 type DesignMedia = {
@@ -170,8 +173,7 @@ type DisplayTalent = {
   city: string;
   rating: string;
   price: string;
-  image: string;
-  portfolio: string[];
+  image: string | null;
   href: string;
   verified: boolean;
 };
@@ -220,37 +222,19 @@ function formatPrice(value: number | null | undefined, lang: LandingLang) {
   return lang === "ar" ? "السعر حسب الطلب" : "Price on request";
 }
 
+// No fake-person fallback: a real talent with a missing field just shows
+// less (empty city, initials avatar via TalentCard) instead of a
+// fabricated stranger's name/photo/portfolio standing in for them.
 function formatRealTalents(talents: ServerTalentCard[], lang: LandingLang): DisplayTalent[] {
-  return talents.slice(0, 4).map((talent, index) => {
-    const demo = demoTalents[index % demoTalents.length];
-    const fallbackName = localize(demo.name, lang);
-    const fallbackProfession = localize(demo.profession, lang);
-    const fallbackCity = localize(demo.city, lang);
-    return {
-      name: cleanText(talent.name) || fallbackName,
-      profession: formatCategory(talent.category, fallbackProfession, lang),
-      city: cleanText(talent.location) || fallbackCity,
-      rating: Number.isFinite(talent.rating) && talent.rating > 0 ? talent.rating.toFixed(1) : (lang === "ar" ? "جديد" : "New"),
-      price: formatPrice(talent.starting_price, lang),
-      image: talent.avatar_url || demo.image,
-      portfolio: demo.portfolio,
-      href: talent.handle ? `/talent/${talent.handle}` : "/explore",
-      verified: talent.verified,
-    };
-  });
-}
-
-function fallbackTalents(lang: LandingLang): DisplayTalent[] {
-  return demoTalents.map((talent) => ({
-    name: localize(talent.name, lang),
-    profession: localize(talent.profession, lang),
-    city: localize(talent.city, lang),
-    rating: talent.rating,
-    price: localize(talent.price, lang),
-    image: talent.image,
-    portfolio: talent.portfolio,
-    href: "/explore",
-    verified: true,
+  return talents.slice(0, 4).map((talent) => ({
+    name: cleanText(talent.name) || "-",
+    profession: formatCategory(talent.category, "", lang),
+    city: cleanText(talent.location),
+    rating: Number.isFinite(talent.rating) && talent.rating > 0 ? talent.rating.toFixed(1) : (lang === "ar" ? "جديد" : "New"),
+    price: formatPrice(talent.starting_price, lang),
+    image: talent.avatar_url || null,
+    href: talent.handle ? `/talent/${talent.handle}` : "/explore",
+    verified: talent.verified,
   }));
 }
 
@@ -302,15 +286,25 @@ function SectionHeader({
   );
 }
 
-function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTalents: number; media: DesignMedia }) {
+function HeroSection({
+  lang, totalTalents, completedProjects, avgRating, media,
+}: {
+  lang: LandingLang; totalTalents: number; completedProjects: number; avgRating: number; media: DesignMedia;
+}) {
   const heroRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
   const [heroSearch, setHeroSearch] = useState("");
   const t = pageCopy[lang];
-  const localizedStats = stats.map((item, index) => ({
-    ...item,
-    value: index === 0 && totalTalents > 0 ? `+${Math.max(totalTalents, 30)}` : item.value,
-  }));
+  // stats[0] = verified talents, [1] = completed projects, [2] = avg
+  // rating (was a fabricated "98% satisfaction" — no satisfaction-survey
+  // data exists, so this is real avg rating instead), [3] = support
+  // coverage claim (left as static copy, not a number).
+  const localizedStats = stats.map((item, index) => {
+    if (index === 0 && totalTalents > 0) return { ...item, value: `+${Math.max(totalTalents, 30)}` };
+    if (index === 1) return { ...item, value: completedProjects > 0 ? `+${completedProjects}` : (lang === "ar" ? "قريباً" : "Coming soon") };
+    if (index === 2) return { ...item, value: avgRating > 0 ? avgRating.toFixed(1) : "—" };
+    return item;
+  });
 
   function handleHeroSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -519,7 +513,7 @@ function HeroSection({ lang, totalTalents, media }: { lang: LandingLang; totalTa
   );
 }
 
-function CategoriesSection({ lang }: { lang: LandingLang }) {
+function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; categoryCounts: Record<"ugc" | "model", number> }) {
   const t = pageCopy[lang];
   const ar = lang === "ar";
   const railRef = useRef<HTMLDivElement>(null);
@@ -574,19 +568,37 @@ function CategoriesSection({ lang }: { lang: LandingLang }) {
           onBlur={() => setHovering(false)}
         >
           <div className={styles.categoryGrid} ref={railRef}>
+            {/* Doubled for the seamless auto-scroll loop (see the effect
+                above) — 4 distinct categories now, so the repeat isn't the
+                "same 2 cards twice" the rail used to show. */}
             {[...categories, ...categories].map((category, i) => {
               const Icon = category.icon;
-              return (
-                <Link className={styles.categoryCard} href="/explore" key={`${category.title.en}-${i}`} tabIndex={i < categories.length ? 0 : -1}>
+              const count = category.filterKey ? categoryCounts[category.filterKey] : null;
+              const content = (
+                <>
                   <img src={category.image} alt="" loading="lazy" />
+                  {category.comingSoon && (
+                    <span className={styles.categoryComingSoon}>{lang === "ar" ? "قريباً" : "Coming soon"}</span>
+                  )}
                   <div className={styles.categoryContent}>
                     <span className={styles.iconBubble}>
                       <Icon size={20} />
                     </span>
                     <h3 className={styles.categoryTitle}>{localize(category.title, lang)}</h3>
                     <p className={styles.categoryMeta}>{localize(category.description, lang)}</p>
-                    <p className={styles.categoryMeta}>{category.count} {lang === "ar" ? "موهبة" : "talents"}</p>
+                    {count !== null && (
+                      <p className={styles.categoryMeta}>{count} {lang === "ar" ? "موهبة" : "talents"}</p>
+                    )}
                   </div>
+                </>
+              );
+              return category.comingSoon ? (
+                <div className={`${styles.categoryCard} ${styles.categoryCardDisabled}`} key={`${category.title.en}-${i}`} aria-disabled="true">
+                  {content}
+                </div>
+              ) : (
+                <Link className={styles.categoryCard} href="/explore" key={`${category.title.en}-${i}`} tabIndex={i < categories.length ? 0 : -1}>
+                  {content}
                 </Link>
               );
             })}
@@ -615,65 +627,59 @@ function CategoriesSection({ lang }: { lang: LandingLang }) {
 }
 
 function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang }) {
-  const availability = lang === "ar" ? "\u0645\u062a\u0627\u062d \u0627\u0644\u0622\u0646" : "Available now";
   const profileLabel = lang === "ar" ? "\u0639\u0631\u0636 \u0627\u0644\u0645\u0644\u0641" : "View profile";
   const priceLabel = lang === "ar" ? "\u064a\u0628\u062f\u0623 \u0645\u0646" : "Starts at";
   const hasRequestPrice = talent.price === "Price on request" || talent.price === "السعر حسب الطلب";
   const displayPrice = hasRequestPrice
     ? talent.price
     : talent.price.replace(/^From\s+/i, "").replace(/^\u0645\u0646\s+/u, "");
+  const isNew = talent.rating === "New" || talent.rating === "\u062c\u062f\u064a\u062f";
 
   return (
-    <article className={styles.talentCard}>
+    <Link className={styles.talentCard} href={talent.href}>
       <div className={styles.talentMedia}>
-        <img src={talent.image} alt={talent.name} loading="lazy" />
+        {talent.image ? (
+          <img src={talent.image} alt={talent.name} loading="lazy" />
+        ) : (
+          <div className={styles.talentMediaInitial} aria-hidden="true">{talent.name.charAt(0).toUpperCase()}</div>
+        )}
         {talent.verified ? (
           <span className={styles.verifiedBadge}>
             <ShieldCheck size={13} />
             {pageCopy[lang].verified}
           </span>
         ) : null}
-        <span className={styles.saveBadge} aria-hidden="true">
-          <Bookmark size={16} />
-        </span>
-        <span className={styles.playBadge} aria-hidden="true">
-          <Play size={16} fill="currentColor" />
-        </span>
       </div>
       <div className={styles.talentBody}>
         <h3 className={styles.talentName}>
           <span>{talent.name}</span>
-          <span className={styles.stars}>
-            <Star size={15} fill="currentColor" />
-            {talent.rating}
-          </span>
+          {!isNew && (
+            <span className={styles.stars}>
+              <Star size={15} fill="currentColor" />
+              {talent.rating}
+            </span>
+          )}
         </h3>
         <div className={styles.talentMetaRow}>
           <span className={styles.talentCategory}>{talent.profession}</span>
-          <span className={styles.talentLocation}>
-            <MapPin size={14} aria-hidden="true" />
-            {talent.city}
-          </span>
-        </div>
-        <div className={styles.talentPills}>
-          <span>{availability}</span>
-        </div>
-        <div className={styles.portfolioStrip}>
-          {talent.portfolio.map((image) => (
-            <img src={image} alt="" loading="lazy" key={image} />
-          ))}
+          {talent.city && (
+            <span className={styles.talentLocation}>
+              <MapPin size={14} aria-hidden="true" />
+              {talent.city}
+            </span>
+          )}
         </div>
         <div className={styles.talentFooter}>
           <span className={styles.talentPrice}>
             <small>{hasRequestPrice ? (lang === "ar" ? "السعر" : "Price") : priceLabel}</small>
             {displayPrice}
           </span>
-          <Link className={styles.talentCta} href={talent.href}>
+          <span className={styles.talentCta}>
             {profileLabel}
-          </Link>
+          </span>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
 
@@ -701,7 +707,7 @@ function FeaturedTalentsSection({ lang, talents }: { lang: LandingLang; talents:
         />
         <div className={styles.talentGrid}>
           {talents.map((talent) => (
-            <TalentCard key={`${talent.name}-${talent.profession}`} talent={talent} lang={lang} />
+            <TalentCard key={talent.href} talent={talent} lang={lang} />
           ))}
         </div>
       </div>
@@ -783,7 +789,7 @@ function WorkflowPanel({ title, steps, lang }: { title: string; steps: typeof br
 const CheckIcon = checkIcon;
 const QuoteIcon = quoteIcon;
 
-function CampaignSection({ lang }: { lang: LandingLang }) {
+function CampaignSection({ lang, moments }: { lang: LandingLang; moments: PublicBrandMoment[] }) {
   const t = pageCopy[lang];
 
   return (
@@ -795,22 +801,29 @@ function CampaignSection({ lang }: { lang: LandingLang }) {
           title={lang === "ar" ? "الصفحة تعرض نتائج ملموسة وليس وعود عامة" : "Show real campaign moments, not generic promises"}
           description={
             lang === "ar"
-              ? "استخدم صور حملات، shoots، وفيديوهات قصيرة عشان الزائر يحس إن المنصة نشطة وموثوقة."
-              : "Campaign imagery, shoot moments and short video previews create immediate trust."
+              ? "صور حملات حقيقية من براندات ومواهب على المنصة، بعد موافقة الفريق."
+              : "Real campaign photos from brands and talents on the platform, admin-approved before they show."
           }
         />
 
         <div className={styles.campaignGrid}>
           <div className={styles.campaignCards}>
-            {brandMoments.map((moment) => (
-              <article className={styles.campaignCard} key={moment.title.en}>
-                <img src={moment.image} alt={localize(moment.title, lang)} loading="lazy" />
-                <div>
-                  <h3>{localize(moment.title, lang)}</h3>
-                  <p>{localize(moment.location, lang)}</p>
-                </div>
-              </article>
-            ))}
+            {moments.length > 0 ? (
+              moments.map((moment) => (
+                <article className={styles.campaignCard} key={moment.id}>
+                  <img src={moment.imageUrl} alt={moment.title} loading="lazy" />
+                  <div>
+                    <h3>{moment.title}</h3>
+                    {moment.location && <p>{moment.location}</p>}
+                  </div>
+                </article>
+              ))
+            ) : (
+              <p className={styles.sectionDescription}>
+                {lang === "ar" ? "لسه مفيش لحظات براندات معتمدة." : "No approved brand moments yet."}
+              </p>
+            )}
+            <BrandMomentSubmitPanel lang={lang} />
           </div>
 
           <aside className={styles.darkCtaPanel}>
@@ -869,7 +882,7 @@ function FeatureSection({ lang }: { lang: LandingLang }) {
   );
 }
 
-function TestimonialsSection({ lang }: { lang: LandingLang }) {
+function TestimonialsSection({ lang, items }: { lang: LandingLang; items: PublicTestimonial[] }) {
   const t = pageCopy[lang];
 
   return (
@@ -880,21 +893,30 @@ function TestimonialsSection({ lang }: { lang: LandingLang }) {
           kicker={t.testimonials}
           title={lang === "ar" ? "ثقة مبنية على تجربة واضحة" : "Trust built from clear client experience"}
         />
-        <div className={styles.testimonialGrid}>
-          {testimonials.map((testimonial) => (
-            <article className={styles.testimonialCard} key={testimonial.name.en}>
-              <QuoteIcon size={24} color="var(--color-secondary)" />
-              <p>{localize(testimonial.quote, lang)}</p>
-              <div className={styles.testimonialAuthor}>
-                <img src={testimonial.image} alt={localize(testimonial.name, lang)} loading="lazy" />
-                <div>
-                  <h3>{localize(testimonial.name, lang)}</h3>
-                  <p>{localize(testimonial.role, lang)}</p>
+        {items.length > 0 ? (
+          <div className={styles.testimonialGrid}>
+            {items.map((testimonial) => (
+              <article className={styles.testimonialCard} key={testimonial.id}>
+                <QuoteIcon size={24} color="var(--color-secondary)" />
+                <p>{testimonial.quote}</p>
+                <div className={styles.testimonialAuthor}>
+                  <div className={styles.talentMediaInitial} style={{ width: 40, height: 40, borderRadius: "50%", fontSize: "1rem" }} aria-hidden="true">
+                    {testimonial.authorName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3>{testimonial.authorName}</h3>
+                    <p>{[testimonial.authorRole, testimonial.company].filter(Boolean).join(" · ")}</p>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className={styles.sectionDescription}>
+            {lang === "ar" ? "لسه مفيش آراء معتمدة." : "No approved testimonials yet."}
+          </p>
+        )}
+        <TestimonialSubmitPanel lang={lang} />
       </div>
     </section>
   );
@@ -952,20 +974,24 @@ export default function LandingPage({
   lang,
   talents,
   totalTalents,
+  completedProjects,
+  avgRating,
+  categoryCounts,
+  testimonials,
+  brandMoments,
 }: Props) {
   const displayedTalents = formatRealTalents(talents, lang);
-  const filledTalents = displayedTalents.length >= 4 ? displayedTalents : fallbackTalents(lang);
   const designMedia = useDesignMedia();
 
   return (
     <div className={styles.page} dir={lang === "ar" ? "rtl" : "ltr"}>
-      <HeroSection lang={lang} totalTalents={totalTalents} media={designMedia} />
-      <CategoriesSection lang={lang} />
-      <FeaturedTalentsSection lang={lang} talents={filledTalents} />
+      <HeroSection lang={lang} totalTalents={totalTalents} completedProjects={completedProjects} avgRating={avgRating} media={designMedia} />
+      <CategoriesSection lang={lang} categoryCounts={categoryCounts} />
+      <FeaturedTalentsSection lang={lang} talents={displayedTalents} />
       <WorkflowSection lang={lang} />
-      <CampaignSection lang={lang} />
+      <CampaignSection lang={lang} moments={brandMoments} />
       <FeatureSection lang={lang} />
-      <TestimonialsSection lang={lang} />
+      <TestimonialsSection lang={lang} items={testimonials} />
       <FAQSection lang={lang} />
       <FinalCTA lang={lang} />
     </div>

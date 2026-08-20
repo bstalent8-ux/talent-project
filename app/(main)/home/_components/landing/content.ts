@@ -6,18 +6,17 @@ import {
   CheckCircle2,
   Clapperboard,
   Gem,
+  Gift,
   Handshake,
   Headphones,
   Megaphone,
-  Mic2,
-  Paintbrush,
   Quote,
   Search,
   ShieldCheck,
   Sparkles,
   Star,
   UserRound,
-  UsersRound,
+  Users,
   WalletCards,
   Zap,
 } from "lucide-react";
@@ -32,16 +31,11 @@ export type CategoryItem = {
   count: string;
   icon: LucideIcon;
   image: string;
-};
-
-export type DemoTalent = {
-  name: Localized<string>;
-  profession: Localized<string>;
-  city: Localized<string>;
-  rating: string;
-  price: Localized<string>;
-  image: string;
-  portfolio: string[];
+  /** Not a real signup-able/filterable category yet — shown as a teaser
+   * with a "Coming soon" ribbon, not linked to Explore, no real count. */
+  comingSoon?: boolean;
+  /** Real categories only — which categoryCounts key this maps to. */
+  filterKey?: "ugc" | "model";
 };
 
 export type StepItem = {
@@ -54,13 +48,6 @@ export type FeatureItem = {
   title: Localized<string>;
   description: Localized<string>;
   icon: LucideIcon;
-};
-
-export type TestimonialItem = {
-  quote: Localized<string>;
-  name: Localized<string>;
-  role: Localized<string>;
-  image: string;
 };
 
 export type FAQItem = {
@@ -80,7 +67,7 @@ export const pageCopy = {
     heroBadge: "منصة موثوقة للمواهب والبراندات",
     headline: "احجز المواهب المناسبة لحملتك في دقائق",
     subtitle:
-      "Talents تجمع البراندات مع مؤثرين، UGC creators، مصورين، موديلز ومقدمي برامج موثقين لتصميم حملات أسرع وأكثر احترافية.",
+      "Talents تجمع البراندات مع صنّاع محتوى UGC وموديلز موثّقين — احجز، تعاون، واستلم النتيجة في مكان واحد.",
     primaryCta: "استكشف المواهب",
     secondaryCta: "ابدأ كموهوب",
     searchPlaceholder: "ابحث عن موهبة أو خدمة...",
@@ -113,7 +100,7 @@ export const pageCopy = {
     heroBadge: "Trusted talent and brand marketplace",
     headline: "Book the right talent for your campaign in minutes",
     subtitle:
-      "Talents connects brands with verified influencers, UGC creators, photographers, models and hosts for faster, sharper campaigns.",
+      "Talents connects brands with verified UGC creators and models — book, collaborate, and get the result in one place.",
     primaryCta: "Explore talents",
     secondaryCta: "Join as talent",
     searchPlaceholder: "Search a talent or service...",
@@ -144,137 +131,69 @@ export const pageCopy = {
   },
 } as const;
 
+// All 4 values are overridden with real numbers in LandingPage.tsx's
+// HeroSection (totalTalents / completedProjects / avgRating from the DB) —
+// these are only the fallback shown before that data resolves, plus the
+// labels. index 2 used to be a fabricated "98% satisfaction" (no
+// satisfaction-survey data exists anywhere in the schema); it's real avg
+// rating now instead.
 export const stats = [
-  { value: "+12,500", label: { ar: "موهبة موثقة", en: "Verified talents" } },
-  { value: "+3,200", label: { ar: "مشروع مكتمل", en: "Completed projects" } },
-  { value: "98%", label: { ar: "معدل رضا العملاء", en: "Client satisfaction" } },
+  { value: "0", label: { ar: "موهبة موثقة", en: "Verified talents" } },
+  { value: "0", label: { ar: "مشروع مكتمل", en: "Completed projects" } },
+  { value: "—", label: { ar: "متوسط التقييم", en: "Avg. rating" } },
   { value: "24/7", label: { ar: "دعم على مدار الساعة", en: "Support coverage" } },
 ];
 
+// Platform restricted to UGC + Model talents only (matches
+// app/(auth)/register/page.tsx's TALENT_TYPES and the Explore filter) — the
+// other 5 categories that used to show here (Influencers, Photographers,
+// Videographers, Hosts, Designers) don't exist as a signup-able or
+// filterable category anymore, so listing them here was actively
+// misleading. `count` is intentionally NOT here — LandingPage.tsx injects
+// the real per-category count from the DB (see categoryCounts prop).
 export const categories: CategoryItem[] = [
-  {
-    title: { ar: "مؤثرون", en: "Influencers" },
-    description: { ar: "صناع تأثير عبر المنصات الاجتماعية", en: "Social-first reach and influence" },
-    count: "+2,450",
-    icon: UsersRound,
-    image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
-  },
   {
     title: { ar: "UGC Creators", en: "UGC Creators" },
     description: { ar: "محتوى أصلي للمنتجات والحملات", en: "Native product and campaign content" },
-    count: "+1,620",
+    count: "",
     icon: Clapperboard,
     image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: { ar: "مصورون", en: "Photographers" },
-    description: { ar: "تصوير منتجات، بورتريه وفعاليات", en: "Product, portrait and event shoots" },
-    count: "+1,880",
-    icon: Camera,
-    image: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: { ar: "مخرجو فيديو", en: "Videographers" },
-    description: { ar: "إعلانات قصيرة، ريلز وتغطيات", en: "Reels, short ads and coverage" },
-    count: "+1,320",
-    icon: Clapperboard,
-    image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: { ar: "مقدمون", en: "Hosts" },
-    description: { ar: "تقديم فعاليات، بث مباشر وفيديو", en: "Events, live sessions and video hosting" },
-    count: "+980",
-    icon: Mic2,
-    image: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=900&q=80",
+    filterKey: "ugc",
   },
   {
     title: { ar: "موديلز", en: "Models" },
     description: { ar: "أزياء، جمال، منتجات ولايف ستايل", en: "Fashion, beauty, products and lifestyle" },
-    count: "+1,250",
+    count: "",
     icon: Sparkles,
     image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
+    filterKey: "model",
+  },
+  // Not real categories yet (no signup path, no filter, no real accounts) —
+  // shown as "Coming soon" teasers only, per explicit request.
+  {
+    title: { ar: "عائلات", en: "Family" },
+    description: { ar: "أزواج مع أطفالهم لمحتوى عائلي وحملات لايف ستايل", en: "Couples with kids for family and lifestyle campaigns" },
+    count: "",
+    icon: Users,
+    image: "https://images.unsplash.com/photo-1476703993599-0035a21b17a9?auto=format&fit=crop&w=900&q=80",
+    comingSoon: true,
   },
   {
-    title: { ar: "مصممون", en: "Designers" },
-    description: { ar: "هوية، سوشيال، موشن وواجهات", en: "Brand, social, motion and digital design" },
-    count: "+740",
-    icon: Paintbrush,
-    image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=900&q=80",
+    title: { ar: "مروّجين", en: "Promoters" },
+    description: { ar: "التواجد في الفعاليات وتوزيع العينات للزوار", en: "Event presence and sampling for visitors" },
+    count: "",
+    icon: Gift,
+    image: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=80",
+    comingSoon: true,
   },
 ];
 
-export const demoTalents: DemoTalent[] = [
-  {
-    name: { ar: "هيا الفاهدي", en: "Haya Al Fahdi" },
-    profession: { ar: "عارضة أزياء", en: "Fashion model" },
-    city: { ar: "الرياض", en: "Riyadh" },
-    rating: "4.9",
-    price: { ar: "من 6,500 ج.م", en: "From EGP 6,500" },
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80",
-    portfolio: [
-      "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=400&q=75",
-      "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=400&q=75",
-      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=400&q=75",
-    ],
-  },
-  {
-    name: { ar: "سالم باحمد", en: "Salem Bahamed" },
-    profession: { ar: "مخرج محتوى", en: "Content director" },
-    city: { ar: "دبي", en: "Dubai" },
-    rating: "4.8",
-    price: { ar: "من 2,800 ج.م", en: "From EGP 2,800" },
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
-    portfolio: [
-      "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=400&q=75",
-      "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=400&q=75",
-      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=400&q=75",
-    ],
-  },
-  {
-    name: { ar: "نورة السبيعي", en: "Nora Al Subaie" },
-    profession: { ar: "مؤثرة جمال", en: "Beauty creator" },
-    city: { ar: "جدة", en: "Jeddah" },
-    rating: "5.0",
-    price: { ar: "من 4,000 ج.م", en: "From EGP 4,000" },
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80",
-    portfolio: [
-      "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=75",
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=75",
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=75",
-    ],
-  },
-  {
-    name: { ar: "فهد الدوسري", en: "Fahad Al Dosari" },
-    profession: { ar: "مصمم ومصور", en: "Designer and photographer" },
-    city: { ar: "القاهرة", en: "Cairo" },
-    rating: "4.9",
-    price: { ar: "من 3,200 ج.م", en: "From EGP 3,200" },
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=900&q=80",
-    portfolio: [
-      "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=400&q=75",
-      "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=400&q=75",
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=75",
-    ],
-  },
-];
-
-export const brandMoments = [
-  {
-    title: { ar: "إطلاق عطر فاخر", en: "Luxury fragrance launch" },
-    location: { ar: "الرياض", en: "Riyadh" },
-    image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: { ar: "حملة جمال ولايف ستايل", en: "Beauty and lifestyle campaign" },
-    location: { ar: "دبي", en: "Dubai" },
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: { ar: "تصوير منتجات تقني", en: "Tech product production" },
-    location: { ar: "القاهرة", en: "Cairo" },
-    image: "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=900&q=80",
-  },
-];
+// demoTalents / brandMoments / testimonials were 100% fabricated (fake
+// names, fake stock photos, fake quotes) with nothing real behind them.
+// Removed entirely — LandingPage.tsx now renders real DB-backed data for
+// all three (talents from public-talents.service.ts,
+// testimonials/brandMoments from features/landing/services, submitted by
+// real users and admin-approved before they show).
 
 export const brandSteps: StepItem[] = [
   {
@@ -345,35 +264,6 @@ export const features: FeatureItem[] = [
   },
 ];
 
-export const testimonials: TestimonialItem[] = [
-  {
-    quote: {
-      ar: "اختصرنا وقت البحث من أسبوعين إلى يوم واحد، وجودة الملفات خلت قرار الحجز أسهل.",
-      en: "We reduced talent search from two weeks to one day, and profiles made booking decisions easier.",
-    },
-    name: { ar: "سارة القحطاني", en: "Sara Al Qahtani" },
-    role: { ar: "مديرة تسويق", en: "Marketing lead" },
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    quote: {
-      ar: "أول مرة أحس إن منصة مواهب عربية شكلها وflow بتاعها مناسب لشغل enterprise.",
-      en: "It finally feels like an Arabic talent marketplace that can support serious enterprise work.",
-    },
-    name: { ar: "علي المهندس", en: "Ali El Mohandes" },
-    role: { ar: "مؤسس وكالة إبداعية", en: "Creative agency founder" },
-    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    quote: {
-      ar: "البورتفوليو والتقييمات خلونا نختار الشخص المناسب بدون مكالمات طويلة.",
-      en: "Portfolios and reviews helped us choose the right person without long discovery calls.",
-    },
-    name: { ar: "منى عادل", en: "Mona Adel" },
-    role: { ar: "Brand manager" , en: "Brand manager" },
-    image: "https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&w=300&q=80",
-  },
-];
 
 export const pricingPackages = [
   {
@@ -413,10 +303,8 @@ export const faqs: FAQItem[] = [
 ];
 
 export const floatingChips = [
-  { ar: "مصوري فيديو", en: "Videographers", icon: Clapperboard },
-  { ar: "موديلز", en: "Models", icon: Sparkles },
   { ar: "UGC", en: "UGC", icon: Camera },
-  { ar: "مؤثرون", en: "Influencers", icon: UsersRound },
+  { ar: "موديلز", en: "Models", icon: Sparkles },
 ];
 
 export const quoteIcon = Quote;

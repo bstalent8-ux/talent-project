@@ -1,0 +1,106 @@
+/* Shimmer skeleton for /model/[handle], /ugc/[handle], /talent/[handle] —
+   loading.tsx renders this automatically while the async page.tsx server
+   component is still fetching (Next.js route-segment Suspense). Pure CSS,
+   no client JS: theme comes from the same bg and border-subtle tokens
+   globals.css already flips via [data-theme], so this looks right in
+   dark/light without needing useSite() in what is a server component. */
+
+.page {
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.hero {
+  width: 100%;
+  height: 260px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.container {
+  width: min(var(--container-max, 1440px), 100%);
+  margin: 0 auto;
+  padding: 20px var(--container-pad, 24px);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.4fr);
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.block {
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  overflow: hidden;
+  position: relative;
+}
+
+.block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--text-primary, #fff) 6%, transparent),
+    transparent
+  );
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+.tabsRow {
+  height: 44px;
+}
+
+.statsRow {
+  height: 64px;
+}
+
+.gridBlock {
+  height: 320px;
+}
+
+.sideBlock {
+  height: 180px;
+}
+
+.sideBlockTall {
+  height: 260px;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block::after {
+    animation: none;
+  }
+}

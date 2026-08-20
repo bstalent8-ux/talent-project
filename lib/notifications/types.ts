@@ -24,6 +24,8 @@ export const NOTIFICATION_TYPES = [
   "SYSTEM",
   "ADMIN_MESSAGE",
   "GENERAL",
+  "TESTIMONIAL_SUBMITTED",
+  "BRAND_MOMENT_SUBMITTED",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

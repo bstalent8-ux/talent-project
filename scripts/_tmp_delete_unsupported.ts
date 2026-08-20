@@ -24,7 +24,7 @@ const ACCOUNTS = [
 const profileIds = ACCOUNTS.map(a => a.profileId);
 const tpIds = ACCOUNTS.map(a => a.tpId);
 
-async function step(label: string, fn: () => Promise<{ error: unknown; count: number | null }>) {
+async function step(label: string, fn: () => PromiseLike<{ error: unknown; count: number | null }>) {
   const { error, count } = await fn();
   console.log(`${label} -> ${error ? "ERROR: " + JSON.stringify(error) : `ok (${count ?? "?"} rows)`}`);
   if (error) throw new Error(`Aborting at "${label}": ${JSON.stringify(error)}`);

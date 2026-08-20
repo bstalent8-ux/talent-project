@@ -620,5 +620,51 @@ export async function sendAdminAnnouncement(input: {
   return { broadcastId, recipientCount };
 }
 
+// ─── Landing submissions ─────────────────────────────────────────────────────
+
+/** A brand/talent submitted a testimonial for the home page. Fans out to admins. */
+export async function notifyAdminNewTestimonial(input: {
+  submitterId:   string;
+  submitterName: string;
+}): Promise<number> {
+  return notifyRole(["admin"], {
+    type:      "TESTIMONIAL_SUBMITTED",
+    senderId:  input.submitterId,
+    actionUrl: "/admin/testimonials",
+    ...withI18n({
+      title: {
+        ar: "رأي جديد بانتظار المراجعة",
+        en: "New testimonial awaiting review",
+      },
+      message: {
+        ar: `${input.submitterName} أرسل رأيًا جديدًا للموافقة عليه قبل ظهوره في الصفحة الرئيسية.`,
+        en: `${input.submitterName} submitted a testimonial for review before it goes live on the home page.`,
+      },
+    }),
+  });
+}
+
+/** A brand/talent submitted a campaign photo for the home page. Fans out to admins. */
+export async function notifyAdminNewBrandMoment(input: {
+  submitterId:   string;
+  submitterName: string;
+}): Promise<number> {
+  return notifyRole(["admin"], {
+    type:      "BRAND_MOMENT_SUBMITTED",
+    senderId:  input.submitterId,
+    actionUrl: "/admin/brand-moments",
+    ...withI18n({
+      title: {
+        ar: "لحظة براند جديدة بانتظار المراجعة",
+        en: "New brand moment awaiting review",
+      },
+      message: {
+        ar: `${input.submitterName} أرسل صورة حملة جديدة للموافقة عليها قبل ظهورها في الصفحة الرئيسية.`,
+        en: `${input.submitterName} submitted a campaign photo for review before it goes live on the home page.`,
+      },
+    }),
+  });
+}
+
 // Re-exported so feature code never needs two imports.
 export { createBulkNotifications, createNotification, notifyEveryone, notifyRole } from "./service";

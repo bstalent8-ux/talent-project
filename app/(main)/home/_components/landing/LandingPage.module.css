@@ -571,6 +571,33 @@
   box-shadow: var(--shadow-sm);
 }
 
+.categoryCardDisabled {
+  cursor: default;
+}
+
+.categoryCardDisabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.categoryCardDisabled img {
+  filter: grayscale(0.5);
+  opacity: 0.6;
+}
+
+.categoryComingSoon {
+  position: absolute;
+  inset-block-start: 0.85rem;
+  inset-inline-end: 0.85rem;
+  z-index: 1;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-secondary) 92%, #fff);
+  color: #151109;
+  font-size: var(--text-xs);
+  font-weight: 900;
+}
+
 .categoryCard img {
   position: absolute;
   inset: 0;
@@ -636,12 +663,15 @@
 }
 
 .talentCard {
+  display: block;
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   box-shadow: none;
   scroll-snap-align: start;
+  color: inherit;
+  text-decoration: none;
   transition:
     transform var(--duration-base) var(--ease-emphasis),
     box-shadow var(--duration-base) var(--ease-standard);
@@ -663,6 +693,18 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.talentMediaInitial {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 900;
+  color: color-mix(in srgb, var(--color-primary) 55%, white);
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--bg-card-muted));
 }
 
 .playBadge,
@@ -1655,6 +1697,114 @@
   .stepBody {
     padding: 0.5rem 0.65rem;
   }
+}
+
+/* ── Testimonial / brand-moment submission panels ────────────────────── */
+.submitPanelTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+
+.submitPanelTrigger:hover {
+  border-color: var(--color-primary);
+}
+
+.submitPanel {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1.1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+.submitPanelLabel {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.submitPanelRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.submitPanelInput,
+.submitPanelTextarea {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  padding: 0.55rem 0.7rem;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.submitPanelTextarea {
+  resize: vertical;
+}
+
+.submitPanelActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.submitPanelCancel {
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submitPanelSubmit {
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submitPanelSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submitPanelError {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-xs);
+}
+
+.submitPanelSent {
+  margin-top: 1rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: var(--text-sm);
 }
 
 @media (prefers-reduced-motion: reduce) {

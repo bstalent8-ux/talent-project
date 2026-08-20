@@ -269,3 +269,77 @@ export async function fetchAdminBrands(): Promise<AdminBrand[]> {
     };
   });
 }
+
+// ─── Home landing: testimonials ──────────────────────────────────────────────
+export interface AdminTestimonial {
+  id:              string;
+  quote:           string;
+  authorName:      string;
+  authorRole:      string | null;
+  company:         string | null;
+  status:          "pending" | "approved" | "rejected";
+  submittedAt:     string;
+  submitterHandle: string | null;
+  rejectionReason: string | null;
+}
+
+export async function fetchAdminTestimonials(): Promise<AdminTestimonial[]> {
+  const { data: rows, error } = await adminClient
+    .from("landing_testimonials")
+    .select("id, submitter_id, quote, author_name, author_role, company, status, submitted_at, rejection_reason")
+    .order("submitted_at", { ascending: false });
+
+  if (error || !rows?.length) return [];
+
+  const submitterIds = [...new Set(rows.map((r) => r.submitter_id))];
+  const { data: profiles } = await adminClient.from("profiles").select("id, handle").in("id", submitterIds);
+  const handleById = Object.fromEntries((profiles ?? []).map((p) => [p.id, p.handle]));
+
+  return rows.map((r) => ({
+    id:              r.id,
+    quote:           r.quote,
+    authorName:      r.author_name,
+    authorRole:      r.author_role,
+    company:         r.company,
+    status:          r.status as "pending" | "approved" | "rejected",
+    submittedAt:     r.submitted_at,
+    submitterHandle: handleById[r.submitter_id] ?? null,
+    rejectionReason: r.rejection_reason,
+  }));
+}
+
+// ─── Home landing: brand moments ─────────────────────────────────────────────
+export interface AdminBrandMoment {
+  id:              string;
+  title:           string;
+  location:        string | null;
+  imageUrl:        string;
+  status:          "pending" | "approved" | "rejected";
+  submittedAt:     string;
+  submitterHandle: string | null;
+  rejectionReason: string | null;
+}
+
+export async function fetchAdminBrandMoments(): Promise<AdminBrandMoment[]> {
+  const { data: rows, error } = await adminClient
+    .from("landing_brand_moments")
+    .select("id, submitter_id, title, location, image_url, status, submitted_at, rejection_reason")
+    .order("submitted_at", { ascending: false });
+
+  if (error || !rows?.length) return [];
+
+  const submitterIds = [...new Set(rows.map((r) => r.submitter_id))];
+  const { data: profiles } = await adminClient.from("profiles").select("id, handle").in("id", submitterIds);
+  const handleById = Object.fromEntries((profiles ?? []).map((p) => [p.id, p.handle]));
+
+  return rows.map((r) => ({
+    id:              r.id,
+    title:           r.title,
+    location:        r.location,
+    imageUrl:        r.image_url,
+    status:          r.status as "pending" | "approved" | "rejected",
+    submittedAt:     r.submitted_at,
+    submitterHandle: handleById[r.submitter_id] ?? null,
+    rejectionReason: r.rejection_reason,
+  }));
+}
