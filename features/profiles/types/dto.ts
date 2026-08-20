@@ -204,6 +204,12 @@ export interface ModelMetricsDTO {
   avgProjectValue:   number | null;
   noShowRate:        number | null;
   tier:              string | null;
+  /** Auto-computed by recalc_talent_response_metrics() (see
+   * supabase/migrations/20260821_auto_model_metrics.sql) — NULL until the
+   * talent has enough qualifying bookings, never a fabricated number. Kept
+   * separate from the admin-typed fields above, which stay manual. */
+  avgResponseHours: number | null;
+  autoOnTimeRate:   number | null;
 }
 
 export interface TalentPublicCore {

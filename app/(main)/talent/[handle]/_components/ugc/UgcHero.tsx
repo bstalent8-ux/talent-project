@@ -7,11 +7,12 @@
 // Tailwind classes, and wired to real TalentData / real portfolio items
 // instead of ugc/untitled/data/creatorData.ts.
 //
-// AI Match Score / Response Time / On-Time Delivery are HARDCODED per
-// explicit request to match the reference visually — none of the three are
-// tracked anywhere in the schema (no scoring model, no response-time or
-// on-time-delivery metric column). Completion Rate and Availability stay
-// real (bookingStats, talent.availability).
+// Response Time / On-Time Delivery read talent.modelMetrics.avgResponseHours /
+// .autoOnTimeRate — auto-computed by recalc_talent_response_metrics() (see
+// supabase/migrations/20260821_auto_model_metrics.sql) from real bookings,
+// NULL (tile hidden) until a talent clears the 5-booking sample floor. AI
+// Match Score stays HARDCODED — no scoring model exists for it at all.
+// Completion Rate and Availability stay real (bookingStats, talent.availability).
 //
 // Dropped vs. source (no real feature behind them — see integration report):
 //   - multi-currency switcher (project is EGP-only)
@@ -57,6 +58,12 @@ const PROFILE_URL_BASE: Record<string, string> = {
   youtube:   "https://youtube.com/@",
   linkedin:  "https://linkedin.com/in/",
 };
+function formatResponseTime(hours: number, ar: boolean): string {
+  if (hours < 24) return ar ? "خلال يوم" : "Within a day";
+  const days = Math.round(hours / 24);
+  return ar ? `${days} ${days === 1 ? "يوم" : "أيام"}` : `${days} ${days === 1 ? "Day" : "Days"}`;
+}
+
 function toHref(key: string, value: string): string {
   if (/^https?:\/\//i.test(value)) return value;
   const base = PROFILE_URL_BASE[key];
@@ -88,6 +95,8 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
   const socialEntries = PLATFORM_ORDER.filter((k) => presenceLinks[k]);
   const reelThumbs = portfolioItems.slice(0, 5);
   const completedPct = bookingStats.total > 0 ? Math.round((bookingStats.completed / bookingStats.total) * 100) : null;
+  const avgResponseHours = talent.modelMetrics?.avgResponseHours ?? null;
+  const autoOnTimeRate = talent.modelMetrics?.autoOnTimeRate ?? null;
 
   function handleShare() {
     if (typeof window === "undefined") return;
@@ -181,17 +190,15 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 8 }}>
-            {/* Response time isn't tracked anywhere in the schema — hardcoded
-                to match the reference tile, same as ModelKeyStats does for
-                its own non-derivable admin-only metrics before an admin sets
-                them. */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
-              <div style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: `${VIOLET}1f`, color: VIOLET, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Clock size={13} /></div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800 }}>{ar ? "2-3 أيام" : "2-3 Days"}</div>
-                <div style={{ fontSize: 10, color: "#94A3B8" }}>{ar ? "وقت الرد" : "Avg. Response Time"}</div>
+            {avgResponseHours !== null && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: `${VIOLET}1f`, color: VIOLET, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Clock size={13} /></div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800 }}>{formatResponseTime(avgResponseHours, ar)}</div>
+                  <div style={{ fontSize: 10, color: "#94A3B8" }}>{ar ? "وقت الرد" : "Avg. Response Time"}</div>
+                </div>
               </div>
-            </div>
+            )}
 
             {completedPct !== null && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
@@ -203,15 +210,15 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
               </div>
             )}
 
-            {/* On-time delivery isn't tracked either — hardcoded, matches
-                reference's static "100%" tile. */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
-              <div style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: "rgba(14,165,233,0.12)", color: "#0EA5E9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Zap size={13} /></div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800 }}>100%</div>
-                <div style={{ fontSize: 10, color: "#94A3B8" }}>{ar ? "في الموعد" : "On-Time Delivery"}</div>
+            {autoOnTimeRate !== null && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: "rgba(14,165,233,0.12)", color: "#0EA5E9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Zap size={13} /></div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800 }}>{Math.round(autoOnTimeRate)}%</div>
+                  <div style={{ fontSize: 10, color: "#94A3B8" }}>{ar ? "في الموعد" : "On-Time Delivery"}</div>
+                </div>
               </div>
-            </div>
+            )}
 
             {talent.availability && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(15,23,42,0.6)", border: "1px solid #1E293B", borderRadius: 12, padding: "8px 10px" }}>

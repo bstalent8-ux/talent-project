@@ -44,14 +44,23 @@ BEGIN
   WHERE b.talent_id = p_talent_id
     AND bb.responded_at IS NOT NULL;
 
-  SELECT count(*),
-         100.0 * count(*) FILTER (WHERE d.created_at <= bb.deadline) / count(*)
-    INTO v_delivery_n, v_on_time_rate
-  FROM public.deliverables d
-  JOIN public.bookings b ON b.id = d.booking_id
-  JOIN public.booking_briefs bb ON bb.booking_id = b.id
-  WHERE b.talent_id = p_talent_id
-    AND bb.deadline IS NOT NULL;
+  -- deliverables is documented as live in CLAUDE.md but is absent on this
+  -- database today (schema drift between the repo's migration files and
+  -- the real DB — see CLAUDE.md §6). Guard so this function still works for
+  -- avg_response_hours until that table actually exists.
+  v_delivery_n := 0;
+  v_on_time_rate := NULL;
+  IF to_regclass('public.deliverables') IS NOT NULL THEN
+    EXECUTE $q$
+      SELECT count(*),
+             100.0 * count(*) FILTER (WHERE d.created_at <= bb.deadline) / count(*)
+      FROM public.deliverables d
+      JOIN public.bookings b ON b.id = d.booking_id
+      JOIN public.booking_briefs bb ON bb.booking_id = b.id
+      WHERE b.talent_id = $1
+        AND bb.deadline IS NOT NULL
+    $q$ INTO v_delivery_n, v_on_time_rate USING p_talent_id;
+  END IF;
 
   UPDATE public.talent_profiles
   SET model_metrics = model_metrics
@@ -92,10 +101,20 @@ CREATE TRIGGER recalc_response_metrics_on_brief
 AFTER INSERT OR UPDATE OF responded_at, deadline ON public.booking_briefs
 FOR EACH ROW EXECUTE FUNCTION public.trg_recalc_response_metrics_from_brief();
 
-DROP TRIGGER IF EXISTS recalc_response_metrics_on_deliverable ON public.deliverables;
-CREATE TRIGGER recalc_response_metrics_on_deliverable
-AFTER INSERT ON public.deliverables
-FOR EACH ROW EXECUTE FUNCTION public.trg_recalc_response_metrics_from_deliverable();
+-- deliverables doesn't exist on this DB yet (see comment above) — skip
+-- attaching the trigger rather than fail the whole migration. Re-run this
+-- file after the table is created and this block will attach it.
+DO $$
+BEGIN
+  IF to_regclass('public.deliverables') IS NOT NULL THEN
+    EXECUTE 'DROP TRIGGER IF EXISTS recalc_response_metrics_on_deliverable ON public.deliverables';
+    EXECUTE 'CREATE TRIGGER recalc_response_metrics_on_deliverable
+             AFTER INSERT ON public.deliverables
+             FOR EACH ROW EXECUTE FUNCTION public.trg_recalc_response_metrics_from_deliverable()';
+  ELSE
+    RAISE NOTICE 'public.deliverables does not exist yet — skipped attaching its trigger. auto_on_time_rate stays NULL until it does.';
+  END IF;
+END $$;
 
 -- Backfill: recompute for every talent once so existing data is reflected
 -- immediately (still gated by v_min_sample inside the function — most will

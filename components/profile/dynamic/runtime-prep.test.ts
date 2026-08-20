@@ -52,6 +52,7 @@ const dto: PublicProfileDTO = {
     modelMetrics: {
       responseTimeLabel: null, responseRate: null, repeatClientRate: null,
       onTimeRate: null, avgProjectValue: null, noShowRate: null, tier: null,
+      avgResponseHours: null, autoOnTimeRate: null,
     },
     packages: [{ id: "pkg1", name: "Basic", price: "1000", popular: true, features: ["a"] }],
     socialLinks: {

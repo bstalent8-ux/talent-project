@@ -144,6 +144,8 @@ function toModelMetrics(raw: unknown): ModelMetricsDTO {
     avgProjectValue:   num(r.avg_project_value),
     noShowRate:        num(r.no_show_rate),
     tier:              str(r.tier),
+    avgResponseHours: num(r.avg_response_hours),
+    autoOnTimeRate:   num(r.auto_on_time_rate),
   };
 }
 

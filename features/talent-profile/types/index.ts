@@ -160,6 +160,10 @@ export interface ModelMetrics {
   avgProjectValue:   number | null;
   noShowRate:        number | null;
   tier:              string | null;
+  /** Auto-computed, NULL until enough bookings exist — see
+   * supabase/migrations/20260821_auto_model_metrics.sql. */
+  avgResponseHours: number | null;
+  autoOnTimeRate:   number | null;
 }
 
 export interface BookingStats {
