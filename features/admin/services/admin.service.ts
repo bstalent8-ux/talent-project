@@ -357,13 +357,14 @@ export interface AdminSupportTicket {
   adminReply:  string | null;
   repliedAt:   string | null;
   context:     { page?: string | null; pageError?: string | null } | null;
+  attachmentUrl: string | null;
   createdAt:   string;
 }
 
 export async function fetchAdminSupportTickets(): Promise<AdminSupportTicket[]> {
   const { data: rows, error } = await adminClient
     .from("contact_messages")
-    .select("id, name, email, phone, type, subject, message, status, admin_reply, replied_at, context, created_at")
+    .select("id, name, email, phone, type, subject, message, status, admin_reply, replied_at, context, attachment_url, created_at")
     .order("created_at", { ascending: false });
 
   if (error || !rows) return [];
@@ -380,6 +381,7 @@ export async function fetchAdminSupportTickets(): Promise<AdminSupportTicket[]> 
     adminReply: r.admin_reply,
     repliedAt:  r.replied_at,
     context:    r.context,
+    attachmentUrl: r.attachment_url,
     createdAt:  r.created_at,
   }));
 }

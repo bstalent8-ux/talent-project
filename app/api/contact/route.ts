@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { notifyAdminNewSupportTicket } from "@/lib/notifications/events";
 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "hello@talents.com";
 
@@ -44,6 +45,13 @@ export async function POST(req: NextRequest) {
     console.error("[contact] db error:", dbErr.message);
     return NextResponse.json({ error: "failed to save message" }, { status: 500 });
   }
+
+  // Same in-app admin notification the quick ticket modal fires — this was
+  // previously silent (Resend-only, and only when RESEND_API_KEY was set),
+  // so a submission here could sit unseen for days.
+  notifyAdminNewSupportTicket({ email, page: null }).catch((e) => {
+    console.error("[contact] admin notify failed:", e);
+  });
 
   // Send email via Resend (optional — only if RESEND_API_KEY is configured)
   const resendKey = process.env.RESEND_API_KEY;

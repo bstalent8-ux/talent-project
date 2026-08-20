@@ -88,6 +88,49 @@
   resize: vertical;
 }
 
+.attachBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.attachBtn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.attachPreviewRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.attachPreview {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.attachRemove {
+  background: none;
+  border: none;
+  color: var(--color-error);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
 .submit {
   width: 100%;
   padding: 11px;

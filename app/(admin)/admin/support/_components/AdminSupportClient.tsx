@@ -25,6 +25,7 @@ const TX = {
     title: "تذاكر الدعم", from: "من", subject: "الموضوع", status: "الحالة",
     submitted: "التاريخ", all: "الكل", new: "جديدة", in_progress: "قيد المعالجة", resolved: "تم الحل",
     noRequests: "لا توجد تذاكر بعد", close: "إغلاق", message: "الرسالة", contact: "التواصل",
+    attachment: "صورة المشكلة",
     source: "المصدر", errorSeen: "الخطأ الظاهر وقت الإرسال", reply: "الرد",
     replyPH: "اكتب ردك هنا...",
     send: "إرسال الرد", markInProgress: "قيد المعالجة", markResolved: "تم الحل",
@@ -37,6 +38,7 @@ const TX = {
     title: "Support Tickets", from: "From", subject: "Subject", status: "Status",
     submitted: "Date", all: "All", new: "New", in_progress: "In progress", resolved: "Resolved",
     noRequests: "No tickets yet", close: "Close", message: "Message", contact: "Contact",
+    attachment: "Problem screenshot",
     source: "Source", errorSeen: "Error shown at submit time", reply: "Reply",
     replyPH: "Write your reply...",
     send: "Send reply", markInProgress: "In progress", markResolved: "Resolved",
@@ -212,6 +214,20 @@ export default function AdminSupportClient({ tickets, emailConfigured }: { ticke
               <p style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>{t.message}</p>
               <p style={{ color: TEXT, fontSize: 14, margin: 0, whiteSpace: "pre-wrap" }}>{selected.message}</p>
             </div>
+
+            {selected.attachmentUrl && (
+              <div style={{ marginBottom: 14 }}>
+                <p style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>{t.attachment}</p>
+                <a href={selected.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={selected.attachmentUrl}
+                    alt=""
+                    style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 8, border: `1px solid ${BORDER}`, display: "block" }}
+                  />
+                </a>
+              </div>
+            )}
 
             {selected.context?.pageError && (
               <div style={{ marginBottom: 14, padding: 10, borderRadius: 8, backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>

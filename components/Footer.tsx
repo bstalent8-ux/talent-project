@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import SupportTicketModal from "@/components/support/SupportTicketModal";
 import styles from "./SiteChrome.module.css";
 
 const TX = {
@@ -165,6 +166,7 @@ export default function Footer() {
                 {label}
               </Link>
             ))}
+            <SupportTicketModal page="footer" />
           </div>
         </div>
       </div>

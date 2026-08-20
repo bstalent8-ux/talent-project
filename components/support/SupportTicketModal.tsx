@@ -1,16 +1,19 @@
 "use client";
 
-// ─── Quick support ticket (register / login pages) ────────────────────────
+// ─── Quick support ticket (register / login / footer) ─────────────────────
 // For a visitor who literally cannot sign in — the whole reason this exists
-// on these two pages instead of only the full /contact form. Auto-captures
-// which page and what error was on screen so the admin doesn't have to ask;
-// the visitor only types email + message. Public, no auth required — see
-// app/api/support/tickets/route.ts.
+// on register/login instead of only the full /contact form — plus a footer
+// entry point reachable from anywhere on the site. Auto-captures which page
+// and what error was on screen so the admin doesn't have to ask; the
+// visitor only types email + message, with an optional screenshot. Public,
+// no auth required — see app/api/support/tickets/route.ts.
 
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useRef, useState } from "react";
+import { Image as ImageIcon, X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import styles from "./SupportTicketModal.module.css";
+
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
 const TX = {
   ar: {
@@ -23,10 +26,15 @@ const TX = {
     phonePH:  "+20 1xx xxx xxxx",
     message:  "المشكلة",
     messagePH: "قولنا اللي حصل بالظبط...",
+    attachment: "صورة للمشكلة (اختياري)",
+    attachBtn:  "إرفاق صورة",
+    removeAttach: "إزالة",
     submit:   "إرسال",
     sending:  "جاري الإرسال...",
     errRequired: "الإيميل والرسالة مطلوبين.",
     errEmail:    "أدخل بريد إلكتروني صحيح.",
+    errFileType: "الملف لازم يكون صورة.",
+    errFileSize: "الصورة أكبر من 5MB.",
     errServer:   "حصل خطأ، حاول تاني.",
     successTitle: "تم الإرسال ✓",
     successSub:   "هنتواصل معاك على الإيميل قريب.",
@@ -42,10 +50,15 @@ const TX = {
     phonePH:  "+20 1xx xxx xxxx",
     message:  "What happened",
     messagePH: "Tell us exactly what happened...",
+    attachment: "Screenshot of the problem (optional)",
+    attachBtn:  "Attach a screenshot",
+    removeAttach: "Remove",
     submit:   "Send",
     sending:  "Sending...",
     errRequired: "Email and message are required.",
     errEmail:    "Enter a valid email address.",
+    errFileType: "The file must be an image.",
+    errFileSize: "The image is larger than 5MB.",
     errServer:   "Something went wrong, try again.",
     successTitle: "Sent ✓",
     successSub:   "We'll reach out to your email soon.",
@@ -53,14 +66,22 @@ const TX = {
   },
 };
 
-export default function SupportTicketModal({ page, pageError }: { page: "register" | "login"; pageError?: string | null }) {
+interface Props {
+  page: "register" | "login" | "footer";
+  pageError?: string | null;
+}
+
+export default function SupportTicketModal({ page, pageError }: Props) {
   const { lang } = useSite();
   const t = TX[lang];
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -68,6 +89,24 @@ export default function SupportTicketModal({ page, pageError }: { page: "registe
   function reset() {
     setOpen(false);
     setEmail(""); setPhone(""); setMessage(""); setError(""); setSent(false);
+    clearFile();
+  }
+
+  function clearFile() {
+    setFile(null);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function pickFile(f: File | undefined) {
+    if (!f) return;
+    if (!f.type.startsWith("image/")) { setError(t.errFileType); return; }
+    if (f.size > MAX_FILE_BYTES) { setError(t.errFileSize); return; }
+    setError("");
+    setFile(f);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(URL.createObjectURL(f));
   }
 
   async function submit() {
@@ -76,11 +115,15 @@ export default function SupportTicketModal({ page, pageError }: { page: "registe
 
     setSending(true); setError("");
     try {
-      const res = await fetch("/api/support/tickets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), phone: phone.trim(), message: message.trim(), page, pageError: pageError ?? null }),
-      });
+      const body = new FormData();
+      body.append("email", email.trim());
+      body.append("phone", phone.trim());
+      body.append("message", message.trim());
+      body.append("page", page);
+      if (pageError) body.append("pageError", pageError);
+      if (file) body.append("file", file);
+
+      const res = await fetch("/api/support/tickets", { method: "POST", body });
       if (!res.ok) { setError(t.errServer); setSending(false); return; }
       setSent(true);
     } catch {
@@ -147,6 +190,31 @@ export default function SupportTicketModal({ page, pageError }: { page: "registe
                     value={message}
                     onChange={(e) => { setMessage(e.target.value); setError(""); }}
                   />
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>{t.attachment}</label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => pickFile(e.target.files?.[0])}
+                  />
+                  {preview ? (
+                    <div className={styles.attachPreviewRow}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={preview} alt="" className={styles.attachPreview} />
+                      <button type="button" className={styles.attachRemove} onClick={clearFile}>
+                        {t.removeAttach}
+                      </button>
+                    </div>
+                  ) : (
+                    <button type="button" className={styles.attachBtn} onClick={() => fileInputRef.current?.click()}>
+                      <ImageIcon size={14} />
+                      {t.attachBtn}
+                    </button>
+                  )}
                 </div>
 
                 {error && <p className={styles.errorText} role="alert">{error}</p>}
