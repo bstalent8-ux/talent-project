@@ -60,17 +60,14 @@ export async function PATCH(
     .eq("booking_id", id);
   if (briefErr) return NextResponse.json({ error: briefErr.message }, { status: 500 });
 
-  // Update booking status
+  // Update booking status. bookings has no updated_at/negotiation_message/
+  // negotiation_requested_at columns (confirmed against the live schema,
+  // same drift as app/api/bookings/direct's note) — this used to make
+  // every accept/reject/request-changes call 500. The negotiation message
+  // is already captured on booking_briefs.reject_reason above, so nothing
+  // is lost by not writing it here too.
   const newStatus = action === "accept" ? "accepted" : action === "reject" ? "rejected" : "changes_requested";
-  const bookingUpdate: Record<string, unknown> = {
-    status:     newStatus,
-    updated_at: now,
-  };
-  if (action === "request_changes") {
-    bookingUpdate.negotiation_message = message.trim();
-    bookingUpdate.negotiation_requested_at = now;
-  }
-  const { error: bookingErr } = await adminClient.from("bookings").update(bookingUpdate).eq("id", id);
+  const { error: bookingErr } = await adminClient.from("bookings").update({ status: newStatus }).eq("id", id);
   if (bookingErr) return NextResponse.json({ error: bookingErr.message }, { status: 500 });
 
   // Send system message in chat

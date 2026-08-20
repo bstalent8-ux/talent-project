@@ -5,7 +5,7 @@ import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import EmptyState from "@/components/admin/EmptyState";
 import type { AdminSupportTicket } from "@/features/admin/services/admin.service";
-import { Copy, Mail, Phone, X } from "lucide-react";
+import { Copy, Image as ImageIcon, Mail, Phone, X } from "lucide-react";
 
 const STATUS_FILTERS = ["all", "new", "in_progress", "resolved"] as const;
 
@@ -144,7 +144,10 @@ export default function AdminSupportClient({ tickets, emailConfigured }: { ticke
                         {v.phone && <div style={{ color: MUTED, fontSize: 11 }}>{v.phone}</div>}
                       </td>
                       <td style={cellStyle}>
-                        {v.subject}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {v.subject}
+                          {v.attachmentUrl && <ImageIcon size={12} color={MUTED} />}
+                        </div>
                         {v.context?.page && (
                           <div style={{ color: MUTED, fontSize: 11 }}>
                             {(PAGE_LABEL[v.context.page]?.[lang]) ?? v.context.page}

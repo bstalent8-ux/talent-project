@@ -1,0 +1,152 @@
+/* ─── Onboarding wizard ──────────────────────────────────────────────────────
+   Bare (auth) route group, no navbar. Single centered card, own layout
+   (not auth.module.css's split brand-panel — that's built for a form, this
+   is a step-by-step read). Tokens only, matches the rest of the site. */
+
+.page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-page);
+  padding: 24px;
+}
+
+.card {
+  width: min(560px, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  position: relative;
+}
+
+.skip {
+  position: absolute;
+  inset-inline-end: 20px;
+  top: 8px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.progress {
+  display: flex;
+  gap: 6px;
+  margin-top: 20px;
+  margin-bottom: 28px;
+}
+
+.progressDot {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--border-subtle);
+  transition: background 0.2s;
+}
+
+.progressDotActive {
+  background: var(--color-primary);
+}
+
+.iconWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+  margin-bottom: 18px;
+}
+
+.heading {
+  color: var(--text-primary);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+
+.sub {
+  color: var(--text-muted);
+  font-size: 14.5px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.listItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.listIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.listTitle {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.listText {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+}
+
+.back {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 8px 4px;
+}
+
+.backHidden {
+  visibility: hidden;
+}
+
+.next {
+  padding: 12px 26px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}

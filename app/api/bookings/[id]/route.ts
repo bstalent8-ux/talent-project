@@ -18,9 +18,13 @@ export async function GET(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+  // bookings has no budget_type/budget_amount/start_date/duration/deadline/
+  // negotiation_message/negotiation_requested_at/updated_at columns (see
+  // app/api/bookings/direct's note — confirmed against the live schema).
+  // deadline comes from the joined booking_briefs row below instead.
   const { data: booking, error } = await adminClient
     .from("bookings")
-    .select("id, status, amount, budget_type, budget_amount, start_date, duration, deadline, negotiation_message, negotiation_requested_at, created_at, updated_at, service_type, brand_id, talent_user_id, talent_id, job_id, job_application_id, paid_at, completed_at, notes")
+    .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, talent_id, job_id, job_application_id, paid_at, completed_at, notes")
     .eq("id", id)
     .single();
 
@@ -60,7 +64,12 @@ export async function GET(
       ? adminClient.from("jobs").select("id,title,description,category,budget_min,budget_max,currency").eq("id", booking.job_id).single()
       : Promise.resolve({ data: null, error: null }),
     adminClient.from("booking_briefs").select("*").eq("booking_id", id).maybeSingle(),
-    adminClient.from("deliverables").select("*").eq("booking_id", id).order("created_at", { ascending: false }),
+    // deliverables doesn't exist on this DB yet (schema drift — see
+    // supabase/migrations/20260727_fix_schema_drift.sql, never run here).
+    // Degrade to an empty list instead of 500ing the whole booking detail
+    // page over one missing table.
+    adminClient.from("deliverables").select("*").eq("booking_id", id).order("created_at", { ascending: false })
+      .then((res) => (res.error?.code === "PGRST205" ? { data: [], error: null } : res)),
     adminClient.from("payments").select("*").eq("booking_id", id).maybeSingle(),
     adminClient.from("reviews").select("id,rating,comment,status").eq("booking_id", id).maybeSingle(),
     adminClient.from("conversations").select("id").eq("brand_id", booking.brand_id).eq("talent_id", booking.talent_user_id ?? "").maybeSingle(),

@@ -22,7 +22,11 @@ export async function GET() {
   if (profile?.role === "brand") {
     const { data, error } = await adminClient
       .from("bookings")
-      .select("id, status, amount, budget_type, budget_amount, start_date, duration, deadline, negotiation_message, created_at, updated_at, service_type, brand_id, talent_user_id, job_id, talent_id")
+      // bookings has no budget_type/budget_amount/start_date/duration/deadline/
+      // negotiation_message/updated_at columns (see app/api/bookings/direct's
+      // note — confirmed against the live schema). deadline comes from the
+      // joined booking_briefs row below instead.
+      .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, job_id, talent_id")
       .eq("brand_id", user.id)
       .order("created_at", { ascending: false });
     bookings = (data ?? []) as Record<string, unknown>[];
@@ -42,7 +46,11 @@ export async function GET() {
     if (!tp) return NextResponse.json({ bookings: [] }, { headers: privateNoStoreHeaders() });
     const { data, error } = await adminClient
       .from("bookings")
-      .select("id, status, amount, budget_type, budget_amount, start_date, duration, deadline, negotiation_message, created_at, updated_at, service_type, brand_id, talent_user_id, job_id, talent_id")
+      // bookings has no budget_type/budget_amount/start_date/duration/deadline/
+      // negotiation_message/updated_at columns (see app/api/bookings/direct's
+      // note — confirmed against the live schema). deadline comes from the
+      // joined booking_briefs row below instead.
+      .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, job_id, talent_id")
       .eq("talent_id", tp.id)
       .order("created_at", { ascending: false });
     bookings = (data ?? []) as Record<string, unknown>[];

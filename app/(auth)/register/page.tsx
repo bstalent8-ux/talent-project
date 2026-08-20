@@ -356,7 +356,9 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push(safeNextPath() ?? "/profile/me");
+      // A specific safeNextPath (e.g. resuming a booking flow) always wins —
+      // onboarding is only the default first stop for a fresh talent signup.
+      router.push(safeNextPath() ?? (form.role === "talent" ? "/onboarding" : "/profile/me"));
     } catch (e) {
       const message = e instanceof Error ? e.message : "";
       if (/fetch|network/i.test(message)) {
