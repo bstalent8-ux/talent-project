@@ -666,5 +666,28 @@ export async function notifyAdminNewBrandMoment(input: {
   });
 }
 
+/** An unauthenticated visitor filed a support ticket (register/login page,
+ * or the full Contact Us form). No senderId — the submitter has no session,
+ * that's usually why they're filing the ticket. Fans out to admins. */
+export async function notifyAdminNewSupportTicket(input: {
+  email: string;
+  page:  string | null;
+}): Promise<number> {
+  return notifyRole(["admin"], {
+    type:      "SUPPORT_TICKET_SUBMITTED",
+    actionUrl: "/admin/support",
+    ...withI18n({
+      title: {
+        ar: "تذكرة دعم جديدة",
+        en: "New support ticket",
+      },
+      message: {
+        ar: `${input.email} محتاج مساعدة${input.page ? ` (صفحة ${input.page})` : ""}.`,
+        en: `${input.email} needs help${input.page ? ` (${input.page} page)` : ""}.`,
+      },
+    }),
+  });
+}
+
 // Re-exported so feature code never needs two imports.
 export { createBulkNotifications, createNotification, notifyEveryone, notifyRole } from "./service";

@@ -9,6 +9,7 @@ import { Eye, EyeOff, Languages, Moon, Sun } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import { safeNextPath } from "@/lib/safe-next-path";
+import SupportTicketModal from "@/components/support/SupportTicketModal";
 import styles from "../auth.module.css";
 
 // brandHighlight excludes the trailing "." on purpose — .brandHighlight::after
@@ -204,6 +205,10 @@ export default function LoginPage() {
             {t.noAccount}{" "}
             <Link className={styles.textLink} href="/register">{t.register}</Link>
           </p>
+
+          <div style={{ textAlign: "center", marginTop: 10 }}>
+            <SupportTicketModal page="login" pageError={error || null} />
+          </div>
         </div>
       </div>
 

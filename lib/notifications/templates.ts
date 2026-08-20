@@ -84,6 +84,7 @@ export const TYPE_ICON: Record<NotificationType, string> = {
   GENERAL:                  "🔔",
   TESTIMONIAL_SUBMITTED:    "💬",
   BRAND_MOMENT_SUBMITTED:   "📸",
+  SUPPORT_TICKET_SUBMITTED: "🆘",
 };
 
 export const TYPE_COLOR: Record<NotificationType, string> = {
@@ -108,6 +109,7 @@ export const TYPE_COLOR: Record<NotificationType, string> = {
   GENERAL:                  "#6B7280",
   TESTIMONIAL_SUBMITTED:    "#16a3a3",
   BRAND_MOMENT_SUBMITTED:   "#16a3a3",
+  SUPPORT_TICKET_SUBMITTED: "#EF4444",
 };
 
 export const PRIORITY_COLOR: Record<NotificationPriority, string> = {
@@ -139,6 +141,7 @@ export const TYPE_LABEL: Record<NotificationType, BilingualText> = {
   GENERAL:                  { ar: "عام",               en: "General" },
   TESTIMONIAL_SUBMITTED:    { ar: "رأي جديد",          en: "New testimonial" },
   BRAND_MOMENT_SUBMITTED:   { ar: "لحظة براند جديدة",  en: "New brand moment" },
+  SUPPORT_TICKET_SUBMITTED: { ar: "تذكرة دعم جديدة",   en: "New support ticket" },
 };
 
 export const DEFAULT_PRIORITY: Record<NotificationType, NotificationPriority> = {
@@ -163,6 +166,7 @@ export const DEFAULT_PRIORITY: Record<NotificationType, NotificationPriority> = 
   GENERAL:                  "normal",
   TESTIMONIAL_SUBMITTED:    "normal",
   BRAND_MOMENT_SUBMITTED:   "normal",
+  SUPPORT_TICKET_SUBMITTED: "high",
 };
 
 /**

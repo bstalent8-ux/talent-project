@@ -9,6 +9,7 @@ import { Eye, EyeOff, Languages, Moon, Sun } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import { safeNextPath } from "@/lib/safe-next-path";
+import SupportTicketModal from "@/components/support/SupportTicketModal";
 import styles from "../auth.module.css";
 import PhoneInput from "../phone/PhoneInput";
 import { detectDefaultCountryIso, findCountry, rememberCountryIso } from "../phone/countries";
@@ -627,6 +628,10 @@ export default function RegisterPage() {
             {tx.haveAccount}{" "}
             <Link className={styles.textLink} href="/login">{tx.signIn}</Link>
           </p>
+
+          <div style={{ textAlign: "center", marginTop: 10 }}>
+            <SupportTicketModal page="register" pageError={serverError} />
+          </div>
         </div>
       </div>
 

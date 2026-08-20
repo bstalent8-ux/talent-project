@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Handshake,
   LayoutDashboard,
+  LifeBuoy,
   ListTree,
   LogOut,
   Package as PackageIcon,
@@ -36,6 +37,7 @@ const TX = {
     verifications: "طلبات التحقق",
     testimonials: "آراء الصفحة الرئيسية",
     brandMoments: "لحظات البراندات",
+    support: "تذاكر الدعم",
     categories: "التصنيفات",
     packages: "الباقات",
     profileConfig: "إعدادات الملفات",
@@ -52,6 +54,7 @@ const TX = {
     verifications: "Verifications",
     testimonials: "Testimonials",
     brandMoments: "Brand Moments",
+    support: "Support Tickets",
     packages: "Packages",
     categories: "Categories",
     trustedBrands: "Trusted Brands",
@@ -64,6 +67,7 @@ const TX = {
 
 const NAV_ITEMS = [
   { key: "dashboard", href: "/admin", icon: LayoutDashboard },
+  { key: "support", href: "/admin/support", icon: LifeBuoy },
   { key: "talents", href: "/admin/talents", icon: Users },
   { key: "brands", href: "/admin/brands", icon: Building2 },
   { key: "bookings", href: "/admin/bookings", icon: CalendarCheck },

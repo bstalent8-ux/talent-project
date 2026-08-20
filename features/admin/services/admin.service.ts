@@ -343,3 +343,43 @@ export async function fetchAdminBrandMoments(): Promise<AdminBrandMoment[]> {
     rejectionReason: r.rejection_reason,
   }));
 }
+
+// ─── Support tickets (contact_messages) ────────────────────────────────────
+export interface AdminSupportTicket {
+  id:          string;
+  name:        string;
+  email:       string;
+  phone:       string | null;
+  type:        string;
+  subject:     string;
+  message:     string;
+  status:      "new" | "in_progress" | "resolved";
+  adminReply:  string | null;
+  repliedAt:   string | null;
+  context:     { page?: string | null; pageError?: string | null } | null;
+  createdAt:   string;
+}
+
+export async function fetchAdminSupportTickets(): Promise<AdminSupportTicket[]> {
+  const { data: rows, error } = await adminClient
+    .from("contact_messages")
+    .select("id, name, email, phone, type, subject, message, status, admin_reply, replied_at, context, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error || !rows) return [];
+
+  return rows.map((r) => ({
+    id:         r.id,
+    name:       r.name,
+    email:      r.email,
+    phone:      r.phone,
+    type:       r.type,
+    subject:    r.subject,
+    message:    r.message,
+    status:     (r.status ?? "new") as "new" | "in_progress" | "resolved",
+    adminReply: r.admin_reply,
+    repliedAt:  r.replied_at,
+    context:    r.context,
+    createdAt:  r.created_at,
+  }));
+}
