@@ -179,7 +179,11 @@ export default function Navbar() {
   async function handleLogout() {
     resetNotificationStore();
     await createClient().auth.signOut();
-    router.push("/login");
+    // Hard navigation, not router.push: drops every bit of client-side
+    // state (React tree, router cache) and — combined with the auth
+    // cookies signOut() just cleared — stops the browser's back button
+    // from bfcache-restoring a page that still looks signed in.
+    window.location.href = "/login";
   }
 
   return (

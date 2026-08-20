@@ -25,9 +25,18 @@ const PROTECTED_PREFIXES = [
 
 const PROTECTED_EXACT_PATHS = ["/jobs/create"];
 
+// Brand-only action pages — posting a job and reviewing its applicants.
+// Talents could otherwise reach these by typing the URL directly (the job
+// board itself stays open to everyone; only these two actions are brand-only).
+function isBrandOnlyPath(pathname: string) {
+  if (pathname === "/jobs/create") return true;
+  if (/^\/jobs\/[^/]+\/applications(?:\/|$)/.test(pathname)) return true;
+  return false;
+}
+
 function isProtectedPath(pathname: string) {
   if (PROTECTED_EXACT_PATHS.includes(pathname)) return true;
-  if (/^\/jobs\/[^/]+\/applications(?:\/|$)/.test(pathname)) return true;
+  if (isBrandOnlyPath(pathname)) return true;
   return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
@@ -95,7 +104,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("account_status, block_reason")
+    .select("role, account_status, block_reason")
     .eq("id", user.id)
     .single();
 
@@ -103,6 +112,42 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/blocked";
     url.searchParams.set("reason", profile.block_reason ?? "");
+    return NextResponse.redirect(url);
+  }
+
+  const role = profile?.role ?? null;
+
+  // Role-based page confinement is for PAGE navigation only. API routes
+  // (including ones an admin page itself calls, like /api/admin/me or
+  // /api/notifications) must never get redirected — a fetch() silently
+  // follows the redirect and returns the wrong page's HTML instead of
+  // JSON, which broke every admin API call the first time this shipped.
+  // Every route already does its own getUser() + role check server-side.
+  const isApiPath = pathname.startsWith("/api/");
+
+  // Admin accounts are confined to the back-office — no browsing the public
+  // marketplace as if they were a talent/brand. Everything outside /admin
+  // (besides the universal utility pages above) bounces back to /admin.
+  if (!isApiPath && role === "admin" && !pathname.startsWith("/admin")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin";
+    return NextResponse.redirect(url);
+  }
+
+  // Non-admins never reach the back-office by typing the URL — the (admin)
+  // layout already checks this server-side, this is defense in depth so the
+  // redirect happens before any admin page even starts rendering.
+  if (!isApiPath && role !== "admin" && pathname.startsWith("/admin")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/home";
+    return NextResponse.redirect(url);
+  }
+
+  // Talents can browse the job board but not post jobs or review applicants
+  // — those stay brand-only even if a talent types the URL directly.
+  if (role !== "brand" && role !== "admin" && isBrandOnlyPath(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/jobs";
     return NextResponse.redirect(url);
   }
 

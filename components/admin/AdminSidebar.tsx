@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
+import { createClient } from "@/lib/supabase/client";
 import {
   Bell,
   Building2,
@@ -27,6 +29,8 @@ import {
   X,
 } from "lucide-react";
 
+export type SidebarMode = "expanded" | "collapsed" | "hover";
+
 const TX = {
   ar: {
     dashboard: "لوحة التحكم",
@@ -44,6 +48,9 @@ const TX = {
     notifications: "الإشعارات",
     settings: "الإعدادات",
     logout: "تسجيل الخروج",
+    modeExpanded: "مفتوحة دائماً",
+    modeCollapsed: "مصغّرة دائماً",
+    modeHover: "تفاعلية عند التمرير",
   },
   en: {
     dashboard: "Dashboard",
@@ -62,6 +69,9 @@ const TX = {
     notifications: "Notifications",
     settings: "Settings",
     logout: "Logout",
+    modeExpanded: "Always expanded",
+    modeCollapsed: "Always collapsed",
+    modeHover: "Interactive (hover)",
   },
 };
 
@@ -85,15 +95,21 @@ const NAV_ITEMS = [
 
 interface Props {
   open: boolean;
-  collapsed: boolean;
+  mode: SidebarMode;
   onClose: () => void;
-  onToggle: () => void;
+  onModeChange: (mode: SidebarMode) => void;
 }
 
 export const SIDEBAR_W_OPEN = 240;
 export const SIDEBAR_W_COLLAPSED = 64;
 
-export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Props) {
+const MODE_OPTIONS: { mode: SidebarMode }[] = [
+  { mode: "expanded" },
+  { mode: "collapsed" },
+  { mode: "hover" },
+];
+
+export default function AdminSidebar({ open, mode, onClose, onModeChange }: Props) {
   const pathname = usePathname();
   const { dark, lang } = useSite();
   const t = TX[lang];
@@ -101,6 +117,37 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
 
   const [adminName, setAdminName] = useState<string | null>(null);
   const [adminAvatar, setAdminAvatar] = useState<string | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const portalMenuRef = useRef<HTMLDivElement>(null);
+
+  // hover mode starts collapsed and expands only while the pointer is over
+  // the rail — expanded/collapsed modes ignore hover entirely.
+  const collapsed = mode === "hover" ? !isHovering : mode === "collapsed";
+
+  // Rendered through a portal (below) so it isn't clipped by the sidebar's
+  // own overflow-x:hidden — a collapsed 64px rail can't contain a menu wide
+  // enough to show the three mode labels. Position is computed from the
+  // button's real screen position since a portaled element has no layout
+  // relationship to it anymore.
+  function openMenu() {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (rect) setMenuPos({ bottom: window.innerHeight - rect.top + 6, left: rect.left });
+    setMenuOpen((o) => !o);
+  }
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      const target = e.target as Node;
+      if (buttonRef.current?.contains(target)) return;
+      if (portalMenuRef.current && !portalMenuRef.current.contains(target)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpen]);
 
   useEffect(() => {
     fetch("/api/admin/me")
@@ -131,6 +178,14 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
 
   const width = collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W_OPEN;
 
+  async function handleLogout() {
+    await createClient().auth.signOut();
+    // Hard navigation — drops client state and, with the auth cookies
+    // signOut() just cleared, stops the back button from bfcache-restoring
+    // an admin page that still looks signed in.
+    window.location.href = "/login";
+  }
+
   return (
     <>
       {open && (
@@ -149,6 +204,8 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
 
       <aside
         className={`admin-sidebar${open ? " admin-sidebar-open" : ""}`}
+        onMouseEnter={() => mode === "hover" && setIsHovering(true)}
+        onMouseLeave={() => mode === "hover" && setIsHovering(false)}
         style={{
           width,
           height: "100vh",
@@ -159,7 +216,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
           position: "sticky",
           top: 0,
           flexShrink: 0,
-          transition: "transform 0.2s ease-out",
+          transition: mode === "hover" ? "width 0.15s ease-out, transform 0.2s ease-out" : "transform 0.2s ease-out",
           zIndex: 40,
           overflowX: "hidden",
           overflowY: "auto",
@@ -312,16 +369,21 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
         </nav>
 
         <div style={{ padding: "8px 8px 0" }}>
-          <Link
-            href="/login"
+          <button
+            type="button"
+            onClick={handleLogout}
             title={collapsed ? t.logout : undefined}
             style={{
+              width: "100%",
               display: "flex",
               alignItems: "center",
               justifyContent: collapsed ? "center" : "flex-start",
               gap: collapsed ? 0 : 12,
               padding: collapsed ? "10px 0" : "10px 12px",
               borderRadius: 10,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
               color: DESTRUCTIVE,
               textDecoration: "none",
               fontSize: 14,
@@ -338,42 +400,100 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggle }: Pro
           >
             <LogOut size={18} style={{ flexShrink: 0 }} />
             {!collapsed && t.logout}
-          </Link>
+          </button>
         </div>
 
-        <button
-          className="admin-collapse-btn"
-          onClick={onToggle}
-          title={collapsed ? "Expand" : "Collapse"}
+        <div className="admin-collapse-btn" style={{ margin: "12px 8px 0", alignSelf: "stretch" }}>
+          <button
+            ref={buttonRef}
+            onClick={openMenu}
+            title={ar ? "طريقة عرض القائمة" : "Sidebar display mode"}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "8px",
+              borderRadius: 10,
+              background: menuOpen ? HOVER : "none",
+              border: "1px solid rgba(255,255,255,0.1)",
+              cursor: "pointer",
+              color: menuOpen ? "#fff" : MUTED,
+              transition: "all 0.2s",
+            }}
+            type="button"
+            onMouseEnter={(event) => {
+              event.currentTarget.style.backgroundColor = HOVER;
+              event.currentTarget.style.color = "#fff";
+            }}
+            onMouseLeave={(event) => {
+              if (!menuOpen) {
+                event.currentTarget.style.backgroundColor = "transparent";
+                event.currentTarget.style.color = MUTED;
+              }
+            }}
+          >
+            {collapsed
+              ? (ar ? <ChevronLeft size={16} /> : <ChevronRight size={16} />)
+              : (ar ? <ChevronRight size={16} /> : <ChevronLeft size={16} />)}
+          </button>
+        </div>
+      </aside>
+
+      {/* Portaled to <body> — the sidebar's own overflow-x:hidden would
+          otherwise clip this the moment it's wider than a collapsed 64px
+          rail. Position is computed screen coordinates, not relative CSS,
+          since a portaled node has no layout tie to the button anymore. */}
+      {menuOpen && menuPos && createPortal(
+        <div
+          ref={portalMenuRef}
           style={{
-            margin: "12px 8px 0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "8px",
+            position: "fixed",
+            bottom: menuPos.bottom,
+            left: menuPos.left,
+            minWidth: 200,
+            backgroundColor: dark ? "#0d1420" : "#1a2332",
+            border: "1px solid rgba(255,255,255,0.12)",
             borderRadius: 10,
-            background: "none",
-            border: "1px solid rgba(255,255,255,0.1)",
-            cursor: "pointer",
-            color: MUTED,
-            transition: "all 0.2s",
-            alignSelf: "stretch",
-          }}
-          type="button"
-          onMouseEnter={(event) => {
-            event.currentTarget.style.backgroundColor = HOVER;
-            event.currentTarget.style.color = "#fff";
-          }}
-          onMouseLeave={(event) => {
-            event.currentTarget.style.backgroundColor = "transparent";
-            event.currentTarget.style.color = MUTED;
+            padding: 4,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
+            zIndex: 1000,
           }}
         >
-          {collapsed
-            ? (ar ? <ChevronLeft size={16} /> : <ChevronRight size={16} />)
-            : (ar ? <ChevronRight size={16} /> : <ChevronLeft size={16} />)}
-        </button>
-      </aside>
+          {MODE_OPTIONS.map(({ mode: m }) => {
+            const label = m === "expanded" ? t.modeExpanded : m === "collapsed" ? t.modeCollapsed : t.modeHover;
+            const active = mode === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => { onModeChange(m); setMenuOpen(false); }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "8px 10px",
+                  borderRadius: 7,
+                  background: active ? ACTIVE_TINT : "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: active ? ACTIVE : "#fff",
+                  fontSize: 13,
+                  fontWeight: active ? 700 : 400,
+                  whiteSpace: "nowrap",
+                  textAlign: "start",
+                }}
+                onMouseEnter={(event) => { if (!active) event.currentTarget.style.backgroundColor = HOVER; }}
+                onMouseLeave={(event) => { if (!active) event.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>,
+        document.body
+      )}
 
       <style>{`
         .admin-collapse-btn { display: flex !important; }
