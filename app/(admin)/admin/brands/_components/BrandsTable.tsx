@@ -2,13 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
-import AdminShell from "@/components/admin/AdminShell";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import EmptyState from "@/components/admin/EmptyState";
+import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminBrand } from "@/features/admin/services/admin.service";
 import { CheckCircle, XCircle, RotateCcw, ShieldBan, ShieldCheck, ExternalLink } from "lucide-react";
-
-const STATUS_FILTERS = ["all", "pending", "approved", "rejected"] as const;
 
 const BRAND_STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   pending:  { bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
@@ -18,10 +16,10 @@ const BRAND_STATUS_COLOR: Record<string, { bg: string; text: string }> = {
 
 const TX = {
   ar: {
-    title: "الشركات", name: "الاسم", username: "اسم المستخدم", city: "المدينة",
+    name: "الاسم", username: "اسم المستخدم", city: "المدينة",
     registered: "التسجيل", brandStatus: "حالة الاعتماد", accountStatus: "حالة الحساب",
     taxDoc: "المستند الضريبي", actions: "الإجراءات",
-    all: "الكل", pending: "قيد الانتظار", approved: "معتمد", rejected: "مرفوض",
+    pending: "قيد الانتظار", approved: "معتمد", rejected: "مرفوض",
     active: "نشط", blocked: "محظور", suspended: "معلق",
     approve: "اعتماد", reject: "رفض", reset: "إعادة للانتظار",
     block: "حظر الحساب", unblock: "رفع الحظر",
@@ -34,12 +32,13 @@ const TX = {
     blockReasonLabel: "سبب الحظر (اختياري)",
     noData: "لا توجد شركات",
     view: "عرض",
+    results: "نتيجة",
   },
   en: {
-    title: "Brands", name: "Name", username: "Username", city: "City",
+    name: "Name", username: "Username", city: "City",
     registered: "Registered", brandStatus: "Approval Status", accountStatus: "Account",
     taxDoc: "Tax Document", actions: "Actions",
-    all: "All", pending: "Pending", approved: "Approved", rejected: "Rejected",
+    pending: "Pending", approved: "Approved", rejected: "Rejected",
     active: "Active", blocked: "Blocked", suspended: "Suspended",
     approve: "Approve", reject: "Reject", reset: "Reset to Pending",
     block: "Block Account", unblock: "Unblock",
@@ -52,19 +51,35 @@ const TX = {
     blockReasonLabel: "Block reason (optional)",
     noData: "No brands found",
     view: "View",
+    results: "results",
   },
 };
 
 type ModalType = "approve" | "reject" | "reset" | "block" | "unblock";
 type ModalState = { type: ModalType; brand: AdminBrand };
 
-export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) {
+interface Props {
+  brands:   AdminBrand[];
+  total:    number;
+  page:     number;
+  pageSize: number;
+  status:   string;
+}
+
+function hrefFor(page: number, status: string) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (status !== "all") params.set("status", status);
+  const qs = params.toString();
+  return qs ? `/admin/brands?${qs}` : "/admin/brands";
+}
+
+export default function BrandsTable({ brands, total, page, pageSize, status }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const [filter,  setFilter]  = useState<typeof STATUS_FILTERS[number]>("all");
   const [modal,   setModal]   = useState<ModalState | null>(null);
   const [reason,  setReason]  = useState("");
   const [loading, setLoading] = useState(false);
@@ -75,9 +90,7 @@ export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) 
   const MUTED  = dark ? "#94a3b8" : "#64748b";
   const TH     = dark ? "#0a121c" : "#f8fafc";
 
-  const filtered = filter === "all"
-    ? brands
-    : brands.filter(b => b.brandStatus === filter);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   async function runModal() {
     if (!modal) return;
@@ -115,30 +128,13 @@ export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) 
   const showReason = modal?.type === "reject" || modal?.type === "block";
 
   return (
-    <AdminShell title={t.title}>
-      {/* Filter tabs */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
-        {STATUS_FILTERS.map(s => {
-          const active = filter === s;
-          const col    = s === "all" ? "#60a5fa" : (BRAND_STATUS_COLOR[s]?.text ?? MUTED);
-          return (
-            <button key={s} onClick={() => setFilter(s)} style={{
-              padding: "6px 14px", borderRadius: 20, cursor: "pointer",
-              border: `1px solid ${active ? col : BORDER}`,
-              backgroundColor: active ? `${col}22` : "transparent",
-              color: active ? col : MUTED, fontSize: 12, fontWeight: active ? 700 : 400,
-            }}>
-              {t[s as keyof typeof t] as string}
-            </button>
-          );
-        })}
-        <span style={{ color: MUTED, fontSize: 12, alignSelf: "center", marginLeft: "auto" }}>
-          {filtered.length} {ar ? "نتيجة" : "results"}
-        </span>
+    <>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <span style={{ color: MUTED, fontSize: 12 }}>{total} {t.results}</span>
       </div>
 
       <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
-        {filtered.length === 0 ? <EmptyState message={t.noData} /> : (
+        {brands.length === 0 ? <EmptyState message={t.noData} /> : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -154,7 +150,7 @@ export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) 
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(b => {
+                {brands.map(b => {
                   const bCol      = BRAND_STATUS_COLOR[b.brandStatus] ?? BRAND_STATUS_COLOR.pending;
                   const isBlocked = b.accountStatus !== "active";
                   return (
@@ -162,13 +158,11 @@ export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) 
                       <td style={{ ...cellStyle, fontWeight: 600 }}>{b.fullName ?? "—"}</td>
                       <td style={{ ...cellStyle, color: MUTED }}>{b.handle ? `@${b.handle}` : "—"}</td>
                       <td style={cellStyle}>{b.city ?? "—"}</td>
-                      {/* Brand approval status */}
                       <td style={cellStyle}>
                         <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: bCol.bg, color: bCol.text }}>
                           {t[b.brandStatus as keyof typeof t] as string ?? b.brandStatus}
                         </span>
                       </td>
-                      {/* Account status */}
                       <td style={cellStyle}>
                         <span style={{
                           padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
@@ -178,7 +172,6 @@ export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) 
                           {isBlocked ? (b.accountStatus === "blocked" ? t.blocked : t.suspended) : t.active}
                         </span>
                       </td>
-                      {/* Tax doc */}
                       <td style={cellStyle}>
                         {b.taxDocumentUrl ? (
                           <a href={b.taxDocumentUrl} target="_blank" rel="noopener noreferrer"
@@ -192,7 +185,6 @@ export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) 
                       </td>
                       <td style={cellStyle}>
                         <div style={{ display: "flex", gap: 4 }}>
-                          {/* Brand approval actions */}
                           {b.brandStatus !== "approved" && (
                             <button onClick={() => setModal({ type: "approve", brand: b })} title={t.approve}
                               style={{ background: "none", border: "none", cursor: "pointer", color: "#00D26A", padding: 4, borderRadius: 6, display: "flex" }}>
@@ -211,7 +203,6 @@ export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) 
                               <RotateCcw size={15} />
                             </button>
                           )}
-                          {/* Account block/unblock */}
                           {isBlocked ? (
                             <button onClick={() => setModal({ type: "unblock", brand: b })} title={t.unblock}
                               style={{ background: "none", border: "none", cursor: "pointer", color: "#00D26A", padding: 4, borderRadius: 6, display: "flex" }}>
@@ -233,6 +224,8 @@ export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) 
           </div>
         )}
       </div>
+
+      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
 
       {modal && confirmCfg && (
         <ConfirmationModal
@@ -263,6 +256,6 @@ export default function AdminBrandsClient({ brands }: { brands: AdminBrand[] }) 
           )}
         </ConfirmationModal>
       )}
-    </AdminShell>
+    </>
   );
 }

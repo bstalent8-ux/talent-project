@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSite } from "@/contexts/SiteContext";
-import AdminShell from "@/components/admin/AdminShell";
 import EmptyState from "@/components/admin/EmptyState";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import type { AdminBrandMoment } from "@/features/admin/services/admin.service";
@@ -84,7 +83,7 @@ export default function AdminBrandMomentsClient({ moments }: { moments: AdminBra
   }[modal.type] : null;
 
   return (
-    <AdminShell title={t.title}>
+    <>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
         {STATUS_FILTERS.map((s) => {
           const active = filter === s;
@@ -194,6 +193,6 @@ export default function AdminBrandMomentsClient({ moments }: { moments: AdminBra
           )}
         </ConfirmationModal>
       )}
-    </AdminShell>
+    </>
   );
 }

@@ -2,10 +2,17 @@ export const runtime = 'edge';
 
 export const dynamic = "force-dynamic";
 
-import { fetchAdminDashboardStats } from "@/features/admin/services/admin.service";
-import AdminDashboardClient from "./_components/AdminDashboardClient";
+import { Suspense } from "react";
+import AdminDashboardShell from "./_components/AdminDashboardShell";
+import DashboardStatsSection from "./_components/DashboardStatsSection";
+import DashboardStatsSkeleton from "./_components/DashboardStatsSkeleton";
 
-export default async function AdminDashboardPage() {
-  const stats = await fetchAdminDashboardStats();
-  return <AdminDashboardClient stats={stats} />;
+export default function AdminDashboardPage() {
+  return (
+    <AdminDashboardShell>
+      <Suspense fallback={<DashboardStatsSkeleton />}>
+        <DashboardStatsSection />
+      </Suspense>
+    </AdminDashboardShell>
+  );
 }

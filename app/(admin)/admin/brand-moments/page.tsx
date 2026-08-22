@@ -2,10 +2,17 @@ export const runtime = 'edge';
 
 export const dynamic = "force-dynamic";
 
-import { fetchAdminBrandMoments } from "@/features/admin/services/admin.service";
-import AdminBrandMomentsClient from "./_components/AdminBrandMomentsClient";
+import { Suspense } from "react";
+import AdminBrandMomentsShell from "./_components/AdminBrandMomentsShell";
+import BrandMomentsSection from "./_components/BrandMomentsSection";
+import BrandMomentsSkeleton from "./_components/BrandMomentsSkeleton";
 
-export default async function AdminBrandMomentsPage() {
-  const moments = await fetchAdminBrandMoments();
-  return <AdminBrandMomentsClient moments={moments} />;
+export default function AdminBrandMomentsPage() {
+  return (
+    <AdminBrandMomentsShell>
+      <Suspense fallback={<BrandMomentsSkeleton />}>
+        <BrandMomentsSection />
+      </Suspense>
+    </AdminBrandMomentsShell>
+  );
 }

@@ -3,13 +3,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSite } from "@/contexts/SiteContext";
-import AdminShell from "@/components/admin/AdminShell";
 import EmptyState from "@/components/admin/EmptyState";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminVerification } from "@/features/admin/services/admin.service";
 import { CheckCircle, XCircle, ExternalLink, ShieldCheck, User } from "lucide-react";
-
-const STATUS_FILTERS = ["all", "pending", "approved", "rejected"] as const;
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   pending:  { bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
@@ -19,40 +17,59 @@ const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
 
 const TX = {
   ar: {
-    title: "طلبات التحقق", name: "الاسم", username: "اسم المستخدم", status: "الحالة",
+    name: "الاسم", username: "اسم المستخدم", status: "الحالة",
     submitted: "تاريخ الطلب", idDoc: "وثيقة الهوية", selfie: "صورة شخصية",
-    socialProof: "إثبات السوشيال", actions: "الإجراءات", verified: "موثق",
-    all: "الكل", pending: "قيد الانتظار", approved: "معتمد", rejected: "مرفوض",
+    socialProof: "إثبات السوشيال", actions: "الإجراءات",
+    pending: "قيد الانتظار", approved: "معتمد", rejected: "مرفوض",
     approve: "موافقة", reject: "رفض",
     confirmApprove: "الموافقة على هذا الطلب وتوثيق الحساب؟",
     confirmReject:  "رفض طلب التحقق هذا؟",
     reasonLabel: "سبب الرفض (اختياري)",
     noRequests: "لا توجد طلبات تحقق",
     view: "عرض",
+    results: "طلب",
   },
   en: {
-    title: "Verification Requests", name: "Name", username: "Username", status: "Status",
+    name: "Name", username: "Username", status: "Status",
     submitted: "Submitted", idDoc: "ID Document", selfie: "Selfie",
-    socialProof: "Social Proof", actions: "Actions", verified: "Verified",
-    all: "All", pending: "Pending", approved: "Approved", rejected: "Rejected",
+    socialProof: "Social Proof", actions: "Actions",
+    pending: "Pending", approved: "Approved", rejected: "Rejected",
     approve: "Approve", reject: "Reject",
     confirmApprove: "Approve request and mark account as verified",
     confirmReject:  "Reject this verification request?",
     reasonLabel: "Rejection reason (optional)",
     noRequests: "No verification requests",
     view: "View",
+    results: "requests",
   },
 };
 
 type ModalState = { type: "approve" | "reject"; id: string };
 
-export default function AdminVerificationsClient({ verifications }: { verifications: AdminVerification[] }) {
+interface Props {
+  verifications: AdminVerification[];
+  total:         number;
+  page:          number;
+  pageSize:      number;
+  status:        string;
+}
+
+// Always carries an explicit status param (even "all") — the page's default
+// status is "pending", not "all", so a bare /admin/verifications would
+// silently mean something different than the "All" tab that's currently active.
+function hrefFor(page: number, status: string) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  params.set("status", status);
+  return `/admin/verifications?${params.toString()}`;
+}
+
+export default function VerificationsTable({ verifications, total, page, pageSize, status }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const [filter,  setFilter]  = useState<typeof STATUS_FILTERS[number]>("pending");
   const [modal,   setModal]   = useState<ModalState | null>(null);
   const [reason,  setReason]  = useState("");
   const [loading, setLoading] = useState(false);
@@ -63,7 +80,7 @@ export default function AdminVerificationsClient({ verifications }: { verificati
   const MUTED  = dark ? "#94a3b8" : "#64748b";
   const TH     = dark ? "#0a121c" : "#f8fafc";
 
-  const filtered = filter === "all" ? verifications : verifications.filter(v => v.status === filter);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   async function runModal() {
     if (!modal) return;
@@ -88,30 +105,13 @@ export default function AdminVerificationsClient({ verifications }: { verificati
   }[modal.type] : null;
 
   return (
-    <AdminShell title={t.title}>
-      {/* Filter tabs */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
-        {STATUS_FILTERS.map(s => {
-          const active = filter === s;
-          const col    = s === "all" ? "#60a5fa" : (STATUS_COLOR[s]?.text ?? MUTED);
-          return (
-            <button key={s} onClick={() => setFilter(s)} style={{
-              padding: "6px 14px", borderRadius: 20, cursor: "pointer",
-              border: `1px solid ${active ? col : BORDER}`,
-              backgroundColor: active ? `${col}22` : "transparent",
-              color: active ? col : MUTED, fontSize: 12, fontWeight: active ? 700 : 400,
-            }}>
-              {t[s as keyof typeof t] as string}
-            </button>
-          );
-        })}
-        <span style={{ color: MUTED, fontSize: 12, alignSelf: "center", marginLeft: "auto" }}>
-          {filtered.length} {ar ? "طلب" : "requests"}
-        </span>
+    <>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <span style={{ color: MUTED, fontSize: 12 }}>{total} {t.results}</span>
       </div>
 
       <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
-        {filtered.length === 0 ? <EmptyState message={t.noRequests} /> : (
+        {verifications.length === 0 ? <EmptyState message={t.noRequests} /> : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -127,11 +127,10 @@ export default function AdminVerificationsClient({ verifications }: { verificati
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(v => {
+                {verifications.map(v => {
                   const col = STATUS_COLOR[v.status] ?? STATUS_COLOR.pending;
                   return (
                     <tr key={v.id}>
-                      {/* Name + avatar + verified badge */}
                       <td style={cellStyle}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                           <div style={{ width: 34, height: 34, borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: BORDER, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -157,7 +156,6 @@ export default function AdminVerificationsClient({ verifications }: { verificati
                           {t[v.status as keyof typeof t] as string ?? v.status}
                         </span>
                       </td>
-                      {/* ID Document */}
                       <td style={cellStyle}>
                         {v.idDocumentUrl ? (
                           <a href={v.idDocumentUrl} target="_blank" rel="noopener noreferrer"
@@ -166,7 +164,6 @@ export default function AdminVerificationsClient({ verifications }: { verificati
                           </a>
                         ) : <span style={{ color: MUTED }}>—</span>}
                       </td>
-                      {/* Selfie */}
                       <td style={cellStyle}>
                         {v.selfieUrl ? (
                           <a href={v.selfieUrl} target="_blank" rel="noopener noreferrer"
@@ -175,7 +172,6 @@ export default function AdminVerificationsClient({ verifications }: { verificati
                           </a>
                         ) : <span style={{ color: MUTED }}>—</span>}
                       </td>
-                      {/* Social proof */}
                       <td style={cellStyle}>
                         {v.socialProof ? (
                           <a href={v.socialProof} target="_blank" rel="noopener noreferrer"
@@ -187,7 +183,6 @@ export default function AdminVerificationsClient({ verifications }: { verificati
                       <td style={{ ...cellStyle, color: MUTED }}>
                         {new Date(v.submittedAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}
                       </td>
-                      {/* Actions */}
                       <td style={cellStyle}>
                         <div style={{ display: "flex", gap: 4 }}>
                           {v.status !== "approved" && (
@@ -214,6 +209,8 @@ export default function AdminVerificationsClient({ verifications }: { verificati
           </div>
         )}
       </div>
+
+      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
 
       {modal && confirmCfg && (
         <ConfirmationModal
@@ -242,6 +239,6 @@ export default function AdminVerificationsClient({ verifications }: { verificati
           )}
         </ConfirmationModal>
       )}
-    </AdminShell>
+    </>
   );
 }

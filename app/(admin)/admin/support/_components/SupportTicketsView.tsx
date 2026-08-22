@@ -2,12 +2,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
-import AdminShell from "@/components/admin/AdminShell";
 import EmptyState from "@/components/admin/EmptyState";
+import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminSupportTicket } from "@/features/admin/services/admin.service";
 import { Copy, Image as ImageIcon, Mail, Phone, X } from "lucide-react";
-
-const STATUS_FILTERS = ["all", "new", "in_progress", "resolved"] as const;
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   new:         { bg: "rgba(239,68,68,0.15)",  text: "#EF4444" },
@@ -22,9 +20,9 @@ const PAGE_LABEL: Record<string, { ar: string; en: string }> = {
 
 const TX = {
   ar: {
-    title: "تذاكر الدعم", from: "من", subject: "الموضوع", status: "الحالة",
-    submitted: "التاريخ", all: "الكل", new: "جديدة", in_progress: "قيد المعالجة", resolved: "تم الحل",
-    noRequests: "لا توجد تذاكر بعد", close: "إغلاق", message: "الرسالة", contact: "التواصل",
+    from: "من", subject: "الموضوع", status: "الحالة",
+    submitted: "التاريخ", new: "جديدة", in_progress: "قيد المعالجة", resolved: "تم الحل",
+    noRequests: "لا توجد تذاكر بعد", message: "الرسالة",
     attachment: "صورة المشكلة",
     source: "المصدر", errorSeen: "الخطأ الظاهر وقت الإرسال", reply: "الرد",
     replyPH: "اكتب ردك هنا...",
@@ -32,12 +30,12 @@ const TX = {
     previousReply: "آخر رد", repliedAt: "بتاريخ",
     emailAuto: "هيتبعت للمستخدم تلقائي على إيميله.",
     emailManual: "الإيميل مش مربوط بالمنصة — الرد بيتحفظ هنا بس، لازم تتواصل مع المستخدم يدوي.",
-    copyEmail: "نسخ الإيميل", copied: "اتنسخ ✓",
+    copyEmail: "نسخ الإيميل", copied: "اتنسخ ✓", tickets: "تذكرة",
   },
   en: {
-    title: "Support Tickets", from: "From", subject: "Subject", status: "Status",
-    submitted: "Date", all: "All", new: "New", in_progress: "In progress", resolved: "Resolved",
-    noRequests: "No tickets yet", close: "Close", message: "Message", contact: "Contact",
+    from: "From", subject: "Subject", status: "Status",
+    submitted: "Date", new: "New", in_progress: "In progress", resolved: "Resolved",
+    noRequests: "No tickets yet", message: "Message",
     attachment: "Problem screenshot",
     source: "Source", errorSeen: "Error shown at submit time", reply: "Reply",
     replyPH: "Write your reply...",
@@ -45,17 +43,35 @@ const TX = {
     previousReply: "Last reply", repliedAt: "on",
     emailAuto: "This will be emailed to the user automatically.",
     emailManual: "No email provider is connected — this reply is saved here only, you'll need to contact the user manually.",
-    copyEmail: "Copy email", copied: "Copied ✓",
+    copyEmail: "Copy email", copied: "Copied ✓", tickets: "tickets",
   },
 };
 
-export default function AdminSupportClient({ tickets, emailConfigured }: { tickets: AdminSupportTicket[]; emailConfigured: boolean }) {
+interface Props {
+  tickets:         AdminSupportTicket[];
+  total:           number;
+  page:            number;
+  pageSize:        number;
+  status:          string;
+  emailConfigured: boolean;
+}
+
+// Always carries an explicit status param (even "all") — the page's default
+// status is "new", not "all", so a bare /admin/support would silently mean
+// something different than the "All" tab that's currently active.
+function hrefFor(page: number, status: string) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  params.set("status", status);
+  return `/admin/support?${params.toString()}`;
+}
+
+export default function SupportTicketsView({ tickets, total, page, pageSize, status, emailConfigured }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const [filter, setFilter] = useState<typeof STATUS_FILTERS[number]>("new");
   const [selected, setSelected] = useState<AdminSupportTicket | null>(null);
   const [reply, setReply] = useState("");
   const [saving, setSaving] = useState(false);
@@ -67,7 +83,7 @@ export default function AdminSupportClient({ tickets, emailConfigured }: { ticke
   const MUTED  = dark ? "#94a3b8" : "#64748b";
   const TH     = dark ? "#0a121c" : "#f8fafc";
 
-  const filtered = filter === "all" ? tickets : tickets.filter((v) => v.status === filter);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   async function patch(id: string, body: { status?: string; reply?: string }) {
     setSaving(true);
@@ -83,8 +99,11 @@ export default function AdminSupportClient({ tickets, emailConfigured }: { ticke
     // visible tab to match, so the ticket lands in front of the admin
     // instead of just vanishing from whichever filter they were on.
     const landedStatus = body.status ?? (body.reply ? "resolved" : null);
-    if (landedStatus) setFilter(landedStatus as typeof STATUS_FILTERS[number]);
-    router.refresh();
+    if (landedStatus && landedStatus !== status) {
+      router.push(hrefFor(1, landedStatus));
+    } else {
+      router.refresh();
+    }
   }
 
   function copyEmail(email: string) {
@@ -97,29 +116,13 @@ export default function AdminSupportClient({ tickets, emailConfigured }: { ticke
   const thStyle:   React.CSSProperties = { padding: "10px 14px", color: MUTED, fontSize: 12, fontWeight: 600, textAlign: ar ? "right" : "left", backgroundColor: TH, borderBottom: `1px solid ${BORDER}` };
 
   return (
-    <AdminShell title={t.title}>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
-        {STATUS_FILTERS.map((s) => {
-          const active = filter === s;
-          const col = s === "all" ? "#60a5fa" : (STATUS_COLOR[s]?.text ?? MUTED);
-          return (
-            <button key={s} onClick={() => setFilter(s)} style={{
-              padding: "6px 14px", borderRadius: 20, cursor: "pointer",
-              border: `1px solid ${active ? col : BORDER}`,
-              backgroundColor: active ? `${col}22` : "transparent",
-              color: active ? col : MUTED, fontSize: 12, fontWeight: active ? 700 : 400,
-            }}>
-              {t[s as keyof typeof t] as string}
-            </button>
-          );
-        })}
-        <span style={{ color: MUTED, fontSize: 12, alignSelf: "center", marginLeft: "auto" }}>
-          {filtered.length} {ar ? "تذكرة" : "tickets"}
-        </span>
+    <>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <span style={{ color: MUTED, fontSize: 12 }}>{total} {t.tickets}</span>
       </div>
 
       <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
-        {filtered.length === 0 ? <EmptyState message={t.noRequests} /> : (
+        {tickets.length === 0 ? <EmptyState message={t.noRequests} /> : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -131,7 +134,7 @@ export default function AdminSupportClient({ tickets, emailConfigured }: { ticke
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((v) => {
+                {tickets.map((v) => {
                   const col = STATUS_COLOR[v.status] ?? STATUS_COLOR.new;
                   return (
                     <tr
@@ -170,6 +173,8 @@ export default function AdminSupportClient({ tickets, emailConfigured }: { ticke
           </div>
         )}
       </div>
+
+      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
 
       {selected && (
         <div
@@ -300,6 +305,6 @@ export default function AdminSupportClient({ tickets, emailConfigured }: { ticke
           </div>
         </div>
       )}
-    </AdminShell>
+    </>
   );
 }

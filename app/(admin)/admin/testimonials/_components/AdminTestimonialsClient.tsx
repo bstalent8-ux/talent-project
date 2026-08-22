@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
-import AdminShell from "@/components/admin/AdminShell";
 import EmptyState from "@/components/admin/EmptyState";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import type { AdminTestimonial } from "@/features/admin/services/admin.service";
@@ -83,7 +82,7 @@ export default function AdminTestimonialsClient({ testimonials }: { testimonials
   }[modal.type] : null;
 
   return (
-    <AdminShell title={t.title}>
+    <>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
         {STATUS_FILTERS.map((s) => {
           const active = filter === s;
@@ -196,6 +195,6 @@ export default function AdminTestimonialsClient({ testimonials }: { testimonials
           )}
         </ConfirmationModal>
       )}
-    </AdminShell>
+    </>
   );
 }

@@ -1,23 +1,18 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
-import AdminShell from "@/components/admin/AdminShell";
 import StatusBadge from "@/components/admin/StatusBadge";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import EmptyState from "@/components/admin/EmptyState";
-import Pagination from "@/components/admin/Pagination";
+import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminTalent, TalentStatus } from "@/features/admin/types";
 import { Eye, CheckCircle, XCircle, PauseCircle, Trash2, RotateCcw, Pencil, ShieldCheck } from "lucide-react";
 
-const PAGE_SIZE = 15;
-
 const TX = {
   ar: {
-    title: "المواهب",
-    all: "الكل", pending: "قيد الانتظار", approved: "معتمد", rejected: "مرفوض", suspended: "موقوف",
     name: "الاسم", username: "اسم المستخدم", category: "التصنيف", city: "المدينة",
     registered: "تاريخ التسجيل", status: "الحالة", actions: "الإجراءات",
     approve: "موافقة", reject: "رفض", suspend: "وقف", restore: "استعادة", delete: "حذف", view: "عرض",
@@ -27,10 +22,9 @@ const TX = {
     confirmDelete:  "هل تريد حذف هذه الموهبة نهائياً؟",
     reasonLabel: "سبب الرفض (اختياري)",
     noTalents: "لا توجد مواهب",
+    results: "نتيجة",
   },
   en: {
-    title: "Talents",
-    all: "All", pending: "Pending", approved: "Approved", rejected: "Rejected", suspended: "Suspended",
     name: "Name", username: "Username", category: "Category", city: "City",
     registered: "Registered", status: "Status", actions: "Actions",
     approve: "Approve", reject: "Reject", suspend: "Suspend", restore: "Restore", delete: "Delete", view: "View",
@@ -40,42 +34,48 @@ const TX = {
     confirmDelete:  "Permanently delete this talent profile?",
     reasonLabel: "Rejection reason (optional)",
     noTalents: "No talents found",
+    results: "results",
   },
 };
-
-const STATUS_FILTERS: Array<TalentStatus | "all"> = ["all", "pending", "approved", "rejected", "suspended"];
 
 interface ModalState {
   type: "approve" | "reject" | "suspend" | "restore" | "delete";
   talent: AdminTalent;
 }
 
-export default function TalentsTableClient({ talents }: { talents: AdminTalent[] }) {
+interface Props {
+  talents:  AdminTalent[];
+  total:    number;
+  page:     number;
+  pageSize: number;
+  status:   string;
+}
+
+function hrefFor(page: number, status: string) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (status !== "all") params.set("status", status);
+  const qs = params.toString();
+  return qs ? `/admin/talents?${qs}` : "/admin/talents";
+}
+
+export default function TalentsTable({ talents, total, page, pageSize, status }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const [filter, setFilter]   = useState<TalentStatus | "all">("all");
   const [modal,  setModal]    = useState<ModalState | null>(null);
   const [reason, setReason]   = useState("");
   const [loading, setLoading] = useState(false);
-  const [page,   setPage]     = useState(1);
 
-  const BG     = dark ? "#050B12" : "#F1F5F9";
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "#1e293b" : "#E2E8F0";
   const TEXT   = dark ? "#f1f5f9" : "#0f172a";
   const MUTED  = dark ? "#94a3b8" : "#64748b";
   const TH     = dark ? "#0a121c" : "#f8fafc";
 
-  const filtered = useMemo(
-    () => filter === "all" ? talents : talents.filter(t => t.status === filter),
-    [talents, filter]
-  );
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   async function runAction(modal: ModalState) {
     setLoading(true);
@@ -96,23 +96,6 @@ export default function TalentsTableClient({ talents }: { talents: AdminTalent[]
       setReason("");
     }
   }
-
-  const filterBtn = (s: TalentStatus | "all") => {
-    const active = filter === s;
-    return (
-      <button
-        key={s}
-        onClick={() => { setFilter(s); setPage(1); }}
-        style={{
-          padding: "7px 16px", borderRadius: 20, border: `1px solid ${active ? "#00D26A" : BORDER}`,
-          backgroundColor: active ? "rgba(0,210,106,0.1)" : "transparent",
-          color: active ? "#00D26A" : MUTED, cursor: "pointer", fontSize: 13, fontWeight: active ? 700 : 400,
-        }}
-      >
-        {t[s]}
-      </button>
-    );
-  };
 
   const actionBtn = (
     onClick: () => void,
@@ -152,18 +135,13 @@ export default function TalentsTableClient({ talents }: { talents: AdminTalent[]
   }[modal.type] : null;
 
   return (
-    <AdminShell title={t.title}>
-      {/* Filters */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
-        {STATUS_FILTERS.map(filterBtn)}
-        <span style={{ color: MUTED, fontSize: 13, marginLeft: "auto", alignSelf: "center" }}>
-          {filtered.length} {ar ? "نتيجة" : "results"}
-        </span>
+    <>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <span style={{ color: MUTED, fontSize: 13 }}>{total} {t.results}</span>
       </div>
 
-      {/* Table */}
       <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
-        {paginated.length === 0 ? (
+        {talents.length === 0 ? (
           <EmptyState message={t.noTalents} />
         ) : (
           <div style={{ overflowX: "auto" }}>
@@ -180,9 +158,8 @@ export default function TalentsTableClient({ talents }: { talents: AdminTalent[]
                 </tr>
               </thead>
               <tbody>
-                {paginated.map(talent => (
+                {talents.map(talent => (
                   <tr key={talent.talentProfileId}>
-                    {/* Name + Avatar */}
                     <td style={cellStyle}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{
@@ -248,9 +225,8 @@ export default function TalentsTableClient({ talents }: { talents: AdminTalent[]
         )}
       </div>
 
-      <Pagination page={page} totalPages={totalPages} onPage={setPage} />
+      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
 
-      {/* Modal */}
       {modal && confirmConfig && (
         <ConfirmationModal
           open
@@ -278,6 +254,6 @@ export default function TalentsTableClient({ talents }: { talents: AdminTalent[]
           )}
         </ConfirmationModal>
       )}
-    </AdminShell>
+    </>
   );
 }

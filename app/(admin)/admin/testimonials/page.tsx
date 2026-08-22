@@ -2,10 +2,17 @@ export const runtime = 'edge';
 
 export const dynamic = "force-dynamic";
 
-import { fetchAdminTestimonials } from "@/features/admin/services/admin.service";
-import AdminTestimonialsClient from "./_components/AdminTestimonialsClient";
+import { Suspense } from "react";
+import AdminTestimonialsShell from "./_components/AdminTestimonialsShell";
+import TestimonialsSection from "./_components/TestimonialsSection";
+import TestimonialsSkeleton from "./_components/TestimonialsSkeleton";
 
-export default async function AdminTestimonialsPage() {
-  const testimonials = await fetchAdminTestimonials();
-  return <AdminTestimonialsClient testimonials={testimonials} />;
+export default function AdminTestimonialsPage() {
+  return (
+    <AdminTestimonialsShell>
+      <Suspense fallback={<TestimonialsSkeleton />}>
+        <TestimonialsSection />
+      </Suspense>
+    </AdminTestimonialsShell>
+  );
 }

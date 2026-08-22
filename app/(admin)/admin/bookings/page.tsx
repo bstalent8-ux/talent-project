@@ -7,7 +7,7 @@ import AdminBookingsShell from "./_components/AdminBookingsShell";
 import BookingsTableSection from "./_components/BookingsTableSection";
 import BookingsTableSkeleton from "./_components/BookingsTableSkeleton";
 
-const PAGE_SIZE_DEFAULT = 20;
+const PAGE_SIZE_DEFAULT = 10;
 const PAGE_SIZE_MAX = 50;
 
 interface Props {

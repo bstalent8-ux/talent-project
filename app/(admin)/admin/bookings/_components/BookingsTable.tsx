@@ -1,16 +1,16 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
+import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminBooking } from "@/features/admin/types";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { PIPELINE, STATUS_COLOR, STATUS_LABEL, type PipelineStatus } from "./bookingStatus";
 
 const TX = {
-  ar: { brand: "الشركة", talent: "الموهبة", status: "الحالة", date: "التاريخ", amount: "المبلغ", actions: "الإجراءات", cancel: "إلغاء", noBookings: "لا توجد حجوزات", moveNext: "المرحلة التالية", movePrev: "المرحلة السابقة", results: "نتيجة", prev: "السابق", next: "التالي", page: (p: number, n: number) => `صفحة ${p} من ${n}` },
-  en: { brand: "Brand",   talent: "Talent",  status: "Status", date: "Date",    amount: "Amount", actions: "Actions",    cancel: "Cancel", noBookings: "No bookings", moveNext: "Next Stage", movePrev: "Prev Stage", results: "results", prev: "Prev", next: "Next", page: (p: number, n: number) => `Page ${p} of ${n}` },
+  ar: { brand: "الشركة", talent: "الموهبة", status: "الحالة", date: "التاريخ", amount: "المبلغ", actions: "الإجراءات", cancel: "إلغاء", noBookings: "لا توجد حجوزات", moveNext: "المرحلة التالية", movePrev: "المرحلة السابقة", results: "نتيجة" },
+  en: { brand: "Brand",   talent: "Talent",  status: "Status", date: "Date",    amount: "Amount", actions: "Actions",    cancel: "Cancel", noBookings: "No bookings", moveNext: "Next Stage", movePrev: "Prev Stage", results: "results" },
 };
 
 interface Props {
@@ -42,7 +42,6 @@ export default function BookingsTable({ bookings, total, page, pageSize, status 
   const TEXT   = dark ? "#f1f5f9" : "#0f172a";
   const MUTED  = dark ? "#94a3b8" : "#64748b";
   const TH     = dark ? "#0a121c" : "#f8fafc";
-  const GREEN  = "#00D26A";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -160,68 +159,7 @@ export default function BookingsTable({ bookings, total, page, pageSize, status 
         )}
       </div>
 
-      {totalPages > 1 && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 20 }}>
-          <Link
-            href={hrefFor(Math.max(1, page - 1), status)}
-            aria-disabled={page === 1}
-            style={{
-              padding: "6px 14px", borderRadius: 8,
-              border: `1px solid ${BORDER}`,
-              color: page === 1 ? MUTED : TEXT, opacity: page === 1 ? 0.4 : 1, fontSize: 13,
-              textDecoration: "none", pointerEvents: page === 1 ? "none" : "auto",
-            }}
-          >
-            {t.prev}
-          </Link>
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1)
-            .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-            .reduce<(number | "…")[]>((acc, p, i, arr) => {
-              if (i > 0 && (p as number) - (arr[i - 1] as number) > 1) acc.push("…");
-              acc.push(p);
-              return acc;
-            }, [])
-            .map((p, i) =>
-              p === "…" ? (
-                <span key={`ellipsis-${i}`} style={{ color: MUTED, fontSize: 13, padding: "0 4px" }}>…</span>
-              ) : (
-                <Link
-                  key={p}
-                  href={hrefFor(p as number, status)}
-                  style={{
-                    width: 34, height: 34, borderRadius: 8,
-                    border: `1px solid ${page === p ? GREEN : BORDER}`,
-                    backgroundColor: page === p ? `${GREEN}22` : "transparent",
-                    color: page === p ? GREEN : TEXT,
-                    fontSize: 13, fontWeight: page === p ? 700 : 400,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    textDecoration: "none",
-                  }}
-                >
-                  {p}
-                </Link>
-              )
-            )}
-
-          <Link
-            href={hrefFor(Math.min(totalPages, page + 1), status)}
-            aria-disabled={page === totalPages}
-            style={{
-              padding: "6px 14px", borderRadius: 8,
-              border: `1px solid ${BORDER}`,
-              color: page === totalPages ? MUTED : TEXT, opacity: page === totalPages ? 0.4 : 1, fontSize: 13,
-              textDecoration: "none", pointerEvents: page === totalPages ? "none" : "auto",
-            }}
-          >
-            {t.next}
-          </Link>
-
-          <span style={{ color: MUTED, fontSize: 12, marginRight: ar ? 0 : 8, marginLeft: ar ? 8 : 0 }}>
-            {t.page(page, totalPages)}
-          </span>
-        </div>
-      )}
+      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
     </>
   );
 }

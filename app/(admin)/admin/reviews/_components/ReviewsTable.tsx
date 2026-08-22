@@ -2,34 +2,34 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
-import AdminShell from "@/components/admin/AdminShell";
 import EmptyState from "@/components/admin/EmptyState";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminReview } from "@/features/admin/types";
 import { CheckCircle, XCircle, Trash2, ExternalLink } from "lucide-react";
 
-const STATUS_FILTERS = ["all", "pending", "approved", "rejected"] as const;
-
 const TX = {
   ar: {
-    title: "مراجعة التقييمات", brand: "الشركة", talent: "الموهبة", rating: "التقييم",
+    brand: "الشركة", talent: "الموهبة", rating: "التقييم",
     comment: "التعليق", status: "الحالة", type: "النوع", date: "التاريخ", actions: "الإجراءات",
-    proof: "إثبات", all: "الكل", pending: "قيد المراجعة", approved: "معتمد", rejected: "مرفوض",
+    proof: "إثبات", pending: "قيد المراجعة", approved: "معتمد", rejected: "مرفوض",
     approve: "اعتماد", reject: "رفض", delete: "حذف",
     confirmApprove: "اعتماد هذا التقييم وإظهاره للعموم؟",
     confirmReject:  "رفض هذا التقييم؟",
     confirmDelete:  "حذف هذا التقييم نهائياً؟",
     noReviews: "لا توجد تقييمات",
+    results: "نتيجة",
   },
   en: {
-    title: "Reviews Moderation", brand: "Brand", talent: "Talent", rating: "Rating",
+    brand: "Brand", talent: "Talent", rating: "Rating",
     comment: "Comment", status: "Status", type: "Type", date: "Date", actions: "Actions",
-    proof: "Proof", all: "All", pending: "Pending", approved: "Approved", rejected: "Rejected",
+    proof: "Proof", pending: "Pending", approved: "Approved", rejected: "Rejected",
     approve: "Approve", reject: "Reject", delete: "Delete",
     confirmApprove: "Approve this review and make it public?",
     confirmReject:  "Reject this review?",
     confirmDelete:  "Permanently delete this review?",
     noReviews: "No reviews found",
+    results: "results",
   },
 };
 
@@ -43,13 +43,28 @@ const STARS = (n: number) => "★".repeat(n) + "☆".repeat(5 - n);
 
 type ModalType = { action: "approve" | "reject" | "delete"; id: string };
 
-export default function AdminReviewsClient({ reviews: initial }: { reviews: AdminReview[] }) {
+interface Props {
+  reviews:  AdminReview[];
+  total:    number;
+  page:     number;
+  pageSize: number;
+  status:   string;
+}
+
+function hrefFor(page: number, status: string) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (status !== "all") params.set("status", status);
+  const qs = params.toString();
+  return qs ? `/admin/reviews?${qs}` : "/admin/reviews";
+}
+
+export default function ReviewsTable({ reviews, total, page, pageSize, status }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const [filter,  setFilter]  = useState<typeof STATUS_FILTERS[number]>("all");
   const [modal,   setModal]   = useState<ModalType | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -59,7 +74,7 @@ export default function AdminReviewsClient({ reviews: initial }: { reviews: Admi
   const MUTED  = dark ? "#94a3b8" : "#64748b";
   const TH     = dark ? "#0a121c" : "#f8fafc";
 
-  const filtered = filter === "all" ? initial : initial.filter(r => r.status === filter);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   async function runModal() {
     if (!modal) return;
@@ -88,30 +103,13 @@ export default function AdminReviewsClient({ reviews: initial }: { reviews: Admi
   }[modal.action] : null;
 
   return (
-    <AdminShell title={t.title}>
-      {/* Filter tabs */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
-        {STATUS_FILTERS.map(s => {
-          const active = filter === s;
-          const col = s === "all" ? "#60a5fa" : (STATUS_COLOR[s]?.text ?? MUTED);
-          return (
-            <button key={s} onClick={() => setFilter(s)} style={{
-              padding: "6px 14px", borderRadius: 20, cursor: "pointer",
-              border: `1px solid ${active ? col : BORDER}`,
-              backgroundColor: active ? `${col}22` : "transparent",
-              color: active ? col : MUTED, fontSize: 12, fontWeight: active ? 700 : 400,
-            }}>
-              {t[s as keyof typeof t] as string}
-            </button>
-          );
-        })}
-        <span style={{ color: MUTED, fontSize: 12, alignSelf: "center", marginLeft: "auto" }}>
-          {filtered.length} {ar ? "نتيجة" : "results"}
-        </span>
+    <>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <span style={{ color: MUTED, fontSize: 12 }}>{total} {t.results}</span>
       </div>
 
       <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
-        {filtered.length === 0 ? <EmptyState message={t.noReviews} /> : (
+        {reviews.length === 0 ? <EmptyState message={t.noReviews} /> : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -128,7 +126,7 @@ export default function AdminReviewsClient({ reviews: initial }: { reviews: Admi
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(r => {
+                {reviews.map(r => {
                   const brand  = Array.isArray(r.brand)  ? r.brand[0]  : r.brand;
                   const talent = Array.isArray(r.talent) ? r.talent[0] : r.talent;
                   const col    = STATUS_COLOR[r.status] ?? STATUS_COLOR.pending;
@@ -195,6 +193,8 @@ export default function AdminReviewsClient({ reviews: initial }: { reviews: Admi
         )}
       </div>
 
+      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
+
       {modal && confirmCfg && (
         <ConfirmationModal
           open
@@ -205,6 +205,6 @@ export default function AdminReviewsClient({ reviews: initial }: { reviews: Admi
           onCancel={() => setModal(null)}
         />
       )}
-    </AdminShell>
+    </>
   );
 }
