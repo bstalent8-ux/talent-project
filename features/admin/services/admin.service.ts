@@ -70,15 +70,40 @@ export async function fetchAdminTalents(statusFilter?: string): Promise<AdminTal
   });
 }
 
-export async function fetchAdminBookings(): Promise<AdminBooking[]> {
-  // Step 1: fetch raw bookings
-  const { data: bookings, error } = await adminClient
-    .from("bookings")
-    .select("id, status, created_at, amount, notes, brief_url, paid_at, completed_at, brand_id, talent_id")
-    .order("created_at", { ascending: false })
-    .limit(200);
+export interface AdminBookingsPageParams {
+  page?:     number;
+  pageSize?: number;
+  status?:   string;
+}
 
-  if (error || !bookings?.length) return [];
+export interface AdminBookingsPageResult {
+  bookings: AdminBooking[];
+  total:    number;
+}
+
+// Server-side pagination — fetches only the current page via range(), plus
+// the exact total via Supabase's { count: "exact" }. Replaces the old
+// fetchAdminBookings(), which pulled up to 200 rows and let the client slice
+// them (see AdminBookingsClient's former PAGE_SIZE/paginated logic).
+export async function fetchAdminBookingsPage({
+  page = 1,
+  pageSize = 20,
+  status,
+}: AdminBookingsPageParams): Promise<AdminBookingsPageResult> {
+  const from = (page - 1) * pageSize;
+  const to   = from + pageSize - 1;
+
+  let query = adminClient
+    .from("bookings")
+    .select("id, status, created_at, amount, notes, brief_url, paid_at, completed_at, brand_id, talent_id", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (status && status !== "all") query = query.eq("status", status);
+
+  const { data: bookings, count, error } = await query;
+  if (error) return { bookings: [], total: 0 };
+  if (!bookings?.length) return { bookings: [], total: count ?? 0 };
 
   // Step 2: brand_id → profiles.id
   const brandIds  = [...new Set(bookings.map(b => b.brand_id).filter(Boolean))];
@@ -103,7 +128,7 @@ export async function fetchAdminBookings(): Promise<AdminBooking[]> {
   const tpMap      = Object.fromEntries((tpRows         ?? []).map((tp: Record<string, unknown>) => [tp.id as string, tp.user_id as string]));
   const talentMap  = Object.fromEntries((talentProfiles ?? []).map(p => [p.id, p]));
 
-  return bookings.map(b => {
+  const joined = bookings.map(b => {
     const userId = tpMap[b.talent_id];
     return {
       ...b,
@@ -111,6 +136,8 @@ export async function fetchAdminBookings(): Promise<AdminBooking[]> {
       talent: userId ? talentMap[userId] : null,
     };
   }) as AdminBooking[];
+
+  return { bookings: joined, total: count ?? joined.length };
 }
 
 export async function fetchAdminReviews(): Promise<AdminReview[]> {
