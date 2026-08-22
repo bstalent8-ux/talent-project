@@ -32,20 +32,25 @@ const INIT: FormData = {
   confirmPassword: "",
   role:            "talent",
   talentType:      "ugc",
+  otherTypeText:   "",
   brandCategory:   "brand_fashion",
   agreeToTerms:    false,
 };
 
-// Canonical registration categories — just these two. This is a NEW-signup
-// gate only: existing talent_profiles rows with legacy category values
-// (influencer/fashion/food_reviewer/media_buyers/etc., set by this same
-// select before this change, or via the broader list still offered when
-// editing an existing profile in CompleteProfileShell's CATEGORIES) are
-// untouched — getWizardSteps() and the public-profile Model gate already key
-// off "model" alone, everything else already falls into the generic/UGC path.
+// Canonical registration categories — UGC and Model are the only real,
+// public talent categories (this is a NEW-signup gate only: existing
+// talent_profiles rows with legacy category values are untouched —
+// getWizardSteps() and the public-profile Model gate already key off "model"
+// alone, everything else falls into the generic/UGC path).
+//
+// "other" is NOT a real category: picking it creates no talent_profiles row
+// at all (see handleSubmit's `isOtherTalentType` branch) — only a profiles
+// row plus a talent_type_requests row for admin analytics, then routes to
+// /waitlist instead of the UGC/Model onboarding flow.
 const TALENT_TYPES = [
   { value: "ugc",   ar: "صانع محتوى UGC", en: "UGC Creator" },
   { value: "model", ar: "موديل",           en: "Model" },
+  { value: "other", ar: "أخرى",            en: "Other" },
 ];
 
 const BRAND_CATEGORIES = [
@@ -76,6 +81,8 @@ const TX = {
     talent:          "موهبة / منشئ محتوى",
     brand:           "براند / شركة",
     talentType:      "نوع الموهبة",
+    otherTypeLabel:  "ما نوع الموهبة التي تقدمها؟",
+    otherTypePH:     "مثلاً: ممثل، مصور، معلق صوتي، مذيع، ستايلست",
     brandCategory:   "تصنيف البراند",
     terms1:          "أوافق على",
     termsLink:       "الشروط والأحكام",
@@ -98,6 +105,7 @@ const TX = {
     errTerms:            "يجب الموافقة على الشروط والأحكام وسياسة الخصوصية.",
     errCategoryTalent:   "اختر نوع حسابك: صانع محتوى UGC أو موديل.",
     errCategoryBrand:    "اختار تصنيف البراند.",
+    errOtherTypeRequired: "من فضلك اكتب نوع الموهبة التي تقدمها.",
     // Server-level errors
     errExisting:      "يوجد حساب مسجل بالفعل بهذا البريد الإلكتروني. سجل الدخول أو استخدم بريدًا إلكترونيًا آخر.",
     errNetwork:       "تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مرة أخرى.",
@@ -133,6 +141,8 @@ const TX = {
     talent:          "Talent / Creator",
     brand:           "Brand / Company",
     talentType:      "Talent type",
+    otherTypeLabel:  "What type of talent are you?",
+    otherTypePH:     "e.g. Actor, Photographer, Voice Over, Presenter, Stylist",
     brandCategory:   "Brand category",
     terms1:          "I agree to the",
     termsLink:       "Terms of Service",
@@ -155,6 +165,7 @@ const TX = {
     errTerms:            "You must agree to the Terms of Service and Privacy Policy.",
     errCategoryTalent:   "Choose whether you are registering as a UGC Creator or Model.",
     errCategoryBrand:    "Please choose a brand category.",
+    errOtherTypeRequired: "Please tell us what type of talent you are.",
     // Server-level errors
     errExisting:      "An account with this email already exists. Sign in instead or use a different email.",
     errNetwork:       "We couldn't connect to the server. Check your connection and try again.",
@@ -220,6 +231,17 @@ export default function RegisterPage() {
 
   useEffect(() => {
     setPhoneCountryIso(detectDefaultCountryIso());
+  }, []);
+
+  // Captured once on mount, not via useSearchParams — avoids a Suspense
+  // boundary requirement for a value only ever read at submit time.
+  const utmRef = useRef<{ source: string | null; campaign: string | null }>({ source: null, campaign: null });
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    utmRef.current = {
+      source:   params.get("utm_source"),
+      campaign: params.get("utm_campaign"),
+    };
   }, []);
 
   function handleCountryChange(iso: string) {
@@ -302,6 +324,11 @@ export default function RegisterPage() {
 
       const handle = form.email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-");
 
+      // "other" is demand-tracking only — it must never become a real
+      // talent category. No categoryIds, no talent_profiles row at all (see
+      // the profileRes body below) — only profiles + talent_type_requests.
+      const isOtherTalentType = form.role === "talent" && form.talentType === "other";
+
       // Composed here, not stored pre-joined in state (the brief: "Do NOT
       // merge the country code into the typed value"). /api/profile's
       // contract is unchanged — profileData.phone_number is still a single
@@ -322,8 +349,16 @@ export default function RegisterPage() {
             full_name:    form.fullName.trim(),
             phone_number: phoneNumber,
           },
-          categoryIds: form.role === "talent" ? [form.talentType] : [form.brandCategory],
-          ...(form.role === "talent" && {
+          categoryIds: form.role === "talent"
+            ? (isOtherTalentType ? [] : [form.talentType])
+            : [form.brandCategory],
+          // "other" gets no talent_profiles row at all — not even with a
+          // free-text category value. No row means: not eligible for
+          // onboarding, invisible to Explore (which inner-joins
+          // talent_profiles), and no public /talent/[handle] page. The
+          // profiles row (role: "talent") still exists so auth/login and
+          // talent_type_requests both work.
+          ...(form.role === "talent" && !isOtherTalentType && {
             talentProfileData: {
               category:     form.talentType,
               specialties:  [],
@@ -356,9 +391,34 @@ export default function RegisterPage() {
         return;
       }
 
+      // Analytics-only — logged for every talent signup (ugc/model/other) so
+      // admin demand tracking can compare all three, but never blocks
+      // registration if it fails.
+      if (form.role === "talent") {
+        fetch("/api/talent-type-requests", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({
+            selected_type:   form.talentType,
+            other_type_text: isOtherTalentType ? form.otherTypeText.trim() : null,
+            utm_source:      utmRef.current.source,
+            utm_campaign:    utmRef.current.campaign,
+          }),
+        }).catch((e) => console.error("[register] talent-type-request logging failed", e));
+      }
+
       // A specific safeNextPath (e.g. resuming a booking flow) always wins —
-      // onboarding is only the default first stop for a fresh talent signup.
-      router.push(safeNextPath() ?? (form.role === "talent" ? "/onboarding" : "/profile/me"));
+      // onboarding/waitlist are only the default first stop for a fresh
+      // talent signup. "other" never enters the UGC/Model onboarding flow —
+      // it has no supported profile to build yet.
+      if (isOtherTalentType) {
+        sessionStorage.setItem("talent_other_type_text", form.otherTypeText.trim());
+      }
+      router.push(safeNextPath() ?? (
+        form.role !== "talent" ? "/profile/me" :
+        isOtherTalentType      ? "/waitlist" :
+        "/onboarding"
+      ));
     } catch (e) {
       const message = e instanceof Error ? e.message : "";
       if (/fetch|network/i.test(message)) {
@@ -467,6 +527,24 @@ export default function RegisterPage() {
               <p className={styles.fieldError} role="alert">{fieldErrors.category}</p>
             )}
           </div>
+
+          {form.role === "talent" && form.talentType === "other" && (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="register-other-type">{tx.otherTypeLabel}</label>
+              <input
+                id="register-other-type"
+                className={`${styles.input} ${fieldErrors.otherTypeText ? styles.inputInvalid : ""}`}
+                type="text"
+                placeholder={tx.otherTypePH}
+                value={form.otherTypeText}
+                aria-invalid={Boolean(fieldErrors.otherTypeText) || undefined}
+                onChange={(e) => set("otherTypeText", e.target.value)}
+              />
+              {fieldErrors.otherTypeText && (
+                <p className={styles.fieldError} role="alert">{fieldErrors.otherTypeText}</p>
+              )}
+            </div>
+          )}
 
           {/* Fields */}
           <div className={styles.fieldGroup}>

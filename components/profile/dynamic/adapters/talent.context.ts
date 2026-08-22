@@ -11,6 +11,7 @@
 import type { PublicProfileDTO, TalentPublicCore } from "@/features/profiles/types/dto";
 import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 import { parseAvailabilitySchedule } from "@/lib/availability-schedule";
+import { safePublicDisplayName, isEmailShaped } from "@/lib/public-display-name";
 import type {
   AddonItem,
   BookingStats,
@@ -32,7 +33,10 @@ export function toTalentData(dto: PublicProfileDTO): TalentData {
 
   return {
     id:          identity.id,
-    name:        identity.fullName ?? "Talent",
+    // P0: identity.fullName can hold an email (a data bug, not a code
+    // path — see lib/public-display-name.ts) if a talent typed their email
+    // into the full-name field at signup. Never let that surface publicly.
+    name:        safePublicDisplayName(identity.fullName, identity.handle, "Talent"),
     handle:      identity.handle ?? "",
     avatarUrl:   identity.avatarUrl ?? null,
     title:       (social.title as string) ?? core.category ?? "",
@@ -73,7 +77,12 @@ export function toPresenceLinks(dto: PublicProfileDTO): Record<string, string> {
   const out: Record<string, string> = {};
   for (const key of TALENT_SOCIAL_KEYS) {
     const value = links[key];
-    if (typeof value === "string" && value.trim().length > 2) out[key] = value.trim();
+    // P0: a talent can type anything into a social-handle field — including
+    // their email, which would otherwise render as a clickable
+    // instagram.com/their@email.com link. Drop it rather than publish it.
+    if (typeof value === "string" && value.trim().length > 2 && !isEmailShaped(value)) {
+      out[key] = value.trim();
+    }
   }
   return out;
 }

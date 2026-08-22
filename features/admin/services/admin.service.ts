@@ -385,3 +385,46 @@ export async function fetchAdminSupportTickets(): Promise<AdminSupportTicket[]> 
     createdAt:  r.created_at,
   }));
 }
+
+export interface AdminTalentTypeRequest {
+  id:            string;
+  userId:        string;
+  handle:        string | null;
+  fullName:      string | null;
+  selectedType:  "ugc" | "model" | "other";
+  otherTypeText: string | null;
+  utmSource:     string | null;
+  utmCampaign:   string | null;
+  createdAt:     string;
+}
+
+// Registration demand tracking (ugc/model/other) — analytics only, never
+// feeds the public category system. See supabase/migrations/
+// 20260822_talent_type_requests.sql.
+export async function fetchAdminTalentTypeRequests(): Promise<AdminTalentTypeRequest[]> {
+  const { data: rows, error } = await adminClient
+    .from("talent_type_requests")
+    .select("id, user_id, selected_type, other_type_text, utm_source, utm_campaign, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error || !rows?.length) return [];
+
+  const userIds = [...new Set(rows.map((r) => r.user_id))];
+  const { data: profiles } = await adminClient
+    .from("profiles")
+    .select("id, handle, full_name")
+    .in("id", userIds);
+  const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
+
+  return rows.map((r) => ({
+    id:            r.id,
+    userId:        r.user_id,
+    handle:        profileMap[r.user_id]?.handle ?? null,
+    fullName:      profileMap[r.user_id]?.full_name ?? null,
+    selectedType:  r.selected_type as "ugc" | "model" | "other",
+    otherTypeText: r.other_type_text,
+    utmSource:     r.utm_source,
+    utmCampaign:   r.utm_campaign,
+    createdAt:     r.created_at,
+  }));
+}

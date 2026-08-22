@@ -12,6 +12,7 @@ export interface RegisterFormData {
   confirmPassword: string;
   role:            Role;
   talentType:      string;
+  otherTypeText:   string;
   brandCategory:   string;
   agreeToTerms:    boolean;
 }
@@ -19,14 +20,15 @@ export interface RegisterFormData {
 // Every field the form validates independently. "category" covers both the
 // talent-type and brand-category selects — only one of the two is visible at
 // a time, so they share one slot in the error/focus model.
-export type FieldKey = "category" | "fullName" | "email" | "phone" | "password" | "confirmPassword" | "terms";
+export type FieldKey = "category" | "otherTypeText" | "fullName" | "email" | "phone" | "password" | "confirmPassword" | "terms";
 
 // Visual top-to-bottom order, used to decide which field gets focus when more
 // than one is invalid at once.
-export const FIELD_ORDER: FieldKey[] = ["category", "fullName", "email", "phone", "password", "confirmPassword", "terms"];
+export const FIELD_ORDER: FieldKey[] = ["category", "otherTypeText", "fullName", "email", "phone", "password", "confirmPassword", "terms"];
 
 export const FIELD_IDS: Record<FieldKey, string> = {
   category:        "register-category",
+  otherTypeText:   "register-other-type",
   fullName:        "register-name",
   email:           "register-email",
   phone:           "register-phone",
@@ -45,6 +47,7 @@ export const FORM_TO_FIELD: Partial<Record<keyof RegisterFormData, FieldKey>> = 
   password:        "password",
   confirmPassword: "confirmPassword",
   talentType:      "category",
+  otherTypeText:   "otherTypeText",
   brandCategory:   "category",
   role:            "category",
   agreeToTerms:    "terms",
@@ -67,6 +70,7 @@ export interface RegisterCopy {
   errTerms:            string;
   errCategoryTalent:   string;
   errCategoryBrand:    string;
+  errOtherTypeRequired: string;
   errExisting:         string;
   errNetwork:          string;
   errRateLimit:        string;
@@ -87,6 +91,9 @@ export function validateRegisterForm(form: RegisterFormData, tx: RegisterCopy): 
 
   if (form.role === "talent" && !form.talentType) errs.category = tx.errCategoryTalent;
   if (form.role === "brand" && !form.brandCategory) errs.category = tx.errCategoryBrand;
+  if (form.role === "talent" && form.talentType === "other" && !form.otherTypeText.trim()) {
+    errs.otherTypeText = tx.errOtherTypeRequired;
+  }
 
   if (!form.password) errs.password = tx.errPasswordRequired;
   else if (form.password.length < 8) errs.password = tx.errPasswordWeak;

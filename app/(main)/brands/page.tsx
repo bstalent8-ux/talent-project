@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import { adminClient } from "@/lib/supabase/admin";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
+import { safePublicDisplayName } from "@/lib/public-display-name";
 import BrandsClient from "./_components/BrandsClient";
 
 export interface BrandCard {
@@ -79,7 +80,7 @@ async function fetchPublicBrands(): Promise<BrandCard[]> {
   return publicRows.map((profile) => ({
     id:           profile.id,
     handle:       profile.handle,
-    name:         profile.full_name ?? "Brand",
+    name:         safePublicDisplayName(profile.full_name, profile.handle, "Brand"),
     avatar_url:   profile.avatar_url ?? null,
     city:         profile.city ?? null,
     bio:          profile.bio ?? null,

@@ -5,6 +5,7 @@
 
 import { adminClient } from "@/lib/supabase/admin";
 import { parsePrice } from "@/lib/price";
+import { safePublicDisplayName } from "@/lib/public-display-name";
 
 export interface FavoriteTalentCard {
   id: string;
@@ -61,7 +62,7 @@ export async function getFavoriteTalentCards(userId: string): Promise<FavoriteTa
     return [{
       id:             p.id as string,
       handle:         p.handle as string,
-      name:           (p.full_name as string) ?? "-",
+      name:           safePublicDisplayName(p.full_name as string | null, p.handle as string | null, "Talent"),
       avatar_url:     (p.avatar_url as string) ?? null,
       location:       (p.city as string) ?? null,
       category:       tp.category ?? null,

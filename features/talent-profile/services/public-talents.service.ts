@@ -1,6 +1,7 @@
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import { parsePrice } from "@/lib/price";
 import { adminClient } from "@/lib/supabase/admin";
+import { safePublicDisplayName } from "@/lib/public-display-name";
 
 export interface PublicTalentCard {
   id: string;
@@ -92,7 +93,7 @@ function toPublicTalentCards(rows: PublicTalentProfile[]): PublicTalentCard[] {
     return [{
       id:             p.id,
       handle:         p.handle,
-      name:           p.full_name ?? "-",
+      name:           safePublicDisplayName(p.full_name, p.handle, "Talent"),
       avatar_url:     p.avatar_url ?? null,
       location:       p.city ?? null,
       category:       tp.category ?? null,

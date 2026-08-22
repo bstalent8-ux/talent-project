@@ -11,6 +11,7 @@ import "server-only";
 // during the same phase that moves data access would create two authorization
 // surfaces mid-migration.
 
+import { safePublicDisplayName, redactEmails } from "@/lib/public-display-name";
 import { ProfileError } from "../errors/profile-error";
 import { providerRegistry } from "../providers/registry";
 import { createGenericProvider } from "../providers/generic.provider";
@@ -62,14 +63,26 @@ const WRITABLE_SHARED_FIELDS = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function toIdentityDTO(profile: RawSharedProfile, typeSlug: string): SharedIdentityDTO {
+// P0: fullName/bio can hold an email — a real user pasted their email into
+// the full-name field at signup, and it shipped straight into the RSC
+// payload for every public profile page (the raw PublicProfileDTO prop
+// gets serialized to the client regardless of what the UI ends up
+// rendering, so a client-side-only display fix does NOT stop it leaking
+// into page source). `publicDTO` sanitizes at the DTO boundary, before
+// anything is serialized. getOwnProfile (the owner's own edit dashboard)
+// must keep seeing the raw value — that's the one place they can find and
+// fix it — so it stays false there.
+function toIdentityDTO(profile: RawSharedProfile, typeSlug: string, publicDTO: boolean): SharedIdentityDTO {
   return {
     id:         profile.id,
     handle:     profile.handle,
-    fullName:   profile.full_name,
+    fullName:   publicDTO ? safePublicDisplayName(profile.full_name, profile.handle, "Talent") : profile.full_name,
     avatarUrl:  profile.avatar_url,
     city:       profile.city,
-    bio:        profile.bio,
+    // Free text a talent wrote themselves can contain an email inline
+    // alongside real content — redact just that substring rather than
+    // dropping the whole bio.
+    bio:        publicDTO ? redactEmails(profile.bio) : profile.bio,
     isVerified: Boolean(profile.is_verified),
     createdAt:  profile.created_at,
     typeSlug,
@@ -190,7 +203,7 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
     if (!core) throw ProfileError.notFound({ profileId: profile.id, reason: "failed public gate" });
 
     const dto: PublicProfileDTO = {
-      identity:   toIdentityDTO(profile, ctx.typeSlug),
+      identity:   toIdentityDTO(profile, ctx.typeSlug, true),
       meta:       toMetaDTO(ctx.provider.meta),
       core:       core as AnyPublicCore,
       sections:   mergeSections(sections),
@@ -328,7 +341,7 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
       if (!core) throw ProfileError.notFound({ profileId: profile.id, reason: "core row missing" });
 
       const dto: PublicProfileDTO = {
-        identity:   toIdentityDTO(profile, ctx.typeSlug),
+        identity:   toIdentityDTO(profile, ctx.typeSlug, true),
         meta:       toMetaDTO(ctx.provider.meta),
         core:       core as AnyPublicCore,
         sections:   mergeSections(sections),
@@ -356,7 +369,7 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
       if (!result) throw ProfileError.notFound({ profileId: profile.id, reason: "core row missing" });
 
       return {
-        identity:   toIdentityDTO(profile, ctx.typeSlug),
+        identity:   toIdentityDTO(profile, ctx.typeSlug, false),
         meta:       toMetaDTO(ctx.provider.meta),
         core:       result.core as AnyPrivateCore,
         sections:   mergeSections(sections),

@@ -20,15 +20,18 @@ interface BookingData {
   id: string;
   status: string;
   amount: number | null;
-  budget_type: string | null;
-  budget_amount: number | null;
-  start_date: string | null;
-  duration: number | null;
-  deadline: string | null;
-  negotiation_message: string | null;
-  negotiation_requested_at: string | null;
+  // Not real bookings columns — see app/(main)/bookings/[id]/page.tsx's
+  // fetch comment. Optional so the server DTO (which omits them) still
+  // satisfies this type; renders guard each with a null/undefined check.
+  budget_type?: string | null;
+  budget_amount?: number | null;
+  start_date?: string | null;
+  duration?: number | null;
+  deadline?: string | null;
+  negotiation_message?: string | null;
+  negotiation_requested_at?: string | null;
   created_at: string;
-  updated_at: string | null;
+  updated_at?: string | null;
   service_type: string | null;
   brand_id: string;
   talent_user_id: string | null;

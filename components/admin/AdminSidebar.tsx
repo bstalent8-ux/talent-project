@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { createClient } from "@/lib/supabase/client";
 import {
+  BarChart3,
   Bell,
   Building2,
   CalendarCheck,
@@ -35,6 +36,7 @@ const TX = {
   ar: {
     dashboard: "لوحة التحكم",
     talents: "المواهب",
+    talentDemand: "طلب أنواع المواهب",
     brands: "الشركات",
     bookings: "الحجوزات",
     reviews: "التقييمات",
@@ -55,6 +57,7 @@ const TX = {
   en: {
     dashboard: "Dashboard",
     talents: "Talents",
+    talentDemand: "Talent Type Demand",
     brands: "Brands",
     bookings: "Bookings",
     reviews: "Reviews",
@@ -79,6 +82,7 @@ const NAV_ITEMS = [
   { key: "dashboard", href: "/admin", icon: LayoutDashboard },
   { key: "support", href: "/admin/support", icon: LifeBuoy },
   { key: "talents", href: "/admin/talents", icon: Users },
+  { key: "talentDemand", href: "/admin/talent-demand", icon: BarChart3 },
   { key: "brands", href: "/admin/brands", icon: Building2 },
   { key: "bookings", href: "/admin/bookings", icon: CalendarCheck },
   { key: "reviews", href: "/admin/reviews", icon: Star },

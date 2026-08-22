@@ -12,6 +12,7 @@ import {
   calculateCompletion,
   calculateSectionProgress,
 } from "@/lib/profile-completion";
+import { sanitizeSocialLinksForPublic } from "@/lib/public-display-name";
 import { hasSectionContent } from "../content/section-content";
 import { profileRepository } from "../repositories/profile.repository";
 import { talentRepository } from "../repositories/talent.repository";
@@ -164,7 +165,7 @@ function buildPublicCore(core: RawTalentCore, parts: {
     availabilitySchedule: core.availability_schedule ?? null,
     modelMetrics:  toModelMetrics(core.model_metrics),
     packages:      toPackages(core.packages),
-    socialLinks:   core.social_links ?? {},
+    socialLinks:   sanitizeSocialLinksForPublic(core.social_links as Record<string, unknown> | null),
     rating:        core.avg_rating ?? 0,
     reviewCount:   core.total_reviews ?? 0,
     totalBookings: core.total_bookings ?? 0,

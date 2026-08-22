@@ -14,6 +14,7 @@ import type {
   AddonItem,
   PortfolioItem,
 } from "../types";
+import { safePublicDisplayName, redactEmails } from "@/lib/public-display-name";
 
 // BrandItem is now fetched separately from talent_brands table
 // and passed in directly — no transformation needed from social_links
@@ -30,7 +31,7 @@ function formatViews(views: number): string {
 function transformTalentData(profile: RawProfile, tp: RawTalentProfile | null, sl: Record<string, unknown>): TalentData {
   return {
     id: profile.id,
-    name: profile.full_name ?? "Talent",
+    name: safePublicDisplayName(profile.full_name, profile.handle, "Talent"),
     handle: profile.handle ?? "",
     avatarUrl: profile.avatar_url ?? null,
     title: (sl.title as string) ?? tp?.category ?? "",
@@ -42,7 +43,7 @@ function transformTalentData(profile: RawProfile, tp: RawTalentProfile | null, s
     verified: Boolean(profile.is_verified),
     fastResponse: Boolean(sl.fast_response),
     premium: Boolean(sl.premium),
-    bio: profile.bio ?? tp?.bio ?? null,
+    bio: redactEmails(profile.bio ?? tp?.bio ?? null),
     specialties: tp?.specialties ?? [],
     category: tp?.category ?? null,
   };
@@ -53,7 +54,7 @@ function transformReviews(raw: RawReview[]): Review[] {
     const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
     return {
       id: r.id,
-      author: profile?.full_name ?? "Client",
+      author: safePublicDisplayName(profile?.full_name, null, "Client"),
       brand: "",
       rating: r.rating,
       text: r.comment ?? "",
