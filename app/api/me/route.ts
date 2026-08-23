@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     // Use admin client to bypass RLS
     let { data: profile } = await adminClient
       .from("profiles")
-      .select("id, full_name, handle, city, avatar_url, bio, role, created_at")
+      .select("id, full_name, handle, city, avatar_url, bio, role, created_at, phone_number, brand_status")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       });
       const { data: retried } = await adminClient
         .from("profiles")
-        .select("id, full_name, handle, city, avatar_url, bio, role, created_at")
+        .select("id, full_name, handle, city, avatar_url, bio, role, created_at, phone_number, brand_status")
         .eq("id", user.id)
         .maybeSingle();
       profile = retried;

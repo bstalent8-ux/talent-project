@@ -119,14 +119,15 @@ export default function Navbar() {
         ? { href: "/explore", label: t.book, Icon: CalendarCheck }
         : { href: "/register", label: t.register, Icon: UserRoundPlus };
 
-  // Same role-aware destinations as `cta` above, relabeled for the account
-  // dropdown menu context (e.g. "Book Now" as a top-bar CTA vs. "Brand
-  // Dashboard" as a menu item) — routing logic is unchanged, only the label.
+  // Both roles land on the same /dashboard route — it renders role-aware
+  // content itself (see app/(main)/dashboard). Previously this pointed talent
+  // at /profile/me (the profile EDITOR) and brand at /explore (the public
+  // marketplace) — neither was a dashboard. Label stays role-specific.
   const dashboardMenuItem = role === "admin"
     ? null
     : role === "brand" || role === "client"
-      ? { href: "/explore", label: t.dashboardBrand, Icon: LayoutDashboard }
-      : { href: "/profile/me", label: t.dashboardTalent, Icon: LayoutDashboard };
+      ? { href: "/dashboard", label: t.dashboardBrand, Icon: LayoutDashboard }
+      : { href: "/dashboard", label: t.dashboardTalent, Icon: LayoutDashboard };
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -287,7 +288,7 @@ export default function Navbar() {
                     <MessageCircle size={16} />
                     {t.messages}
                   </Link>
-                  <Link className={styles.dropdownItem} href="/profile/me">
+                  <Link className={styles.dropdownItem} href="/settings">
                     <Settings size={16} />
                     {t.accountSettings}
                   </Link>

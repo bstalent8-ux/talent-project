@@ -67,7 +67,7 @@ const TX = {
 };
 
 interface Props {
-  page: "register" | "login" | "footer";
+  page: "register" | "login" | "footer" | "settings";
   pageError?: string | null;
 }
 
