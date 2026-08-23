@@ -13,6 +13,7 @@ import ExploreGrid from "./ExploreGrid";
 import { useSite } from "@/contexts/SiteContext";
 import { categoryMatchRank, MATCH_RANK_NONE } from "@/features/categories/matching";
 import DirectBriefModal from "@/components/DirectBriefModal";
+import { trackEvent } from "@/lib/analytics/track";
 import styles from "./ExplorePage.module.css";
 
 // 8 = ~2 rows at the grid's primary 4-column desktop width (see
@@ -189,6 +190,19 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Debounced so a search event fires once per pause in typing, not once
+  // per keystroke — filtering itself stays instant (the useMemo above),
+  // only the analytics write waits.
+  useEffect(() => {
+    const query = search.trim();
+    if (!query) return;
+    const timer = setTimeout(() => {
+      trackEvent("search", { metadata: { query, result_count: filtered.length } });
+    }, 600);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   // ── Featured talents for the hero marquee ─────────────
   // Top-rated first (verified as a tiebreaker), avatar required — a blank

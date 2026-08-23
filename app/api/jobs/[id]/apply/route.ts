@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyJobApplicationReceived } from "@/lib/notifications/events";
+import { logJobApplication } from "@/lib/events/events";
 import { canApplyJob } from "@/lib/permissions";
 import { privateNoStoreHeaders } from "@/lib/cache";
 
@@ -90,6 +91,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     talentName:    talent?.full_name ?? null,
     message,
   });
+
+  await logJobApplication({ talentId: user.id, jobId, applicationId: application.id });
 
   return NextResponse.json({ application }, { status: 201, headers: privateNoStoreHeaders() });
 }

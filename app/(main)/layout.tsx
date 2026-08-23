@@ -1,8 +1,10 @@
 export const runtime = 'edge';
 
+import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GlobalChat from "@/components/chat/GlobalChat";
+import PageViewTracker from "@/components/analytics/PageViewTracker";
 
 // No server-side cookies()/getUser()/profile lookup here — that was the
 // proven cause of every (main) route rendering fully dynamic on Cloudflare
@@ -12,6 +14,12 @@ import GlobalChat from "@/components/chat/GlobalChat";
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
+      {/* useSearchParams() inside PageViewTracker requires a Suspense
+          boundary — wrapping only this leaf, not the whole tree, keeps the
+          rest of (main) exactly as static/streamed as before. */}
+      <Suspense fallback={null}>
+        <PageViewTracker />
+      </Suspense>
       <Navbar />
       <main style={{ flex: 1 }}>{children}</main>
       <Footer />

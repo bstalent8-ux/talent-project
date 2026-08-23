@@ -27,6 +27,7 @@ import { useMemo } from "react";
 import { useSite } from "@/contexts/SiteContext";
 import DynamicProfileRenderer, { useDynamicProfile } from "@/components/profile/dynamic/DynamicProfileRenderer";
 import { anchorIdFor } from "@/components/profile/dynamic/anchors";
+import ProfileViewTracker from "@/components/analytics/ProfileViewTracker";
 import {
   toBookingStats,
   toCampaignStats,
@@ -105,6 +106,7 @@ export default function TalentProfileShell({ profile }: { profile: PublicProfile
       }}
     >
       <div style={{ maxWidth: 1440, margin: "0 auto", padding: "24px 24px" }}>
+        <ProfileViewTracker profileUserId={profile.identity.id} />
         <CampaignBanner campaignStats={campaignStats} featuredCampaign={featuredCampaign} />
         <ProfileHero talent={talent} />
 

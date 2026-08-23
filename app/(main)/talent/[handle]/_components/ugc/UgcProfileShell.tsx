@@ -28,6 +28,7 @@ import { useGuestGuard } from "@/contexts/GuestGuard";
 import { useFavoriteTalent } from "@/hooks/useFavoriteTalent";
 import type { PermissionAction } from "@/lib/permissions";
 import DirectBriefModal from "@/components/DirectBriefModal";
+import ProfileViewTracker from "@/components/analytics/ProfileViewTracker";
 import {
   toTalentData,
   toPresenceLinks,
@@ -178,6 +179,7 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
         paddingBottom: 90,
       }}
     >
+      <ProfileViewTracker profileUserId={talent.id} />
       {/* Full-bleed band — deliberately OUTSIDE the centered container below,
           so its dark background spans the whole page width. Its own inner
           content still centers at --container-max (see UgcHero.tsx). */}

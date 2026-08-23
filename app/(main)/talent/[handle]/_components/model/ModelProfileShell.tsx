@@ -40,6 +40,7 @@ import { useGuestGuard } from "@/contexts/GuestGuard";
 import { useFavoriteTalent } from "@/hooks/useFavoriteTalent";
 import type { PermissionAction } from "@/lib/permissions";
 import DirectBriefModal from "@/components/DirectBriefModal";
+import ProfileViewTracker from "@/components/analytics/ProfileViewTracker";
 import {
   toTalentData,
   toPresenceLinks,
@@ -164,6 +165,7 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
       dir={ar ? "rtl" : "ltr"}
       style={{ fontFamily: "'Cairo', sans-serif", backgroundColor: dark ? "var(--bg-page)" : "#F1F5F9", minHeight: "100vh", paddingBottom: 90 }}
     >
+      <ProfileViewTracker profileUserId={talent.id} />
       <ModelActionBar
         talentId={talent.id}
         talentName={talent.name}

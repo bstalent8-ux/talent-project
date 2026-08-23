@@ -26,8 +26,16 @@ interface Props {
 export default function ExploreHero({ lang, search, onSearch, resultCount, featured }: Props) {
   const ar = lang === "ar";
   const ph = ar ? "ابحث عن موهبة، تخصص، أو اسم..." : "Search by name, specialty, category...";
-  // Duplicated once so the CSS marquee (translateX 0 -> -50%) loops seamlessly.
-  const marqueeItems = featured.length > 0 ? [...featured, ...featured] : [];
+  // The marquee's translateX(0 -> -50%) loop is only seamless if a single
+  // "half" of the track is already wider than the viewport — otherwise the
+  // short strip visibly runs out and snaps back before it ever fills the
+  // screen (looked like it "ends" instead of flowing continuously, e.g.
+  // when only a handful of talents have an avatar_url). Repeat the featured
+  // set enough times per half to guarantee that, then duplicate the half for
+  // the loop itself.
+  const copiesPerHalf = featured.length > 0 ? Math.max(2, Math.ceil(14 / featured.length)) : 0;
+  const half = Array.from({ length: copiesPerHalf }, () => featured).flat();
+  const marqueeItems = half.length > 0 ? [...half, ...half] : [];
 
   return (
     <section className={styles.hero}>
@@ -65,7 +73,10 @@ export default function ExploreHero({ lang, search, onSearch, resultCount, featu
 
       {marqueeItems.length > 0 && (
         <div className={styles.heroCarousel} aria-hidden="true">
-          <div className={styles.heroCarouselTrack}>
+          <div
+            className={styles.heroCarouselTrack}
+            style={{ animationDuration: `${marqueeItems.length * 3}s` }}
+          >
             {marqueeItems.map((t, i) => (
               <Link
                 key={`${t.id}-${i}`}

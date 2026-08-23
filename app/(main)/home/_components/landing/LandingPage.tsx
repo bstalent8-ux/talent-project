@@ -519,11 +519,32 @@ function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; catego
   const railRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
 
-  // Auto-loop: the rail's content is rendered twice back-to-back, so
-  // "one set" is exactly half of scrollWidth — wrapping scrollLeft across
-  // that half-point at the seam is invisible because both halves are
-  // identical. Paused on hover/focus (see the .categoryNavBtn reveal) and
-  // skipped entirely for prefers-reduced-motion.
+  // Auto-loop: the rail's content is rendered several times back-to-back
+  // (see railItems below), so "one set" (railHalf) is exactly half of
+  // scrollWidth — wrapping across that half-point at the seam is invisible
+  // because both halves are identical. Paused on hover/focus (see the
+  // .categoryNavBtn reveal) and skipped entirely for prefers-reduced-motion.
+  //
+  // Two independent requirements, both needed for a genuinely seamless loop:
+  //
+  // 1. A single set must be wider than the rail's own clientWidth — with too
+  //    few categories, the old flat 2x duplicate made a half narrower than
+  //    the viewport, so the browser clamped scrollLeft at
+  //    -(scrollWidth-clientWidth) before the code's wrap point was ever
+  //    reached, and the rail froze pinned at that clamp (confirmed live:
+  //    with only 4 categories doubled, half-width ~1021px < a ~1135px
+  //    viewport pinned it dead at -908). railItems below repeats the
+  //    category list enough times per half to stay wider than any real
+  //    viewport.
+  //
+  // 2. The position must be tracked in a plain JS float (`position`), not by
+  //    reading `el.scrollLeft` back as the running total. The DOM property
+  //    rounds to whole pixels, so `el.scrollLeft += 0.25` reads back
+  //    unchanged forever once the fractional part can't move the rounded
+  //    value — a slow, readable speed made this fire on literally every
+  //    frame (confirmed live: 1200+ ticks, scrollLeft pinned at exactly 0
+  //    throughout). Keeping the accumulator in JS avoids the rounding trap
+  //    regardless of how slow the animation runs.
   useEffect(() => {
     const el = railRef.current;
     if (!el || hovering) return;
@@ -532,15 +553,29 @@ function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; catego
     // RTL scrollLeft direction follows the modern spec (Chrome/Firefox/Safari
     // 15+): it runs 0 → -maxScroll instead of 0 → +maxScroll.
     const dirSign = ar ? -1 : 1;
+    // Slowed down significantly (was 0.6px/frame ≈ 36px/s) so each card
+    // stays readable as it crosses the rail.
+    const speed = 0.3;
+    let position = el.scrollLeft;
     let raf = requestAnimationFrame(function tick() {
       const singleSetWidth = el.scrollWidth / 2;
-      el.scrollLeft += dirSign * 0.6;
-      if (dirSign > 0 && el.scrollLeft >= singleSetWidth) el.scrollLeft -= singleSetWidth;
-      else if (dirSign < 0 && el.scrollLeft <= -singleSetWidth) el.scrollLeft += singleSetWidth;
+      position += dirSign * speed;
+      if (dirSign > 0 && position >= singleSetWidth) position -= singleSetWidth;
+      else if (dirSign < 0 && position <= -singleSetWidth) position += singleSetWidth;
+      el.scrollLeft = position;
       raf = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(raf);
   }, [ar, hovering]);
+
+  // Repeats the category list enough times per half that the half is always
+  // wider than any realistic viewport (see the effect's comment above) — a
+  // fixed 2x duplicate broke as soon as there were only a handful of
+  // categories. Only the first copy's cards stay in the tab order; the
+  // repeats are decorative for the loop, not distinct content.
+  const railRepeat = Math.max(2, Math.ceil(12 / categories.length));
+  const railHalf = Array.from({ length: railRepeat }, () => categories).flat();
+  const railItems = [...railHalf, ...railHalf];
 
   function nudge(px: number) {
     railRef.current?.scrollBy({ left: px, behavior: "smooth" });
@@ -568,10 +603,10 @@ function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; catego
           onBlur={() => setHovering(false)}
         >
           <div className={styles.categoryGrid} ref={railRef}>
-            {/* Doubled for the seamless auto-scroll loop (see the effect
-                above) — 4 distinct categories now, so the repeat isn't the
-                "same 2 cards twice" the rail used to show. */}
-            {[...categories, ...categories].map((category, i) => {
+            {/* Repeated for the seamless auto-scroll loop — see railItems
+                above; a plain 2x duplicate isn't wide enough once there are
+                only a handful of categories. */}
+            {railItems.map((category, i) => {
               const Icon = category.icon;
               const count = category.filterKey ? categoryCounts[category.filterKey] : null;
               const content = (

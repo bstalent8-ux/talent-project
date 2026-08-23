@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import { safeNextPath } from "@/lib/safe-next-path";
 import SupportTicketModal from "@/components/support/SupportTicketModal";
+import { trackEvent } from "@/lib/analytics/track";
 import styles from "../auth.module.css";
 
 // brandHighlight excludes the trailing "." on purpose — .brandHighlight::after
@@ -114,6 +115,9 @@ export default function LoginPage() {
 
     const res = await fetch("/api/me/role");
     const { role } = await res.json();
+
+    trackEvent("login", { metadata: { role } });
+
     router.push(role === "admin" ? "/admin" : safeNextPath() ?? "/explore");
   }
 

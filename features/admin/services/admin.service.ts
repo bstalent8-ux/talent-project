@@ -693,3 +693,117 @@ export async function fetchAdminTalentTypeRequestsPage({
 
   return { requests, total: count ?? requests.length };
 }
+
+// ─── User activity (in-house event log) ──────────────────────────────────────
+
+export const USER_EVENT_NAMES = [
+  "page_view", "talent_profile_view", "search",
+  "booking_brief_sent", "job_application", "signup", "login",
+] as const;
+export type UserEventName = typeof USER_EVENT_NAMES[number];
+
+export interface AdminUserEvent {
+  id:         string;
+  userId:     string | null;
+  handle:     string | null;
+  fullName:   string | null;
+  eventName:  UserEventName;
+  targetType: string | null;
+  targetId:   string | null;
+  metadata:   Record<string, unknown>;
+  createdAt:  string;
+}
+
+export interface AdminUserActivityDateRange {
+  from?: string; // "YYYY-MM-DD", inclusive
+  to?:   string; // "YYYY-MM-DD", inclusive
+}
+
+function applyUserActivityDateRange<T extends { gte: (c: string, v: string) => T; lt: (c: string, v: string) => T }>(
+  query: T,
+  { from, to }: AdminUserActivityDateRange,
+): T {
+  if (from) query = query.gte("created_at", `${from}T00:00:00.000Z`);
+  if (to) {
+    const exclusiveEnd = new Date(`${to}T00:00:00.000Z`);
+    exclusiveEnd.setUTCDate(exclusiveEnd.getUTCDate() + 1);
+    query = query.lt("created_at", exclusiveEnd.toISOString());
+  }
+  return query;
+}
+
+export type AdminUserActivityStats = Record<UserEventName, number>;
+
+// Count-only queries (no rows fetched) over the full date-filtered dataset —
+// same shape as fetchAdminTalentTypeStats.
+export async function fetchAdminUserActivityStats(range: AdminUserActivityDateRange = {}): Promise<AdminUserActivityStats> {
+  const countFor = async (eventName: UserEventName) => {
+    let query = adminClient
+      .from("user_events")
+      .select("id", { count: "exact", head: true })
+      .eq("event_name", eventName);
+    query = applyUserActivityDateRange(query, range);
+    const { count } = await query;
+    return count ?? 0;
+  };
+
+  const counts = await Promise.all(USER_EVENT_NAMES.map(countFor));
+  return Object.fromEntries(USER_EVENT_NAMES.map((name, i) => [name, counts[i]])) as AdminUserActivityStats;
+}
+
+export interface AdminUserActivityPageParams extends AdminUserActivityDateRange {
+  page?:      number;
+  pageSize?:  number;
+  eventName?: UserEventName;
+}
+
+export interface AdminUserActivityPageResult {
+  events: AdminUserEvent[];
+  total:  number;
+}
+
+// Server-side pagination — same join-in-JS pattern as
+// fetchAdminTalentTypeRequestsPage (Supabase joins across these tables are
+// avoided deliberately, see CLAUDE.md §11).
+export async function fetchAdminUserActivityPage({
+  page = 1,
+  pageSize = 20,
+  from,
+  to,
+  eventName,
+}: AdminUserActivityPageParams): Promise<AdminUserActivityPageResult> {
+  const rangeFrom = (page - 1) * pageSize;
+  const rangeTo   = rangeFrom + pageSize - 1;
+
+  let query = adminClient
+    .from("user_events")
+    .select("id, user_id, event_name, target_type, target_id, metadata, created_at", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(rangeFrom, rangeTo);
+  query = applyUserActivityDateRange(query, { from, to });
+  if (eventName) query = query.eq("event_name", eventName);
+
+  const { data: rows, count, error } = await query;
+  if (error) return { events: [], total: 0 };
+  if (!rows?.length) return { events: [], total: count ?? 0 };
+
+  const userIds = [...new Set(rows.map((r) => r.user_id).filter((id): id is string => Boolean(id)))];
+  const { data: profiles } = userIds.length
+    ? await adminClient.from("profiles").select("id, handle, full_name").in("id", userIds)
+    : { data: [] };
+  const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
+
+  const events = rows.map((r) => ({
+    id:         r.id,
+    userId:     r.user_id,
+    handle:     r.user_id ? profileMap[r.user_id]?.handle ?? null : null,
+    fullName:   r.user_id ? profileMap[r.user_id]?.full_name ?? null : null,
+    eventName:  r.event_name as UserEventName,
+    targetType: r.target_type,
+    targetId:   r.target_id,
+    metadata:   (r.metadata ?? {}) as Record<string, unknown>,
+    createdAt:  r.created_at,
+  }));
+
+  return { events, total: count ?? events.length };
+}

@@ -703,3 +703,142 @@ Both are idempotent and print a `RAISE NOTICE` verification summary.
 `vitest` now runs (`vitest.config.ts`, 75 tests over the adapters and the runtime
 prep). §11.11 and §15.9's "no test suite exists" is no longer strictly true for
 this area — run `npx vitest run` alongside `npx tsc --noEmit` and `npm run build`.
+
+---
+
+## User Action Tracking — 2026-08-23
+
+New table **`user_events`** (`supabase/migrations/20260823_user_events.sql`) —
+a generic, append-only event log: `user_id` (nullable — guests), `session_id`
+(client-generated UUID, `localStorage`), `event_name` (`page_view` |
+`talent_profile_view` | `search` | `booking_brief_sent` | `job_application` |
+`signup` | `login`, DB-`CHECK`ed), `target_type` (`talent_profile`|`job`|
+`booking`|`NULL`, DB-`CHECK`ed) / `target_id`, `metadata jsonb`. RLS enabled,
+no policies — service-role only, same pattern as `notifications` /
+`talent_type_requests`. Also adds `profiles.last_active_at`.
+
+**`app/api/events/route.ts` is a hardened, strictly-validated edge endpoint**
+— the only one of these tables' write paths a browser can reach directly.
+`session_id` and `target_id` must be well-formed UUIDs; `event_name` and
+`target_type` are fixed allow-lists; `target_type`/`target_id` presence is
+required-or-forbidden per event (only `talent_profile_view` carries one; any
+other event sending one is rejected). Metadata has a **per-event schema**
+(e.g. `page_view` only accepts `path`/`referrer`, `search` only `query`/
+`result_count`) — an unknown key rejects the whole request rather than being
+silently dropped, plus a 500-byte total cap. A client-supplied `user_id` in
+the body is never read anywhere; identity comes only from
+`supabase.auth.getUser()`. A DB failure returns a real error status, not a
+false `{success:true}` — the browser tracker (`lib/analytics/track.ts`)
+still fire-and-forgets the response either way, so this never blocks
+navigation.
+
+**Split mirrors `lib/notifications/`:** `lib/events/service.ts` is the thin
+`adminClient` writer (`logEvent`, returns `boolean`, swallows/logs errors —
+an analytics write must never break the flow that triggered it, but the
+caller still gets an honest success/failure signal); `lib/events/events.ts`
+holds named wrappers only for the two events with real server-side
+enrichment (`logBookingBriefSent`, `logJobApplication`, called from
+`/api/bookings/direct` and `/api/jobs/[id]/apply`). The other four
+non-profile-view client events go straight from `app/api/events/route.ts`
+into `logEvent`.
+
+**`talent_profile_view` does NOT go through `logEvent`** — it has its own
+`logTalentProfileView()`, calling the `track_talent_profile_view()` SQL
+function (dedupe, below). Fixes a dead counter: `talent_profiles.
+profile_views` existed as a column but was never incremented anywhere before
+this (only hand-seeded with fake numbers in `app/api/admin/seed/route.ts`).
+
+**Profile-view dedupe (30-minute window, DB-atomic).** A refresh-spam loop
+must not inflate either the public `profile_views` counter or the admin
+analytics table. `talent_profile_view_dedupe` holds one row per
+`(session_id, talent_user_id)`; `track_talent_profile_view()` does a single
+`INSERT ... ON CONFLICT ... DO UPDATE ... WHERE last_counted_at < now() -
+interval '30 minutes' RETURNING ...` — atomic, no read-then-write race — and
+only when that returns a row does it, in the same function, increment
+`talent_profiles.profile_views` **and** insert the `user_events` row. A
+deduped (too-recent) view increments nothing and logs nothing.
+
+**`last_active_at` throttle (5-minute window, DB-atomic).** `touch_last_active
+(p_user_id)` is a single guarded `UPDATE ... WHERE last_active_at IS NULL OR
+last_active_at < now() - interval '5 minutes'` — one statement, no race.
+`logEvent`/`logTalentProfileView` call it whenever a request has a `userId`,
+so a signed-in user's flurry of events costs at most one `profiles` write
+per 5 minutes, not one per event.
+
+**Every `SECURITY DEFINER` function explicitly locks itself down** —
+`track_talent_profile_view()` and `touch_last_active()` both set
+`SET search_path = public` (defends against search_path hijacking) and
+`REVOKE ALL ... FROM PUBLIC, anon, authenticated; GRANT EXECUTE ... TO
+service_role`. Without this, Postgres's default "grant EXECUTE to PUBLIC on
+create" plus Supabase auto-exposing every function as a PostgREST RPC
+endpoint would let anyone holding the public anon key call these directly
+(`POST /rest/v1/rpc/track_talent_profile_view`), bypassing `/api/events`'
+validation and dedupe entirely. The browser must never be able to reach
+either function except through the edge route.
+
+**Client side:** `lib/analytics/track.ts` (`trackEvent`, fire-and-forget,
+owns the `localStorage` session id — a real UUID, since `session_id` is now
+validated as one) is called from `components/analytics/PageViewTracker.tsx`
+(mounted once in `app/(main)/layout.tsx`, wrapped in `<Suspense>` —
+`useSearchParams()` requires it; its effect body is `lib/analytics/
+page-view.ts`'s `firePageView()`, pulled out into a plain function so it's
+unit-testable without a DOM/React renderer — this repo deliberately has no
+jsdom/RTL, see `vitest.config.ts`) and `components/analytics/
+ProfileViewTracker.tsx` (mounted by all three profile shells —
+`TalentProfileShell`, `ModelProfileShell`, `UgcProfileShell` — keyed by
+`PublicProfileDTO.identity.id`, i.e. `profiles.id`, the only id a profile
+page ever exposes to the browser; relies entirely on the DB-side dedupe
+above, adds none of its own).
+
+**Meta/Facebook Ads Pixel** — `components/analytics/MetaPixel.tsx` (mounted
+in root `app/layout.tsx`) and `lib/analytics/meta-pixel.ts`
+(`trackMetaEvent`) are both no-ops when `NEXT_PUBLIC_META_PIXEL_ID` is unset
+(the default — no Pixel ID exists yet). `next.config.ts`'s CSP now allows
+`connect.facebook.net` (`script-src`) and `facebook.com`/`graph.facebook.com`
+(`connect-src`) for it. **`MetaPixel` only loads `fbq` and calls `fbq('init',
+...)`** (via the pure, unit-tested `buildMetaPixelSnippet()`) — it must
+never also call `fbq('track', 'PageView')` itself. `PageViewTracker` (via
+`firePageView()`) is the single source of every `PageView` event: once on
+initial mount, once per SPA route change. The two used to both fire it,
+double-counting every session's first page view — fixed 2026-08-23.
+Event mapping: `page_view`→`PageView`, `talent_profile_view`→`ViewContent`,
+`search`→`Search`, `signup`→`CompleteRegistration`, `login`→internal only
+(no Meta equivalent — logging back in isn't a conversion). `booking_
+brief_sent`/`job_application` are **deliberately internal-only for now** —
+both fire from server routes with no browser `fbq` to call; wiring their
+Meta conversions properly needs the server-to-server Conversions API, not a
+client-side call bolted onto a server route (see the comment in
+`lib/events/events.ts`).
+
+**New admin page** `/admin/user-activity` (sidebar entry added to
+`AdminSidebar.tsx`) — copies the `talent-demand` structure exactly
+(`page.tsx` → `*Shell.tsx` → `*Section.tsx` → `*View.tsx` + skeleton),
+backed by `fetchAdminUserActivityStats` / `fetchAdminUserActivityPage` in
+`features/admin/services/admin.service.ts`.
+
+**Tests** — `app/api/events/route.test.ts` (19), `lib/events/service.test.ts`
+(7), `lib/analytics/meta-pixel.test.ts` (7), `lib/analytics/page-view.test.ts`
+(2): allow-list/UUID/target/metadata-schema validation, client `user_id`
+never trusted, DB failure not reported as success, `touch_last_active` only
+called when a `userId` is present, `track_talent_profile_view`'s RPC call
+shape, Meta helper no-op paths, and the loader-vs-tracker PageView split.
+These prove the **app-layer orchestration** is correct; the 30-minute/
+5-minute window boundaries themselves live in SQL and have no DB-integration
+test harness in this repo (vitest runs with no live Postgres) — that
+remains a real gap if this logic changes without also being verified against
+a live Supabase project.
+
+**Known gaps, not built:** no consent/cookie-banner UI (the Cookie Policy
+page already claims "opt out via browser settings" but there's no in-app
+toggle anywhere in the repo — pre-existing, not introduced here); no rate
+limiting on `/api/events` beyond the profile-view dedupe (a request flood of
+`page_view`/`search` events isn't throttled, matching `talent-type-requests`'
+existing posture); `last_active_at` starts `NULL` and only populates going
+forward, no backfill.
+
+Per §6, this migration is **not auto-applied** — it must be pasted into the
+Supabase SQL editor by a human before any of this writes real rows (until
+then, `logEvent`/`logTalentProfileView` swallow the resulting "table/function
+not found" error and `/admin/user-activity` shows an honest empty state,
+exactly as designed — confirmed live against the dev database before this
+hardening pass).

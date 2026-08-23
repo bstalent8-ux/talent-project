@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import "./globals.css";
 import { SiteProvider } from "@/contexts/SiteContext";
 import { GuestGuard } from "@/contexts/GuestGuard";
+import MetaPixel from "@/components/analytics/MetaPixel";
 import type { Lang, Mode } from "@/contexts/SiteContext";
 
 export const metadata: Metadata = {
@@ -70,6 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: INIT_SCRIPT }} />
       </head>
       <body suppressHydrationWarning>
+        <MetaPixel />
         <SiteProvider initialLang={lang} initialMode={mode}>
           <GuestGuard>{children}</GuestGuard>
         </SiteProvider>
