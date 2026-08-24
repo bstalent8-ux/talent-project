@@ -97,7 +97,7 @@ export default function JobsClient({ jobs }: Props) {
           </span>
 
           <h1 className={styles.heroTitle}>
-            {ar ? <>اعثر على <em>فرصتك القادمة</em> من أفضل البراندات</>
+            {ar ? <>اوجد <em>فرصتك القادمة</em> من أفضل البراندات</>
                 : <>Find your <em>next opportunity</em> with top brands</>}
           </h1>
 
