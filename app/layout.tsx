@@ -20,16 +20,19 @@ export const viewport: Viewport = {
 };
 
 // Blocking script runs before React hydrates to prevent flash of wrong theme/lang.
-// Reads site_language / site_theme from localStorage; falls back to "ar" and time-based mode.
+// Reads site_language / site_theme from localStorage; falls back to English +
+// light mode until a visitor explicitly picks something else (toggleLang/
+// toggleMode in contexts/SiteContext.tsx persist that choice to both
+// localStorage and a cookie, so it sticks across the whole session and
+// future visits — this default only applies before that first choice).
 // Also mirrors both into cookies (not just localStorage) — the root layout
 // below reads those cookies on the SERVER so the very first HTML byte
-// already carries the right lang/theme, instead of always "ar"/"dark" and
+// already carries the right lang/theme, instead of always "en"/"light" and
 // flipping client-side after mount (see contexts/SiteContext.tsx).
 const INIT_SCRIPT = `(function(){try{
 
-  var l=localStorage.getItem('site_language')||'ar';
-  var m=localStorage.getItem('site_theme');
-  if(!m){var h=new Date().getHours();m=(h>=6&&h<18)?'light':'dark';}
+  var l=localStorage.getItem('site_language')||'en';
+  var m=localStorage.getItem('site_theme')||'light';
   document.documentElement.setAttribute('data-theme',m);
   document.documentElement.setAttribute('lang',l);
   document.documentElement.setAttribute('dir',l==='ar'?'rtl':'ltr');
@@ -50,19 +53,16 @@ const INIT_SCRIPT = `(function(){try{
   }
 }catch(e){}})();`;
 
-function timeBasedMode(): Mode {
-  const h = new Date().getHours();
-  return h >= 6 && h < 18 ? "light" : "dark";
-}
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Mirrors INIT_SCRIPT's own fallback logic so a first-ever visit (no
   // cookie yet) resolves the same way server and client — the cookie only
   // exists after the blocking script's first run, so this branch matters
-  // for exactly one request per new visitor.
+  // for exactly one request per new visitor. Default is English + light;
+  // an explicit "ar"/"dark" cookie (set once the visitor changes it in
+  // settings) always wins over this default.
   const cookieStore = await cookies();
-  const lang: Lang = cookieStore.get("site_language")?.value === "en" ? "en" : "ar";
-  const mode: Mode = (cookieStore.get("site_theme")?.value as Mode | undefined) ?? timeBasedMode();
+  const lang: Lang = cookieStore.get("site_language")?.value === "ar" ? "ar" : "en";
+  const mode: Mode = cookieStore.get("site_theme")?.value === "dark" ? "dark" : "light";
 
   return (
     <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} data-theme={mode} suppressHydrationWarning data-scroll-behavior="smooth">

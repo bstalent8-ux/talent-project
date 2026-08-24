@@ -491,8 +491,12 @@ All reads go through `features/admin/services/admin.service.ts` (service role), 
 - **Hand-rolled i18n and theming** instead of `next-intl`, to keep everything in one bilingual
   component file and avoid a message-catalog build step.
 - **Theme/lang flash prevention:** a blocking `<script>` in `app/layout.tsx` sets
-  `data-theme` / `lang` / `dir` on `<html>` from `localStorage` before hydration. Default mode is
-  **time-based** (light 06:00–18:00, else dark) when nothing is stored.
+  `data-theme` / `lang` / `dir` on `<html>` from `localStorage` before hydration. Default is
+  **English + light mode** when nothing is stored (changed 2026-08-24 from Arabic + time-based
+  light/dark). Once a visitor changes either from settings (`toggleLang`/`toggleMode` in
+  `contexts/SiteContext.tsx`), the choice is written to both `localStorage` and a cookie and wins
+  over this default for that visitor from then on — the default only governs a fresh, never-chosen
+  session.
 - **Manual payment confirmation** — deliberate for the current stage; no gateway integration.
 - **CSP header** is set in `next.config.ts`; `connect-src` allows `https://*.supabase.co` and
   `wss://*.supabase.co`. Adding a new third-party endpoint requires editing it.

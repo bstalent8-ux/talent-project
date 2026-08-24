@@ -32,7 +32,7 @@ interface SiteProviderProps {
   initialMode?: Mode;
 }
 
-export function SiteProvider({ children, initialLang = "ar", initialMode = "dark" }: SiteProviderProps) {
+export function SiteProvider({ children, initialLang = "en", initialMode = "light" }: SiteProviderProps) {
   const [lang, setLangState] = useState<Lang>(initialLang);
   const [mode, setModeState] = useState<Mode>(initialMode);
 

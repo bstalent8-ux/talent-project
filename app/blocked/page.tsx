@@ -9,11 +9,11 @@ import { createClient } from "@/lib/supabase/client";
 export default function BlockedPage() {
   const params = useSearchParams();
   const reason = params.get("reason");
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("site_theme");
-    setDark(stored !== "light");
+    setDark(stored === "dark");
   }, []);
 
   const BG     = dark ? "#050B12" : "#F1F5F9";
