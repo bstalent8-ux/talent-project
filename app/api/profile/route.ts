@@ -6,6 +6,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { normalizeCategoryId, setProfileCategories } from "@/features/categories/services/category.service";
 import { invalidateBrand, invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 import { ProfileError, profileService } from "@/features/profiles";
+import { hasRecentVerifiedRegisterOtp } from "@/lib/email-otp";
 
 // ─── Mass-assignment guards ──────────────────────────────────────────────────
 // This route writes through the service role (RLS bypassed), so the caller must
@@ -64,6 +65,13 @@ export async function POST(req: NextRequest) {
     } else {
       if (!ALLOWED_ROLES.includes(role)) {
         return NextResponse.json({ error: "role must be talent or brand" }, { status: 400, headers: privateNoStoreHeaders() });
+      }
+      // Defense-in-depth: the real gate is the register page only calling
+      // signUp() after the email OTP verifies. This blocks a direct
+      // /api/profile call (skipping the UI) from completing a first-time
+      // profile without a recently-verified code for this account's email.
+      if (user.email && !(await hasRecentVerifiedRegisterOtp(user.email))) {
+        return NextResponse.json({ error: "email not verified" }, { status: 403, headers: privateNoStoreHeaders() });
       }
       effectiveRole = role;
     }
