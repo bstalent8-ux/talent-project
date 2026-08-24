@@ -10,6 +10,26 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**" },
     ],
   },
+  // Folded these out of standalone page.tsx routes (each was 6-7 lines of
+  // nothing but a redirect(), or a byte-identical duplicate render of
+  // another page) so they stop counting as separate entries in Cloudflare
+  // Pages' _routes.json — that file caps at 100 rules, and this project's
+  // 147 combined page/API routes was exceeding it, silently 404ing whichever
+  // routes didn't make the cut (confirmed live: /api/events,
+  // /api/talent-type-requests, /api/auth/otp/send). next-on-pages compiles
+  // these into Cloudflare's native _redirects mechanism instead, which is
+  // edge-level and doesn't share that budget.
+  async redirects() {
+    return [
+      { source: "/talents", destination: "/explore", permanent: true },
+      { source: "/pricing", destination: "/packages", permanent: true },
+      { source: "/campaigns", destination: "/jobs", permanent: true },
+      { source: "/profile", destination: "/profile/me", permanent: true },
+      { source: "/terms", destination: "/legal/terms", permanent: true },
+      { source: "/privacy", destination: "/legal/privacy", permanent: true },
+      { source: "/cookies", destination: "/legal/cookies", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
