@@ -140,6 +140,10 @@ export default function OnboardingPage() {
   const Icon = step.icon;
 
   function finish() {
+    // One-shot signal for /profile/me to show the "complete your profile"
+    // popup on first arrival — consumed and cleared there so it never
+    // reappears on a later visit or page refresh.
+    sessionStorage.setItem("talents_just_onboarded", "1");
     router.push("/profile/me");
   }
 

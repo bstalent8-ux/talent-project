@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import ProfileCompletionCard from "@/components/profile/ProfileCompletionCard";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
+import { COMPLETION_THRESHOLDS } from "@/lib/profile-completion";
 
 /* ─── colour helpers ─── */
 const GREEN = "#00D26A";
@@ -235,6 +236,8 @@ export default function DashboardPage() {
   const [physForm,      setPhysForm]      = useState<any>({});
   const [physSaving,    setPhysSaving]    = useState(false);
   const [completion,    setCompletion]    = useState<CompletionDTO | null>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const cameFromOnboardingRef = useRef(false);
 
   /**
    * Completion is computed by the signed-in user's own provider, so a brand is
@@ -309,6 +312,26 @@ export default function DashboardPage() {
   };
 
   useEffect(() => { refreshAll(); }, []);
+
+  // One-shot "complete your profile" popup — only right after onboarding
+  // (see app/(auth)/onboarding/page.tsx's finish()), and only while the
+  // profile is still below the search-visibility threshold. Consumed
+  // immediately so a refresh or a later visit never re-shows it.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem("talents_just_onboarded")) {
+      cameFromOnboardingRef.current = true;
+      sessionStorage.removeItem("talents_just_onboarded");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!cameFromOnboardingRef.current || !completion) return;
+    cameFromOnboardingRef.current = false;
+    if (completion.score < COMPLETION_THRESHOLDS.appearInSearch) {
+      setShowWelcomeModal(true);
+    }
+  }, [completion]);
 
   const handleAvatarUpload = async (file: File) => {
     setUploading(true);
@@ -1075,6 +1098,36 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Physical Info Quick-Edit Modal ── */}
+      {showWelcomeModal && (
+        <div onClick={e => e.target === e.currentTarget && setShowWelcomeModal(false)} style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:440, width:"100%", fontFamily:"'Cairo',sans-serif", textAlign:"center" }} dir={lang === "ar" ? "rtl" : "ltr"}>
+            <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(0,210,106,0.12)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:26 }}>
+              🚀
+            </div>
+            <h3 style={{ color:TEXT, fontSize:18, fontWeight:800, margin:"0 0 10px" }}>
+              {lang === "ar" ? "كمّل بروفايلك" : "Complete your profile"}
+            </h3>
+            <p style={{ color:MUTED, fontSize:13.5, lineHeight:1.7, margin:"0 0 22px" }}>
+              {lang === "ar"
+                ? "بروفايلك مش هيظهر في نتائج البحث ولا صفحة استكشف للبراندات لحد ما تكمله."
+                : "Your profile won't show up in search or the Explore page for brands until you complete it."}
+            </p>
+            <button
+              onClick={() => { setShowWelcomeModal(false); setEdit(true); }}
+              style={{ width:"100%", padding:"12px 0", background:"#00C9B1", border:"none", borderRadius:10, color:"#fff", fontSize:14.5, fontWeight:700, cursor:"pointer", fontFamily:"'Cairo',sans-serif" }}
+            >
+              {lang === "ar" ? "كمّل دلوقتي ←" : "Complete now →"}
+            </button>
+            <button
+              onClick={() => setShowWelcomeModal(false)}
+              style={{ width:"100%", padding:"10px 0", marginTop:8, background:"transparent", border:"none", color:MUTED, fontSize:13, cursor:"pointer", fontFamily:"'Cairo',sans-serif" }}
+            >
+              {lang === "ar" ? "لاحقاً" : "Later"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {physicalModal && (
         <div onClick={e => e.target === e.currentTarget && setPhysicalModal(false)} style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
           <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:480, width:"100%", maxHeight:"90vh", overflowY:"auto", fontFamily:"'Cairo',sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
