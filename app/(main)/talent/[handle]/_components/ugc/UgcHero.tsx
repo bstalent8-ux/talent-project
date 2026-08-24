@@ -319,7 +319,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
             </motion.button>
           </ProtectedAction>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 10.5, color: "#94A3B8" }}>
-            <ShieldCheck size={12} color={EMERALD} />{ar ? "محمي بنظام الدفع الآمن" : "Protected by Secure Payment"}
+            <ShieldCheck size={12} color={EMERALD} />{ar ? "هوية موثّقة" : "Identity Verified"}
           </div>
 
           {/* No campaign-roster feature exists yet — kept visible per source, intentionally inert. */}

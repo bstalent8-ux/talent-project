@@ -221,8 +221,8 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
   const features: { icon: LucideIcon; title: string; text: string }[] = [
     { icon: ShieldCheck, title: ar ? "مواهب موثّقة" : "Verified talent",
       text: ar ? "نراجع كل ملف يدويًا لضمان الجودة والمصداقية قبل ظهوره." : "Every profile is manually reviewed for quality and authenticity." },
-    { icon: Wallet, title: ar ? "دفع آمن" : "Secure payments",
-      text: ar ? "ادفع بثقة عبر النظام، ولا يتم التحويل إلا بعد الاتفاق." : "Pay with confidence through the platform, released on agreement." },
+    { icon: Wallet, title: ar ? "دفع مباشر" : "Direct payments",
+      text: ar ? "تدفع بعد الاتفاق مباشرة مع تأكيد يدوي لكل عملية." : "Pay the talent directly, with manual confirmation on every booking." },
     { icon: MessagesSquare, title: ar ? "تواصل مباشر" : "Direct chat",
       text: ar ? "ناقش التفاصيل وأرسل البريف وتابع التسليم في مكان واحد." : "Discuss details, send briefs and track delivery in one place." },
     { icon: Star, title: ar ? "تقييمات حقيقية" : "Real reviews",

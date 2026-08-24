@@ -5,9 +5,14 @@ import { useSite } from "@/contexts/SiteContext";
 export default function TrustCard() {
   const { dark, lang } = useSite();
   const ar = lang === "ar";
+  // Previously claimed "100% Secure Payments" / "Escrow protection" / "Fast
+  // dispute resolution" — none of that exists (CLAUDE.md §10.1: no escrow,
+  // no payment provider, manual confirmation only; no dispute system either).
+  // Replaced with claims the platform actually backs: talent verification,
+  // moderated reviews, and pre-booking chat are all real, shipped features.
   const features = ar
-    ? ["مدفوعات آمنة 100%", "حماية الضمان المالي (Escrow)", "مراجعة يدوية لكل طلب", "حل سريع للنزاعات"]
-    : ["100% Secure Payments", "Financial Guarantee (Escrow)", "Manual Review for Every Order", "Fast Dispute Resolution"];
+    ? ["توثيق هوية المواهب", "تقييمات حقيقية من براندات", "مراجعة إدارية لكل تقييم", "تواصل مباشر قبل الحجز"]
+    : ["Talent Identity Verification", "Real Reviews from Real Brands", "Admin-Moderated Reviews", "Direct Chat Before You Book"];
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const GREEN = "#00D26A";

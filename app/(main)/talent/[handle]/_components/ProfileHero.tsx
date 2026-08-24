@@ -33,10 +33,10 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
     bookNow: ar ? "احجز الآن" : "Book Now",
     favorite: ar ? "المفضلة" : "Favorite",
     share: ar ? "مشاركة" : "Share",
-    escrowTitle: ar ? "نظام الدفع الآمن (Escrow)" : "Secure Payment System (Escrow)",
+    escrowTitle: ar ? "خطوات الحجز" : "Booking Steps",
     escrowSteps: ar
-      ? ["الدفع محجوز", "تسليم العمل", "الموافقة", "الإفراج عن الأموال"]
-      : ["Payment Held", "Work Delivery", "Approval", "Fund Release"],
+      ? ["إرسال البريف", "قبول الموهبة", "تأكيد الدفع", "تسليم العمل"]
+      : ["Brief Sent", "Talent Accepts", "Payment Confirmed", "Work Delivered"],
     favorited: ar ? "في المفضلة" : "Favorited",
     favoriteError: ar ? "تعذر تحديث المفضلة" : "Couldn't update favorites",
   };

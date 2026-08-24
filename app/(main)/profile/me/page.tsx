@@ -103,8 +103,8 @@ const TX = {
     bookNow:        "احجز الآن",
     favorite:       "المفضلة",
     share:          "مشاركة",
-    escrowTitle:    "نظام الدفع الآمن (Escrow)",
-    escrowSteps:    ["الدفع محجوز","تسليم العمل","الموافقة","الإفراج عن الأموال"],
+    escrowTitle:    "خطوات الحجز",
+    escrowSteps:    ["إرسال البريف","قبول الموهبة","تأكيد الدفع","تسليم العمل"],
     viewPublic:     "عرض الملف العام",
     previewPublic:  "معاينة الملف العام",
     brands:         "العلامات التجارية المتعاونة",
@@ -173,8 +173,8 @@ const TX = {
     bookNow:        "Book Now",
     favorite:       "Favorite",
     share:          "Share",
-    escrowTitle:    "Secure Payment System (Escrow)",
-    escrowSteps:    ["Payment Held","Work Delivery","Approval","Fund Release"],
+    escrowTitle:    "Booking Steps",
+    escrowSteps:    ["Brief Sent","Talent Accepts","Payment Confirmed","Work Delivered"],
     viewPublic:     "View Public Profile",
     previewPublic:  "Preview Public Profile",
     brands:         "Collaborated Brands",
@@ -1058,8 +1058,8 @@ export default function DashboardPage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {(lang === "ar"
-                  ? ["مدفوعات آمنة 100%","حماية الضمان المالي (Escrow)","مراجعة يدوية لكل طلب","حل سريع للنزاعات"]
-                  : ["100% Secure Payments","Financial Guarantee (Escrow)","Manual Review for Every Order","Fast Dispute Resolution"]
+                  ? ["توثيق هوية المواهب","تقييمات حقيقية من براندات","مراجعة إدارية لكل تقييم","تواصل مباشر قبل الحجز"]
+                  : ["Talent Identity Verification","Real Reviews from Real Brands","Admin-Moderated Reviews","Direct Chat Before You Book"]
                 ).map((f, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: "rgba(0,210,106,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>

@@ -31,8 +31,8 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
   const MUTED = dark ? "#A8B3C2" : "#64748B";
 
   const bullets = ar
-    ? ["دفع إلكتروني آمن 100%", "مراجعة يدوية لكل طلب", "حل سريع للنزاعات خلال 24 ساعة"]
-    : ["100% Secure Payments", "Manual Review for Every Order", "Fast Dispute Resolution"];
+    ? ["توثيق هوية المواهب", "مراجعة إدارية لكل طلب", "تواصل مباشر قبل الحجز"]
+    : ["Talent Identity Verification", "Admin-Moderated Bookings", "Direct Chat Before You Book"];
 
   function askQuestion() {
     window.dispatchEvent(new CustomEvent("open-chat-widget", {

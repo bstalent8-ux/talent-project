@@ -68,7 +68,7 @@ const TX = {
     benefits: [
       { icon: "🌟", title: "Real Brands", body: "Connect with trusted companies and brands actively looking for talents like you." },
       { icon: "💸", title: "Fair Pricing", body: "You set your rates. No middlemen, no hidden fees." },
-      { icon: "🔒", title: "Secure Payments", body: "Escrow system guarantees you get paid for every project." },
+      { icon: "🔒", title: "Direct Payments", body: "Get paid directly by brands once your work is approved — no middlemen." },
       { icon: "📈", title: "Continuous Growth", body: "Build your reputation through reviews and grow your client base." },
       { icon: "🌍", title: "Unlimited Opportunities", body: "Access brands from Saudi Arabia, UAE, Egypt, and the Arab world." },
       { icon: "🤝", title: "Supportive Community", body: "Join a community of Arab creative professionals." },
