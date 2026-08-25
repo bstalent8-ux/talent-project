@@ -150,6 +150,8 @@ export default function Footer() {
                 ))}
               </div>
             </div>
+
+            <SupportTicketModal page="footer" />
           </div>
 
           <LinkColumn title={t.sections.platform} links={PLATFORM_LINKS(t.links)} />
@@ -168,7 +170,6 @@ export default function Footer() {
                 {label}
               </Link>
             ))}
-            <SupportTicketModal page="footer" />
           </div>
         </div>
       </div>
