@@ -159,7 +159,11 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
               </thead>
               <tbody>
                 {talents.map(talent => (
-                  <tr key={talent.talentProfileId}>
+                  <tr
+                    key={talent.talentProfileId}
+                    onClick={() => router.push(`/admin/talents/${talent.talentProfileId}`)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td style={cellStyle}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{
@@ -192,7 +196,7 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
                     <td style={cellStyle}>
                       <StatusBadge status={talent.status} lang={lang} />
                     </td>
-                    <td style={cellStyle}>
+                    <td style={cellStyle} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: "flex", gap: 4 }}>
                         <Link href={`/admin/talents/${talent.talentProfileId}`} style={{ color: MUTED, display: "flex" }}>
                           {actionBtn(() => {}, <Pencil size={16} />, ar ? "تعديل" : "Edit", "#60A5FA")}
