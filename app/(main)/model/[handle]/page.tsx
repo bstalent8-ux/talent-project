@@ -27,7 +27,9 @@ export default async function ModelTalentPage({
 
   return (
     <>
-      {loaded.isOwnerPreview && <PendingPreviewBanner status={loaded.moderationStatus} />}
+      {(loaded.isOwnerPreview || loaded.isAdminPreview) && (
+        <PendingPreviewBanner status={loaded.moderationStatus} audience={loaded.isAdminPreview ? "admin" : "owner"} />
+      )}
       <ModelProfileShell profile={loaded.profile} />
     </>
   );

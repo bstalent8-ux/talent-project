@@ -12,13 +12,19 @@ import type { ModerationStatus } from "@/features/profiles/types/raw";
 export default function PendingPreviewBanner({
   status,
   rejectionReason,
+  audience = "owner",
 }: {
   status: ModerationStatus | null;
   rejectionReason?: string | null;
+  /** "admin" when this is an admin reviewing someone else's listing before
+   * approving it — the copy switches out of second person ("your profile")
+   * since it isn't the viewer's own. */
+  audience?: "owner" | "admin";
 }) {
   const { dark, lang } = useSite();
   const ar = lang === "ar";
   const isRejected = status === "rejected";
+  const isAdmin = audience === "admin";
 
   const BG     = isRejected ? "rgba(239,68,68,0.12)" : "rgba(244,183,64,0.12)";
   const BORDER = isRejected ? "rgba(239,68,68,0.35)" : "rgba(244,183,64,0.35)";
@@ -27,7 +33,15 @@ export default function PendingPreviewBanner({
   // Exact spec copy for "pending" — status text carries its own "Preview —"
   // prefix already, so the rejected variant (not in the original spec) uses
   // an equivalent prefix rather than inventing a different banner shape.
-  const message = isRejected
+  const message = isAdmin
+    ? (isRejected
+        ? (rejectionReason
+            ? (ar ? `معاينة أدمن — هذا الملف مرفوض. السبب: ${rejectionReason}` : `Admin preview — This listing was rejected. Reason: ${rejectionReason}`)
+            : (ar ? "معاينة أدمن — هذا الملف مرفوض." : "Admin preview — This listing was rejected."))
+        : (ar
+            ? "معاينة أدمن — هذا الملف قيد المراجعة وغير ظاهر للعامة."
+            : "Admin preview — This listing is pending review and is not visible publicly."))
+    : isRejected
     ? (rejectionReason
         ? (ar ? `معاينة — لم تتم الموافقة على ملفك. السبب: ${rejectionReason}` : `Preview — Your profile was not approved. Reason: ${rejectionReason}`)
         : (ar ? "معاينة — لم تتم الموافقة على ملفك الشخصي." : "Preview — Your profile was not approved."))

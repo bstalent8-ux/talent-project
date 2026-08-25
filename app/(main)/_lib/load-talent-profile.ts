@@ -18,6 +18,9 @@ export interface LoadedTalentProfile {
   /** True when this is the signed-in owner's own read-only preview of a
    * not-yet-approved listing — never a real public view. */
   isOwnerPreview: boolean;
+  /** True when an admin is previewing someone else's not-yet-approved
+   * listing (e.g. from /admin/talents' View icon) before approving it. */
+  isAdminPreview: boolean;
   moderationStatus: ModerationStatus | null;
 }
 
@@ -50,8 +53,37 @@ async function getOwnerPreviewIfMatches(
   }
 }
 
+/**
+ * The public gate hid this handle. Check whether the current signed-in
+ * visitor is an admin — if so, they get the same read-only preview an owner
+ * gets of their own not-yet-approved listing, so the admin can review a
+ * profile before deciding to approve it. Never runs for anyone whose role
+ * isn't "admin" in `profiles` (RLS only allows reading one's own row here,
+ * so this can't be used to probe another visitor's role).
+ */
+async function getAdminPreviewIfAllowed(
+  handle: string,
+): Promise<{ profile: PublicProfileDTO; moderationStatus: ModerationStatus | null } | null> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data: viewer } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (viewer?.role !== "admin") return null;
+
+    const { profile, moderationStatus } = await profileService.getAdminPreviewProfileByHandle(handle);
+    if (profile.meta.typeSlug !== "talent") return null;
+
+    return { profile, moderationStatus };
+  } catch {
+    return null;
+  }
+}
+
 /** Fetches the public profile for `handle`, falling back to the owner's own
- * pending-listing preview. Returns null when neither applies (real 404). */
+ * pending-listing preview, then an admin's review preview. Returns null when
+ * none apply (real 404). */
 export async function loadTalentProfile(handle: string): Promise<LoadedTalentProfile | null> {
   const profile = await cachedPublic<PublicProfileDTO | null>(
     ["talent-detail", handle],
@@ -75,11 +107,18 @@ export async function loadTalentProfile(handle: string): Promise<LoadedTalentPro
   if (profile) {
     // A brand handle must not render through any talent shell.
     if (profile.meta.typeSlug !== "talent") return null;
-    return { profile, isOwnerPreview: false, moderationStatus: null };
+    return { profile, isOwnerPreview: false, isAdminPreview: false, moderationStatus: null };
   }
 
   const owner = await getOwnerPreviewIfMatches(handle);
-  if (owner) return { profile: owner.profile, isOwnerPreview: true, moderationStatus: owner.moderationStatus };
+  if (owner) {
+    return { profile: owner.profile, isOwnerPreview: true, isAdminPreview: false, moderationStatus: owner.moderationStatus };
+  }
+
+  const adminPreview = await getAdminPreviewIfAllowed(handle);
+  if (adminPreview) {
+    return { profile: adminPreview.profile, isOwnerPreview: false, isAdminPreview: true, moderationStatus: adminPreview.moderationStatus };
+  }
 
   return null;
 }

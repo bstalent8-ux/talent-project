@@ -355,6 +355,46 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
       return { profile: dto, moderationStatus };
     },
 
+    /**
+     * Same read-only preview as getOwnerPreviewProfile, keyed by HANDLE
+     * instead of the signed-in user's own id — for an admin reviewing a
+     * listing that hasn't cleared the approval gate yet, before deciding to
+     * approve it. Caller MUST have already verified the requester is an
+     * admin; this function does no authorization of its own.
+     */
+    async getAdminPreviewProfileByHandle(handle: string): Promise<{
+      profile:          PublicProfileDTO;
+      moderationStatus: ModerationStatus | null;
+    }> {
+      const ctx = await resolveContext(await deps.profiles.findIdentityByHandle(handle));
+      const { profile } = ctx.identity;
+
+      if (!isPublicallyVisible(profile)) throw ProfileError.notFound({ profileId: profile.id });
+
+      const [core, sections, layout, rawCore] = await Promise.all([
+        ctx.provider.getPublicProfile({ shared: profile, bypassApprovalGate: true }),
+        deps.dynamic.getSectionsForProfile(profile.id, ctx.typeSlug, "public"),
+        deps.dynamic.getLayout(ctx.typeSlug),
+        ctx.provider.loadCore(profile.id),
+      ]);
+
+      if (!core) throw ProfileError.notFound({ profileId: profile.id, reason: "core row missing" });
+
+      const dto: PublicProfileDTO = {
+        identity:   toIdentityDTO(profile, ctx.typeSlug, true),
+        meta:       toMetaDTO(ctx.provider.meta),
+        core:       core as AnyPublicCore,
+        sections:   mergeSections(sections),
+        layout,
+        isBookable: ctx.provider.meta.bookable,
+      };
+      dto.sections = dto.sections.filter((section) => ctx.provider.hasContent(section, dto));
+
+      const moderationStatus = (rawCore as { status?: ModerationStatus | null } | null)?.status ?? null;
+
+      return { profile: dto, moderationStatus };
+    },
+
     /** Caller MUST have already verified that userId is the signed-in user. */
     async getOwnProfile(userId: string): Promise<PrivateProfileDTO> {
       const ctx = await resolveContext(await deps.profiles.findIdentityByUserId(userId));
