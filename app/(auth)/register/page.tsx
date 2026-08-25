@@ -133,9 +133,6 @@ const TX = {
     brand2:          "منصة المواهب",
     brandHighlight:  "العربية",
     brandDesc:       "موديلز، UGC Creators، وإنفلونسرز — كلهم في مكان واحد. براندات موثقة. تعاون حقيقي.",
-    stat1: "متوسط التقييم",
-    stat2: "براند",
-    stat3: "موهبة",
   },
   en: {
     eyebrow:         "JOIN NOW //",
@@ -205,20 +202,10 @@ const TX = {
     brand2:          "Arab Talent",
     brandHighlight:  "Platform",
     brandDesc:       "Models, UGC Creators, and Influencers — all in one place. Verified brands. Real collaboration.",
-    stat1: "Avg Rating",
-    stat2: "Brands",
-    stat3: "Talents",
   },
 };
 
 type Tx = typeof TX["en"];
-
-// Accent classes come from the design tokens, not literal hex values.
-const floatingTalents = [
-  { name: "سارة أحمد", sub: "Fashion · 8.4k", accent: styles.accentTeal },
-  { name: "عمر خالد",  sub: "UGC · 12k",      accent: styles.accentGold },
-  { name: "مي حسين",   sub: "Model · 5.2k",   accent: styles.accentPurple },
-];
 
 const STRENGTH_CLASS = [
   "",
@@ -929,37 +916,12 @@ export default function RegisterPage() {
           />
         </div>
 
-        <div className={styles.floatingStack}>
-          {floatingTalents.map((tl) => (
-            <div key={tl.name} className={styles.floatingCard}>
-              <div className={`${styles.floatingAvatar} ${tl.accent}`}>{tl.name[0]}</div>
-              <div>
-                <p className={styles.floatingName}>{tl.name}</p>
-                <p className={styles.floatingSub}>{tl.sub}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
         <div className={styles.brandBottom}>
           <h2 className={styles.brandHeadline}>
             {tx.brand2}<br />
             <span className={styles.brandHighlight}>{tx.brandHighlight}</span>
           </h2>
           <p className={styles.brandDesc}>{tx.brandDesc}</p>
-
-          <div className={styles.statRow}>
-            {[
-              { val: "4.9",  label: tx.stat1 },
-              { val: "83",   label: tx.stat2 },
-              { val: "+247", label: tx.stat3 },
-            ].map((s) => (
-              <div key={s.label}>
-                <p className={styles.statValue}>{s.val}</p>
-                <p className={styles.statLabel}>{s.label}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
