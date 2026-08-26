@@ -6,10 +6,10 @@ import { logEvent, logTalentProfileView } from "@/lib/events/service";
 import { privateNoStoreHeaders } from "@/lib/cache";
 
 // Client-originated events only — page_view, talent_profile_view, search,
-// signup, login. booking_brief_sent / job_application are logged directly
-// from their own routes (see lib/events/events.ts), which already have
-// richer server-side context than a client POST could carry.
-const CLIENT_EVENTS = ["page_view", "talent_profile_view", "search", "signup", "login"] as const;
+// signup, login, page_engagement. booking_brief_sent / job_application are
+// logged directly from their own routes (see lib/events/events.ts), which
+// already have richer server-side context than a client POST could carry.
+const CLIENT_EVENTS = ["page_view", "talent_profile_view", "search", "signup", "login", "page_engagement", "click"] as const;
 type ClientEvent = typeof CLIENT_EVENTS[number];
 
 const TARGET_TYPES = ["talent_profile", "job", "booking"] as const;
@@ -25,6 +25,8 @@ const TARGET_RULES: Record<ClientEvent, { type: TargetType } | null> = {
   search:                null,
   signup:                null,
   login:                 null,
+  page_engagement:       null,
+  click:                 null,
   talent_profile_view:   { type: "talent_profile" },
 };
 
@@ -113,6 +115,65 @@ const METADATA_VALIDATORS: Record<ClientEvent, (raw: unknown) => Record<string, 
     if (raw.role !== undefined) {
       if (raw.role !== "talent" && raw.role !== "brand" && raw.role !== "admin") return null;
       out.role = raw.role;
+    }
+    return out;
+  },
+  // duration_ms: time the page stayed the visible tab. render_ms: a cheap
+  // double-rAF estimate of mount-to-painted, not a Core Web Vitals metric —
+  // null when the page was hidden before that frame ever ran. Caps are
+  // sanity bounds against a tampered/garbage client value, not real limits.
+  page_engagement: (raw) => {
+    if (raw === undefined) return {};
+    if (!isPlainRecord(raw)) return null;
+    for (const key of Object.keys(raw)) {
+      if (key !== "path" && key !== "duration_ms" && key !== "render_ms" && key !== "scrolled") return null;
+    }
+    const out: Record<string, unknown> = {};
+    if (raw.path !== undefined) {
+      const path = str(raw.path, 300);
+      if (path === null) return null;
+      out.path = path;
+    }
+    if (raw.duration_ms !== undefined) {
+      const n = raw.duration_ms;
+      if (typeof n !== "number" || !Number.isInteger(n) || n < 0 || n > 86_400_000) return null;
+      out.duration_ms = n;
+    }
+    if (raw.render_ms !== undefined) {
+      const n = raw.render_ms;
+      if (n !== null && (typeof n !== "number" || !Number.isInteger(n) || n < 0 || n > 60_000)) return null;
+      out.render_ms = n;
+    }
+    if (raw.scrolled !== undefined) {
+      if (typeof raw.scrolled !== "boolean") return null;
+      out.scrolled = raw.scrolled;
+    }
+    return out;
+  },
+  // label: best-effort description of what was clicked (see
+  // lib/analytics/click-tracking.ts). href: the link destination, only
+  // present when the clicked element was an <a>.
+  click: (raw) => {
+    if (raw === undefined) return {};
+    if (!isPlainRecord(raw)) return null;
+    for (const key of Object.keys(raw)) {
+      if (key !== "path" && key !== "label" && key !== "href") return null;
+    }
+    const out: Record<string, unknown> = {};
+    if (raw.path !== undefined) {
+      const path = str(raw.path, 300);
+      if (path === null) return null;
+      out.path = path;
+    }
+    if (raw.label !== undefined) {
+      const label = str(raw.label, 150);
+      if (label === null) return null;
+      out.label = label;
+    }
+    if (raw.href !== undefined) {
+      const href = str(raw.href, 300);
+      if (href === null) return null;
+      out.href = href;
     }
     return out;
   },

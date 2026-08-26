@@ -1,5 +1,6 @@
 import { adminClient } from "@/lib/supabase/admin";
 import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminReview } from "../types";
+import { clusterPageVisits, totalDurationByPage, type PageTotal } from "./page-duration-clustering";
 
 export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   // { count: "exact", head: true } returns just the row count — no rows are
@@ -708,6 +709,7 @@ export async function fetchAdminTalentTypeRequestsPage({
 export const USER_EVENT_NAMES = [
   "page_view", "talent_profile_view", "search",
   "booking_brief_sent", "job_application", "signup", "login",
+  "page_engagement", "click",
 ] as const;
 export type UserEventName = typeof USER_EVENT_NAMES[number];
 
@@ -815,4 +817,154 @@ export async function fetchAdminUserActivityPage({
   }));
 
   return { events, total: count ?? events.length };
+}
+
+// ─── Per-visitor rollup ─────────────────────────────────────────────────────
+// "Visitor" = one real identity: a signed-in user is grouped by user_id
+// (the same person logging in from two different devices/sessions is one
+// row, not two) — a guest with no account is grouped by session_id, the
+// only thing tying their events together. That distinction matters
+// specifically because session_id is shared browser-wide (localStorage):
+// two different logged-in people testing on the same machine must NOT be
+// merged into one row just because they happened to share that token.
+
+export interface AdminVisitor {
+  /** user_id for a signed-in visitor, "guest:<session_id>" for a guest —
+   * pass straight through as the [key] route param. */
+  key:        string;
+  userId:     string | null;
+  sessionId:  string;
+  handle:     string | null;
+  fullName:   string | null;
+  firstSeen:  string;
+  lastSeen:   string;
+  eventCount: number;
+}
+
+// No per-visitor rollup table exists — this groups the most recent N raw
+// events in JS, the same "resolve in JS, not a DB join" posture as the rest
+// of this file (CLAUDE.md §11). Fine at today's volume; a real rollup table
+// (or a materialized view) is the fix once a full scan of this many rows
+// stops being cheap.
+const VISITOR_SCAN_LIMIT = 3000;
+
+export async function fetchAdminUserActivityVisitors(range: AdminUserActivityDateRange = {}): Promise<AdminVisitor[]> {
+  let query = adminClient
+    .from("user_events")
+    .select("user_id, session_id, created_at")
+    .order("created_at", { ascending: false })
+    .limit(VISITOR_SCAN_LIMIT);
+  query = applyUserActivityDateRange(query, range);
+
+  const { data: rows, error } = await query;
+  if (error || !rows?.length) return [];
+
+  const byKey = new Map<string, { userId: string | null; sessionId: string; first: string; last: string; count: number }>();
+  for (const r of rows) {
+    const key = r.user_id ?? `guest:${r.session_id}`;
+    const existing = byKey.get(key);
+    if (existing) {
+      existing.count += 1;
+      if (r.created_at < existing.first) existing.first = r.created_at;
+      if (r.created_at > existing.last) existing.last = r.created_at;
+    } else {
+      byKey.set(key, { userId: r.user_id, sessionId: r.session_id, first: r.created_at, last: r.created_at, count: 1 });
+    }
+  }
+
+  const userIds = [...new Set([...byKey.values()].map((v) => v.userId).filter((id): id is string => Boolean(id)))];
+  const { data: profiles } = userIds.length
+    ? await adminClient.from("profiles").select("id, handle, full_name").in("id", userIds)
+    : { data: [] };
+  const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
+
+  return [...byKey.entries()]
+    .map(([key, v]) => ({
+      key,
+      userId:     v.userId,
+      sessionId:  v.sessionId,
+      handle:     v.userId ? profileMap[v.userId]?.handle ?? null : null,
+      fullName:   v.userId ? profileMap[v.userId]?.full_name ?? null : null,
+      firstSeen:  v.first,
+      lastSeen:   v.last,
+      eventCount: v.count,
+    }))
+    .sort((a, b) => b.lastSeen.localeCompare(a.lastSeen));
+}
+
+// ─── Single-visitor detail ──────────────────────────────────────────────────
+
+export interface AdminVisitorDetail {
+  key:        string;
+  userId:     string | null;
+  sessionId:  string;
+  handle:     string | null;
+  fullName:   string | null;
+  events:     AdminUserEvent[];
+  /** Total time spent per page, reconstructed from page_engagement
+   * heartbeats — see features/admin/services/page-duration-clustering.ts. */
+  pageTotals: PageTotal[];
+}
+
+const VISITOR_DETAIL_LIMIT = 500;
+
+export async function fetchAdminVisitorDetail(key: string): Promise<AdminVisitorDetail | null> {
+  const isGuest  = key.startsWith("guest:");
+  const userId   = isGuest ? null : key;
+  const sessionId = isGuest ? key.slice("guest:".length) : null;
+
+  let query = adminClient
+    .from("user_events")
+    .select("id, user_id, session_id, event_name, target_type, target_id, metadata, created_at")
+    .order("created_at", { ascending: false })
+    .limit(VISITOR_DETAIL_LIMIT);
+  // A guest's session_id is looked up on its own (not also filtered to
+  // user_id IS NULL) — if that same browser session later signs in, this
+  // still shows the full journey under the one token that ties it together.
+  query = userId ? query.eq("user_id", userId) : query.eq("session_id", sessionId as string);
+
+  const { data: rows, error } = await query;
+  if (error || !rows?.length) return null;
+
+  let handle: string | null = null;
+  let fullName: string | null = null;
+  if (userId) {
+    const { data: profile } = await adminClient.from("profiles").select("handle, full_name").eq("id", userId).maybeSingle();
+    handle = profile?.handle ?? null;
+    fullName = profile?.full_name ?? null;
+  }
+
+  const events: AdminUserEvent[] = rows.map((r) => ({
+    id:         r.id,
+    userId:     r.user_id,
+    handle,
+    fullName,
+    eventName:  r.event_name as UserEventName,
+    targetType: r.target_type,
+    targetId:   r.target_id,
+    metadata:   (r.metadata ?? {}) as Record<string, unknown>,
+    createdAt:  r.created_at,
+  }));
+
+  const engagementSamples = rows
+    .filter((r) => r.event_name === "page_engagement")
+    .map((r) => {
+      const m = (r.metadata ?? {}) as Record<string, unknown>;
+      return {
+        path:        typeof m.path === "string" ? m.path : "?",
+        duration_ms: typeof m.duration_ms === "number" ? m.duration_ms : 0,
+        created_at:  r.created_at,
+      };
+    });
+  const pageTotals = totalDurationByPage(clusterPageVisits(engagementSamples));
+
+  return {
+    key,
+    userId,
+    sessionId: sessionId ?? rows[0].session_id,
+    handle,
+    fullName,
+    events,
+    pageTotals,
+  };
 }

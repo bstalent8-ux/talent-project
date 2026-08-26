@@ -14,7 +14,9 @@ export type EventName =
   | "booking_brief_sent"
   | "job_application"
   | "signup"
-  | "login";
+  | "login"
+  | "page_engagement"
+  | "click";
 
 /**
  * profiles.last_active_at is throttled at the DB layer (touch_last_active(),

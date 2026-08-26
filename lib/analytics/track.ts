@@ -21,12 +21,17 @@ export function getSessionId(): string {
   }
 }
 
-export type ClientEventName = "page_view" | "talent_profile_view" | "search" | "signup" | "login";
+export type ClientEventName = "page_view" | "talent_profile_view" | "search" | "signup" | "login" | "page_engagement" | "click";
 
 export interface TrackEventOptions {
   targetType?: string;
   targetId?:   string;
   metadata?:   Record<string, unknown>;
+  /** Lets the request survive the page unloading/navigating away right
+   * after the call — exactly the case page_engagement fires in (tab
+   * hidden, pagehide). A plain fetch can be aborted mid-flight there;
+   * keepalive is the standard fetch option for this exact situation. */
+  keepalive?:  boolean;
 }
 
 /** Fire-and-forget — a dropped analytics call must never surface to the user. */
@@ -37,6 +42,7 @@ export function trackEvent(eventName: ClientEventName, options: TrackEventOption
     method:      "POST",
     headers:     { "Content-Type": "application/json" },
     credentials: "include",
+    keepalive:   options.keepalive,
     body: JSON.stringify({
       event_name:  eventName,
       session_id:  getSessionId(),

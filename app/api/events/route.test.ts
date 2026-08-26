@@ -164,6 +164,106 @@ describe("POST /api/events — metadata schema", () => {
   });
 });
 
+describe("POST /api/events — page_engagement metadata", () => {
+  it("accepts a full valid payload", async () => {
+    const res = await POST(req({
+      event_name: "page_engagement", session_id: VALID_SESSION,
+      metadata: { path: "/explore", duration_ms: 12_345, render_ms: 48, scrolled: true },
+    }));
+    expect(res.status).toBe(200);
+    expect(logEvent).toHaveBeenCalledWith(expect.objectContaining({
+      eventName: "page_engagement",
+      metadata: { path: "/explore", duration_ms: 12_345, render_ms: 48, scrolled: true },
+    }));
+  });
+
+  it("accepts a null render_ms (page hidden before paint measured)", async () => {
+    const res = await POST(req({
+      event_name: "page_engagement", session_id: VALID_SESSION,
+      metadata: { duration_ms: 500, render_ms: null, scrolled: false },
+    }));
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects a negative duration_ms", async () => {
+    const res = await POST(req({
+      event_name: "page_engagement", session_id: VALID_SESSION,
+      metadata: { duration_ms: -1 },
+    }));
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an out-of-range duration_ms", async () => {
+    const res = await POST(req({
+      event_name: "page_engagement", session_id: VALID_SESSION,
+      metadata: { duration_ms: 999_999_999 },
+    }));
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects a non-boolean scrolled", async () => {
+    const res = await POST(req({
+      event_name: "page_engagement", session_id: VALID_SESSION,
+      metadata: { scrolled: "yes" },
+    }));
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an unknown metadata key", async () => {
+    const res = await POST(req({
+      event_name: "page_engagement", session_id: VALID_SESSION,
+      metadata: { duration_ms: 100, extra: "nope" },
+    }));
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects a target on page_engagement (does not accept one)", async () => {
+    const res = await POST(req({
+      event_name: "page_engagement", session_id: VALID_SESSION,
+      target_type: "job", target_id: VALID_TARGET,
+    }));
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("POST /api/events — click metadata", () => {
+  it("accepts a full valid payload", async () => {
+    const res = await POST(req({
+      event_name: "click", session_id: VALID_SESSION,
+      metadata: { path: "/explore", label: "Book Now", href: "/talent/sara" },
+    }));
+    expect(res.status).toBe(200);
+    expect(logEvent).toHaveBeenCalledWith(expect.objectContaining({
+      eventName: "click",
+      metadata: { path: "/explore", label: "Book Now", href: "/talent/sara" },
+    }));
+  });
+
+  it("accepts a click with no href (a button, not a link)", async () => {
+    const res = await POST(req({
+      event_name: "click", session_id: VALID_SESSION,
+      metadata: { path: "/explore", label: "Send Brief" },
+    }));
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects an unknown metadata key", async () => {
+    const res = await POST(req({
+      event_name: "click", session_id: VALID_SESSION,
+      metadata: { label: "x", selector: "#foo" },
+    }));
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an oversized label", async () => {
+    const res = await POST(req({
+      event_name: "click", session_id: VALID_SESSION,
+      metadata: { label: "a".repeat(200) },
+    }));
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("POST /api/events — identity", () => {
   it("ignores a client-supplied user_id entirely (never trusted)", async () => {
     state.user = null;

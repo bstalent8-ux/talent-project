@@ -1,0 +1,144 @@
+"use client";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { useSite } from "@/contexts/SiteContext";
+import AdminShell from "@/components/admin/AdminShell";
+import EmptyState from "@/components/admin/EmptyState";
+import type { AdminVisitorDetail } from "@/features/admin/services/admin.service";
+import { EVENT_LABEL, EVENT_COLOR, detailFor } from "../../_lib/eventFormat";
+
+const TX = {
+  ar: {
+    back: "رجوع لكل الزوار",
+    guest: "زائر",
+    firstSeen: "أول ظهور", lastSeen: "آخر نشاط", totalEvents: "إجمالي الأحداث",
+    timePerPage: "الوقت في كل صفحة",
+    page: "الصفحة", totalTime: "إجمالي الوقت", visits: "زيارات",
+    noPageTime: "لا توجد بيانات وقت بعد",
+    allActivity: "كل النشاط",
+    event: "الحدث", detail: "التفاصيل", date: "التاريخ",
+    limitNote: (n: number) => `آخر ${n} حدث`,
+  },
+  en: {
+    back: "Back to all visitors",
+    guest: "Guest",
+    firstSeen: "First seen", lastSeen: "Last active", totalEvents: "Total events",
+    timePerPage: "Time per page",
+    page: "Page", totalTime: "Total time", visits: "Visits",
+    noPageTime: "No time data yet",
+    allActivity: "All activity",
+    event: "Event", detail: "Detail", date: "Date",
+    limitNote: (n: number) => `Last ${n} events`,
+  },
+};
+
+function formatMs(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  const totalSec = Math.round(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return min > 0 ? `${min}m ${sec}s` : `${sec}s`;
+}
+
+export default function VisitorDetailView({ visitor }: { visitor: AdminVisitorDetail }) {
+  const { dark, lang } = useSite();
+  const t = TX[lang];
+
+  const CARD   = dark ? "#0D1623" : "#FFFFFF";
+  const BORDER = dark ? "#1e293b" : "#E2E8F0";
+  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
+  const MUTED  = dark ? "#94a3b8" : "#64748b";
+  const TH     = dark ? "#0a121c" : "#f8fafc";
+
+  const name = visitor.handle ?? visitor.fullName
+    ?? (visitor.userId ? visitor.userId.slice(0, 8) : `${t.guest} · ${visitor.sessionId.slice(0, 8)}`);
+
+  const times = visitor.events.map((e) => new Date(e.createdAt).getTime());
+  const firstSeen = times.length ? new Date(Math.min(...times)) : null;
+  const lastSeen  = times.length ? new Date(Math.max(...times)) : null;
+  const locale = lang === "ar" ? "ar-EG" : "en-GB";
+
+  return (
+    <AdminShell title={name}>
+      <Link
+        href="/admin/user-activity"
+        style={{ display: "flex", alignItems: "center", gap: 6, color: MUTED, textDecoration: "none", fontSize: 14, marginBottom: 20 }}
+      >
+        <ArrowLeft size={16} />{t.back}
+      </Link>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>
+          <p style={{ margin: 0, fontSize: 12, color: MUTED }}>{t.firstSeen}</p>
+          <p style={{ margin: "6px 0 0", fontSize: 15, fontWeight: 700, color: TEXT }}>{firstSeen ? firstSeen.toLocaleString(locale) : "—"}</p>
+        </div>
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>
+          <p style={{ margin: 0, fontSize: 12, color: MUTED }}>{t.lastSeen}</p>
+          <p style={{ margin: "6px 0 0", fontSize: 15, fontWeight: 700, color: TEXT }}>{lastSeen ? lastSeen.toLocaleString(locale) : "—"}</p>
+        </div>
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>
+          <p style={{ margin: 0, fontSize: 12, color: MUTED }}>{t.totalEvents}</p>
+          <p style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 700, color: TEXT }}>{visitor.events.length}</p>
+        </div>
+      </div>
+
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
+        <p style={{ margin: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
+          {t.timePerPage}
+        </p>
+        {visitor.pageTotals.length === 0 ? (
+          <EmptyState message={t.noPageTime} />
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: TH }}>
+                  {[t.page, t.totalTime, t.visits].map((h) => (
+                    <th key={h} style={{ textAlign: "start", padding: "10px 16px", color: MUTED, fontWeight: 500 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {visitor.pageTotals.map((p) => (
+                  <tr key={p.path} style={{ borderTop: `1px solid ${BORDER}` }}>
+                    <td style={{ padding: "10px 16px", color: TEXT, direction: "ltr", textAlign: lang === "ar" ? "right" : "left" }}>{p.path}</td>
+                    <td style={{ padding: "10px 16px", color: TEXT, fontWeight: 600 }}>{formatMs(p.totalMs)}</td>
+                    <td style={{ padding: "10px 16px", color: MUTED }}>{p.visitCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
+        <p style={{ margin: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
+          {t.allActivity} — {t.limitNote(visitor.events.length)}
+        </p>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: TH }}>
+                {[t.event, t.detail, t.date].map((h) => (
+                  <th key={h} style={{ textAlign: "start", padding: "10px 16px", color: MUTED, fontWeight: 500 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {visitor.events.map((e) => (
+                <tr key={e.id} style={{ borderTop: `1px solid ${BORDER}` }}>
+                  <td style={{ padding: "10px 16px" }}>
+                    <span style={{ color: EVENT_COLOR[e.eventName], fontWeight: 600 }}>{EVENT_LABEL[lang][e.eventName]}</span>
+                  </td>
+                  <td style={{ padding: "10px 16px", color: TEXT, maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{detailFor(e, lang)}</td>
+                  <td style={{ padding: "10px 16px", color: MUTED }}>{new Date(e.createdAt).toLocaleString(locale)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </AdminShell>
+  );
+}

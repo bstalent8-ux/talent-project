@@ -26,6 +26,7 @@ export default defineConfig({
     environment: "node",
     include: [
       "features/profiles/**/*.test.ts",
+      "features/admin/**/*.test.ts",
       "components/profile/**/*.test.ts",
       "lib/**/*.test.ts",
       "app/api/profile/**/*.test.ts",

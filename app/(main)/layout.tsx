@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GlobalChat from "@/components/chat/GlobalChat";
 import PageViewTracker from "@/components/analytics/PageViewTracker";
+import ClickTracker from "@/components/analytics/ClickTracker";
 
 // No server-side cookies()/getUser()/profile lookup here — that was the
 // proven cause of every (main) route rendering fully dynamic on Cloudflare
@@ -20,6 +21,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <Suspense fallback={null}>
         <PageViewTracker />
       </Suspense>
+      <ClickTracker />
       <Navbar />
       <main style={{ flex: 1 }}>{children}</main>
       <Footer />
