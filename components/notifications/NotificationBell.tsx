@@ -7,7 +7,12 @@ import { useNotifications } from "@/hooks/notifications";
 import NotificationDropdown from "./NotificationDropdown";
 import styles from "@/components/SiteChrome.module.css";
 
-export default function NotificationBell() {
+interface Props {
+  /** Forwarded to NotificationDropdown — see its own doc comment. */
+  viewAllHref?: string;
+}
+
+export default function NotificationBell({ viewAllHref }: Props) {
   const { lang } = useSite();
   const {
     notifications,
@@ -29,6 +34,17 @@ export default function NotificationBell() {
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  // Opening the panel is "viewing" the notifications — clears the badge the
+  // way every other bell/inbox does, without requiring a separate "mark all
+  // read" click. A short delay so it reads as "you looked at these", not an
+  // instant flash the moment the icon is clicked.
+  useEffect(() => {
+    if (!open || unreadCount === 0) return;
+    const timer = setTimeout(() => { markAllAsRead(); }, 1200);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   return (
@@ -58,6 +74,7 @@ export default function NotificationBell() {
           onReadAll={markAllAsRead}
           onDelete={deleteNotification}
           onClose={() => setOpen(false)}
+          viewAllHref={viewAllHref}
         />
       )}
     </div>

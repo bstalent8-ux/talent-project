@@ -14,6 +14,10 @@ interface Props {
   onReadAll:     () => void;
   onDelete:      (id: string) => void;
   onClose:       () => void;
+  /** Where "View all notifications" goes — the admin topbar points this at
+   * its own full-history page instead of the public /notifications page,
+   * which middleware.ts bounces an admin session away from. */
+  viewAllHref?:  string;
 }
 
 const TX = {
@@ -41,6 +45,7 @@ export default function NotificationDropdown({
   onReadAll,
   onDelete,
   onClose,
+  viewAllHref = "/notifications",
 }: Props) {
   const { lang, dark } = useSite();
   const isRTL = lang === "ar";
@@ -172,7 +177,7 @@ export default function NotificationDropdown({
           flexShrink: 0,
         }}>
           <Link
-            href="/notifications"
+            href={viewAllHref}
             onClick={onClose}
             style={{
               display:        "block",

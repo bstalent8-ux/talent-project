@@ -13,7 +13,7 @@ const TX = {
     brands:           "الشركات",
     bookings:         "الحجوزات",
     reviews:          "التقييمات",
-    newRegistrations: "تسجيلات جديدة اليوم",
+    newRegistrations: "تسجيلات جديدة",
   },
   en: {
     pending:          "Pending Approval",
@@ -23,7 +23,7 @@ const TX = {
     brands:           "Brands",
     bookings:         "Bookings",
     reviews:          "Reviews",
-    newRegistrations: "New Registrations Today",
+    newRegistrations: "New Registrations",
   },
 };
 

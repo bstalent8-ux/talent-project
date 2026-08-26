@@ -30,7 +30,9 @@ export interface AdminDashboardStats {
   brands:           number;
   bookings:         number;
   reviews:          number;
-  /** profiles (any role) created since the start of today, server time. */
+  /** Running total of profiles (any role) created since launch tracking
+   * started — grows over time, not reset daily. See
+   * REGISTRATION_COUNTER_START in admin.service.ts. */
   newRegistrations: number;
 }
 

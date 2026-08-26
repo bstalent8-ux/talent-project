@@ -9,8 +9,12 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
     try { const r = await (q as Promise<{ count: number | null }>); return r.count ?? 0; } catch { return 0; }
   };
 
-  const todayStart = new Date();
-  todayStart.setUTCHours(0, 0, 0, 0);
+  // Running total, not "today" — a cumulative count of real signups since
+  // launch tracking started (2026-08-25, right after the last seed/QA batch
+  // that morning), so it only ever grows. The two accounts it starts from
+  // (Joy Adel, Mariam Samy — both that afternoon/evening) are real; the test
+  // brand created earlier that same morning is excluded by this cutoff.
+  const REGISTRATION_COUNTER_START = "2026-08-25T12:00:00.000Z";
 
   const [talents, brands, bookings, reviews, pending, newRegistrations] = await Promise.all([
     safe(adminClient.from("talent_profiles").select("id", { count: "exact", head: true })),
@@ -18,7 +22,7 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
     safe(adminClient.from("bookings").select("id", { count: "exact", head: true })),
     safe(adminClient.from("reviews").select("id", { count: "exact", head: true })),
     safe(adminClient.from("talent_verifications").select("id", { count: "exact", head: true }).eq("status", "pending")),
-    safe(adminClient.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", todayStart.toISOString())),
+    safe(adminClient.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", REGISTRATION_COUNTER_START)),
   ]);
 
   return {

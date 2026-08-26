@@ -72,7 +72,7 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
           that Navbar's own dark/lightChrome wrapper defines — replicate
           that scope here since AdminTopbar isn't the Navbar. */}
       <span className={dark ? chromeStyles.darkChrome : chromeStyles.lightChrome}>
-        <NotificationBell />
+        <NotificationBell viewAllHref="/admin/notifications-feed" />
       </span>
 
       {/* ── Center: Title (flex: 1 pushes right group to edge) ── */}
