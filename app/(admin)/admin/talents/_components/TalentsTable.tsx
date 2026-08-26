@@ -9,6 +9,7 @@ import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminTalent, TalentStatus } from "@/features/admin/types";
+import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import { Eye, CheckCircle, XCircle, PauseCircle, Trash2, RotateCcw, Pencil, ShieldCheck } from "lucide-react";
 
 const TX = {
@@ -198,11 +199,21 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
                     </td>
                     <td style={cellStyle} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: "flex", gap: 4 }}>
-                        <Link href={`/admin/talents/${talent.talentProfileId}`} style={{ color: MUTED, display: "flex" }}>
+                        <Link
+                          href={`/admin/talents/${talent.talentProfileId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ color: MUTED, display: "flex" }}
+                        >
                           {actionBtn(() => {}, <Pencil size={16} />, ar ? "تعديل" : "Edit", "#60A5FA")}
                         </Link>
                         {talent.handle && (
-                          <Link href={`/talent/${talent.handle}`} target="_blank" style={{ color: MUTED, display: "flex" }}>
+                          <Link
+                            href={canonicalTalentPath(talent.category, talent.handle)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ color: MUTED, display: "flex" }}
+                          >
                             {actionBtn(() => {}, <Eye size={16} />, t.view)}
                           </Link>
                         )}
