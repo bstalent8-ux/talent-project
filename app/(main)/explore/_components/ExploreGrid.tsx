@@ -6,6 +6,7 @@ import type { TalentCard } from "../page";
 import { cdnImage } from "@/lib/images";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import { useGuestGuard } from "@/contexts/GuestGuard";
+import ProtectedAction from "@/components/auth/ProtectedAction";
 import styles from "./ExplorePage.module.css";
 
 interface Props {
@@ -52,6 +53,7 @@ function TalentCardItem({
   }
 
   return (
+    <ProtectedAction action="view_talent_profile" nextPathOverride={profileHref}>
     <Link href={profileHref} className={styles.talentCard}>
       {/* Media */}
       <div className={styles.talentMedia}>
@@ -143,6 +145,7 @@ function TalentCardItem({
         )}
       </div>
     </Link>
+    </ProtectedAction>
   );
 }
 

@@ -842,6 +842,13 @@
   font-weight: 700;
 }
 
+/* Guests see that a price exists (the shape of the number) without reading
+   it — encourages the account creation the price itself sits behind. */
+.talentPriceBlurred {
+  filter: blur(5px);
+  user-select: none;
+}
+
 .talentCta {
   display: inline-flex;
   min-height: 2.35rem;

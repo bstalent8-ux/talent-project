@@ -14,9 +14,12 @@ interface ProtectedActionProps {
   action: PermissionAction;
   children: ReactNode;
   message?: string;
+  /** Send the visitor to this specific destination after auth instead of
+   * back to the current page — see GuestGuardValue.requestAuth. */
+  nextPathOverride?: string;
 }
 
-export default function ProtectedAction({ action, children, message }: ProtectedActionProps) {
+export default function ProtectedAction({ action, children, message, nextPathOverride }: ProtectedActionProps) {
   const { user, requestAuth } = useGuestGuard();
   const allowed = canPerformAction(action, user).allowed;
 
@@ -24,7 +27,7 @@ export default function ProtectedAction({ action, children, message }: Protected
     if (allowed) return false;
     event.preventDefault();
     event.stopPropagation();
-    requestAuth(action, message);
+    requestAuth(action, message, nextPathOverride);
     return true;
   };
 
@@ -46,7 +49,7 @@ export default function ProtectedAction({ action, children, message }: Protected
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          requestAuth(action, message);
+          requestAuth(action, message, nextPathOverride);
         }
       }}
     >

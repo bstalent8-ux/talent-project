@@ -20,6 +20,8 @@ import {
 import type { TalentCard as ServerTalentCard } from "../../../explore/page";
 import type { PublicTestimonial, PublicBrandMoment } from "@/features/landing/services/landing-content.service";
 import TrustedBrands from "@/components/home/TrustedBrands";
+import ProtectedAction from "@/components/auth/ProtectedAction";
+import { useGuestGuard } from "@/contexts/GuestGuard";
 import TestimonialSubmitPanel from "./TestimonialSubmitPanel";
 import BrandMomentSubmitPanel from "./BrandMomentSubmitPanel";
 import styles from "./LandingPage.module.css";
@@ -662,6 +664,7 @@ function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; catego
 }
 
 function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang }) {
+  const { isGuest } = useGuestGuard();
   const profileLabel = lang === "ar" ? "\u0639\u0631\u0636 \u0627\u0644\u0645\u0644\u0641" : "View profile";
   const priceLabel = lang === "ar" ? "\u064a\u0628\u062f\u0623 \u0645\u0646" : "Starts at";
   const hasRequestPrice = talent.price === "Price on request" || talent.price === "السعر حسب الطلب";
@@ -671,6 +674,7 @@ function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang
   const isNew = talent.rating === "New" || talent.rating === "\u062c\u062f\u064a\u062f";
 
   return (
+    <ProtectedAction action="view_talent_profile" nextPathOverride={talent.href}>
     <Link className={styles.talentCard} href={talent.href}>
       <div className={styles.talentMedia}>
         {talent.image ? (
@@ -705,7 +709,7 @@ function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang
           )}
         </div>
         <div className={styles.talentFooter}>
-          <span className={styles.talentPrice}>
+          <span className={`${styles.talentPrice} ${isGuest && !hasRequestPrice ? styles.talentPriceBlurred : ""}`}>
             <small>{hasRequestPrice ? (lang === "ar" ? "السعر" : "Price") : priceLabel}</small>
             {displayPrice}
           </span>
@@ -715,6 +719,7 @@ function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang
         </div>
       </div>
     </Link>
+    </ProtectedAction>
   );
 }
 

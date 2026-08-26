@@ -18,6 +18,7 @@ export type PermissionAction =
   | "access_notifications"
   | "access_payments"
   | "manage_applications"
+  | "view_talent_profile"
   | "admin";
 
 export interface PermissionUser {
@@ -157,6 +158,7 @@ export function canPerformAction(
     case "access_notifications":
       return allowIfAuthenticated(user);
     case "favorite_talent":
+    case "view_talent_profile":
       return allowIfAuthenticated(user);
     default:
       return { allowed: false, reason: "role" };
@@ -231,6 +233,10 @@ export const AUTH_MODAL_COPY: Record<PermissionAction, { ar: string; en: string 
   manage_applications: {
     ar: "تحتاج إلى حساب براند لإدارة الطلبات.",
     en: "You need a Brand account to manage applications.",
+  },
+  view_talent_profile: {
+    ar: "أنشئ حساباً مجانياً لعرض هذا الملف الشخصي.",
+    en: "Create a free account to view this profile.",
   },
   admin: {
     ar: "تحتاج إلى صلاحيات مسؤول.",

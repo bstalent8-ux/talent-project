@@ -27,7 +27,14 @@ interface GuestGuardValue {
   user: PermissionUser | null;
   isGuest: boolean;
   can: (action: PermissionAction) => boolean;
-  requestAuth: (action: PermissionAction, message?: string) => void;
+  /**
+   * `nextPathOverride` sends the visitor to a SPECIFIC destination after
+   * auth instead of back to the current page — e.g. a talent card on a list
+   * page (Explore, Home) where "the current page" can't say which card was
+   * clicked. Skips the `resume=<action>` replay convention: landing on that
+   * destination IS the fulfilled action, there's nothing left to replay.
+   */
+  requestAuth: (action: PermissionAction, message?: string, nextPathOverride?: string) => void;
   closeAuthModal: () => void;
 }
 
@@ -78,7 +85,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
 
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<PermissionUser | null>(null);
-  const [modal, setModal] = useState<{ action: PermissionAction; message?: string } | null>(null);
+  const [modal, setModal] = useState<{ action: PermissionAction; message?: string; nextPathOverride?: string } | null>(null);
 
   const loadUser = useCallback(async () => {
     setLoading(true);
@@ -145,7 +152,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
     user,
     isGuest: !user?.id,
     can: (action) => canPerformAction(action, user).allowed,
-    requestAuth: (action, message) => setModal({ action, message }),
+    requestAuth: (action, message, nextPathOverride) => setModal({ action, message, nextPathOverride }),
     closeAuthModal: () => setModal(null),
   }), [loading, user]);
 
@@ -175,11 +182,14 @@ export function GuestGuard({ children }: { children: ReactNode }) {
    */
   function go(path: string) {
     const pendingAction = modal?.action;
+    const override = modal?.nextPathOverride;
     setModal(null);
     if (typeof window === "undefined") { router.push(path); return; }
 
-    let target = window.location.pathname + window.location.search;
-    if (pendingAction) {
+    // An override IS the fulfilled action (e.g. "view this profile") — no
+    // resume replay needed, just land there.
+    let target = override ?? window.location.pathname + window.location.search;
+    if (!override && pendingAction) {
       target += `${target.includes("?") ? "&" : "?"}resume=${encodeURIComponent(pendingAction)}`;
     }
     const sep = path.includes("?") ? "&" : "?";
