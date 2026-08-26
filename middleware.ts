@@ -25,6 +25,18 @@ const PROTECTED_PREFIXES = [
 
 const PROTECTED_EXACT_PATHS = ["/jobs/create"];
 
+// The one deliberate hole in "admin is confined to /admin": reviewing a
+// listing's actual public-facing profile before approving/rejecting it.
+// features/profiles/services/profile.service.ts's getAdminPreviewProfileByHandle
+// already bypasses the approval gate for these exact routes when the viewer
+// is an admin — this exemption is what lets a request ever reach that code
+// instead of bouncing back to /admin first.
+const ADMIN_PREVIEW_PREFIXES = ["/talent", "/model", "/ugc", "/brand"];
+
+function isAdminPreviewPath(pathname: string) {
+  return ADMIN_PREVIEW_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 // Brand-only action pages — posting a job and reviewing its applicants.
 // Talents could otherwise reach these by typing the URL directly (the job
 // board itself stays open to everyone; only these two actions are brand-only).
@@ -127,8 +139,9 @@ export async function middleware(request: NextRequest) {
 
   // Admin accounts are confined to the back-office — no browsing the public
   // marketplace as if they were a talent/brand. Everything outside /admin
-  // (besides the universal utility pages above) bounces back to /admin.
-  if (!isApiPath && role === "admin" && !pathname.startsWith("/admin")) {
+  // (besides the universal utility pages above, and the profile-preview
+  // exemption below) bounces back to /admin.
+  if (!isApiPath && role === "admin" && !pathname.startsWith("/admin") && !isAdminPreviewPath(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin";
     return NextResponse.redirect(url);

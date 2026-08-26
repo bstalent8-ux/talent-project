@@ -116,6 +116,20 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
     </button>
   );
 
+  // For an icon that sits INSIDE a <Link> (Edit/Eye) — never a <button>
+  // there. A button nested inside an anchor is invalid HTML (interactive
+  // content inside interactive content); browsers disagree on how its click
+  // bubbles, which is exactly why stopPropagation on it was unreliable. The
+  // anchor itself is the only clickable element; this is just its icon.
+  const actionIcon = (icon: React.ReactNode, title_: string, color = MUTED) => (
+    <span
+      title={title_}
+      style={{ padding: 4, borderRadius: 6, display: "flex", alignItems: "center", color }}
+    >
+      {icon}
+    </span>
+  );
+
   const cellStyle: React.CSSProperties = {
     padding: "12px 14px", color: TEXT, fontSize: 13, whiteSpace: "nowrap",
     borderBottom: `1px solid ${BORDER}`,
@@ -204,7 +218,7 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
                           onClick={(e) => e.stopPropagation()}
                           style={{ color: MUTED, display: "flex" }}
                         >
-                          {actionBtn(() => {}, <Pencil size={16} />, ar ? "تعديل" : "Edit", "#60A5FA")}
+                          {actionIcon(<Pencil size={16} />, ar ? "تعديل" : "Edit", "#60A5FA")}
                         </Link>
                         {talent.handle && (
                           <Link
@@ -214,7 +228,7 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
                             onClick={(e) => e.stopPropagation()}
                             style={{ color: MUTED, display: "flex" }}
                           >
-                            {actionBtn(() => {}, <Eye size={16} />, t.view)}
+                            {actionIcon(<Eye size={16} />, t.view)}
                           </Link>
                         )}
                         {talent.status !== "approved" && (
