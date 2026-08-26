@@ -19,7 +19,7 @@ export default async function AdminTalentEditorPage({
   let { data, error } = await adminClient
     .from("profiles")
     .select(`
-      id, full_name, handle, city,
+      id, full_name, handle, city, phone_number, created_at,
       talent_profiles!inner (
         id, category, bio, specialties, availability, packages, social_links, model_metrics
       )
@@ -31,7 +31,7 @@ export default async function AdminTalentEditorPage({
     ({ data, error } = await adminClient
       .from("profiles")
       .select(`
-        id, full_name, handle, city,
+        id, full_name, handle, city, phone_number, created_at,
         talent_profiles!inner (
           id, category, bio, specialties, availability, packages, social_links
         )
@@ -41,6 +41,10 @@ export default async function AdminTalentEditorPage({
   }
 
   if (!data) notFound();
+
+  // Email lives in auth.users, not profiles — a separate lookup, admin-only,
+  // never exposed on any public/self-serve route.
+  const { data: authUser } = await adminClient.auth.admin.getUserById(data.id);
 
   const tp = Array.isArray(data.talent_profiles)
     ? data.talent_profiles[0]
@@ -62,6 +66,11 @@ export default async function AdminTalentEditorPage({
         packages:     JSON.stringify(tp?.packages ?? [], null, 2),
         social_links: JSON.stringify(tp?.social_links ?? {}, null, 2),
         model_metrics: (tpRecord.model_metrics ?? {}) as Record<string, unknown>,
+      }}
+      registration={{
+        email:     authUser?.user?.email ?? null,
+        phone:     data.phone_number ?? null,
+        createdAt: data.created_at ?? null,
       }}
     />
   );

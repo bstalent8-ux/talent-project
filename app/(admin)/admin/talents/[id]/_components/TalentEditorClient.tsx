@@ -12,6 +12,8 @@ const TX = {
     category: "التصنيف", bio: "نبذة", specialties: "التخصصات (مفصولة بفاصلة)",
     availability: "التوفر", packages: "الباقات (JSON)", socialLinks: "البيانات الإضافية (JSON)",
     save: "حفظ التغييرات", saving: "جاري الحفظ...", back: "رجوع",
+    registrationTitle: "بيانات التسجيل", email: "البريد الإلكتروني", phone: "رقم الهاتف",
+    registeredAt: "تاريخ التسجيل", notProvided: "غير متوفر",
     saved: "تم الحفظ بنجاح", error: "حدث خطأ",
     availableOpts: { available: "متاح", busy: "مشغول", unavailable: "غير متاح" },
     modelMetricsTitle: "مقاييس الموديل (يديرها الأدمن فقط)",
@@ -30,6 +32,8 @@ const TX = {
     category: "Category", bio: "Bio", specialties: "Specialties (comma-separated)",
     availability: "Availability", packages: "Packages (JSON)", socialLinks: "Social Links (JSON)",
     save: "Save Changes", saving: "Saving...", back: "Back",
+    registrationTitle: "Registration Info", email: "Email", phone: "Phone Number",
+    registeredAt: "Registered On", notProvided: "Not provided",
     saved: "Saved successfully", error: "An error occurred",
     availableOpts: { available: "Available", busy: "Busy", unavailable: "Unavailable" },
     modelMetricsTitle: "Model Metrics (admin-managed only)",
@@ -61,13 +65,20 @@ interface InitialData {
   model_metrics: Record<string, unknown>;
 }
 
+interface RegistrationInfo {
+  email: string | null;
+  phone: string | null;
+  createdAt: string | null;
+}
+
 interface Props {
   talentProfileId: string;
   profileUserId: string;
   initialData: InitialData;
+  registration: RegistrationInfo;
 }
 
-export default function TalentEditorClient({ talentProfileId, profileUserId, initialData }: Props) {
+export default function TalentEditorClient({ talentProfileId, profileUserId, initialData, registration }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -190,6 +201,34 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
       >
         <ArrowLeft size={16} />{t.back}
       </button>
+
+      {/* Registration info — read-only, from auth.users (email) and profiles
+          (phone, created_at). Never editable here: email/phone changes go
+          through the talent's own account settings, not admin override. */}
+      {section(t.registrationTitle, (
+        <div style={grid2}>
+          <div>
+            {label(t.email)}
+            <p style={{ color: TEXT, fontSize: 14, margin: 0, direction: "ltr", textAlign: ar ? "right" : "left" }}>
+              {registration.email ?? t.notProvided}
+            </p>
+          </div>
+          <div>
+            {label(t.phone)}
+            <p style={{ color: TEXT, fontSize: 14, margin: 0, direction: "ltr", textAlign: ar ? "right" : "left" }}>
+              {registration.phone ?? t.notProvided}
+            </p>
+          </div>
+          <div>
+            {label(t.registeredAt)}
+            <p style={{ color: TEXT, fontSize: 14, margin: 0 }}>
+              {registration.createdAt
+                ? new Date(registration.createdAt).toLocaleString(ar ? "ar-EG" : "en-US")
+                : t.notProvided}
+            </p>
+          </div>
+        </div>
+      ))}
 
       {/* Basic info */}
       {section(ar ? "المعلومات الأساسية" : "Basic Information", (
