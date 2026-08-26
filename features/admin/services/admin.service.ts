@@ -9,12 +9,16 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
     try { const r = await (q as Promise<{ count: number | null }>); return r.count ?? 0; } catch { return 0; }
   };
 
-  const [talents, brands, bookings, reviews, pending] = await Promise.all([
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+
+  const [talents, brands, bookings, reviews, pending, newRegistrations] = await Promise.all([
     safe(adminClient.from("talent_profiles").select("id", { count: "exact", head: true })),
     safe(adminClient.from("profiles").select("id", { count: "exact", head: true }).eq("role", "brand")),
     safe(adminClient.from("bookings").select("id", { count: "exact", head: true })),
     safe(adminClient.from("reviews").select("id", { count: "exact", head: true })),
     safe(adminClient.from("talent_verifications").select("id", { count: "exact", head: true }).eq("status", "pending")),
+    safe(adminClient.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", todayStart.toISOString())),
   ]);
 
   return {
@@ -25,6 +29,7 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
     brands,
     bookings,
     reviews,
+    newRegistrations,
   };
 }
 

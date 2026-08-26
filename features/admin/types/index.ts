@@ -23,13 +23,15 @@ export interface AdminTalent {
 }
 
 export interface AdminDashboardStats {
-  pending:   number;
-  approved:  number;
-  rejected:  number;
-  suspended: number;
-  brands:    number;
-  bookings:  number;
-  reviews:   number;
+  pending:          number;
+  approved:         number;
+  rejected:         number;
+  suspended:        number;
+  brands:           number;
+  bookings:         number;
+  reviews:          number;
+  /** profiles (any role) created since the start of today, server time. */
+  newRegistrations: number;
 }
 
 type ProfileRef = { full_name: string | null; handle: string | null } | { full_name: string | null; handle: string | null }[] | null;
