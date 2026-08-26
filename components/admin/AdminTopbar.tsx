@@ -1,8 +1,9 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
-import { Menu, Sun, Moon, Globe, Bell, Search } from "lucide-react";
+import { Menu, Sun, Moon, Globe, Search } from "lucide-react";
+import NotificationBell from "@/components/notifications/NotificationBell";
+import chromeStyles from "@/components/SiteChrome.module.css";
 
 interface Props {
   title: string;
@@ -64,6 +65,16 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
         <Menu size={20} />
       </button>
 
+      {/* The admin's own incoming notifications — not the "send an
+          announcement" composer (that's AdminSidebar's dedicated
+          /admin/notifications nav entry). Same bell/dropdown every other
+          surface uses. NotificationBell's styling reads the --nav-* tokens
+          that Navbar's own dark/lightChrome wrapper defines — replicate
+          that scope here since AdminTopbar isn't the Navbar. */}
+      <span className={dark ? chromeStyles.darkChrome : chromeStyles.lightChrome}>
+        <NotificationBell />
+      </span>
+
       {/* ── Center: Title (flex: 1 pushes right group to edge) ── */}
       <h1 style={{
         color: TEXT, fontSize: 17, fontWeight: 800, margin: 0,
@@ -101,21 +112,6 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
 
         {iconBtn(toggleLang, <Globe size={17} />, ar ? "English" : "عربي")}
         {iconBtn(toggleMode, dark ? <Sun size={17} /> : <Moon size={17} />, ar ? "تبديل المظهر" : "Toggle theme")}
-        <Link
-          href="/admin/notifications"
-          title={ar ? "الإشعارات" : "Notifications"}
-          aria-label={ar ? "الإشعارات" : "Notifications"}
-          style={{
-            background: "none", border: `1px solid ${BORDER}`, borderRadius: 8,
-            padding: 8, cursor: "pointer", color: MUTED,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "border-color 0.15s, color 0.15s",
-            flexShrink: 0,
-          }}
-        >
-          <Bell size={17} />
-        </Link>
-
       </div>
 
       <style>{`
