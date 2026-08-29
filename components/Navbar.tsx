@@ -31,22 +31,25 @@ import { cdnImage } from "@/lib/images";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./SiteChrome.module.css";
 
+// `soon` — these 3 pages are live and data-backed but fully blurred/blocked
+// behind a "coming soon" overlay (see components/ComingSoonOverlay.tsx and
+// each page.tsx) — the nav tag just gives a heads-up before the click.
 const NAV_LINKS = {
   ar: [
     { label: "الرئيسية", href: "/home" },
     { label: "استكشاف", href: "/explore" },
-    { label: "المجتمع", href: "/community" },
-    { label: "وظائف", href: "/jobs" },
-    { label: "للشركات", href: "/brands" },
+    { label: "المجتمع", href: "/community", soon: true },
+    { label: "وظائف", href: "/jobs", soon: true },
+    { label: "للشركات", href: "/brands", soon: true },
     { label: "الباقات", href: "/packages" },
     { label: "مشاريعي", href: "/bookings" },
   ],
   en: [
     { label: "Home", href: "/home" },
     { label: "Explore", href: "/explore" },
-    { label: "Community", href: "/community" },
-    { label: "Jobs", href: "/jobs" },
-    { label: "Brands", href: "/brands" },
+    { label: "Community", href: "/community", soon: true },
+    { label: "Jobs", href: "/jobs", soon: true },
+    { label: "Brands", href: "/brands", soon: true },
     { label: "Packages", href: "/packages" },
     { label: "Projects", href: "/bookings" },
   ],
@@ -69,6 +72,7 @@ const TX = {
     menu: "فتح القائمة",
     close: "إغلاق القائمة",
     theme: "تغيير الوضع",
+    soon: "قريباً",
   },
   en: {
     search: "Search talents or services...",
@@ -86,6 +90,7 @@ const TX = {
     menu: "Open menu",
     close: "Close menu",
     theme: "Toggle theme",
+    soon: "Soon",
   },
 };
 
@@ -219,6 +224,7 @@ export default function Navbar() {
                   aria-current={isActive ? "page" : undefined}
                 >
                   {item.label}
+                  {item.soon && <span className={styles.navSoonBadge}>{t.soon}</span>}
                 </Link>
               );
               return item.href.startsWith("/bookings")
@@ -339,6 +345,7 @@ export default function Navbar() {
                 aria-current={isActive ? "page" : undefined}
               >
                 {item.label}
+                {item.soon && <span className={styles.navSoonBadge}>{t.soon}</span>}
               </Link>
             );
             return item.href.startsWith("/bookings")

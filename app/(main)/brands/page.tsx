@@ -4,6 +4,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import { safePublicDisplayName } from "@/lib/public-display-name";
 import BrandsClient from "./_components/BrandsClient";
+import ComingSoonOverlay from "@/components/ComingSoonOverlay";
 
 export interface BrandCard {
   id: string;
@@ -98,5 +99,9 @@ export default async function BrandsPage() {
     fetchPublicBrands,
   );
 
-  return <BrandsClient brands={brands} />;
+  return (
+    <ComingSoonOverlay>
+      <BrandsClient brands={brands} />
+    </ComingSoonOverlay>
+  );
 }

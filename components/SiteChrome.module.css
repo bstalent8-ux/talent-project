@@ -133,6 +133,17 @@
   background: var(--color-secondary);
 }
 
+.navSoonBadge {
+  margin-inline-start: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-secondary-soft);
+  color: var(--color-secondary-strong);
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
 .navControls {
   gap: 0.5rem;
 }

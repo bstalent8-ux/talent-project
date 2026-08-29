@@ -4,6 +4,7 @@ import { Construction } from "lucide-react";
 import { adminClient } from "@/lib/supabase/admin";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import JobsClient from "./_components/JobsClient";
+import ComingSoonOverlay from "@/components/ComingSoonOverlay";
 import styles from "./_components/JobsPage.module.css";
 
 export interface JobPost {
@@ -64,16 +65,22 @@ export default async function JobsPage() {
   if (result.error) {
     // Table doesn't exist yet — show setup message
     return (
-      <div className={styles.setupError}>
-        <div className={styles.setupCard}>
-          <span className={styles.setupIcon}><Construction size={26} /></span>
-          <p className={styles.setupTitle}>Jobs table not set up yet</p>
-          <p className={styles.setupText}>Call GET /api/admin/jobs-migration to get the SQL, then run it in Supabase.</p>
-          <a href="/api/admin/jobs-migration" className={styles.setupLink}>/api/admin/jobs-migration</a>
+      <ComingSoonOverlay>
+        <div className={styles.setupError}>
+          <div className={styles.setupCard}>
+            <span className={styles.setupIcon}><Construction size={26} /></span>
+            <p className={styles.setupTitle}>Jobs table not set up yet</p>
+            <p className={styles.setupText}>Call GET /api/admin/jobs-migration to get the SQL, then run it in Supabase.</p>
+            <a href="/api/admin/jobs-migration" className={styles.setupLink}>/api/admin/jobs-migration</a>
+          </div>
         </div>
-      </div>
+      </ComingSoonOverlay>
     );
   }
 
-  return <JobsClient jobs={result.jobs} />;
+  return (
+    <ComingSoonOverlay>
+      <JobsClient jobs={result.jobs} />
+    </ComingSoonOverlay>
+  );
 }
