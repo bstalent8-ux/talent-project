@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createJobSchema } from "./route";
+import { createJobSchema } from "./schema";
 
 // Mirrors the real body app/(main)/jobs/create/page.tsx sends.
 const validBody = {

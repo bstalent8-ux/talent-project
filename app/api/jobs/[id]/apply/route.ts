@@ -8,18 +8,7 @@ import { notifyJobApplicationReceived } from "@/lib/notifications/events";
 import { logJobApplication } from "@/lib/events/events";
 import { canApplyJob } from "@/lib/permissions";
 import { privateNoStoreHeaders } from "@/lib/cache";
-
-// Real client (ApplyModal.tsx) always sends proposed_price/message and
-// either omits delivery_days/portfolio_links or sends null — nothing here
-// existed before this pass, so a direct/malicious caller could post an
-// unbounded message, a NaN price (Number("garbage") swallowed silently),
-// or arbitrary non-URL junk into portfolio_links.
-export const applySchema = z.object({
-  message:         z.string().trim().min(1).max(2000),
-  proposed_price:  z.number().positive().max(10_000_000),
-  delivery_days:   z.number().int().positive().max(365).nullable().optional(),
-  portfolio_links: z.array(z.string().url()).max(10).nullable().optional(),
-});
+import { applySchema } from "./schema";
 
 // POST /api/jobs/[id]/apply — talent submits a proposal
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

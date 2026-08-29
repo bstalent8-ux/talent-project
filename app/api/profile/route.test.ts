@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { profileDataSchema } from "./route";
+import { profileDataSchema } from "./schema";
 
 describe("profileDataSchema", () => {
   it("accepts a normal registration/edit payload", () => {

@@ -7,6 +7,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { notifyBookingRequest } from "@/lib/notifications/events";
 import { logBookingBriefSent } from "@/lib/events/events";
 import { canCreateBooking } from "@/lib/permissions";
+import { bookingSchema } from "./schema";
 
 const ACTIVE_BOOKING_STATUSES = [
   "pending",
@@ -17,12 +18,6 @@ const ACTIVE_BOOKING_STATUSES = [
   "brief_sent",
   "contacting",
 ];
-
-const SERVICE_TYPES = ["hourly", "daily", "fixed_project"] as const;
-
-type ServiceType = typeof SERVICE_TYPES[number];
-
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 function dateOnly(value: unknown) {
   if (typeof value !== "string" || !value) return null;
@@ -36,22 +31,6 @@ function isPastDate(value: string) {
   const candidate = new Date(`${value}T00:00:00.000Z`);
   return candidate.getTime() < today.getTime();
 }
-
-// DirectBriefModal.tsx already validates all of this client-side (see its
-// own `validate()`) — this is the server-side backstop for a direct caller,
-// so it re-enforces the same rules rather than trusting the client's copy.
-// Genuinely new here: brief/attachments length caps and a budget ceiling —
-// neither existed at any layer before.
-export const bookingSchema = z.object({
-  talent_user_id: z.string().uuid(),
-  service_type:   z.enum(SERVICE_TYPES),
-  start_date:     z.string().regex(DATE_ONLY, "start_date must be YYYY-MM-DD"),
-  duration:       z.coerce.number().int().positive().nullable().optional(),
-  deadline:       z.string().regex(DATE_ONLY, "deadline must be YYYY-MM-DD").nullable().optional(),
-  budget_amount:  z.coerce.number().positive().max(10_000_000),
-  brief:          z.string().trim().min(1).max(5000),
-  attachments:    z.array(z.string().url()).max(10).nullable().optional(),
-});
 
 // POST — brand sends a structured booking request to a talent.
 // Body: { talent_user_id, service_type, start_date, duration?, deadline?, budget_amount, brief, attachments? }

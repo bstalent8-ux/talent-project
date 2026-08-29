@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applySchema } from "./route";
+import { applySchema } from "./schema";
 
 // Mirrors the real body ApplyModal.tsx sends (see app/(main)/jobs/_components/ApplyModal.tsx).
 const validBody = {

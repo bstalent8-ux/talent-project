@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bookingSchema } from "./route";
+import { bookingSchema } from "./schema";
 
 // Mirrors the real body components/DirectBriefModal.tsx sends.
 const validBody = {
