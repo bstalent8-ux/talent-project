@@ -11,6 +11,13 @@ import type { Lang, Mode } from "@/contexts/SiteContext";
 export const metadata: Metadata = {
   title: "Talents - منصة المواهب العربية",
   description: "ربط البراندات بأفضل المواهب والمؤثرين في العالم العربي",
+  // The app/icon.png metadata-route convention doesn't survive
+  // @cloudflare/next-on-pages — the <link rel="icon"> tag it's supposed to
+  // auto-inject was simply missing from the production HTML (confirmed live
+  // against talent-s.com), unlike every other asset served from public/,
+  // which next-on-pages handles fine. Serving the same file from public/ and
+  // declaring it explicitly here sidesteps whatever that incompatibility is.
+  icons: { icon: "/favicon.png" },
 };
 
 export const viewport: Viewport = {
