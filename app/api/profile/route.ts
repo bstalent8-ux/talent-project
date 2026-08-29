@@ -7,6 +7,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { normalizeCategoryId, setProfileCategories } from "@/features/categories/services/category.service";
 import { invalidateBrand, invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 import { ProfileError, profileService } from "@/features/profiles";
+import { syncTalentBrands } from "@/lib/talent-brands-sync";
 import { profileDataSchema } from "./schema";
 
 // ─── Mass-assignment guards ──────────────────────────────────────────────────
@@ -114,6 +115,11 @@ export async function POST(req: NextRequest) {
         // PostgREST error. Documented leak, fixed here as part of the migration.
         return NextResponse.json(err.toBody(), { status: err.status, headers: privateNoStoreHeaders() });
       }
+
+      // Keeps the real talent_brands table (what the public profile actually
+      // reads) in sync with the plain name list the talent edits — see
+      // lib/talent-brands-sync.ts for why this is needed at all.
+      await syncTalentBrands(targetId, talentProfileData?.social_links?.brands);
     }
 
     const normalizedCategoryIds = Array.isArray(categoryIds)

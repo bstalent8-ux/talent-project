@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { TalentCard } from "../page";
 import { cdnImage } from "@/lib/images";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
+import { formatTalentTag } from "@/lib/talent-tags";
 import { useGuestGuard } from "@/contexts/GuestGuard";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 import styles from "./ExplorePage.module.css";
@@ -117,7 +118,7 @@ function TalentCardItem({
         {/* One tag — the single key specialty, not a 2-tag row */}
         {talent.specialties.length > 0 && (
           <div className={styles.specialtyRow}>
-            <span className={styles.specialtyTag}>{talent.specialties[0]}</span>
+            <span className={styles.specialtyTag}>{formatTalentTag(talent.specialties[0], lang)}</span>
           </div>
         )}
 

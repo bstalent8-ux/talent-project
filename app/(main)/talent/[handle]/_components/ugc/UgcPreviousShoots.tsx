@@ -2,14 +2,13 @@
 
 // Port of ugc/untitled/components/PreviousShoots.tsx: "Previous Shoots"
 // (real ExperienceItem[]) plus its second block, "Verified Through Talents".
-// Both cards now cross-reference the real talent_brands rows for a logo:
-// an experience entry whose name contains a brand's name gets that brand's
-// real logo_url instead of a plain text row. There is no escrow and no
-// "verified" column on talent_brands, so "Verified Through Talents" shows
-// the talent's real logo'd brands (first 4) as the trust signal — same
-// real-first / hardcoded-fallback pattern as model/ModelVerifiedBrands.tsx,
-// only falling back to the 3 generic placeholder rows when the talent has
-// no talent_brands rows at all.
+// The left card cross-references real talent_brands rows for a logo: an
+// experience entry whose name contains a brand's name gets that brand's real
+// logo_url instead of a plain text row. The right card ("Verified Through
+// Talents") is real only — it shows talent_brands rows an admin has flagged
+// verified=true (same rule as model/ModelVerifiedBrands.tsx), never a
+// self-entered or hard-coded name; no admin verification yet means the card
+// doesn't render.
 
 import { motion } from "framer-motion";
 import { Briefcase, CheckCircle2, ShieldCheck } from "lucide-react";
@@ -19,17 +18,6 @@ import type { ExperienceItem, BrandItem } from "@/features/talent-profile/types"
 
 const ACCENT = "#16a3a3";
 const GREEN = "#00D26A";
-
-const FALLBACK_AR = [
-  { brand: "BeBold", category: "ملابس رياضية", result: "التزام كامل بالمواعيد" },
-  { brand: "TechStore", category: "محتوى UGC", result: "تقييم 5 نجوم" },
-  { brand: "L'Azur", category: "حملة عناية بالبشرة", result: "تعاون متكرر" },
-];
-const FALLBACK_EN = [
-  { brand: "BeBold", category: "Fitness Wear", result: "100% On-Time" },
-  { brand: "TechStore", category: "UGC Content", result: "5 Star Rating" },
-  { brand: "L'Azur", category: "Skincare Campaign", result: "Re-booked" },
-];
 
 function findBrandLogo(name: string, brands: BrandItem[]): string | null {
   const match = brands.find((b) => b.logo_url && name.toLowerCase().includes(b.name.toLowerCase()));
@@ -47,15 +35,20 @@ export default function UgcPreviousShoots({ experience, brands }: { experience: 
   const SURFACE = dark ? "#0A121C" : "#F8FAFC";
 
   const items = experience ?? [];
-  const brandsWithLogo = brands.filter((b) => b.logo_url);
-  const verifiedRows = brandsWithLogo.length > 0
-    ? brandsWithLogo.slice(0, 4).map((b) => ({ id: b.id, brand: b.name, logo: b.logo_url, category: b.year_collaborated ?? "", result: ar ? "موثّق عبر Talents" : "Verified Through Talents" }))
-    : (ar ? FALLBACK_AR : FALLBACK_EN).map((r, i) => ({ id: `fallback-${i}`, logo: null as string | null, ...r }));
+  const verifiedRows = brands
+    .filter((b) => b.verified)
+    .slice(0, 4)
+    .map((b) => ({ id: b.id, brand: b.name, logo: b.logo_url, category: b.year_collaborated ?? "", result: ar ? "موثّق عبر Talents" : "Verified Through Talents" }));
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && verifiedRows.length === 0) return null;
+
+  const showShoots = items.length > 0;
+  const showVerified = verifiedRows.length > 0;
+  const columns = showShoots && showVerified ? "1fr 1fr" : "1fr";
 
   return (
-    <section id="ugc-shoots" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20, alignItems: "start" }}>
+    <section id="ugc-shoots" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : columns, gap: 20, alignItems: "start" }}>
+      {showShoots && (
       <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <div style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: dark ? "rgba(148,163,184,0.12)" : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -89,7 +82,9 @@ export default function UgcPreviousShoots({ experience, brands }: { experience: 
           })}
         </div>
       </div>
+      )}
 
+      {showVerified && (
       <div style={{ backgroundColor: CARD, border: `1px solid ${dark ? "rgba(0,210,106,0.3)" : "#A7F3D0"}`, borderRadius: 20, padding: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <div style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: "rgba(0,210,106,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -119,6 +114,7 @@ export default function UgcPreviousShoots({ experience, brands }: { experience: 
           ))}
         </div>
       </div>
+      )}
     </section>
   );
 }

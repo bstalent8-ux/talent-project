@@ -18,6 +18,7 @@ import { CheckCircle2, Award, MapPin, Maximize2, ExternalLink } from "lucide-rea
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
+import { formatTalentTag } from "@/lib/talent-tags";
 import type { TalentData, PortfolioItem } from "@/features/talent-profile/types";
 
 const GOLD = "#d89b37";
@@ -69,7 +70,9 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
   const SURFACE = dark ? "var(--bg-card-muted)" : "#F8FAFC";
 
   const displayName = talent.name.includes("@") ? talent.handle || talent.name.split("@")[0] : talent.name;
-  const tags = talent.specialties?.length ? talent.specialties.slice(0, 6) : talent.category ? [talent.category] : [];
+  const tags = talent.specialties?.length
+    ? talent.specialties.slice(0, 6).map((tag) => formatTalentTag(tag, lang))
+    : talent.category ? [talent.category] : [];
   const socialEntries = PLATFORM_ORDER.filter((k) => presenceLinks[k]);
 
   return (

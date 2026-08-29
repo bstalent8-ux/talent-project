@@ -40,9 +40,17 @@ const TALENT_TYPES = [
   { key: "model", label_ar: "موديل",          label_en: "Model" },
 ];
 
+// A talent's `category` column is a single value — it's what picks the
+// profile-page layout (Model vs. UGC) and is the primary type match here.
+// `specialties` additionally lets one profile cross-list into a second
+// Explore tab without a second (fake) category — e.g. a model who also
+// does UGC work keeps the Model layout/details but still shows up under
+// the UGC filter too, by having "ugc" as one of her specialty tags.
 function matchesType(talent: TalentCard, type: string): boolean {
   if (type === "all") return true;
-  return (talent.category ?? "").toLowerCase() === type;
+  const category = (talent.category ?? "").toLowerCase();
+  if (category === type) return true;
+  return (talent.specialties ?? []).some((s) => s.toLowerCase() === type);
 }
 
 interface Props {

@@ -6,25 +6,14 @@
 // ExperienceSection.tsx's model branch on purpose, not the tile-grid layout
 // from model/components/PreviousShoots.tsx).
 //
-// REAL when any talent_brands row has verified = true (admin-flagged).
-// Until an admin verifies a real collaboration, falls back to 3 HARD-CODED
-// placeholder rows so the card isn't empty — restored on request; remove
-// again once verification is actually in use for this talent.
+// Real only: a row shows when a talent_brands row has verified = true
+// (admin-flagged). No hard-coded placeholder rows — this section renders
+// nothing until an admin actually verifies a real collaboration, rather than
+// showing the same 3 fake brand names on every model's profile.
 
 import { CheckCircle } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import type { BrandItem } from "@/features/talent-profile/types";
-
-const FALLBACK_AR: { name: string; year: string }[] = [
-  { name: "L'AZUR", year: "يونيو 2026" },
-  { name: "TechStore", year: "مايو 2026" },
-  { name: "BeBold", year: "أبريل 2026" },
-];
-const FALLBACK_EN: { name: string; year: string }[] = [
-  { name: "L'AZUR", year: "Jun 2026" },
-  { name: "TechStore", year: "May 2026" },
-  { name: "BeBold", year: "Apr 2026" },
-];
 
 export default function ModelVerifiedBrands({ brands }: { brands: BrandItem[] }) {
   const { dark, lang } = useSite();
@@ -35,10 +24,11 @@ export default function ModelVerifiedBrands({ brands }: { brands: BrandItem[] })
   const MUTED = dark ? "#A8B3C2" : "#64748B";
   const SURFACE = dark ? "#0A121C" : "#F8FAFC";
 
-  const verifiedReal = brands.filter((b) => b.verified);
-  const rows = verifiedReal.length > 0
-    ? verifiedReal.map((b) => ({ id: b.id, name: b.name, year: b.year_collaborated }))
-    : (ar ? FALLBACK_AR : FALLBACK_EN).map((r, i) => ({ id: `fallback-${i}`, name: r.name, year: r.year }));
+  const rows = brands
+    .filter((b) => b.verified)
+    .map((b) => ({ id: b.id, name: b.name, year: b.year_collaborated }));
+
+  if (rows.length === 0) return null;
 
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, height: "100%" }}>
