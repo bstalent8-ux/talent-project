@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyBookingRequest } from "@/lib/notifications/events";
@@ -21,6 +22,8 @@ const SERVICE_TYPES = ["hourly", "daily", "fixed_project"] as const;
 
 type ServiceType = typeof SERVICE_TYPES[number];
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
 function dateOnly(value: unknown) {
   if (typeof value !== "string" || !value) return null;
   const date = new Date(`${value}T00:00:00.000Z`);
@@ -33,6 +36,22 @@ function isPastDate(value: string) {
   const candidate = new Date(`${value}T00:00:00.000Z`);
   return candidate.getTime() < today.getTime();
 }
+
+// DirectBriefModal.tsx already validates all of this client-side (see its
+// own `validate()`) — this is the server-side backstop for a direct caller,
+// so it re-enforces the same rules rather than trusting the client's copy.
+// Genuinely new here: brief/attachments length caps and a budget ceiling —
+// neither existed at any layer before.
+export const bookingSchema = z.object({
+  talent_user_id: z.string().uuid(),
+  service_type:   z.enum(SERVICE_TYPES),
+  start_date:     z.string().regex(DATE_ONLY, "start_date must be YYYY-MM-DD"),
+  duration:       z.coerce.number().int().positive().nullable().optional(),
+  deadline:       z.string().regex(DATE_ONLY, "deadline must be YYYY-MM-DD").nullable().optional(),
+  budget_amount:  z.coerce.number().positive().max(10_000_000),
+  brief:          z.string().trim().min(1).max(5000),
+  attachments:    z.array(z.string().url()).max(10).nullable().optional(),
+});
 
 // POST — brand sends a structured booking request to a talent.
 // Body: { talent_user_id, service_type, start_date, duration?, deadline?, budget_amount, brief, attachments? }
@@ -50,34 +69,30 @@ export async function POST(req: NextRequest) {
   if (!permission.allowed)
     return NextResponse.json({ error: permission.reason === "role" ? "Only brands can send briefs" : "forbidden" }, { status: 403 });
 
-  const body = await req.json();
+  let parsed: z.infer<typeof bookingSchema>;
+  try {
+    parsed = bookingSchema.parse(await req.json());
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid input", issues: err.issues }, { status: 400 });
+    }
+    return NextResponse.json({ error: "invalid request body" }, { status: 400 });
+  }
   const {
     talent_user_id,
-    service_type,
-    start_date,
-    duration,
-    deadline,
-    budget_amount,
+    service_type: serviceType,
+    duration: numericDuration,
+    budget_amount: numericBudget,
     brief: briefText,
     attachments,
-  } = body;
+  } = parsed;
 
-  if (!talent_user_id) return NextResponse.json({ error: "talent_user_id required" }, { status: 400 });
-  if (!SERVICE_TYPES.includes(service_type))
-    return NextResponse.json({ error: "invalid service_type" }, { status: 400 });
-
-  const serviceType = service_type as ServiceType;
-  const startDate = dateOnly(start_date);
-  const deadlineDate = dateOnly(deadline);
-  const numericBudget = Number(budget_amount);
-  const numericDuration = duration === null || duration === undefined || duration === "" ? null : Number(duration);
+  const startDate = dateOnly(parsed.start_date);
+  const deadlineDate = dateOnly(parsed.deadline);
 
   if (!startDate) return NextResponse.json({ error: "start_date required" }, { status: 400 });
   if (isPastDate(startDate)) return NextResponse.json({ error: "start_date must be today or later" }, { status: 400 });
-  if (!Number.isFinite(numericBudget) || numericBudget <= 0)
-    return NextResponse.json({ error: "budget_amount must be greater than 0" }, { status: 400 });
-  if (!briefText?.trim()) return NextResponse.json({ error: "brief required" }, { status: 400 });
-  if ((serviceType === "hourly" || serviceType === "daily") && (!Number.isInteger(numericDuration) || numericDuration <= 0))
+  if ((serviceType === "hourly" || serviceType === "daily") && !(numericDuration && numericDuration > 0))
     return NextResponse.json({ error: "duration must be a positive number" }, { status: 400 });
   if (serviceType === "fixed_project" && !deadlineDate)
     return NextResponse.json({ error: "deadline required" }, { status: 400 });

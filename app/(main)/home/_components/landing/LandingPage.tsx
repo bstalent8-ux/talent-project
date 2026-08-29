@@ -302,9 +302,12 @@ function HeroSection({
   // data exists, so this is real avg rating instead), [3] = support
   // coverage claim (left as static copy, not a number).
   const localizedStats = stats.map((item, index) => {
-    if (index === 0 && totalTalents > 0) return { ...item, value: `+${Math.max(totalTalents, 30)}` };
-    if (index === 1) return { ...item, value: completedProjects > 0 ? `+${completedProjects}` : (lang === "ar" ? "قريباً" : "Coming soon") };
-    if (index === 2) return { ...item, value: avgRating > 0 ? avgRating.toFixed(1) : "—" };
+    // Only the avg-rating tile (index 1) has a real number behind it — see
+    // content.ts for why the other two are deliberately non-numeric.
+    if (index === 1 && avgRating > 0) {
+      const rating = avgRating.toFixed(1);
+      return { ...item, value: { ar: rating, en: rating } };
+    }
     return item;
   });
 
@@ -500,7 +503,7 @@ function HeroSection({
         <div className={styles.statsStrip} aria-label={lang === "ar" ? "إحصائيات المنصة" : "Platform statistics"}>
           {localizedStats.map((item) => (
             <div className={styles.stat} key={item.label.en}>
-              <div className={styles.statValue}>{item.value}</div>
+              <div className={styles.statValue}>{localize(item.value, lang)}</div>
               <div className={styles.statLabel}>{localize(item.label, lang)}</div>
             </div>
           ))}

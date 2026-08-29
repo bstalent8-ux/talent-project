@@ -17,20 +17,34 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   // brand created earlier that same morning is excluded by this cutoff.
   const REGISTRATION_COUNTER_START = "2026-08-25T12:00:00.000Z";
 
-  const [talents, brands, bookings, reviews, pending, newRegistrations] = await Promise.all([
-    safe(adminClient.from("talent_profiles").select("id", { count: "exact", head: true })),
+  // Was: `approved` counted every talent_profiles row with no status filter
+  // (pending + approved + rejected + suspended all lumped under "Approved
+  // Talents"), `rejected`/`suspended` were hardcoded 0, and `pending` came
+  // from talent_verifications.status (the ID-document review queue — a
+  // different table for a different thing) instead of talent_profiles.status
+  // — DashboardStatsGrid.tsx's labels ("Pending/Approved/Rejected/Suspended
+  // Talents") only ever meant talent_profiles.status. The verification
+  // queue already has its own real count on /admin/verifications; it isn't
+  // dropped, just no longer misrepresented here as the talent-listing queue.
+  const countTalentsByStatus = (status: string) =>
+    safe(adminClient.from("talent_profiles").select("id", { count: "exact", head: true }).eq("status", status));
+
+  const [approved, pending, rejected, suspended, brands, bookings, reviews, newRegistrations] = await Promise.all([
+    countTalentsByStatus("approved"),
+    countTalentsByStatus("pending"),
+    countTalentsByStatus("rejected"),
+    countTalentsByStatus("suspended"),
     safe(adminClient.from("profiles").select("id", { count: "exact", head: true }).eq("role", "brand")),
     safe(adminClient.from("bookings").select("id", { count: "exact", head: true })),
     safe(adminClient.from("reviews").select("id", { count: "exact", head: true })),
-    safe(adminClient.from("talent_verifications").select("id", { count: "exact", head: true }).eq("status", "pending")),
     safe(adminClient.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", REGISTRATION_COUNTER_START)),
   ]);
 
   return {
     pending,
-    approved:  talents,
-    rejected:  0,
-    suspended: 0,
+    approved,
+    rejected,
+    suspended,
     brands,
     bookings,
     reviews,

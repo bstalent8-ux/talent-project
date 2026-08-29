@@ -514,10 +514,13 @@ All reads go through `features/admin/services/admin.service.ts` (service role), 
 4. **`app/(auth)/onboarding/page.tsx` is 792 lines of fully commented-out code** — the multi-step
    onboarding wizard is not live. Profile building happens on `/profile/me` +
    `ProfileCompletionCard` instead.
-5. **~20 ad-hoc admin endpoints** under `app/api/admin/` (`run-migration`, `seed-*`, `debug-*`,
-   `check-*`, `verify-db`, `chat-migration`…) exist in production. They are role-gated at the layout
-   level only for pages — **verify each route's own auth before trusting it**. These should be
-   removed or moved behind an env flag before public launch.
+5. **Resolved 2026-08-29:** the ad-hoc `run-migration`/`seed-*`/`debug-*`/`check-*`/`verify-db`/
+   `chat-migration` admin endpoints this section used to warn about are gone — removed in an
+   earlier pass (commit `0aeed6b`), plus `/api/admin/jobs-migration` (a one-time "jobs table
+   doesn't exist yet" bootstrap helper, dropped once the table existed live). Every remaining
+   route under `app/api/admin/` calls `requireAdmin()`/`getAdminUser()` (`lib/auth/require-admin.ts`)
+   or an equivalent inline check — verified by grepping every `app/api/admin/**/route.ts` for one.
+   New admin routes: use the shared `requireAdmin()` helper rather than hand-rolling the check again.
 6. **`app/api/v1/*` is a stub** (`/api/v1/upload` returns `{ message: "Upload API v1" }`). The real
    endpoints are the unversioned ones.
 7. **`zod` is installed but unused** — validation is ad-hoc. Adopting it for API bodies is the

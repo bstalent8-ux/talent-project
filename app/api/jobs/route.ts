@@ -1,11 +1,34 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyJobCreated } from "@/lib/notifications/events";
 import { canCreateJob } from "@/lib/permissions";
 import { invalidateJobs, privateNoStoreHeaders, publicCacheHeaders } from "@/lib/cache";
+
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+// Real client (app/(main)/jobs/create) always sends numbers-or-null for the
+// budget/slots fields and "YYYY-MM-DD"-or-null for the dates — this was
+// entirely unvalidated server-side before (only `title` was checked), so a
+// direct caller could post a negative budget, thousands of slots, or a
+// multi-megabyte description straight into a public listing.
+export const createJobSchema = z.object({
+  title:       z.string().trim().min(3).max(120),
+  description: z.string().trim().max(5000).nullable().optional(),
+  category:    z.string().trim().max(60).nullable().optional(),
+  budget_min:  z.number().nonnegative().max(10_000_000).nullable().optional(),
+  budget_max:  z.number().nonnegative().max(10_000_000).nullable().optional(),
+  currency:    z.string().trim().max(10).default("EGP"),
+  start_date:  z.string().regex(DATE_ONLY).nullable().optional(),
+  end_date:    z.string().regex(DATE_ONLY).nullable().optional(),
+  slots:       z.number().int().positive().max(50).default(1),
+}).refine(
+  (d) => d.budget_min == null || d.budget_max == null || d.budget_min <= d.budget_max,
+  { message: "budget_min must be less than or equal to budget_max", path: ["budget_min"] },
+);
 
 // GET /api/jobs?status=open&category=&limit=50
 export async function GET(req: NextRequest) {
@@ -53,24 +76,30 @@ export async function POST(req: NextRequest) {
   const permission = canCreateJob(profile);
   if (!permission.allowed) return NextResponse.json({ error: permission.reason === "role" ? "brands only" : "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
-  const body = await req.json();
-  const { title, description, category, budget_min, budget_max, currency = "EGP", start_date, end_date, slots = 1 } = body;
-
-  if (!title?.trim()) return NextResponse.json({ error: "title required" }, { status: 400, headers: privateNoStoreHeaders() });
+  let body: z.infer<typeof createJobSchema>;
+  try {
+    body = createJobSchema.parse(await req.json());
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid input", issues: err.issues }, { status: 400, headers: privateNoStoreHeaders() });
+    }
+    return NextResponse.json({ error: "invalid request body" }, { status: 400, headers: privateNoStoreHeaders() });
+  }
+  const { title, description, category, budget_min, budget_max, currency, start_date, end_date, slots } = body;
 
   const { data: job, error } = await adminClient
     .from("jobs")
     .insert({
       brand_id: user.id,
-      title: title.trim(),
-      description: description?.trim() ?? null,
+      title,
+      description: description ?? null,
       category: category ?? null,
-      budget_min: budget_min ? Number(budget_min) : null,
-      budget_max: budget_max ? Number(budget_max) : null,
+      budget_min: budget_min ?? null,
+      budget_max: budget_max ?? null,
       currency,
       start_date: start_date ?? null,
       end_date: end_date ?? null,
-      slots: Number(slots) || 1,
+      slots,
       status: "open",
     })
     .select()

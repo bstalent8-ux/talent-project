@@ -63,15 +63,17 @@ export default async function JobsPage() {
   );
 
   if (result.error) {
-    // Table doesn't exist yet — show setup message
+    // The `jobs` table has existed in production for a while now — this is
+    // a generic fallback for an unexpected query failure, not a setup step.
+    // (The old /api/admin/jobs-migration bootstrap route this used to point
+    // at is gone — it was a one-time "table doesn't exist yet" helper.)
     return (
       <ComingSoonOverlay>
         <div className={styles.setupError}>
           <div className={styles.setupCard}>
             <span className={styles.setupIcon}><Construction size={26} /></span>
-            <p className={styles.setupTitle}>Jobs table not set up yet</p>
-            <p className={styles.setupText}>Call GET /api/admin/jobs-migration to get the SQL, then run it in Supabase.</p>
-            <a href="/api/admin/jobs-migration" className={styles.setupLink}>/api/admin/jobs-migration</a>
+            <p className={styles.setupTitle}>Something went wrong loading jobs</p>
+            <p className={styles.setupText}>Please try again shortly.</p>
           </div>
         </div>
       </ComingSoonOverlay>

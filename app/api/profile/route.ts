@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { normalizeCategoryId, setProfileCategories } from "@/features/categories/services/category.service";
@@ -24,6 +25,22 @@ const PROFILE_FIELDS = [
 
 const ALLOWED_ROLES = ["talent", "brand"] as const;
 
+// Scoped to the PROFILE_FIELDS this route writes directly through `pick()` —
+// talentProfileData/brandProfileData/categoryIds go through the provider
+// layer's own schemas (features/profiles/validation/config-schemas.ts) and
+// aren't touched here. Before this, `pick()` copied whatever type showed up
+// (a number, an object, an unbounded string) straight into the `profiles`
+// upsert with zero shape/length check.
+export const profileDataSchema = z.object({
+  handle:       z.string().trim().min(2).max(40).optional(),
+  full_name:    z.string().trim().min(1).max(100).optional(),
+  avatar_url:   z.string().trim().max(2000).nullable().optional(),
+  city:         z.string().trim().max(60).nullable().optional(),
+  bio:          z.string().trim().max(1000).nullable().optional(),
+  phone_number: z.string().trim().max(20).nullable().optional(),
+  phone:        z.string().trim().max(20).nullable().optional(),
+});
+
 function pick<T extends Record<string, unknown>>(src: unknown, keys: readonly string[]): T {
   const out: Record<string, unknown> = {};
   if (src && typeof src === "object") {
@@ -42,7 +59,17 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: privateNoStoreHeaders() });
 
     const body = await req.json();
-    const { userId, role, profileData, talentProfileData, categoryIds, brandProfileData } = body;
+    const { userId, role, talentProfileData, categoryIds, brandProfileData } = body;
+
+    let profileData: z.infer<typeof profileDataSchema>;
+    try {
+      profileData = profileDataSchema.parse(body.profileData ?? {});
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return NextResponse.json({ error: "Invalid input", issues: err.issues }, { status: 400, headers: privateNoStoreHeaders() });
+      }
+      throw err;
+    }
 
     // A caller may only ever write its own profile.
     if (userId && userId !== user.id) {

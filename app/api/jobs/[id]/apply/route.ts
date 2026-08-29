@@ -1,12 +1,25 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyJobApplicationReceived } from "@/lib/notifications/events";
 import { logJobApplication } from "@/lib/events/events";
 import { canApplyJob } from "@/lib/permissions";
 import { privateNoStoreHeaders } from "@/lib/cache";
+
+// Real client (ApplyModal.tsx) always sends proposed_price/message and
+// either omits delivery_days/portfolio_links or sends null — nothing here
+// existed before this pass, so a direct/malicious caller could post an
+// unbounded message, a NaN price (Number("garbage") swallowed silently),
+// or arbitrary non-URL junk into portfolio_links.
+export const applySchema = z.object({
+  message:         z.string().trim().min(1).max(2000),
+  proposed_price:  z.number().positive().max(10_000_000),
+  delivery_days:   z.number().int().positive().max(365).nullable().optional(),
+  portfolio_links: z.array(z.string().url()).max(10).nullable().optional(),
+});
 
 // POST /api/jobs/[id]/apply — talent submits a proposal
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -56,8 +69,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500, headers: privateNoStoreHeaders() });
   if (existing) return NextResponse.json({ application: existing, already_applied: true }, { headers: privateNoStoreHeaders() });
 
-  const body = await req.json().catch(() => ({}));
-  const { message, proposed_price, delivery_days, portfolio_links } = body;
+  let parsed: z.infer<typeof applySchema>;
+  try {
+    parsed = applySchema.parse(await req.json());
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid input", issues: err.issues }, { status: 400, headers: privateNoStoreHeaders() });
+    }
+    return NextResponse.json({ error: "invalid request body" }, { status: 400, headers: privateNoStoreHeaders() });
+  }
+  const { message, proposed_price, delivery_days, portfolio_links } = parsed;
 
   const { data: application, error } = await adminClient
     .from("job_applications")
@@ -65,9 +86,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       job_id: jobId,
       talent_id: user.id,
       status: "pending",
-      message: message ?? null,
-      proposed_price: proposed_price ? Number(proposed_price) : null,
-      delivery_days: delivery_days ? Number(delivery_days) : null,
+      message,
+      proposed_price,
+      delivery_days: delivery_days ?? null,
       portfolio_links: portfolio_links ?? null,
     })
     .select()

@@ -31,6 +31,8 @@ export default defineConfig({
       "lib/**/*.test.ts",
       "app/api/profile/**/*.test.ts",
       "app/api/events/**/*.test.ts",
+      "app/api/jobs/**/*.test.ts",
+      "app/api/bookings/**/*.test.ts",
       "app/\\(auth\\)/register/**/*.test.ts",
     ],
   },

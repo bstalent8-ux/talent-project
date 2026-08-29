@@ -131,17 +131,17 @@ export const pageCopy = {
   },
 } as const;
 
-// All 4 values are overridden with real numbers in LandingPage.tsx's
-// HeroSection (totalTalents / completedProjects / avgRating from the DB) —
-// these are only the fallback shown before that data resolves, plus the
-// labels. index 2 used to be a fabricated "98% satisfaction" (no
-// satisfaction-survey data exists anywhere in the schema); it's real avg
-// rating now instead.
+// Only index 1 (avg rating) is overridden with a real DB number in
+// LandingPage.tsx's HeroSection — this is its fallback before that data
+// resolves. index 0 and 2 are deliberately non-numeric: the platform is new
+// enough that "+37 talents" / "+203 projects" read as unimpressive rather
+// than trustworthy, so this strip leads with what's true regardless of
+// scale (every talent goes through manual review; support is real) instead
+// of small counts.
 export const stats = [
-  { value: "0", label: { ar: "موهبة موثقة", en: "Verified talents" } },
-  { value: "0", label: { ar: "مشروع مكتمل", en: "Completed projects" } },
-  { value: "—", label: { ar: "متوسط التقييم", en: "Avg. rating" } },
-  { value: "24/7", label: { ar: "دعم على مدار الساعة", en: "Support coverage" } },
+  { value: { ar: "موثّقة", en: "Verified" }, label: { ar: "كل المواهب بعد مراجعة يدوية", en: "Every talent, manually reviewed" } },
+  { value: { ar: "—", en: "—" }, label: { ar: "متوسط التقييم", en: "Avg. rating" } },
+  { value: { ar: "24/7", en: "24/7" }, label: { ar: "دعم على مدار الساعة", en: "Support coverage" } },
 ];
 
 // Platform restricted to UGC + Model talents only (matches
