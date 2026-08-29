@@ -114,18 +114,6 @@ const TX = {
     errRateLimit:     "تم إجراء محاولات تسجيل كثيرة. انتظر قليلًا ثم حاول مرة أخرى.",
     errProfileFailure: "تعذر إكمال إنشاء حسابك. حاول مرة أخرى.",
     errUnknown:       "تعذر إنشاء الحساب. راجع بياناتك وحاول مرة أخرى.",
-    otpTitle:        "تفعيل بريدك الإلكتروني",
-    otpSub:          "بعتنالك كود مكون من 6 أرقام على",
-    otpCodePH:       "------",
-    otpVerifyBtn:    "تفعيل وإنشاء الحساب ←",
-    otpVerifying:    "جاري التفعيل...",
-    otpResend:       "إعادة إرسال الكود",
-    otpResendIn:     "إعادة الإرسال بعد",
-    otpChangeEmail:  "تغيير البريد الإلكتروني",
-    otpErrInvalid:   "الكود غلط. حاول تاني.",
-    otpErrExpired:   "الكود انتهت صلاحيته. اطلب كود جديد.",
-    otpErrTooMany:   "محاولات كتير. اطلب كود جديد.",
-    otpErrSendFailed: "تعذر إرسال الكود. حاول مرة أخرى.",
     showPass:        "إظهار كلمة المرور",
     hidePass:        "إخفاء كلمة المرور",
     langBtn:         "تغيير اللغة",
@@ -183,18 +171,6 @@ const TX = {
     errRateLimit:     "Too many registration attempts. Please wait a moment and try again.",
     errProfileFailure: "Your account could not be completed. Please try again.",
     errUnknown:       "We couldn't create your account. Check your information and try again.",
-    otpTitle:        "Verify your email",
-    otpSub:          "We sent a 6-digit code to",
-    otpCodePH:       "------",
-    otpVerifyBtn:    "Verify & create account →",
-    otpVerifying:    "Verifying...",
-    otpResend:       "Resend code",
-    otpResendIn:     "Resend in",
-    otpChangeEmail:  "Change email",
-    otpErrInvalid:   "Wrong code. Try again.",
-    otpErrExpired:   "Code expired. Request a new one.",
-    otpErrTooMany:   "Too many attempts. Request a new code.",
-    otpErrSendFailed: "Couldn't send the code. Please try again.",
     showPass:        "Show password",
     hidePass:        "Hide password",
     langBtn:         "Toggle language",
@@ -228,21 +204,6 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [signInPrompt, setSignInPrompt] = useState(false);
-
-  // Email OTP gate — "form" is the normal registration form; "code" swaps in
-  // a 6-digit verification step that must pass before signUp() ever runs.
-  const [otpStep, setOtpStep] = useState<"form" | "code">("form");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpVerifying, setOtpVerifying] = useState(false);
-  const [otpError, setOtpError] = useState<string | null>(null);
-  const [otpCooldown, setOtpCooldown] = useState(0);
-
-  useEffect(() => {
-    if (otpCooldown <= 0) return;
-    const id = setInterval(() => setOtpCooldown((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(id);
-  }, [otpCooldown]);
 
   // Synchronous re-entrancy guard: React state (`loading`) only disables the
   // button after a re-render, which leaves a real window for a second click
@@ -302,9 +263,11 @@ export default function RegisterPage() {
     setServerError(null);
   };
 
-  // Step 1: validate the form, then request an email OTP instead of calling
-  // signUp() directly. signUp() only ever runs after verifyOtpAndComplete()
-  // succeeds (below).
+  // Validate the form, then go straight to signUp() + /api/profile — no
+  // email verification step. (Was a 2-step OTP gate; removed per request —
+  // fill the form, submit, land in the app. lib/email-otp.ts and
+  // /api/auth/otp/email/* are untouched and still work if this needs to
+  // come back, they're just not called from here anymore.)
   const handleSubmit = async () => {
     if (isSubmittingRef.current) return;
 
@@ -317,94 +280,10 @@ export default function RegisterPage() {
       return;
     }
 
-    isSubmittingRef.current = true;
     setFieldErrors({});
-    setServerError(null);
     setSignInPrompt(false);
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/auth/otp/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email.trim().toLowerCase(), lang }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setServerError(body.error === "cooldown" ? tx.otpErrSendFailed : tx.otpErrSendFailed);
-        return;
-      }
-      setOtpStep("code");
-      setOtpCode("");
-      setOtpError(null);
-      setOtpCooldown(45);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "";
-      setServerError(/fetch|network/i.test(message) ? tx.errNetwork : tx.otpErrSendFailed);
-    } finally {
-      isSubmittingRef.current = false;
-      setLoading(false);
-    }
-  };
-
-  async function resendOtp() {
-    if (otpCooldown > 0 || otpSending) return;
-    setOtpSending(true);
-    setOtpError(null);
-    try {
-      const res = await fetch("/api/auth/otp/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email.trim().toLowerCase(), lang }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setOtpCooldown(body.retryAfterSeconds ?? 45);
-        if (body.error !== "cooldown") setOtpError(tx.otpErrSendFailed);
-        return;
-      }
-      setOtpCode("");
-      setOtpCooldown(45);
-    } catch {
-      setOtpError(tx.otpErrSendFailed);
-    } finally {
-      setOtpSending(false);
-    }
-  }
-
-  // Step 2: verify the code, then run the original signUp() + /api/profile
-  // flow — unchanged below this point.
-  async function verifyOtpAndComplete() {
-    if (isSubmittingRef.current || !otpCode.trim()) return;
-    isSubmittingRef.current = true;
-    setOtpVerifying(true);
-    setOtpError(null);
-
-    try {
-      const res = await fetch("/api/auth/otp/email/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email.trim().toLowerCase(), code: otpCode.trim() }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setOtpError(
-          body.error === "too_many_attempts" ? tx.otpErrTooMany :
-          body.error === "expired_or_missing" ? tx.otpErrExpired :
-          tx.otpErrInvalid
-        );
-        return;
-      }
-    } catch {
-      setOtpError(tx.errNetwork);
-      return;
-    } finally {
-      setOtpVerifying(false);
-      isSubmittingRef.current = false;
-    }
-
     await completeRegistration();
-  }
+  };
 
   async function completeRegistration() {
     if (isSubmittingRef.current) return;
@@ -425,7 +304,6 @@ export default function RegisterPage() {
         const mapped = mapSignUpError(signUpErr, tx, (unmapped) => {
           console.error("[register] unmapped signUp error", unmapped);
         });
-        setOtpStep("form");
         if (mapped.field) {
           setFieldErrors({ [mapped.field]: mapped.message });
           setSignInPrompt(mapped.action === "signin");
@@ -439,7 +317,6 @@ export default function RegisterPage() {
       const uid = data.user?.id;
       if (!uid) {
         console.error("[register] signUp succeeded with no user id", data);
-        setOtpStep("form");
         setServerError(tx.errUnknown);
         return;
       }
@@ -509,7 +386,6 @@ export default function RegisterPage() {
         let detail = "";
         try { detail = JSON.stringify(await profileRes.json()); } catch { /* ignore */ }
         console.error("[register] profile creation failed", profileRes.status, detail);
-        setOtpStep("form");
         setServerError(tx.errProfileFailure);
         return;
       }
@@ -549,7 +425,6 @@ export default function RegisterPage() {
         "/onboarding"
       ));
     } catch (e) {
-      setOtpStep("form");
       const message = e instanceof Error ? e.message : "";
       if (/fetch|network/i.test(message)) {
         setServerError(tx.errNetwork);
@@ -611,61 +486,6 @@ export default function RegisterPage() {
             <p className={styles.errorBanner} role="alert">{serverError}</p>
           )}
 
-          {otpStep === "code" ? (
-            <div className={styles.fieldGroup}>
-              <p className={styles.subheading} style={{ margin: 0 }}>
-                {tx.otpSub} <strong>{form.email.trim()}</strong>
-              </p>
-              <div>
-                <label className={styles.label} htmlFor="register-otp">{tx.otpTitle}</label>
-                <input
-                  id="register-otp"
-                  className={`${styles.input} ${otpError ? styles.inputInvalid : ""}`}
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  placeholder={tx.otpCodePH}
-                  value={otpCode}
-                  aria-invalid={Boolean(otpError) || undefined}
-                  onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setOtpError(null); }}
-                  onKeyDown={(e) => e.key === "Enter" && verifyOtpAndComplete()}
-                  style={{ textAlign: "center", letterSpacing: 6, fontSize: 20 }}
-                />
-                {otpError && <p className={styles.fieldError} role="alert">{otpError}</p>}
-              </div>
-
-              <button
-                type="button"
-                className={styles.submitButton}
-                onClick={verifyOtpAndComplete}
-                disabled={otpVerifying || otpCode.trim().length !== 6}
-              >
-                {otpVerifying ? tx.otpVerifying : tx.otpVerifyBtn}
-              </button>
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <button
-                  type="button"
-                  className={styles.textLink}
-                  style={{ background: "none", border: "none", cursor: otpCooldown > 0 || otpSending ? "default" : "pointer", padding: 0, fontSize: 12.5, opacity: otpCooldown > 0 || otpSending ? 0.5 : 1 }}
-                  onClick={resendOtp}
-                  disabled={otpCooldown > 0 || otpSending}
-                >
-                  {otpCooldown > 0 ? `${tx.otpResendIn} ${otpCooldown}s` : tx.otpResend}
-                </button>
-                <button
-                  type="button"
-                  className={styles.textLink}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 12.5 }}
-                  onClick={() => { setOtpStep("form"); setOtpCode(""); setOtpError(null); }}
-                >
-                  {tx.otpChangeEmail}
-                </button>
-              </div>
-            </div>
-          ) : (
-          <>
           {/* Role toggle */}
           <div className={styles.field}>
             <span className={styles.label}>{tx.iAm}</span>
@@ -888,8 +708,6 @@ export default function RegisterPage() {
               {loading ? tx.loading : tx.submit}
             </button>
           </div>
-          </>
-          )}
 
           <p className={styles.footNote}>
             {tx.haveAccount}{" "}
