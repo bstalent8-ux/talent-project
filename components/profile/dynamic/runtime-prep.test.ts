@@ -36,6 +36,7 @@ const dto: PublicProfileDTO = {
     isVerified: true,
     createdAt: "2023-05-01T00:00:00.000Z",
     typeSlug: "talent",
+    isOnline: false,
   },
   meta: {
     typeSlug: "talent",

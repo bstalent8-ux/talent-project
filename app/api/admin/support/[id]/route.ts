@@ -70,3 +70,18 @@ export async function PATCH(
   revalidatePath("/admin/support");
   return NextResponse.json({ ok: true });
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const admin = await requireAdmin();
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { id } = await params;
+  const { error } = await adminClient.from("contact_messages").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  revalidatePath("/admin/support");
+  return NextResponse.json({ ok: true });
+}

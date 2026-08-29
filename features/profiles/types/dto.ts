@@ -22,6 +22,9 @@ export interface SharedIdentityDTO {
   isVerified: boolean;
   createdAt:  string;
   typeSlug:   string;
+  // Whether profile.last_active_at falls inside lib/online-status.ts's
+  // window — a real "seen recently" signal, not the availability toggle.
+  isOnline:   boolean;
 }
 
 /**

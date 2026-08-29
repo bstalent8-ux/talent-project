@@ -1177,7 +1177,16 @@
   .filters {
     position: fixed;
     inset-block: 0;
-    inset-inline-end: 0;
+    /* Physical `right`, not `inset-inline-end` — the logical property was
+       the actual bug here (confirmed live: a bare `position:fixed;
+       inset-inline-end:0` box anchors flush LEFT instead of right in this
+       stack, an engine quirk independent of `dir`/build config — verified
+       by testing `inset-inline-end` vs. plain `right` side by side on an
+       isolated element, same result both times). That's why the open
+       drawer floated mid-viewport with page content visible on both
+       sides instead of docking to the true right edge. Physical `right`
+       has no such ambiguity. */
+    right: 0;
     z-index: 61;
     width: min(320px, 88vw);
     max-height: 100vh;
@@ -1186,17 +1195,13 @@
     transition: transform var(--duration-slow) var(--ease-out-quint);
   }
 
-  /* Pre-existing bug, fixed in passing: `inset-inline-start: 0` in an RTL
-     context resolves to physical `right: 0` (inline-start is the RIGHT
-     edge in RTL, not the left) — so this rule was anchoring the drawer to
-     the same right edge as the LTR rule above, just with a transform that
-     overshot the left viewport edge instead of clearing it, leaving a
-     permanent sliver on screen even when closed. Physical `left: 0` is
-     what "drawer opens from the left in RTL" actually requires. */
+  /* Pre-existing bug, fixed in passing: this used to be written with
+     `inset-inline-start`/`inset-inline-end`, which — see the comment on
+     `.filters` above — don't resolve the way the RTL/LTR split here
+     needs. Both sides of the split are now plain physical `left`/`right`. */
   :global([dir="rtl"]) .filters {
-    inset-inline-end: auto;
-    left: 0;
     right: auto;
+    left: 0;
     transform: translateX(-100%);
   }
 

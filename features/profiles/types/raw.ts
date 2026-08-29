@@ -52,6 +52,7 @@ export interface RawSharedProfile {
   brand_status:    string | null;
   created_at:      string;
   profile_type_id: string | null;
+  last_active_at:  string | null;
 }
 
 /**

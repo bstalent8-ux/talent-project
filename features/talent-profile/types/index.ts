@@ -136,6 +136,9 @@ export interface TalentData {
   category?: string | null;
   /** Hero-adjacent identity line (public UGC/Model profile). Empty → hidden. */
   availability?: string | null;
+  /** Real presence — profile.last_active_at within lib/online-status.ts's
+   * window. NOT the same thing as `availability` ("open for bookings"). */
+  isOnline?: boolean;
   /** Structured weekly hours + exceptions, when the talent has filled it in. */
   availabilitySchedule?: import("@/lib/availability-schedule").AvailabilitySchedule | null;
   languages?: string | null;

@@ -140,7 +140,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
                   )}
                 </div>
               </div>
-              {talent.availability === "available" && (
+              {talent.isOnline && (
                 <span style={{
                   position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)",
                   backgroundColor: "rgba(15,23,42,0.9)", border: `1px solid ${EMERALD}99`, borderRadius: 20,

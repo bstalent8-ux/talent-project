@@ -4,8 +4,9 @@ import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
+import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import type { AdminSupportTicket } from "@/features/admin/services/admin.service";
-import { Copy, Image as ImageIcon, Mail, Phone, X } from "lucide-react";
+import { Copy, Image as ImageIcon, Mail, Phone, Trash2, X } from "lucide-react";
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   new:         { bg: "rgba(239,68,68,0.15)",  text: "#EF4444" },
@@ -31,6 +32,7 @@ const TX = {
     emailAuto: "هيتبعت للمستخدم تلقائي على إيميله.",
     emailManual: "الإيميل مش مربوط بالمنصة — الرد بيتحفظ هنا بس، لازم تتواصل مع المستخدم يدوي.",
     copyEmail: "نسخ الإيميل", copied: "اتنسخ ✓", tickets: "تذكرة",
+    delete: "حذف", deleteTitle: "حذف التذكرة؟", deleteDesc: "الإجراء ده نهائي ومش هينفع يتراجع.",
   },
   en: {
     from: "From", subject: "Subject", status: "Status",
@@ -44,6 +46,7 @@ const TX = {
     emailAuto: "This will be emailed to the user automatically.",
     emailManual: "No email provider is connected — this reply is saved here only, you'll need to contact the user manually.",
     copyEmail: "Copy email", copied: "Copied ✓", tickets: "tickets",
+    delete: "Delete", deleteTitle: "Delete this ticket?", deleteDesc: "This is permanent and can't be undone.",
   },
 };
 
@@ -76,6 +79,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
   const [reply, setReply] = useState("");
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<AdminSupportTicket | null>(null);
 
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "#1e293b" : "#E2E8F0";
@@ -106,6 +110,15 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
     }
   }
 
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    const id = pendingDelete.id;
+    setPendingDelete(null);
+    if (selected?.id === id) setSelected(null);
+    await fetch(`/api/admin/support/${id}`, { method: "DELETE" });
+    router.refresh();
+  }
+
   function copyEmail(email: string) {
     navigator.clipboard?.writeText(email);
     setCopied(true);
@@ -131,6 +144,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                   <th style={thStyle}>{t.subject}</th>
                   <th style={thStyle}>{t.status}</th>
                   <th style={thStyle}>{t.submitted}</th>
+                  <th style={thStyle} />
                 </tr>
               </thead>
               <tbody>
@@ -164,6 +178,16 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                       </td>
                       <td style={{ ...cellStyle, color: MUTED, whiteSpace: "nowrap" }}>
                         {new Date(v.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}
+                      </td>
+                      <td style={{ ...cellStyle, width: 1 }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setPendingDelete(v); }}
+                          title={t.delete}
+                          aria-label={t.delete}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-error)", display: "flex", padding: 4 }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -297,14 +321,32 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
               <button
                 disabled={saving || !reply.trim()}
                 onClick={() => patch(selected.id, { reply })}
-                style={{ marginLeft: ar ? 0 : "auto", marginRight: ar ? "auto" : 0, padding: "8px 16px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: reply.trim() ? "pointer" : "not-allowed", opacity: reply.trim() ? 1 : 0.5 }}
+                style={{ padding: "8px 16px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: reply.trim() ? "pointer" : "not-allowed", opacity: reply.trim() ? 1 : 0.5 }}
               >
                 {t.send}
+              </button>
+              <button
+                disabled={saving}
+                onClick={() => setPendingDelete(selected)}
+                title={t.delete}
+                aria-label={t.delete}
+                style={{ marginInlineStart: "auto", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--color-error)", backgroundColor: "transparent", color: "var(--color-error)", display: "flex", cursor: "pointer" }}
+              >
+                <Trash2 size={15} />
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        open={!!pendingDelete}
+        title={t.deleteTitle}
+        description={t.deleteDesc}
+        confirmLabel={t.delete}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </>
   );
 }

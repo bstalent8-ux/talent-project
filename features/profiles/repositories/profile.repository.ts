@@ -13,7 +13,7 @@ import type {
 } from "../types/raw";
 
 const SHARED_COLUMNS =
-  "id, role, full_name, handle, avatar_url, city, bio, phone_number, is_verified, account_status, brand_status, created_at, profile_type_id";
+  "id, role, full_name, handle, avatar_url, city, bio, phone_number, is_verified, account_status, brand_status, created_at, profile_type_id, last_active_at";
 
 const TYPE_COLUMNS =
   "id, slug, name, description, name_ar, name_en, core_table, provider_key, is_bookable, route_prefix, is_active, sort_order";

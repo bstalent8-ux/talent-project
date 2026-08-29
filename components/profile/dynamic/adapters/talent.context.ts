@@ -56,6 +56,7 @@ export function toTalentData(dto: PublicProfileDTO): TalentData {
     specialties:  core.specialties ?? [],
     category:     core.category ?? null,
     availability: core.availability ?? null,
+    isOnline:     identity.isOnline,
     availabilitySchedule: parseAvailabilitySchedule(core.availabilitySchedule),
     modelMetrics: core.modelMetrics,
     languages:    typeof social.languages === "string" && social.languages.trim().length > 0

@@ -12,6 +12,7 @@ import "server-only";
 // surfaces mid-migration.
 
 import { safePublicDisplayName, redactEmails } from "@/lib/public-display-name";
+import { isRecentlyActive } from "@/lib/online-status";
 import { ProfileError } from "../errors/profile-error";
 import { providerRegistry } from "../providers/registry";
 import { createGenericProvider } from "../providers/generic.provider";
@@ -85,6 +86,7 @@ function toIdentityDTO(profile: RawSharedProfile, typeSlug: string, publicDTO: b
     bio:        publicDTO ? redactEmails(profile.bio) : profile.bio,
     isVerified: Boolean(profile.is_verified),
     createdAt:  profile.created_at,
+    isOnline:   isRecentlyActive(profile.last_active_at),
     typeSlug,
   };
 }

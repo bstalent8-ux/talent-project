@@ -6,7 +6,7 @@ function profileWith(core: Partial<TalentPublicCore>): PublicProfileDTO {
   return {
     identity: {
       id: "u1", handle: "sara", fullName: "Sara", avatarUrl: null, city: "Cairo",
-      bio: "hi", isVerified: false, createdAt: "2026-01-01", typeSlug: "talent",
+      bio: "hi", isVerified: false, createdAt: "2026-01-01", typeSlug: "talent", isOnline: false,
     },
     meta: { typeSlug: "talent", label: { ar: "موهبة", en: "Talent" }, routePrefix: "talent", bookable: true },
     core: {

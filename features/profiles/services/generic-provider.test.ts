@@ -34,7 +34,7 @@ function makeIdentity(type: RawProfileType | null): IdentityRow {
     handle: "test-generic-profile", avatar_url: null, city: null, bio: null,
     phone_number: null, is_verified: false, account_status: "active",
     brand_status: null, created_at: new Date().toISOString(),
-    profile_type_id: type?.id ?? null,
+    profile_type_id: type?.id ?? null, last_active_at: null,
   };
   return { profile, type };
 }
