@@ -14,10 +14,14 @@ export const metadata: Metadata = {
   // The app/icon.png metadata-route convention doesn't survive
   // @cloudflare/next-on-pages — the <link rel="icon"> tag it's supposed to
   // auto-inject was simply missing from the production HTML (confirmed live
-  // against talent-s.com), unlike every other asset served from public/,
-  // which next-on-pages handles fine. Serving the same file from public/ and
-  // declaring it explicitly here sidesteps whatever that incompatibility is.
-  icons: { icon: "/favicon.png" },
+  // against talent-s.com). Moving the file into public/ wasn't enough either
+  // — public/favicon.png specifically 404'd in production with
+  // `x-matched-path: /_not-found`, meaning Next's own router (not Cloudflare's
+  // static-asset layer) was swallowing that exact filename, unlike every
+  // other file under public/ (all served fine). "favicon" appears to be a
+  // reserved name regardless of directory. site-icon.png has no special
+  // meaning to Next at all, sidestepping that entirely.
+  icons: { icon: "/site-icon.png" },
 };
 
 export const viewport: Viewport = {
