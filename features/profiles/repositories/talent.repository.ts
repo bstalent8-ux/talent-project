@@ -180,7 +180,16 @@ export const talentRepository = {
   async findBrands(talentProfileId: string): Promise<RawTalentBrandRow[]> {
     const { data, error } = await adminClient
       .from("talent_brands")
-      .select("id, brand_name, logo_url, year_collaborated, sort_order, verified")
+      // NOTE: `verified` is NOT selected — the 20260819_talent_brands_verified.sql
+      // migration that adds it has never actually been run against the live DB
+      // (CLAUDE.md §6: these files are pasted into the Supabase SQL editor by a
+      // human, not auto-applied). Selecting a column Postgres doesn't have threw
+      // "column talent_brands.verified does not exist" on EVERY single talent
+      // profile page view site-wide (findBrands runs on every visit) — this was
+      // the real cause of both the 404s on freshly-approved talents and a major
+      // share of today's Error 1102s. Restore `verified` here once that
+      // migration has actually been run live.
+      .select("id, brand_name, logo_url, year_collaborated, sort_order")
       .eq("talent_profile_id", talentProfileId)
       .order("sort_order", { ascending: true });
 
