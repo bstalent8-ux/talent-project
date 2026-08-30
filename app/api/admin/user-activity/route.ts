@@ -12,6 +12,7 @@ import {
   fetchAdminUserActivityStats,
   fetchAdminUserActivityPage,
   fetchAdminUserActivityVisitors,
+  fetchAdminTrafficSources,
   type UserEventName,
 } from "@/features/admin/services/admin.service";
 
@@ -40,11 +41,12 @@ export async function GET(req: NextRequest) {
   const to       = sp.get("to") ?? undefined;
   const eventName = (sp.get("event") ?? undefined) as UserEventName | undefined;
 
-  const [stats, { events, total }, visitors] = await Promise.all([
+  const [stats, { events, total }, visitors, trafficSources] = await Promise.all([
     fetchAdminUserActivityStats({ from, to }),
     fetchAdminUserActivityPage({ page, pageSize, from, to, eventName }),
     fetchAdminUserActivityVisitors({ from, to }),
+    fetchAdminTrafficSources({ from, to }),
   ]);
 
-  return NextResponse.json({ stats, events, total, visitors });
+  return NextResponse.json({ stats, events, total, visitors, trafficSources });
 }

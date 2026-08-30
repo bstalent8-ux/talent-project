@@ -96,14 +96,28 @@ const METADATA_VALIDATORS: Record<ClientEvent, (raw: unknown) => Record<string, 
     }
     return out;
   },
+  // utm_*: best-effort attribution captured client-side (lib/analytics/
+  // attribution.ts) from whatever tagged link the visitor last arrived on —
+  // lets admin reporting tell a paid-ad signup apart from an organic
+  // Facebook-group-post signup, which Meta Pixel's own click attribution
+  // cannot do (it only recognizes a paid ad's fbclid).
   signup: (raw) => {
     if (raw === undefined) return {};
     if (!isPlainRecord(raw)) return null;
-    for (const key of Object.keys(raw)) if (key !== "role") return null;
+    for (const key of Object.keys(raw)) {
+      if (key !== "role" && key !== "utm_source" && key !== "utm_medium" && key !== "utm_campaign") return null;
+    }
     const out: Record<string, unknown> = {};
     if (raw.role !== undefined) {
       if (raw.role !== "talent" && raw.role !== "brand") return null;
       out.role = raw.role;
+    }
+    for (const key of ["utm_source", "utm_medium", "utm_campaign"] as const) {
+      if (raw[key] !== undefined) {
+        const v = str(raw[key], 100);
+        if (v === null) return null;
+        out[key] = v;
+      }
     }
     return out;
   },

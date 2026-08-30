@@ -12,6 +12,7 @@ import { safeNextPath } from "@/lib/safe-next-path";
 import SupportTicketModal from "@/components/support/SupportTicketModal";
 import { trackEvent } from "@/lib/analytics/track";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { getAttribution } from "@/lib/analytics/attribution";
 import styles from "../auth.module.css";
 import PhoneInput from "../phone/PhoneInput";
 import { detectDefaultCountryIso, findCountry, rememberCountryIso } from "../phone/countries";
@@ -393,7 +394,15 @@ export default function RegisterPage() {
       // No target — /api/events rejects a target on signup (only
       // talent_profile_view carries one). The signed-in user id is attached
       // server-side from the session, not from anything this call sends.
-      trackEvent("signup", { metadata: { role: form.role } });
+      // utm_* (if the visitor arrived on a tagged link, ad or group post)
+      // rides along so admin reporting can tell the two apart. No tag at all
+      // (a plain share, group post without a link tag, direct visit, etc.)
+      // is explicitly recorded as "organic" rather than left blank — paid
+      // links are the ones that get tagged, everything else defaults here.
+      const attribution = getAttribution();
+      trackEvent("signup", {
+        metadata: { role: form.role, ...attribution, utm_source: attribution?.utm_source ?? "organic" },
+      });
       trackMetaEvent("CompleteRegistration", { content_name: form.role });
 
       // Analytics-only — logged for every talent signup (ugc/model/other) so

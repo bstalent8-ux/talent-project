@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { firePageView } from "@/lib/analytics/page-view";
 import { startEngagementTracking } from "@/lib/analytics/page-engagement";
+import { captureAttribution } from "@/lib/analytics/attribution";
 
 export default function PageViewTracker() {
   const pathname = usePathname();
@@ -15,6 +16,9 @@ export default function PageViewTracker() {
 
   useEffect(() => {
     const path = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
+    // Before firePageView so a tagged link (ad vs. group post) is captured
+    // even on the very first page_view of the visit.
+    captureAttribution(searchParams);
     firePageView(path);
     // Fires this page's "page_engagement" event when the route changes away
     // (cleanup), the tab is hidden, or the page unloads — whichever comes

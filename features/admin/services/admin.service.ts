@@ -833,6 +833,76 @@ export async function fetchAdminUserActivityPage({
   return { events, total: count ?? events.length };
 }
 
+// ─── Traffic sources (signup attribution) ──────────────────────────────────
+// Groups signup events by utm_source/utm_campaign — same join-in-JS
+// approach as the rest of this file (see CLAUDE.md §11): signup volume is
+// low enough that fetching every signup row in range and aggregating in
+// memory is cheap, and it avoids a raw-SQL jsonb GROUP BY the Supabase
+// query builder can't express. lib/analytics/attribution.ts + the register
+// page default an untagged signup to "organic" at write time, but this
+// still falls back defensively for any row written before that shipped.
+
+// Two-bucket channel a signup is credited to, derived from utm_source.
+// Only a paid ad link is "campaign" — a Facebook-group post is unpaid
+// distribution same as any other organic share, so "fb_group" (see
+// lib/analytics/attribution.ts) counts as organic here too, same as the
+// untagged fallback "organic" itself. The per-source detail table still
+// shows "fb_group" as its own row for anyone who wants that split; this
+// bucket is only the two-way paid-vs-not headline number.
+export type TrafficChannel = "campaign" | "organic";
+
+function classifyChannel(source: string): TrafficChannel {
+  return source === "organic" || source === "fb_group" ? "organic" : "campaign";
+}
+
+export interface AdminTrafficSource {
+  source:   string;
+  campaign: string | null;
+  channel:  TrafficChannel;
+  count:    number;
+}
+
+export interface AdminTrafficSummary {
+  total:    number;
+  campaign: number;
+  organic:  number;
+}
+
+export async function fetchAdminTrafficSources(range: AdminUserActivityDateRange = {}): Promise<AdminTrafficSource[]> {
+  let query = adminClient
+    .from("user_events")
+    .select("metadata")
+    .eq("event_name", "signup");
+  query = applyUserActivityDateRange(query, range);
+
+  const { data: rows, error } = await query;
+  if (error || !rows?.length) return [];
+
+  const counts = new Map<string, AdminTrafficSource>();
+  for (const row of rows) {
+    const metadata = (row.metadata ?? {}) as Record<string, unknown>;
+    const source   = typeof metadata.utm_source === "string" ? metadata.utm_source : "organic";
+    const campaign = typeof metadata.utm_campaign === "string" ? metadata.utm_campaign : null;
+    const key = `${source} ${campaign ?? ""}`;
+    const existing = counts.get(key);
+    if (existing) existing.count += 1;
+    else counts.set(key, { source, campaign, channel: classifyChannel(source), count: 1 });
+  }
+
+  return [...counts.values()].sort((a, b) => b.count - a.count);
+}
+
+/** Rolls fetchAdminTrafficSources up into the three headline buckets
+ * (+ total) the admin page's summary cards show. */
+export function summarizeTrafficSources(sources: AdminTrafficSource[]): AdminTrafficSummary {
+  const summary: AdminTrafficSummary = { total: 0, campaign: 0, organic: 0 };
+  for (const s of sources) {
+    summary.total += s.count;
+    summary[s.channel] += s.count;
+  }
+  return summary;
+}
+
 // ─── Per-visitor rollup ─────────────────────────────────────────────────────
 // "Visitor" = one real identity: a signed-in user is grouped by user_id
 // (the same person logging in from two different devices/sessions is one

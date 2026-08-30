@@ -157,6 +157,26 @@ describe("POST /api/events — metadata schema", () => {
     expect(res.status).toBe(400);
   });
 
+  it("accepts signup with utm attribution fields", async () => {
+    const res = await POST(req({
+      event_name: "signup", session_id: VALID_SESSION,
+      metadata: { role: "talent", utm_source: "fb_ad", utm_campaign: "model_ugc_aug26" },
+    }));
+    expect(res.status).toBe(200);
+    expect(logEvent).toHaveBeenCalledWith(expect.objectContaining({
+      metadata: { role: "talent", utm_source: "fb_ad", utm_campaign: "model_ugc_aug26" },
+    }));
+  });
+
+  it("rejects an unknown key on signup metadata", async () => {
+    const res = await POST(req({
+      event_name: "signup", session_id: VALID_SESSION,
+      metadata: { role: "talent", utm_content: "not-allowed" },
+    }));
+    expect(res.status).toBe(400);
+    expect(logEvent).not.toHaveBeenCalled();
+  });
+
   it("accepts missing metadata entirely", async () => {
     const res = await POST(req({ event_name: "login", session_id: VALID_SESSION }));
     expect(res.status).toBe(200);

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
-import { USER_EVENT_NAMES, type UserEventName, type AdminUserEvent, type AdminUserActivityStats, type AdminVisitor } from "@/features/admin/services/admin.service";
+import { USER_EVENT_NAMES, summarizeTrafficSources, type UserEventName, type AdminUserEvent, type AdminUserActivityStats, type AdminVisitor, type AdminTrafficSource } from "@/features/admin/services/admin.service";
 import { EVENT_LABEL, EVENT_COLOR, detailFor } from "../_lib/eventFormat";
 
 // How often the client re-polls /api/admin/user-activity for fresh data —
@@ -21,6 +21,9 @@ const TX = {
     noEvents: "لا توجد بيانات في هذه الفترة",
     visitors: "الزوار", firstSeen: "أول ظهور", lastSeen: "آخر نشاط", eventCount: "عدد الأحداث",
     noVisitors: "لا يوجد زوار في هذه الفترة",
+    trafficSources: "مصادر التسجيل", source: "المصدر", campaign: "الحملة", signups: "عدد التسجيلات",
+    noTrafficSources: "لا توجد تسجيلات في هذه الفترة", organic: "عضوي (بدون رابط معلَّم)",
+    registerTotal: "إجمالي التسجيلات", fromCampaigns: "من حملات إعلانية", fromOrganic: "عضوي (جروبات فيسبوك)",
   },
   en: {
     recent: "Recent events",
@@ -29,14 +32,18 @@ const TX = {
     noEvents: "No data in this range",
     visitors: "Visitors", firstSeen: "First seen", lastSeen: "Last active", eventCount: "Events",
     noVisitors: "No visitors in this range",
+    trafficSources: "Signup sources", source: "Source", campaign: "Campaign", signups: "Signups",
+    noTrafficSources: "No signups in this range", organic: "Organic (untagged link)",
+    registerTotal: "Total registered", fromCampaigns: "From ad campaigns", fromOrganic: "Organic (Facebook Groups)",
   },
 };
 
 interface Props {
-  stats:      AdminUserActivityStats;
-  events:     AdminUserEvent[];
-  total:      number;
-  visitors:   AdminVisitor[];
+  stats:          AdminUserActivityStats;
+  events:         AdminUserEvent[];
+  total:          number;
+  visitors:       AdminVisitor[];
+  trafficSources: AdminTrafficSource[];
   page:       number;
   pageSize:   number;
   from?:      string;
@@ -56,15 +63,17 @@ function hrefFor(page: number, from?: string, to?: string, eventName?: string) {
 
 export default function UserActivityView({
   stats: initialStats, events: initialEvents, total: initialTotal, visitors: initialVisitors,
+  trafficSources: initialTrafficSources,
   page, pageSize, from, to, eventName,
 }: Props) {
   const { dark, lang } = useSite();
   const t = TX[lang];
 
-  const [stats,    setStats]    = useState(initialStats);
-  const [events,   setEvents]   = useState(initialEvents);
-  const [total,    setTotal]    = useState(initialTotal);
-  const [visitors, setVisitors] = useState(initialVisitors);
+  const [stats,          setStats]          = useState(initialStats);
+  const [events,         setEvents]         = useState(initialEvents);
+  const [total,          setTotal]          = useState(initialTotal);
+  const [visitors,       setVisitors]       = useState(initialVisitors);
+  const [trafficSources, setTrafficSources] = useState(initialTrafficSources);
 
   // A real navigation (filter pill, pagination link) re-renders this
   // component with fresh server props — resync local state to that instead
@@ -74,7 +83,8 @@ export default function UserActivityView({
     setEvents(initialEvents);
     setTotal(initialTotal);
     setVisitors(initialVisitors);
-  }, [initialStats, initialEvents, initialTotal, initialVisitors]);
+    setTrafficSources(initialTrafficSources);
+  }, [initialStats, initialEvents, initialTotal, initialVisitors, initialTrafficSources]);
 
   // Polls the same data this page was server-rendered with, on a timer, so
   // new events (page views, clicks, engagement heartbeats) show up without
@@ -102,6 +112,7 @@ export default function UserActivityView({
         setEvents(data.events);
         setTotal(data.total);
         setVisitors(data.visitors);
+        setTrafficSources(data.trafficSources);
       } catch {
         // Fire-and-forget — the next tick just tries again.
       }
@@ -119,6 +130,8 @@ export default function UserActivityView({
   const TH     = dark ? "#0a121c" : "#f8fafc";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const trafficSummary = summarizeTrafficSources(trafficSources);
+  const SUMMARY_CARD_COLOR = { total: TEXT, campaign: "#00D26A", organic: MUTED } as const;
 
   return (
     <>
@@ -129,6 +142,51 @@ export default function UserActivityView({
             <p style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 700, color: EVENT_COLOR[key] }}>{stats[key]}</p>
           </div>
         ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
+        {([
+          ["total",    t.registerTotal,  trafficSummary.total],
+          ["campaign", t.fromCampaigns,  trafficSummary.campaign],
+          ["organic",  t.fromOrganic,    trafficSummary.organic],
+        ] as const).map(([key, label, value]) => (
+          <div key={key} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>
+            <p style={{ margin: 0, fontSize: 12, color: MUTED }}>{label}</p>
+            <p style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 700, color: SUMMARY_CARD_COLOR[key] }}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
+        <p style={{ margin: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
+          {t.trafficSources} ({trafficSources.reduce((sum, s) => sum + s.count, 0)})
+        </p>
+        {trafficSources.length === 0 ? (
+          <EmptyState message={t.noTrafficSources} />
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: TH }}>
+                  {[t.source, t.campaign, t.signups].map((h) => (
+                    <th key={h} style={{ textAlign: "start", padding: "10px 16px", color: MUTED, fontWeight: 500 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {trafficSources.map((s) => (
+                  <tr key={`${s.source} ${s.campaign ?? ""}`} style={{ borderTop: `1px solid ${BORDER}` }}>
+                    <td style={{ padding: "10px 16px", color: TEXT, fontWeight: 600 }}>
+                      {s.source === "organic" ? t.organic : s.source}
+                    </td>
+                    <td style={{ padding: "10px 16px", color: MUTED }}>{s.campaign ?? "—"}</td>
+                    <td style={{ padding: "10px 16px", color: TEXT }}>{s.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
