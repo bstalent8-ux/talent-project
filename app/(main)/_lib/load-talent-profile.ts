@@ -86,7 +86,13 @@ async function getAdminPreviewIfAllowed(
  * none apply (real 404). */
 export async function loadTalentProfile(handle: string): Promise<LoadedTalentProfile | null> {
   const profile = await cachedPublic<PublicProfileDTO | null>(
-    ["talent-detail", handle],
+    // "v2" busts every previously-cached entry under this key shape — the
+    // findBrands() column bug (see talent.repository.ts) made this loader
+    // throw on every talent profile view for a few hours; the cache key
+    // needs to change once so no stale poisoned entry can still be served
+    // for a handle visited during that window. Safe to drop once confirmed
+    // no longer needed, or bump again if this ever recurs.
+    ["talent-detail", "v2", handle],
     [CACHE_TAGS.talents.detail(handle), CACHE_TAGS.talents.list],
     CACHE_SECONDS.tenMinutes,
     async () => {
