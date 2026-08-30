@@ -82,7 +82,10 @@ export async function PATCH(
         ]);
         if (authUser?.user?.email) {
           const { subject, html } = profileApprovedEmail("ar", recipientProfile?.full_name ?? "");
-          await sendEmail({ to: authUser.user.email, subject, html });
+          await sendEmail({
+            to: authUser.user.email, subject, html,
+            template: "profile_approved", recipientId: updated.user_id, sentBy: admin.id,
+          });
         }
       } catch (e) {
         console.error("[admin/talents approve] approval email failed", e);

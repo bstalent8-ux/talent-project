@@ -1052,3 +1052,71 @@ export async function fetchAdminVisitorDetail(key: string): Promise<AdminVisitor
     pageTotals,
   };
 }
+
+// ─── Email log ──────────────────────────────────────────────────────────────
+// Backs /admin/emails. Rows come from lib/email/send.ts's own best-effort
+// insert on every send (see supabase/migrations/20260830_email_log.sql) —
+// this is a read-only paginated view over that table, joined in JS to the
+// recipient's handle/name the same way every other admin list here does
+// (Supabase joins across these tables are avoided deliberately, CLAUDE.md §12).
+
+export interface AdminEmailLogRow {
+  id:              string;
+  recipientEmail:  string;
+  recipientId:     string | null;
+  recipientHandle: string | null;
+  recipientName:   string | null;
+  subject:         string;
+  bodyHtml:        string;
+  template:        string;
+  status:          "sent" | "failed";
+  error:           string | null;
+  createdAt:       string;
+}
+
+export interface AdminEmailLogPageResult {
+  emails: AdminEmailLogRow[];
+  total:  number;
+}
+
+export async function fetchAdminEmailLogPage({
+  page = 1,
+  pageSize = 20,
+}: { page?: number; pageSize?: number }): Promise<AdminEmailLogPageResult> {
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, count, error } = await adminClient
+    .from("email_log")
+    .select("id, recipient_email, recipient_id, subject, body_html, template, status, error, created_at", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) return { emails: [], total: 0 };
+
+  const recipientIds = Array.from(new Set((data ?? []).map((r) => r.recipient_id).filter((id): id is string => !!id)));
+  const profilesById: Record<string, { handle: string | null; full_name: string | null }> = {};
+  if (recipientIds.length > 0) {
+    const { data: profiles } = await adminClient
+      .from("profiles")
+      .select("id, handle, full_name")
+      .in("id", recipientIds);
+    for (const p of profiles ?? []) profilesById[p.id] = { handle: p.handle, full_name: p.full_name };
+  }
+
+  const emails: AdminEmailLogRow[] = (data ?? []).map((r) => ({
+    id:              r.id,
+    recipientEmail:  r.recipient_email,
+    recipientId:     r.recipient_id,
+    recipientHandle: r.recipient_id ? profilesById[r.recipient_id]?.handle ?? null : null,
+    recipientName:   r.recipient_id ? profilesById[r.recipient_id]?.full_name ?? null : null,
+    subject:         r.subject,
+    bodyHtml:        r.body_html,
+    template:        r.template,
+    status:          r.status as "sent" | "failed",
+    error:           r.error,
+    createdAt:       r.created_at,
+  }));
+
+  return { emails, total: count ?? emails.length };
+}
