@@ -22,7 +22,7 @@ export interface ExistingBrandRow {
 export interface BrandSyncPlan {
   toDeleteIds: string[];
   toInsert: { brand_name: string; sort_order: number }[];
-  toReorder: { id: string; sort_order: number }[];
+  toReorder: { id: string; brand_name: string; sort_order: number }[];
 }
 
 const MAX_BRANDS = 20;
@@ -50,7 +50,7 @@ export function planBrandSync(existing: ExistingBrandRow[], desiredNamesRaw: unk
   desiredNames.forEach((name, index) => {
     const match = existingByName.get(name);
     if (match) {
-      toReorder.push({ id: match.id, sort_order: index });
+      toReorder.push({ id: match.id, brand_name: match.brand_name, sort_order: index });
     } else {
       toInsert.push({ brand_name: name, sort_order: index });
     }
@@ -63,6 +63,12 @@ export function planBrandSync(existing: ExistingBrandRow[], desiredNamesRaw: unk
  * Best-effort — never throws. This is a secondary write alongside the main
  * profile save (same posture as lib/notifications/service.ts): a failure here
  * must not fail the talent's profile save.
+ *
+ * Capped at 4 sequential round trips regardless of how many brands a talent
+ * has (max 20, see MAX_BRANDS) — the reorder step used to be one UPDATE per
+ * row in a for-loop, which meant a profile save could fire 20+ sequential
+ * DB round trips from inside a single edge function invocation. Batched into
+ * one upsert instead.
  */
 export async function syncTalentBrands(userId: string, desiredNamesRaw: unknown): Promise<void> {
   try {
@@ -89,8 +95,11 @@ export async function syncTalentBrands(userId: string, desiredNamesRaw: unknown)
         plan.toInsert.map((row) => ({ ...row, talent_profile_id: tp.id }))
       );
     }
-    for (const row of plan.toReorder) {
-      await adminClient.from("talent_brands").update({ sort_order: row.sort_order }).eq("id", row.id);
+    if (plan.toReorder.length > 0) {
+      await adminClient.from("talent_brands").upsert(
+        plan.toReorder.map((row) => ({ ...row, talent_profile_id: tp.id })),
+        { onConflict: "id" }
+      );
     }
   } catch (e) {
     console.error("[talent-brands-sync] failed", e);

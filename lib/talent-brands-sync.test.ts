@@ -41,8 +41,8 @@ describe("planBrandSync", () => {
     expect(plan.toDeleteIds).toEqual([]);
     expect(plan.toInsert).toEqual([]);
     expect(plan.toReorder).toEqual([
-      { id: "2", sort_order: 0 },
-      { id: "1", sort_order: 1 },
+      { id: "2", brand_name: "Adidas", sort_order: 0 },
+      { id: "1", brand_name: "Nike", sort_order: 1 },
     ]);
   });
 
