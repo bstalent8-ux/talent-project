@@ -503,8 +503,12 @@ export async function notifyProfileApproved(input: {
           en: "Approved 🎉",
         },
         message: {
-          ar: `${labelAr} أصبح معتمدًا وظاهرًا على المنصة.`,
-          en: `${labelEn} is approved and now live on the platform.`,
+          ar: kind === "verification"
+            ? `${labelAr} أصبح معتمدًا وظاهرًا على المنصة.`
+            : `${labelAr} اتوافق عليه وبقى ظاهر للبراندات. كمّل بياناتك وصور البورتفوليو عشان تظهر في البحث وتوصلك عروض أكتر.`,
+          en: kind === "verification"
+            ? `${labelEn} is approved and now live on the platform.`
+            : `${labelEn} is approved and visible to brands. Finish your details and portfolio photos to show up in search and get more offers.`,
         },
       },
       { kind }

@@ -6,6 +6,8 @@ import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { notifyProfileApproved, notifyProfileRejected } from "@/lib/notifications/events";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
+import { sendEmail } from "@/lib/email/send";
+import { profileApprovedEmail } from "@/lib/email/templates/profile-approved";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -70,6 +72,21 @@ export async function PATCH(
   if (updated?.user_id) {
     if (body.action === "approve" || body.action === "restore") {
       await notifyProfileApproved({ recipientId: updated.user_id, adminId: admin.id, kind: "talent" });
+
+      // Best-effort — a failed/unconfigured email must never fail the
+      // approve action itself (same posture as notifications).
+      try {
+        const [{ data: authUser }, { data: recipientProfile }] = await Promise.all([
+          adminClient.auth.admin.getUserById(updated.user_id),
+          adminClient.from("profiles").select("full_name").eq("id", updated.user_id).maybeSingle(),
+        ]);
+        if (authUser?.user?.email) {
+          const { subject, html } = profileApprovedEmail("ar", recipientProfile?.full_name ?? "");
+          await sendEmail({ to: authUser.user.email, subject, html });
+        }
+      } catch (e) {
+        console.error("[admin/talents approve] approval email failed", e);
+      }
     } else if (body.action === "reject" || body.action === "suspend") {
       await notifyProfileRejected({
         recipientId: updated.user_id,
