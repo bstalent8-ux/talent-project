@@ -65,11 +65,11 @@ export const heroMedia = {
 export const pageCopy = {
   ar: {
     heroBadge: "منصة موثوقة للمواهب والبراندات",
-    headline: "احجز المواهب المناسبة لحملتك في دقائق",
+    headline: "مكانك المهني بيبدأ هنا",
     subtitle:
-      "Talents تجمع البراندات مع صنّاع محتوى UGC وموديلز موثّقين — احجز، تعاون، واستلم النتيجة في مكان واحد.",
-    primaryCta: "استكشف المواهب",
-    secondaryCta: "ابدأ كموهوب",
+      "Talents هي وجهة الـ UGC Creators والموديلز في مصر والعالم العربي — اعمل Profile احترافي، اعرض شغلك، وخلّي البراندات المناسبة توصلك.",
+    primaryCta: "ابدأ كموهوب مجاناً",
+    secondaryCta: "أنا شركة",
     searchPlaceholder: "ابحث عن موهبة أو خدمة...",
     searchCategory: "اختر الفئة",
     searchLocation: "الموقع",
@@ -98,11 +98,11 @@ export const pageCopy = {
   },
   en: {
     heroBadge: "Trusted talent and brand marketplace",
-    headline: "Book the right talent for your campaign in minutes",
+    headline: "Your professional home starts here",
     subtitle:
-      "Talents connects brands with verified UGC creators and models — book, collaborate, and get the result in one place.",
-    primaryCta: "Explore talents",
-    secondaryCta: "Join as talent",
+      "Talents is the destination for UGC creators and models across Egypt and the Arab world — build a real profile, show your work, and let matching brands reach you.",
+    primaryCta: "Join as talent — free",
+    secondaryCta: "I'm a brand",
     searchPlaceholder: "Search a talent or service...",
     searchCategory: "Choose category",
     searchLocation: "Location",

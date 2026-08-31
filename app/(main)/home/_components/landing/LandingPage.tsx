@@ -7,14 +7,18 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
+  Award,
   Camera,
   ChevronDown,
   CircleDollarSign,
   Eye,
   FileText,
   MapPin,
+  Percent,
+  Rocket,
   Search,
   ShieldCheck,
+  Sparkles,
   Star,
 } from "lucide-react";
 import type { TalentCard as ServerTalentCard } from "../../../explore/page";
@@ -435,11 +439,11 @@ function HeroSection({
           >
             {lang === "ar" ? (
               <>
-                احجز المواهب المناسبة <em>لحملتك في دقائق</em>
+                مكانك المهني <em>بيبدأ هنا</em>
               </>
             ) : (
               <>
-                Book the right talent <em>in minutes</em>
+                Your professional home <em>starts here</em>
               </>
             )}
           </motion.h1>
@@ -459,11 +463,11 @@ function HeroSection({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.24 }}
           >
-            <ButtonLink href="/explore">
+            <ButtonLink href="/become-talent">
               {t.primaryCta}
               <ArrowIcon lang={lang} />
             </ButtonLink>
-            <ButtonLink href="/become-talent" variant="secondary">
+            <ButtonLink href="/explore" variant="secondary">
               {t.secondaryCta}
             </ButtonLink>
           </motion.div>
@@ -513,6 +517,107 @@ function HeroSection({
           label={t.trustedBy}
           ariaLabel={lang === "ar" ? "براندات مميزة" : "Featured brands"}
         />
+      </div>
+    </section>
+  );
+}
+
+// Founding-member incentive — matches the exact perks already promised in the
+// live Meta ad creative (see the campaign brief this section was built
+// from): priority visibility, 0% commission on the first 3 campaigns, and a
+// Founding Talent badge. Someone arriving from that ad expects this on the
+// page; before this section, nothing here reflected it at all.
+const TALENT_500_PERKS = [
+  {
+    icon: Sparkles,
+    title: { ar: "أولوية في الظهور", en: "Priority visibility" },
+    description: { ar: "قبل أي براند بيدور على مواهب.", en: "Ahead of brands browsing for talent." },
+  },
+  {
+    icon: Percent,
+    title: { ar: "0% عمولة", en: "0% commission" },
+    description: { ar: "على أول 3 حملات بتعملها.", en: "On your first 3 campaigns." },
+  },
+  {
+    icon: Award,
+    title: { ar: "Founding Talent Badge", en: "Founding Talent badge" },
+    description: { ar: "شارة دائمة على بروفايلك.", en: "A permanent mark on your profile." },
+  },
+  {
+    icon: Rocket,
+    title: { ar: "وصول حصري مبكر", en: "Early exclusive access" },
+    description: { ar: "لميزات ومزايا قبل باقي المواهب.", en: "To features before everyone else." },
+  },
+];
+
+function Talent500Section({ lang }: { lang: LandingLang }) {
+  const ar = lang === "ar";
+  return (
+    <section className={`${styles.section} ${styles.sectionWhite}`} aria-labelledby="landing-talent-500">
+      <div className={styles.container}>
+        <div
+          style={{
+            borderRadius: 24,
+            padding: "40px 32px",
+            textAlign: "center",
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--text-muted) 30%, transparent) 0%, color-mix(in srgb, var(--color-secondary) 26%, transparent) 100%)",
+            color: "var(--text-primary)",
+          }}
+        >
+          <span
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              backgroundColor: "color-mix(in srgb, var(--color-secondary) 20%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--color-secondary) 45%, transparent)",
+              color: "var(--color-secondary)",
+              borderRadius: 999, padding: "6px 16px", fontSize: 13, fontWeight: 700, marginBottom: 18,
+            }}
+          >
+            {ar ? "كن من أول 500 موهبة" : "Be one of the first 500"}
+          </span>
+          <h2
+            id="landing-talent-500"
+            style={{ fontSize: "clamp(24px, 4vw, 34px)", fontWeight: 800, margin: "0 0 12px" }}
+          >
+            {ar ? "Talent 500" : "Talent 500"}
+          </h2>
+          <p style={{ fontSize: 15, opacity: 0.85, maxWidth: 560, margin: "0 auto 32px" }}>
+            {ar
+              ? "انضم قبل الإطلاق الرسمي واحصل على مزايا حصرية متاحة لأول 500 موهبة فقط."
+              : "Join before the official launch and get exclusive perks reserved for the first 500 talents only."}
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+              gap: 16,
+              marginBottom: 32,
+              textAlign: ar ? "right" : "left",
+            }}
+          >
+            {TALENT_500_PERKS.map((perk) => {
+              const Icon = perk.icon;
+              return (
+                <div
+                  key={perk.title.en}
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--bg-card) 55%, transparent)",
+                    border: "1px solid color-mix(in srgb, var(--color-secondary) 22%, var(--border-subtle))",
+                    borderRadius: 14, padding: 16,
+                  }}
+                >
+                  <Icon size={20} color="var(--color-secondary)" style={{ marginBottom: 10 }} />
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: "var(--text-primary)" }}>{localize(perk.title, lang)}</div>
+                  <div style={{ fontSize: 12.5, color: "var(--text-muted)" }}>{localize(perk.description, lang)}</div>
+                </div>
+              );
+            })}
+          </div>
+          <ButtonLink href="/become-talent">
+            {ar ? "سجّل مجاناً الآن" : "Register free now"}
+            <ArrowIcon lang={lang} />
+          </ButtonLink>
+        </div>
       </div>
     </section>
   );
@@ -781,7 +886,7 @@ function WorkflowSection({ lang }: { lang: LandingLang }) {
         <SectionHeader
           id="landing-workflow"
           kicker={t.howItWorks}
-          title={lang === "ar" ? "مسارين واضحين: براند يحجز، وموهبة تبني سمعتها" : "Two clear paths: brands book, talents grow"}
+          title={lang === "ar" ? "مسارين واضحين: موهبة تبني سمعتها، وبراند يحجز" : "Two clear paths: talents grow, brands book"}
           description={
             lang === "ar"
               ? "المنصة تقلل الاحتكاك من أول بحث حتى بداية التعاون."
@@ -789,8 +894,8 @@ function WorkflowSection({ lang }: { lang: LandingLang }) {
           }
         />
         <div className={styles.twoColumn}>
-          <WorkflowPanel title={t.forBrands} steps={brandSteps} lang={lang} />
           <WorkflowPanel title={t.forTalents} steps={talentSteps} lang={lang} />
+          <WorkflowPanel title={t.forBrands} steps={brandSteps} lang={lang} />
         </div>
       </div>
     </section>
@@ -1029,6 +1134,7 @@ export default function LandingPage({
   return (
     <div className={styles.page} dir={lang === "ar" ? "rtl" : "ltr"}>
       <HeroSection lang={lang} totalTalents={totalTalents} completedProjects={completedProjects} avgRating={avgRating} media={designMedia} />
+      <Talent500Section lang={lang} />
       <CategoriesSection lang={lang} categoryCounts={categoryCounts} />
       <FeaturedTalentsSection lang={lang} talents={displayedTalents} />
       <WorkflowSection lang={lang} />
