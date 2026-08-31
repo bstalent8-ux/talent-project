@@ -13,11 +13,13 @@ import {
   Building2,
   CalendarCheck,
   Camera,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Handshake,
   History,
   LayoutDashboard,
+  LayoutGrid,
   LifeBuoy,
   ListTree,
   LogOut,
@@ -59,6 +61,12 @@ const TX = {
     modeExpanded: "مفتوحة دائماً",
     modeCollapsed: "مصغّرة دائماً",
     modeHover: "تفاعلية عند التمرير",
+    groupTalents: "المواهب",
+    groupBookings: "الحجوزات والتقييمات",
+    groupBrands: "الشركات",
+    groupComms: "التواصل",
+    groupAnalytics: "التحليلات",
+    groupContent: "محتوى الصفحة الرئيسية",
   },
   en: {
     dashboard: "Dashboard",
@@ -84,30 +92,72 @@ const TX = {
     modeExpanded: "Always expanded",
     modeCollapsed: "Always collapsed",
     modeHover: "Interactive (hover)",
+    groupTalents: "Talents",
+    groupBookings: "Bookings & Reviews",
+    groupBrands: "Brands",
+    groupComms: "Communication",
+    groupAnalytics: "Analytics",
+    groupContent: "Home Page Content",
   },
 };
 
-const NAV_ITEMS = [
-  { key: "dashboard", href: "/admin", icon: LayoutDashboard },
-  { key: "support", href: "/admin/support", icon: LifeBuoy },
-  { key: "emails", href: "/admin/emails", icon: Mail },
-  { key: "talents", href: "/admin/talents", icon: Users },
-  { key: "talentDemand", href: "/admin/talent-demand", icon: BarChart3 },
-  { key: "userActivity", href: "/admin/user-activity", icon: Activity },
-  { key: "brands", href: "/admin/brands", icon: Building2 },
-  { key: "bookings", href: "/admin/bookings", icon: CalendarCheck },
-  { key: "reviews", href: "/admin/reviews", icon: Star },
-  { key: "verifications", href: "/admin/verifications", icon: ShieldCheck },
-  { key: "testimonials", href: "/admin/testimonials", icon: Quote },
-  { key: "brandMoments", href: "/admin/brand-moments", icon: Camera },
-  { key: "categories", href: "/admin/categories", icon: ListTree },
-  { key: "packages", href: "/admin/packages", icon: PackageIcon },
-  { key: "trustedBrands", href: "/admin/trusted-brands", icon: Handshake, fallback: "براندات موثوقة" },
-  { key: "profileConfig", href: "/admin/profile-config", icon: SlidersHorizontal },
-  { key: "notifications", href: "/admin/notifications", icon: Bell },
-  { key: "notificationsLog", href: "/admin/notifications-log", icon: History },
-  { key: "settings", href: "/admin/settings", icon: Settings },
-] as const;
+// A flat item, or an item collapsible under a group header — ordered by
+// priority both across groups and within each one (daily moderation/action
+// queues first, occasional-edit content last), per 2026-08-31 sidebar
+// decluttering request. Collapsed-rail mode (SIDEBAR_W_COLLAPSED) flattens
+// this back to one icon column — see flattenNavItems() — so a narrow rail
+// never has to render a group header with no room for its label.
+const NAV_ITEM = {
+  dashboard:        { key: "dashboard",        href: "/admin",                    icon: LayoutDashboard },
+  talents:          { key: "talents",          href: "/admin/talents",            icon: Users },
+  verifications:    { key: "verifications",    href: "/admin/verifications",      icon: ShieldCheck },
+  talentDemand:     { key: "talentDemand",     href: "/admin/talent-demand",      icon: BarChart3 },
+  bookings:         { key: "bookings",         href: "/admin/bookings",           icon: CalendarCheck },
+  reviews:          { key: "reviews",          href: "/admin/reviews",            icon: Star },
+  brands:           { key: "brands",           href: "/admin/brands",             icon: Building2 },
+  trustedBrands:    { key: "trustedBrands",    href: "/admin/trusted-brands",     icon: Handshake, fallback: "براندات موثوقة" },
+  support:          { key: "support",          href: "/admin/support",            icon: LifeBuoy },
+  emails:           { key: "emails",           href: "/admin/emails",             icon: Mail },
+  notifications:    { key: "notifications",    href: "/admin/notifications",      icon: Bell },
+  notificationsLog: { key: "notificationsLog", href: "/admin/notifications-log",  icon: History },
+  userActivity:     { key: "userActivity",     href: "/admin/user-activity",      icon: Activity },
+  testimonials:     { key: "testimonials",     href: "/admin/testimonials",       icon: Quote },
+  brandMoments:     { key: "brandMoments",     href: "/admin/brand-moments",      icon: Camera },
+  categories:       { key: "categories",       href: "/admin/categories",         icon: ListTree },
+  packages:         { key: "packages",         href: "/admin/packages",           icon: PackageIcon },
+  profileConfig:    { key: "profileConfig",    href: "/admin/profile-config",     icon: SlidersHorizontal },
+  settings:         { key: "settings",         href: "/admin/settings",           icon: Settings },
+} as const;
+
+type NavItemDef = (typeof NAV_ITEM)[keyof typeof NAV_ITEM];
+type NavEntry =
+  | { type: "item"; item: NavItemDef }
+  | { type: "group"; key: string; labelKey: keyof typeof TX["ar"]; icon: typeof Users; items: NavItemDef[] };
+
+const NAV_STRUCTURE: NavEntry[] = [
+  { type: "item", item: NAV_ITEM.dashboard },
+  { type: "group", key: "talentsGroup", labelKey: "groupTalents", icon: Users,
+    items: [NAV_ITEM.talents, NAV_ITEM.verifications, NAV_ITEM.talentDemand] },
+  { type: "group", key: "bookingsGroup", labelKey: "groupBookings", icon: CalendarCheck,
+    items: [NAV_ITEM.bookings, NAV_ITEM.reviews] },
+  { type: "group", key: "brandsGroup", labelKey: "groupBrands", icon: Building2,
+    items: [NAV_ITEM.brands, NAV_ITEM.trustedBrands] },
+  { type: "group", key: "commsGroup", labelKey: "groupComms", icon: Mail,
+    items: [NAV_ITEM.support, NAV_ITEM.emails, NAV_ITEM.notifications, NAV_ITEM.notificationsLog] },
+  { type: "group", key: "analyticsGroup", labelKey: "groupAnalytics", icon: BarChart3,
+    items: [NAV_ITEM.userActivity] },
+  { type: "group", key: "contentGroup", labelKey: "groupContent", icon: LayoutGrid,
+    items: [NAV_ITEM.testimonials, NAV_ITEM.brandMoments, NAV_ITEM.categories, NAV_ITEM.packages, NAV_ITEM.profileConfig] },
+  { type: "item", item: NAV_ITEM.settings },
+];
+
+/** Collapsed-rail view ignores grouping entirely — just every item's icon, in
+ * the same priority order, same as before this change. */
+function flattenNavItems(structure: NavEntry[]): NavItemDef[] {
+  return structure.flatMap((entry) => (entry.type === "item" ? [entry.item] : entry.items));
+}
+
+const GROUP_STORAGE_KEY = "admin-sidebar-open-groups";
 
 interface Props {
   open: boolean;
@@ -138,6 +188,31 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const portalMenuRef = useRef<HTMLDivElement>(null);
+
+  // Which accordion groups the admin has manually opened — read after mount
+  // only (same reasoning as sidebarMode in AdminShell: localStorage isn't
+  // available during edge/server render and seeding from it would mismatch
+  // hydration). A group with the active route in it is force-open below
+  // regardless of this set, so navigating into a collapsed group always
+  // reveals it without permanently changing what's stored.
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(GROUP_STORAGE_KEY);
+      if (saved) setOpenGroups(new Set(JSON.parse(saved) as string[]));
+    } catch {
+      // ignore — falls back to all-collapsed
+    }
+  }, []);
+
+  function toggleGroup(key: string) {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      try { localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify([...next])); } catch { /* ignore */ }
+      return next;
+    });
+  }
 
   // hover mode starts collapsed and expands only while the pointer is over
   // the rail — expanded/collapsed modes ignore hover entirely.
@@ -196,6 +271,50 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
     href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(`${href}/`);
 
   const width = collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W_OPEN;
+
+  // Shared by top-level items and grouped ones — `indent` only applies when
+  // expanded (a collapsed rail flattens everything to one icon column, see
+  // flattenNavItems, so there's nothing to indent under there).
+  function renderNavLink(item: NavItemDef, indent: boolean) {
+    const { key, href, icon: Icon } = item;
+    const fallback = "fallback" in item ? item.fallback : undefined;
+    const active = isActive(href);
+    const label = (t as Record<string, string>)[key] ?? fallback ?? key;
+    return (
+      <Link
+        key={key}
+        href={href}
+        onClick={onClose}
+        title={collapsed ? label : undefined}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: collapsed ? "center" : "flex-start",
+          gap: collapsed ? 0 : 12,
+          padding: collapsed ? "10px 0" : "10px 12px",
+          marginInlineStart: !collapsed && indent ? 14 : 0,
+          borderRadius: 10,
+          color: active ? ACTIVE : MUTED,
+          backgroundColor: active ? ACTIVE_TINT : "transparent",
+          textDecoration: "none",
+          fontSize: 14,
+          fontWeight: active ? 700 : 400,
+          transition: "all 0.2s",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+        }}
+        onMouseEnter={(event) => {
+          if (!active) event.currentTarget.style.backgroundColor = HOVER;
+        }}
+        onMouseLeave={(event) => {
+          if (!active) event.currentTarget.style.backgroundColor = "transparent";
+        }}
+      >
+        <Icon size={18} style={{ flexShrink: 0 }} />
+        {!collapsed && <span style={{ opacity: 1, transition: "opacity 0.2s" }}>{label}</span>}
+      </Link>
+    );
+  }
 
   async function handleLogout() {
     await createClient().auth.signOut();
@@ -346,45 +465,56 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
         </div>
 
         <nav style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 8px" }}>
-          {NAV_ITEMS.map((item) => {
-            const { key, href, icon: Icon } = item;
-            const fallback = "fallback" in item ? item.fallback : undefined;
-            const active = isActive(href);
-            const label = (t as Record<string, string>)[key] ?? fallback ?? key;
-            return (
-              <Link
-                key={key}
-                href={href}
-                onClick={onClose}
-                title={collapsed ? label : undefined}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: collapsed ? "center" : "flex-start",
-                  gap: collapsed ? 0 : 12,
-                  padding: collapsed ? "10px 0" : "10px 12px",
-                  borderRadius: 10,
-                  color: active ? ACTIVE : MUTED,
-                  backgroundColor: active ? ACTIVE_TINT : "transparent",
-                  textDecoration: "none",
-                  fontSize: 14,
-                  fontWeight: active ? 700 : 400,
-                  transition: "all 0.2s",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                }}
-                onMouseEnter={(event) => {
-                  if (!active) event.currentTarget.style.backgroundColor = HOVER;
-                }}
-                onMouseLeave={(event) => {
-                  if (!active) event.currentTarget.style.backgroundColor = "transparent";
-                }}
-              >
-                <Icon size={18} style={{ flexShrink: 0 }} />
-                {!collapsed && <span style={{ opacity: 1, transition: "opacity 0.2s" }}>{label}</span>}
-              </Link>
-            );
-          })}
+          {collapsed
+            ? flattenNavItems(NAV_STRUCTURE).map((item) => renderNavLink(item, false))
+            : NAV_STRUCTURE.map((entry) => {
+                if (entry.type === "item") return renderNavLink(entry.item, false);
+
+                const GroupIcon = entry.icon;
+                const groupLabel = t[entry.labelKey];
+                const hasActiveItem = entry.items.some((it) => isActive(it.href));
+                const isOpen = hasActiveItem || openGroups.has(entry.key);
+
+                return (
+                  <div key={entry.key}>
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(entry.key)}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                        gap: 12,
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: MUTED,
+                        fontSize: 14,
+                        fontFamily: "inherit",
+                        transition: "all 0.2s",
+                        whiteSpace: "nowrap",
+                      }}
+                      onMouseEnter={(event) => { event.currentTarget.style.backgroundColor = HOVER; }}
+                      onMouseLeave={(event) => { event.currentTarget.style.backgroundColor = "transparent"; }}
+                    >
+                      <GroupIcon size={18} style={{ flexShrink: 0 }} />
+                      <span style={{ flex: 1, textAlign: "start" }}>{groupLabel}</span>
+                      <ChevronDown
+                        size={14}
+                        style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}>
+                        {entry.items.map((it) => renderNavLink(it, true))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
         </nav>
 
         <div style={{ padding: "8px 8px 0" }}>
