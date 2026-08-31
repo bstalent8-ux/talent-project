@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**" },
     ],
   },
+  // Trims per-route bundles for libraries imported all over the app (nearly
+  // every component pulls a `lucide-react` icon or two) — each of the 149
+  // edge functions next-on-pages generates otherwise carries more of these
+  // packages' internals than it actually uses. Pure build-time transform, no
+  // behavior change. Added while the compiled Worker was tripping Cloudflare's
+  // free-plan 3 MiB size limit (see the 2026-08-31 deploy incident).
+  experimental: {
+    optimizePackageImports: ["lucide-react", "framer-motion"],
+  },
   // Folded these out of standalone page.tsx routes (each was 6-7 lines of
   // nothing but a redirect(), or a byte-identical duplicate render of
   // another page) so they stop counting as separate entries in Cloudflare

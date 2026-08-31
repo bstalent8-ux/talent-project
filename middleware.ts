@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { adminClient } from "@/lib/supabase/admin";
 
 // Paths that are always accessible regardless of account status
 const ALWAYS_ALLOWED = ["/blocked", "/login", "/register", "/forgot-password", "/system_design.html"];
@@ -99,22 +99,11 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Check account_status using service role to bypass RLS
-  // Note: 'cache' is not supported in Cloudflare Workers — omit it (matches lib/supabase/admin.ts)
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      global: {
-        fetch: (url, opts = {}) => {
-          const { cache: _cache, ...rest } = opts as RequestInit;
-          return fetch(url, rest);
-        },
-      },
-    }
-  );
-
-  const { data: profile } = await admin
+  // Check account_status using service role to bypass RLS — reuses the same
+  // lazy singleton every other server route already imports, instead of
+  // this middleware carrying its own private copy of @supabase/supabase-js's
+  // client-construction code in its own separate edge bundle.
+  const { data: profile } = await adminClient
     .from("profiles")
     .select("role, account_status, block_reason")
     .eq("id", user.id)
