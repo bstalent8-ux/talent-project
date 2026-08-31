@@ -32,7 +32,16 @@ export async function PATCH(
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
   const { id } = await params;
-  const body = await req.json() as { action: string; reason?: string };
+  const body = await req.json() as {
+    action: string; reason?: string;
+    // Only meaningful for approve/restore — reject/suspend/delete never
+    // show the notification/email choice. Both default true (matches the
+    // popup's own checkbox defaults) so a caller that doesn't pass them
+    // (there is none left, but defensive) still gets today's behavior.
+    sendNotification?: boolean; sendEmail?: boolean;
+  };
+  const sendNotification = body.sendNotification ?? true;
+  const shouldSendEmail  = body.sendEmail ?? true;
 
   const updates: Record<string, unknown> = {};
 
@@ -71,24 +80,28 @@ export async function PATCH(
   // Tell the talent what the moderator decided.
   if (updated?.user_id) {
     if (body.action === "approve" || body.action === "restore") {
-      await notifyProfileApproved({ recipientId: updated.user_id, adminId: admin.id, kind: "talent" });
+      if (sendNotification) {
+        await notifyProfileApproved({ recipientId: updated.user_id, adminId: admin.id, kind: "talent" });
+      }
 
       // Best-effort — a failed/unconfigured email must never fail the
       // approve action itself (same posture as notifications).
-      try {
-        const [{ data: authUser }, { data: recipientProfile }] = await Promise.all([
-          adminClient.auth.admin.getUserById(updated.user_id),
-          adminClient.from("profiles").select("full_name").eq("id", updated.user_id).maybeSingle(),
-        ]);
-        if (authUser?.user?.email) {
-          const { subject, html } = profileApprovedEmail("ar", recipientProfile?.full_name ?? "");
-          await sendEmail({
-            to: authUser.user.email, subject, html,
-            template: "profile_approved", recipientId: updated.user_id, sentBy: admin.id,
-          });
+      if (shouldSendEmail) {
+        try {
+          const [{ data: authUser }, { data: recipientProfile }] = await Promise.all([
+            adminClient.auth.admin.getUserById(updated.user_id),
+            adminClient.from("profiles").select("full_name").eq("id", updated.user_id).maybeSingle(),
+          ]);
+          if (authUser?.user?.email) {
+            const { subject, html } = profileApprovedEmail("ar", recipientProfile?.full_name ?? "");
+            await sendEmail({
+              to: authUser.user.email, subject, html,
+              template: "profile_approved", recipientId: updated.user_id, sentBy: admin.id,
+            });
+          }
+        } catch (e) {
+          console.error("[admin/talents approve] approval email failed", e);
         }
-      } catch (e) {
-        console.error("[admin/talents approve] approval email failed", e);
       }
     } else if (body.action === "reject" || body.action === "suspend") {
       await notifyProfileRejected({

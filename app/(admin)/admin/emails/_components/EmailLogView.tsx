@@ -8,8 +8,9 @@ import type { AdminEmailLogRow } from "@/features/admin/services/admin.service";
 import { Mail, RefreshCw, Send, X } from "lucide-react";
 
 const TEMPLATE_LABEL: Record<string, { ar: string; en: string }> = {
-  profile_approved: { ar: "موافقة على البروفايل", en: "Profile approved" },
-  custom:           { ar: "مخصص", en: "Custom" },
+  profile_approved:      { ar: "موافقة على البروفايل", en: "Profile approved" },
+  verification_approved: { ar: "موافقة على التوثيق",   en: "Verification approved" },
+  custom:                { ar: "مخصص", en: "Custom" },
 };
 
 const TX = {

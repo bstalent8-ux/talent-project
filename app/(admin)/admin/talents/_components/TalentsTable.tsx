@@ -10,7 +10,9 @@ import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminTalent, TalentStatus } from "@/features/admin/types";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
-import { Eye, CheckCircle, XCircle, PauseCircle, Trash2, RotateCcw, Pencil, ShieldCheck } from "lucide-react";
+import { profileApprovedNotificationContent } from "@/lib/notifications/content/profile-approved";
+import { profileApprovedEmail } from "@/lib/email/templates/profile-approved";
+import { ChevronDown, ChevronUp, Eye, CheckCircle, XCircle, Mail, PauseCircle, Trash2, RotateCcw, Pencil, ShieldCheck } from "lucide-react";
 
 const TX = {
   ar: {
@@ -24,6 +26,13 @@ const TX = {
     reasonLabel: "سبب الرفض (اختياري)",
     noTalents: "لا توجد مواهب",
     results: "نتيجة",
+    sendNotificationLabel: "إرسال إشعار داخل الموقع",
+    sendEmailLabel: "إرسال إيميل",
+    preview: "معاينة المحتوى",
+    hidePreview: "إخفاء المعاينة",
+    notificationPreview: "الإشعار",
+    emailPreview: "الإيميل",
+    subject: "الموضوع",
   },
   en: {
     name: "Name", username: "Username", category: "Category", city: "City",
@@ -36,6 +45,13 @@ const TX = {
     reasonLabel: "Rejection reason (optional)",
     noTalents: "No talents found",
     results: "results",
+    sendNotificationLabel: "Send in-app notification",
+    sendEmailLabel: "Send email",
+    preview: "Preview content",
+    hidePreview: "Hide preview",
+    notificationPreview: "Notification",
+    emailPreview: "Email",
+    subject: "Subject",
   },
 };
 
@@ -69,6 +85,11 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
   const [modal,  setModal]    = useState<ModalState | null>(null);
   const [reason, setReason]   = useState("");
   const [loading, setLoading] = useState(false);
+  // approve/restore only — default true on both matches the request:
+  // "الdefault يكونو معمولين اه" (send both by default).
+  const [sendNotification, setSendNotification] = useState(true);
+  const [sendEmail, setSendEmail] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
 
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "#1e293b" : "#E2E8F0";
@@ -77,6 +98,8 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
   const TH     = dark ? "#0a121c" : "#f8fafc";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  const isApproveLike = (type: ModalState["type"]) => type === "approve" || type === "restore";
 
   async function runAction(modal: ModalState) {
     setLoading(true);
@@ -87,15 +110,26 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
         await fetch(`/api/admin/talents/${modal.talent.talentProfileId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: modal.type, reason }),
+          body: JSON.stringify(
+            isApproveLike(modal.type)
+              ? { action: modal.type, sendNotification, sendEmail }
+              : { action: modal.type, reason }
+          ),
         });
       }
       router.refresh();
     } finally {
       setLoading(false);
-      setModal(null);
-      setReason("");
+      closeModal();
     }
+  }
+
+  function closeModal() {
+    setModal(null);
+    setReason("");
+    setSendNotification(true);
+    setSendEmail(true);
+    setShowPreview(false);
   }
 
   const actionBtn = (
@@ -263,8 +297,63 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
           confirmColor={confirmConfig.color}
           confirmLabel={loading ? (ar ? "جاري..." : "Loading...") : t[modal.type]}
           onConfirm={() => runAction(modal)}
-          onCancel={() => { setModal(null); setReason(""); }}
+          onCancel={closeModal}
         >
+          {isApproveLike(modal.type) && (() => {
+            const name = modal.talent.fullName ?? "";
+            const notif = profileApprovedNotificationContent(lang);
+            const email = profileApprovedEmail(lang, name);
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: TEXT, cursor: "pointer" }}>
+                  <input type="checkbox" checked={sendNotification} onChange={e => setSendNotification(e.target.checked)} />
+                  {t.sendNotificationLabel}
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: TEXT, cursor: "pointer" }}>
+                  <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} />
+                  {t.sendEmailLabel}
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(s => !s)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6, alignSelf: "flex-start",
+                    background: "none", border: "none", cursor: "pointer", padding: 0,
+                    color: "var(--color-primary)", fontSize: 13, fontWeight: 600,
+                  }}
+                >
+                  {showPreview ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  {showPreview ? t.hidePreview : t.preview}
+                </button>
+
+                {showPreview && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {sendNotification && (
+                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#0a121c" : "#f8fafc" }}>
+                        <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: MUTED, display: "flex", alignItems: "center", gap: 5 }}>
+                          <ShieldCheck size={12} /> {t.notificationPreview}
+                        </p>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: TEXT }}>{notif.title}</p>
+                        <p style={{ margin: "2px 0 0", fontSize: 12.5, color: MUTED }}>{notif.message}</p>
+                      </div>
+                    )}
+                    {sendEmail && (
+                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#0a121c" : "#f8fafc" }}>
+                        <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: MUTED, display: "flex", alignItems: "center", gap: 5 }}>
+                          <Mail size={12} /> {t.emailPreview}
+                        </p>
+                        <p style={{ margin: "0 0 6px", fontSize: 12.5, color: MUTED }}>{t.subject}: <span style={{ color: TEXT, fontWeight: 600 }}>{email.subject}</span></p>
+                        <div style={{ fontSize: 12.5, maxHeight: 160, overflowY: "auto", border: `1px solid ${BORDER}`, borderRadius: 6, padding: 8 }}
+                          dangerouslySetInnerHTML={{ __html: email.html }} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {modal.type === "reject" && (
             <div>
               <label style={{ color: MUTED, fontSize: 13, display: "block", marginBottom: 6 }}>{t.reasonLabel}</label>

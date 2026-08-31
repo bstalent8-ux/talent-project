@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { notifyProfileApproved, notifyProfileRejected } from "@/lib/notifications/events";
+import { sendEmail } from "@/lib/email/send";
+import { verificationApprovedEmail } from "@/lib/email/templates/verification-approved";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -22,7 +24,14 @@ export async function PATCH(
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
-  const { action, reason } = await req.json() as { action: "approve" | "reject"; reason?: string };
+  const {
+    action, reason,
+    // Only meaningful for action: "approve" — the reject flow never showed
+    // these checkboxes, so both default true (matches what the popup's own
+    // checkboxes default to) rather than requiring every caller to pass them.
+    sendNotification = true,
+    sendEmail: shouldSendEmail = true,
+  } = await req.json() as { action: "approve" | "reject"; reason?: string; sendNotification?: boolean; sendEmail?: boolean };
 
   if (action !== "approve" && action !== "reject") {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
@@ -77,11 +86,34 @@ export async function PATCH(
   }
 
   if (action === "approve") {
-    await notifyProfileApproved({
-      recipientId: verification.talent_id,
-      adminId:     admin.id,
-      kind:        "verification",
-    });
+    if (sendNotification) {
+      await notifyProfileApproved({
+        recipientId: verification.talent_id,
+        adminId:     admin.id,
+        kind:        "verification",
+      });
+    }
+
+    // Best-effort — same posture as the profile-approval email in
+    // /api/admin/talents/[id]: a failed/unconfigured email must never fail
+    // the approve action itself.
+    if (shouldSendEmail) {
+      try {
+        const [{ data: authUser }, { data: recipientProfile }] = await Promise.all([
+          adminClient.auth.admin.getUserById(verification.talent_id),
+          adminClient.from("profiles").select("full_name").eq("id", verification.talent_id).maybeSingle(),
+        ]);
+        if (authUser?.user?.email) {
+          const { subject, html } = verificationApprovedEmail("ar", recipientProfile?.full_name ?? "");
+          await sendEmail({
+            to: authUser.user.email, subject, html,
+            template: "verification_approved", recipientId: verification.talent_id, sentBy: admin.id,
+          });
+        }
+      } catch (e) {
+        console.error("[admin/verifications approve] verification email failed", e);
+      }
+    }
   } else {
     await notifyProfileRejected({
       recipientId: verification.talent_id,

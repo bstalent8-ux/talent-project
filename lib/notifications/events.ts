@@ -16,6 +16,8 @@ import {
   updateBroadcastCount,
 } from "./service";
 import { withI18n } from "./templates";
+import { verificationApprovedNotificationContent } from "./content/verification-approved";
+import { profileApprovedNotificationContent } from "./content/profile-approved";
 import type {
   NotificationAudience,
   NotificationContent,
@@ -488,8 +490,10 @@ export async function notifyProfileApproved(input: {
   kind?:       "talent" | "brand" | "verification";
 }): Promise<void> {
   const kind = input.kind ?? "talent";
-  const labelAr = kind === "verification" ? "طلب التوثيق" : "ملفك";
-  const labelEn = kind === "verification" ? "Your verification" : "Your profile";
+  // "talent" and "brand" share the exact same copy today (no distinct brand
+  // wording exists) — profileApprovedNotificationContent covers both.
+  const contentAr = kind === "verification" ? verificationApprovedNotificationContent("ar") : profileApprovedNotificationContent("ar");
+  const contentEn = kind === "verification" ? verificationApprovedNotificationContent("en") : profileApprovedNotificationContent("en");
 
   await createNotification({
     recipientId: input.recipientId,
@@ -498,18 +502,8 @@ export async function notifyProfileApproved(input: {
     actionUrl:   "/profile/me",
     ...withI18n(
       {
-        title: {
-          ar: "تمت الموافقة 🎉",
-          en: "Approved 🎉",
-        },
-        message: {
-          ar: kind === "verification"
-            ? `${labelAr} أصبح معتمدًا وظاهرًا على المنصة.`
-            : `${labelAr} اتوافق عليه وبقى ظاهر للبراندات. كمّل بياناتك وصور البورتفوليو عشان تظهر في البحث وتوصلك عروض أكتر.`,
-          en: kind === "verification"
-            ? `${labelEn} is approved and now live on the platform.`
-            : `${labelEn} is approved and visible to brands. Finish your details and portfolio photos to show up in search and get more offers.`,
-        },
+        title:   { ar: contentAr.title,   en: contentEn.title   },
+        message: { ar: contentAr.message, en: contentEn.message },
       },
       { kind }
     ),
