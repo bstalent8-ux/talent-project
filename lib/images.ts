@@ -30,6 +30,11 @@ export function cdnImage(
   const [prefix, rest] = url.split(CLOUDINARY_UPLOAD);
   if (/^[a-z]{1,3}_[^/]+\//.test(rest)) return url;
 
-  const transform = `f_auto,q_auto,dpr_auto,w_${width},c_${crop}`;
+  // g_auto only applies (and only makes sense) for a `fill` crop — `limit`
+  // never crops, so there's no framing decision for Cloudinary to make.
+  // Was a blind center-crop, which is why a talent's own photo could come
+  // out headless on a card the same width as the source image is tall.
+  const gravity = crop === "fill" ? ",g_auto" : "";
+  const transform = `f_auto,q_auto,dpr_auto,w_${width},c_${crop}${gravity}`;
   return `${prefix}${CLOUDINARY_UPLOAD}${transform}/${rest}`;
 }

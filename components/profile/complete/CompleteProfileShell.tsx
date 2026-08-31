@@ -26,6 +26,7 @@ import {
 } from "@/lib/availability-schedule";
 import { resumeStepIndex, stepDone, STEP_COMPLETION_KEYS } from "@/components/profile/complete/resume-step";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
+import AvatarCropModal from "@/components/profile/AvatarCropModal";
 
 /* ─── translations ───────────────────────────────────────── */
 const TX = {
@@ -259,6 +260,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Resolve the starting step once: an explicit ?step= wins (deep link from
@@ -710,7 +712,14 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                   <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{uploading ? t.uploading : t.uploadPhoto}</span>
                 </label>
                 <input id="cp-avatar-input" type="file" accept="image/*" style={{ display: "none" }}
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAvatarFile(f); }} />
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) setCropFile(f); e.target.value = ""; }} />
+                {cropFile && (
+                  <AvatarCropModal
+                    file={cropFile}
+                    onCancel={() => setCropFile(null)}
+                    onCropped={(cropped) => { setCropFile(null); handleAvatarFile(cropped); }}
+                  />
+                )}
 
                 <div>
                   <label style={label}>{t.labels.fullName}</label>

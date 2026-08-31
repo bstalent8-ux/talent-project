@@ -26,6 +26,7 @@ import type { PublicTestimonial, PublicBrandMoment } from "@/features/landing/se
 import TrustedBrands from "@/components/home/TrustedBrands";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 import { useGuestGuard } from "@/contexts/GuestGuard";
+import { cdnImage } from "@/lib/images";
 import TestimonialSubmitPanel from "./TestimonialSubmitPanel";
 import BrandMomentSubmitPanel from "./BrandMomentSubmitPanel";
 import styles from "./LandingPage.module.css";
@@ -786,7 +787,12 @@ function TalentCard({ talent, lang }: { talent: DisplayTalent; lang: LandingLang
     <Link className={styles.talentCard} href={talent.href}>
       <div className={styles.talentMedia}>
         {talent.image ? (
-          <img src={talent.image} alt={talent.name} loading="lazy" />
+          // g_auto (lib/images.ts) lets Cloudinary find the face before
+          // squaring the crop — was a raw <img>, so a portrait/full-body
+          // upload got a blind CSS object-fit: cover center-crop instead,
+          // landing on torso/legs instead of a face (see the 2026-08-31
+          // "not balanced" report).
+          <img src={cdnImage(talent.image, 400)} alt={talent.name} loading="lazy" />
         ) : (
           <div className={styles.talentMediaInitial} aria-hidden="true">{talent.name.charAt(0).toUpperCase()}</div>
         )}
@@ -959,7 +965,7 @@ function CampaignSection({ lang, moments }: { lang: LandingLang; moments: Public
             {moments.length > 0 ? (
               moments.map((moment) => (
                 <article className={styles.campaignCard} key={moment.id}>
-                  <img src={moment.imageUrl} alt={moment.title} loading="lazy" />
+                  <img src={cdnImage(moment.imageUrl, 480, "fill")} alt={moment.title} loading="lazy" />
                   <div>
                     <h3>{moment.title}</h3>
                     {moment.location && <p>{moment.location}</p>}

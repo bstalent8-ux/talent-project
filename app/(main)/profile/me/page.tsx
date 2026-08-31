@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { createClient } from "@/lib/supabase/client";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import ProfileCompletionCard from "@/components/profile/ProfileCompletionCard";
+import AvatarCropModal from "@/components/profile/AvatarCropModal";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
 import { COMPLETION_THRESHOLDS } from "@/lib/profile-completion";
 
@@ -222,6 +223,7 @@ export default function DashboardPage() {
   const [saveMsg,       setSaveMsg]       = useState("");
   const [saveErr,       setSaveErr]       = useState("");
   const [uploading,     setUploading]     = useState(false);
+  const [cropFile,      setCropFile]      = useState<File | null>(null);
   const [mediaUploading,setMediaUploading]= useState(false);
   const [caption,       setCaption]       = useState("");
   const [media,         setMedia]         = useState<MediaItem[]>([]);
@@ -646,11 +648,18 @@ export default function DashboardPage() {
               </div>
               {edit && (
                 <>
-                  <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
+                  <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile(f); e.target.value = ""; }} />
                   <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: GREEN, border: "none", borderRadius: 20, color: "#000", fontSize: 11, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "'Cairo',sans-serif" }}>
                     <Camera size={12} />{uploading ? t.uploading : t.changePhoto}
                   </button>
                 </>
+              )}
+              {cropFile && (
+                <AvatarCropModal
+                  file={cropFile}
+                  onCancel={() => setCropFile(null)}
+                  onCropped={(cropped) => { setCropFile(null); handleAvatarUpload(cropped); }}
+                />
               )}
             </div>
 
