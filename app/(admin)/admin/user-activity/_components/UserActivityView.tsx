@@ -159,38 +159,6 @@ export default function UserActivityView({
 
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
         <p style={{ margin: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
-          {t.trafficSources} ({trafficSources.reduce((sum, s) => sum + s.count, 0)})
-        </p>
-        {trafficSources.length === 0 ? (
-          <EmptyState message={t.noTrafficSources} />
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: TH }}>
-                  {[t.source, t.campaign, t.signups].map((h) => (
-                    <th key={h} style={{ textAlign: "start", padding: "10px 16px", color: MUTED, fontWeight: 500 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {trafficSources.map((s) => (
-                  <tr key={`${s.source} ${s.campaign ?? ""}`} style={{ borderTop: `1px solid ${BORDER}` }}>
-                    <td style={{ padding: "10px 16px", color: TEXT, fontWeight: 600 }}>
-                      {s.source === "organic" ? t.organic : s.source}
-                    </td>
-                    <td style={{ padding: "10px 16px", color: MUTED }}>{s.campaign ?? "—"}</td>
-                    <td style={{ padding: "10px 16px", color: TEXT }}>{s.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
-        <p style={{ margin: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
           {t.visitors} ({visitors.length})
         </p>
         {visitors.length === 0 ? (
