@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Handshake,
+  History,
   LayoutDashboard,
   LifeBuoy,
   ListTree,
@@ -52,6 +53,7 @@ const TX = {
     packages: "الباقات",
     profileConfig: "إعدادات الملفات",
     notifications: "الإشعارات",
+    notificationsLog: "سجل الإشعارات",
     settings: "الإعدادات",
     logout: "تسجيل الخروج",
     modeExpanded: "مفتوحة دائماً",
@@ -76,6 +78,7 @@ const TX = {
     trustedBrands: "Trusted Brands",
     profileConfig: "Profile Config",
     notifications: "Notifications",
+    notificationsLog: "Notification Log",
     settings: "Settings",
     logout: "Logout",
     modeExpanded: "Always expanded",
@@ -102,6 +105,7 @@ const NAV_ITEMS = [
   { key: "trustedBrands", href: "/admin/trusted-brands", icon: Handshake, fallback: "براندات موثوقة" },
   { key: "profileConfig", href: "/admin/profile-config", icon: SlidersHorizontal },
   { key: "notifications", href: "/admin/notifications", icon: Bell },
+  { key: "notificationsLog", href: "/admin/notifications-log", icon: History },
   { key: "settings", href: "/admin/settings", icon: Settings },
 ] as const;
 
@@ -185,8 +189,11 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
   const MUTED = "rgba(255,255,255,0.55)";
   const HOVER = "rgba(255,255,255,0.07)";
 
+  // Plain startsWith would make /admin/notifications-log also light up the
+  // /admin/notifications composer (a real string-prefix collision, not a
+  // hypothetical one) — require an exact match or a "/" boundary.
   const isActive = (href: string) =>
-    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+    href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(`${href}/`);
 
   const width = collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W_OPEN;
 

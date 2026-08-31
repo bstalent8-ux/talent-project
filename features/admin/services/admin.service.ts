@@ -1120,3 +1120,73 @@ export async function fetchAdminEmailLogPage({
 
   return { emails, total: count ?? emails.length };
 }
+
+// ─── Notification log ─────────────────────────────────────────────────────────
+// Backs /admin/notifications-log — a read-only paginated view over every row
+// ever written to `notifications`, individual sends (PROFILE_APPROVED,
+// BOOKING_REQUEST, ...) and broadcasts alike. Distinct from /admin/notifications'
+// own "send history", which only covers rows its own broadcast composer wrote.
+// Joined in JS to the recipient's handle/name, same pattern as
+// fetchAdminEmailLogPage above.
+
+export interface AdminNotificationLogRow {
+  id:              string;
+  recipientId:     string;
+  recipientHandle: string | null;
+  recipientName:   string | null;
+  type:            string;
+  title:           string;
+  message:         string;
+  metadata:        Record<string, unknown>;
+  isRead:          boolean;
+  createdAt:       string;
+}
+
+export interface AdminNotificationLogPageResult {
+  notifications: AdminNotificationLogRow[];
+  total:         number;
+}
+
+export async function fetchAdminNotificationLogPage({
+  page = 1,
+  pageSize = 20,
+  type,
+}: { page?: number; pageSize?: number; type?: string }): Promise<AdminNotificationLogPageResult> {
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = adminClient
+    .from("notifications")
+    .select("id, recipient_id, type, title, message, metadata, is_read, created_at", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
+  if (type) query = query.eq("type", type);
+
+  const { data, count, error } = await query;
+  if (error) return { notifications: [], total: 0 };
+
+  const recipientIds = Array.from(new Set((data ?? []).map((r) => r.recipient_id).filter((id): id is string => !!id)));
+  const profilesById: Record<string, { handle: string | null; full_name: string | null }> = {};
+  if (recipientIds.length > 0) {
+    const { data: profiles } = await adminClient
+      .from("profiles")
+      .select("id, handle, full_name")
+      .in("id", recipientIds);
+    for (const p of profiles ?? []) profilesById[p.id] = { handle: p.handle, full_name: p.full_name };
+  }
+
+  const notifications: AdminNotificationLogRow[] = (data ?? []).map((r) => ({
+    id:              r.id,
+    recipientId:     r.recipient_id,
+    recipientHandle: profilesById[r.recipient_id]?.handle ?? null,
+    recipientName:   profilesById[r.recipient_id]?.full_name ?? null,
+    type:            r.type,
+    title:           r.title,
+    message:         r.message,
+    metadata:        (r.metadata ?? {}) as Record<string, unknown>,
+    isRead:          r.is_read,
+    createdAt:       r.created_at,
+  }));
+
+  return { notifications, total: count ?? notifications.length };
+}
