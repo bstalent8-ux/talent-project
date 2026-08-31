@@ -113,7 +113,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
     width: "100%", padding: "10px 12px", borderRadius: 8,
     border: `1px solid ${BORDER}`, backgroundColor: INPUT,
     color: TEXT, fontSize: 14, outline: "none",
-    fontFamily: "'Cairo', sans-serif", boxSizing: "border-box",
+    fontFamily: "'IBM Plex Sans Arabic', sans-serif", boxSizing: "border-box",
   };
 
   function set(k: keyof InitialData, v: string) {
@@ -356,7 +356,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
             backgroundColor: "#00D26A", color: "#000", border: "none",
             borderRadius: 10, padding: "12px 28px", fontSize: 14,
             fontWeight: 800, cursor: status === "saving" ? "wait" : "pointer",
-            fontFamily: "'Cairo', sans-serif", opacity: status === "saving" ? 0.7 : 1,
+            fontFamily: "'IBM Plex Sans Arabic', sans-serif", opacity: status === "saving" ? 0.7 : 1,
           }}
         >
           <Save size={16} />

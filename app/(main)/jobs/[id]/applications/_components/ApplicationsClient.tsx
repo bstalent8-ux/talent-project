@@ -175,11 +175,11 @@ export default function ApplicationsClient({
   const accepted  = apps.filter((a) => a.status === "accepted").length;
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: BG, fontFamily: "'Cairo',sans-serif", direction: ar ? "rtl" : "ltr", paddingBottom: 60 }}>
+    <div style={{ minHeight: "100vh", backgroundColor: BG, fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr", paddingBottom: 60 }}>
       {/* Breadcrumb */}
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 24px 0" }}>
         <button onClick={() => router.push("/jobs")}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: MUTED, cursor: "pointer", fontSize: 13, fontWeight: 700, padding: 0, fontFamily: "'Cairo',sans-serif" }}>
+          style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: MUTED, cursor: "pointer", fontSize: 13, fontWeight: 700, padding: 0, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
           {ar ? <ArrowRight size={14} /> : <ChevronLeft size={14} />} {t.back}
         </button>
       </div>
@@ -322,7 +322,7 @@ export default function ApplicationsClient({
                       {/* Accept */}
                       {isPending && (
                         <button onClick={() => handleAccept(app.id)} disabled={!!loadingId}
-                          style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: isAccepting ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 800, cursor: loadingId ? "default" : "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                          style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: isAccepting ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 800, cursor: loadingId ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                           <CheckCircle2 size={14} /> {isAccepting ? t.accepting : t.accept}
                         </button>
                       )}
@@ -330,21 +330,21 @@ export default function ApplicationsClient({
                       {/* Reject */}
                       {isPending && (
                         <button onClick={() => setRejectModal(app.id)} disabled={!!loadingId}
-                          style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "transparent", color: "#EF4444", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: loadingId ? "default" : "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                          style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "transparent", color: "#EF4444", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: loadingId ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                           <XCircle size={14} /> {t.reject}
                         </button>
                       )}
 
                       {/* Chat */}
                       <button onClick={() => openChat(app.talent_id)}
-                        style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "transparent", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                        style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "transparent", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                         <MessageCircle size={14} /> {t.chat}
                       </button>
 
                       {/* View profile */}
                       {talent?.handle && (
                         <button onClick={() => router.push(`/talent/${talent.handle}`)}
-                          style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "transparent", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                          style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "transparent", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                           <ExternalLink size={14} /> {t.profile}
                         </button>
                       )}
@@ -366,15 +366,15 @@ export default function ApplicationsClient({
             <textarea
               value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
               placeholder={t.rejectReason} rows={3}
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#F8FAFC", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'Cairo',sans-serif", outline: "none", resize: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#F8FAFC", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", resize: "none", boxSizing: "border-box" }}
             />
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               <button onClick={() => handleReject(rejectModal)} disabled={!!loadingId}
-                style={{ flex: 1, backgroundColor: "#EF4444", color: "#fff", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                style={{ flex: 1, backgroundColor: "#EF4444", color: "#fff", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 {loadingId ? t.rejecting : t.confirmRej}
               </button>
               <button onClick={() => setRejectModal(null)}
-                style={{ flex: 1, backgroundColor: "transparent", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                style={{ flex: 1, backgroundColor: "transparent", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 {t.cancel}
               </button>
             </div>

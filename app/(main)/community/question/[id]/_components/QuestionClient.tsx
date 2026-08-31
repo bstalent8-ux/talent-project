@@ -113,7 +113,7 @@ export default function QuestionClient() {
     <div style={{
       minHeight: "100vh",
       backgroundColor: dark ? "#050B12" : "#f1f5f9",
-      fontFamily: "'Cairo', sans-serif",
+      fontFamily: "'IBM Plex Sans Arabic', sans-serif",
       direction: ar ? "rtl" : "ltr",
       padding: "40px 20px",
     }}>

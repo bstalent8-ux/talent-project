@@ -33,7 +33,7 @@ const href = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(t.message)}
         borderRadius:   12,
         background:     "linear-gradient(135deg, #25D366, #128C7E)",
         color:          "#ffffff",
-        fontFamily:     "'Cairo', sans-serif",
+        fontFamily:     "'IBM Plex Sans Arabic', sans-serif",
         fontSize:       15,
         fontWeight:     700,
         textDecoration: "none",

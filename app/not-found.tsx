@@ -43,7 +43,7 @@ export default function NotFound() {
       dir={ar ? "rtl" : "ltr"}
       style={{
         minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        backgroundColor: BG, fontFamily: "'Cairo', sans-serif", padding: 24,
+        backgroundColor: BG, fontFamily: "'IBM Plex Sans Arabic', sans-serif", padding: 24,
       }}
     >
       <div style={{

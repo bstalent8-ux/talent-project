@@ -51,7 +51,7 @@ export default function ReviewForm({ bookingId, existingReview, myRole, dark, la
 
   if (myRole !== "brand") {
     return (
-      <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "16px 20px", fontFamily: "'Cairo',sans-serif", direction: ar ? "rtl" : "ltr" }}>
+      <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "16px 20px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr" }}>
         <p style={{ color: MUTED, fontSize: 13, margin: 0, textAlign: "center" }}>{t.talentOnly}</p>
       </div>
     );
@@ -72,7 +72,7 @@ export default function ReviewForm({ bookingId, existingReview, myRole, dark, la
 
   if (existingReview) {
     return (
-      <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 24px", fontFamily: "'Cairo',sans-serif", direction: ar ? "rtl" : "ltr" }}>
+      <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 24px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr" }}>
         <p style={{ color: GREEN, fontSize: 15, fontWeight: 800, margin: "0 0 8px" }}>{t.submitted}</p>
         <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
           {[1,2,3,4,5].map((s) => (
@@ -85,7 +85,7 @@ export default function ReviewForm({ bookingId, existingReview, myRole, dark, la
   }
 
   return (
-    <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 24px", fontFamily: "'Cairo',sans-serif", direction: ar ? "rtl" : "ltr" }}>
+    <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 24px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr" }}>
       <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: "0 0 14px" }}>{t.title}</h3>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
@@ -106,11 +106,11 @@ export default function ReviewForm({ bookingId, existingReview, myRole, dark, la
         <div>
           <label style={{ color: MUTED, fontSize: 12, fontWeight: 700, marginBottom: 6, display: "block" }}>{t.comment}</label>
           <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t.comPh} rows={3}
-            style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'Cairo',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
+            style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
         </div>
 
         <button type="submit" disabled={sending || !rating}
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: !rating ? MUTED : GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: sending || !rating ? "default" : "pointer", opacity: !rating ? 0.5 : 1, fontFamily: "'Cairo',sans-serif" }}>
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: !rating ? MUTED : GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: sending || !rating ? "default" : "pointer", opacity: !rating ? 0.5 : 1, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
           {sending ? t.sending : t.send}
         </button>
       </form>

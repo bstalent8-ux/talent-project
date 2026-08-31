@@ -38,7 +38,7 @@ export default function JobDetailClient({ job }: { job: JobPost }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: dark ? "#050B12" : "#F1F5F9", padding: "40px 24px 80px", fontFamily: "'Cairo',sans-serif", direction: ar ? "rtl" : "ltr" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: dark ? "#050B12" : "#F1F5F9", padding: "40px 24px 80px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr" }}>
       <main style={{ maxWidth: 900, margin: "0 auto" }}>
         <Link href="/jobs" style={{ display: "inline-flex", alignItems: "center", gap: 8, color: GREEN, fontWeight: 800, textDecoration: "none", marginBottom: 20 }}>
           <Arrow size={16} />
@@ -95,7 +95,7 @@ export default function JobDetailClient({ job }: { job: JobPost }) {
               fontWeight: 900,
               cursor: !isGuestUser(user) && !canApplyJob(user).allowed ? "not-allowed" : "pointer",
               opacity: !isGuestUser(user) && !canApplyJob(user).allowed ? 0.45 : 1,
-              fontFamily: "'Cairo',sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}
           >
             <Send size={16} />

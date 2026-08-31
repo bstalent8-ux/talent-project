@@ -13,7 +13,7 @@ export default function AboutClient() {
     <div style={{
       minHeight: "100vh",
       backgroundColor: dark ? "#050B12" : "#f1f5f9",
-      fontFamily: "'Cairo', sans-serif",
+      fontFamily: "'IBM Plex Sans Arabic', sans-serif",
     }}>
       <AboutHero    dark={dark} lang={lang} />
       <MissionVision dark={dark} lang={lang} />

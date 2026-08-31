@@ -32,7 +32,7 @@ export default function BlockedPage() {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      backgroundColor: BG, fontFamily: "'Cairo', sans-serif", padding: 24,
+      backgroundColor: BG, fontFamily: "'IBM Plex Sans Arabic', sans-serif", padding: 24,
     }}>
       <div style={{
         backgroundColor: CARD, border: `1px solid ${BORDER}`,
@@ -93,7 +93,7 @@ export default function BlockedPage() {
               border: `1px solid ${BORDER}`,
               borderRadius: 10, padding: "10px 24px",
               color: MUTED, fontSize: 14, cursor: "pointer",
-              fontFamily: "'Cairo', sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic', sans-serif",
             }}
           >
             تسجيل الخروج / Sign Out

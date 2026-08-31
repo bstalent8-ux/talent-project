@@ -79,7 +79,7 @@ export default function ProfileSection({ profile, talentStatus, talentCategory, 
   const inp: React.CSSProperties = {
     width: "100%", padding: "10px 14px", backgroundColor: INP, border: `1px solid ${BORDER}`,
     borderRadius: 8, color: TEXT, fontSize: 14, outline: "none", boxSizing: "border-box",
-    fontFamily: "'Cairo', sans-serif",
+    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
   };
 
   if (profile.role === "brand") {

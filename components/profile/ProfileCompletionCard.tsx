@@ -78,7 +78,7 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
   if (score >= 100) {
     return (
       <div style={{
-        marginBottom: 28, fontFamily: "'Cairo', sans-serif",
+        marginBottom: 28, fontFamily: "'IBM Plex Sans Arabic', sans-serif",
         background: dark ? "linear-gradient(135deg,#0a2a1e,#0d1f2d)" : "linear-gradient(135deg,#ecfdf5,#eff6ff)",
         border: `1px solid ${dark ? "rgba(0,210,106,0.25)" : "rgba(0,210,106,0.3)"}`,
         borderRadius: 18, padding: "28px 24px", textAlign: "center",
@@ -94,7 +94,7 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
           display: "inline-block", padding: "11px 28px",
           background: "#00C9B1", color: "#fff", borderRadius: 10,
           fontSize: 14, fontWeight: 700, textDecoration: "none",
-          fontFamily: "'Cairo', sans-serif",
+          fontFamily: "'IBM Plex Sans Arabic', sans-serif",
         }}>
           {t.congrats.cta}
         </a>
@@ -105,7 +105,7 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
   const scoreColor = score >= 80 ? "#00D26A" : score >= 50 ? TEAL : score >= 25 ? "#FFB800" : ORANGE;
 
   return (
-    <div style={{ marginBottom: 28, fontFamily: "'Cairo', sans-serif" }} dir={dir}>
+    <div style={{ marginBottom: 28, fontFamily: "'IBM Plex Sans Arabic', sans-serif" }} dir={dir}>
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         flexWrap: "wrap", gap: 14, padding: "16px 18px", borderRadius: 16,
@@ -127,7 +127,7 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
           style={{
             padding: "12px 24px", background: TEAL, border: "none", borderRadius: 12,
             color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer",
-            fontFamily: "'Cairo', sans-serif", whiteSpace: "nowrap",
+            fontFamily: "'IBM Plex Sans Arabic', sans-serif", whiteSpace: "nowrap",
           }}
         >
           {t.ctaComplete}

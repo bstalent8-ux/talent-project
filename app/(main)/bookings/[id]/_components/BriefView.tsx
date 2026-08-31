@@ -113,7 +113,7 @@ export default function BriefView({ brief, bookingId, bookingStatus, myRole, dar
   const statusLabel = brief.status === "accepted" ? t.accepted : brief.status === "rejected" ? t.rejected : brief.status === "changes_requested" ? t.changes : (myRole === "talent" ? t.pending : t.brandPending);
 
   return (
-    <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 24px", fontFamily: "'Cairo',sans-serif", direction: ar ? "rtl" : "ltr" }}>
+    <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 24px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <FileText size={18} color={GREEN} />
@@ -176,28 +176,28 @@ export default function BriefView({ brief, bookingId, bookingStatus, myRole, dar
           {!showReject && !showChanges ? (
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button onClick={() => respond("accept")} disabled={loading}
-                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 <CheckCircle2 size={14} /> {t.accept}
               </button>
               <button onClick={() => setShowChanges(true)} disabled={loading}
-                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: GOLD, border: `1px solid ${GOLD}66`, borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: GOLD, border: `1px solid ${GOLD}66`, borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 {t.requestChanges}
               </button>
               <button onClick={() => setShowReject(true)} disabled={loading}
-                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: "#ef4444", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: "#ef4444", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 <XCircle size={14} /> {t.reject}
               </button>
             </div>
           ) : showReject ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t.rejectPh} rows={3}
-                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'Cairo',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => respond("reject")} disabled={loading}
-                  style={{ flex: 1, backgroundColor: "#ef4444", color: "#fff", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 700, cursor: loading ? "default" : "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                  style={{ flex: 1, backgroundColor: "#ef4444", color: "#fff", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 700, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   {loading ? "…" : t.send}
                 </button>
-                <button onClick={() => setShowReject(false)} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                <button onClick={() => setShowReject(false)} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   {t.cancel}
                 </button>
               </div>
@@ -205,13 +205,13 @@ export default function BriefView({ brief, bookingId, bookingStatus, myRole, dar
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t.changesPh} rows={3}
-                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'Cairo',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => respond("request_changes")} disabled={loading}
-                  style={{ flex: 1, backgroundColor: GOLD, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 800, cursor: loading ? "default" : "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                  style={{ flex: 1, backgroundColor: GOLD, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 800, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   {loading ? "…" : t.send}
                 </button>
-                <button onClick={() => setShowChanges(false)} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                <button onClick={() => setShowChanges(false)} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   {t.cancel}
                 </button>
               </div>

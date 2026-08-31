@@ -16,7 +16,7 @@ export default function QuestionCard() {
       </div>
       <h3 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 15, fontWeight: 800, marginBottom: 6 }}>{ar ? "اسأل الموديل" : "Ask the Talent"}</h3>
       <p style={{ color: MUTED, fontSize: 12, marginBottom: 16 }}>{ar ? "لديك سؤال؟ تواصل مباشرةً" : "Have a question? Get in touch directly"}</p>
-      <motion.button whileHover={{ scale: 1.02, translateY: -2 }} style={{ backgroundColor: "transparent", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "11px 0", width: "100%", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif", transition: "all 0.2s" }}>
+      <motion.button whileHover={{ scale: 1.02, translateY: -2 }} style={{ backgroundColor: "transparent", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "11px 0", width: "100%", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", transition: "all 0.2s" }}>
         {ar ? "إرسال سؤال" : "Send Question"}
       </motion.button>
     </div>

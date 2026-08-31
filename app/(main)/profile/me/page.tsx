@@ -455,7 +455,7 @@ export default function DashboardPage() {
     backgroundColor: INP, border: `1px solid ${BORDER}`,
     borderRadius: 8, color: TEXT, fontSize: 14,
     outline: "none", boxSizing: "border-box",
-    fontFamily: "'Cairo', sans-serif",
+    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
   };
 
   if (status === "loading") return (
@@ -463,13 +463,13 @@ export default function DashboardPage() {
       <div style={{ textAlign: "center" }}>
         <div style={{ width: 40, height: 40, borderRadius: "50%", borderWidth: 3, borderStyle: "solid", borderColor: `${GREEN} ${BORDER} ${BORDER} ${BORDER}`, animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        <p style={{ color: MUTED, fontSize: 14, fontFamily: "'Cairo',sans-serif" }}>{t.loading}</p>
+        <p style={{ color: MUTED, fontSize: 14, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>{t.loading}</p>
       </div>
     </div>
   );
 
   if (status === "none") return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: BG, padding: "24px 16px", fontFamily: "'Cairo',sans-serif", direction: lang === "ar" ? "rtl" : "ltr" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: BG, padding: "24px 16px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: lang === "ar" ? "rtl" : "ltr" }}>
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {/* Welcome card */}
@@ -526,7 +526,7 @@ export default function DashboardPage() {
             background: "#FFB800", color: "#000",
             border: "none", borderRadius: 12,
             fontSize: 16, fontWeight: 800, cursor: "pointer",
-            fontFamily: "'Cairo',sans-serif",
+            fontFamily: "'IBM Plex Sans Arabic',sans-serif",
           }}
         >
           {lang === "ar" ? "ابدأ الآن ←" : "Get Started →"}
@@ -553,7 +553,7 @@ export default function DashboardPage() {
   ].filter(Boolean) as { icon: React.ReactNode; label: string }[];
 
   return (
-    <main dir={lang === "ar" ? "rtl" : "ltr"} style={{ fontFamily: "'Cairo', sans-serif", backgroundColor: BG, minHeight: "100vh", paddingBottom: 110 }}>
+    <main dir={lang === "ar" ? "rtl" : "ltr"} style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif", backgroundColor: BG, minHeight: "100vh", paddingBottom: 110 }}>
 
       {/* ─── Save bar (edit mode) ─── */}
       <AnimatePresence>
@@ -571,10 +571,10 @@ export default function DashboardPage() {
             <span style={{ color: TEXT, fontSize: 14, fontWeight: 700 }}>{t.editProfile}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {saveErr && <span style={{ color: "#ef4444", fontSize: 12, fontWeight: 600 }}>{saveErr}</span>}
-              <button onClick={() => { setEdit(false); setSaveErr(""); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: "transparent", border: `1px solid ${BORDER}`, borderRadius: 8, color: MUTED, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+              <button onClick={() => { setEdit(false); setSaveErr(""); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: "transparent", border: `1px solid ${BORDER}`, borderRadius: 8, color: MUTED, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 <X size={14} />{t.cancel}
               </button>
-              <button onClick={handleSave} disabled={saving} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", backgroundColor: saveErr ? "#ef4444" : GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: saving ? "wait" : "pointer", fontFamily: "'Cairo',sans-serif" }}>
+              <button onClick={handleSave} disabled={saving} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", backgroundColor: saveErr ? "#ef4444" : GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: saving ? "wait" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 <Save size={14} />{saveMsg || (saving ? t.saving : t.saveChanges)}
               </button>
             </div>
@@ -624,7 +624,7 @@ export default function DashboardPage() {
               // `edit` can no longer become true from this page; its inline
               // form branches below are kept but unreachable rather than
               // deleted, per the "demote, don't delete" instruction.
-              <button onClick={() => router.push("/profile/me/complete")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+              <button onClick={() => router.push("/profile/me/complete")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 <Pencil size={14} />{t.editProfile}
               </button>
             )}
@@ -649,7 +649,7 @@ export default function DashboardPage() {
               {edit && (
                 <>
                   <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile(f); e.target.value = ""; }} />
-                  <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: GREEN, border: "none", borderRadius: 20, color: "#000", fontSize: 11, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "'Cairo',sans-serif" }}>
+                  <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: GREEN, border: "none", borderRadius: 20, color: "#000", fontSize: 11, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                     <Camera size={12} />{uploading ? t.uploading : t.changePhoto}
                   </button>
                 </>
@@ -740,18 +740,18 @@ export default function DashboardPage() {
             {/* Right col — same as talent profile view */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   <MessageCircle size={14} color={GREEN} />{t.message}
                 </button>
-                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#000", borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif", border: "none" }}>
+                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#000", borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", border: "none" }}>
                   <Calendar size={14} />{t.bookNow}
                 </button>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   <Heart size={13} />{t.favorite}
                 </button>
-                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   <Share2 size={13} />{t.share}
                 </button>
               </div>
@@ -785,13 +785,13 @@ export default function DashboardPage() {
                 <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 800, margin: 0 }}>{t.portfolio}</h2>
                 {edit && (
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <input value={caption} onChange={e => setCaption(e.target.value)} placeholder={t.captionPlaceholder} style={{ padding: "6px 10px", backgroundColor: INP, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 12, outline: "none", width: 140, fontFamily: "'Cairo',sans-serif" }} />
+                    <input value={caption} onChange={e => setCaption(e.target.value)} placeholder={t.captionPlaceholder} style={{ padding: "6px 10px", backgroundColor: INP, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 12, outline: "none", width: 140, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }} />
                     <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { handleMediaUpload(f,"photo"); e.target.value=""; }}} />
-                    <button onClick={() => photoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(0,210,106,0.1)", border: "1px solid rgba(0,210,106,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                    <button onClick={() => photoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(0,210,106,0.1)", border: "1px solid rgba(0,210,106,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Upload size={12} />{t.addPhoto}
                     </button>
                     <input ref={videoRef} type="file" accept="video/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { handleMediaUpload(f,"video"); e.target.value=""; }}} />
-                    <button onClick={() => videoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 8, color: "#a78bfa", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                    <button onClick={() => videoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 8, color: "#a78bfa", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Play size={12} />{t.addVideo}
                     </button>
                   </div>
@@ -859,7 +859,7 @@ export default function DashboardPage() {
                     // the wizard's (which also covers eye_color).
                     <button
                       onClick={() => router.push("/profile/me/complete?step=physical")}
-                      style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", backgroundColor: "rgba(0,201,177,0.08)", border: `1px solid rgba(0,201,177,0.2)`, borderRadius: 8, color: "#00C9B1", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+                      style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", backgroundColor: "rgba(0,201,177,0.08)", border: `1px solid rgba(0,201,177,0.2)`, borderRadius: 8, color: "#00C9B1", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
                     >
                       ✏️ {lang === "ar" ? "تعديل" : "Edit"}
                     </button>
@@ -885,7 +885,7 @@ export default function DashboardPage() {
                     {!["height","weight","age","hair_color","shoe_size","languages","dialect"].some(k => form[k]) && (
                       <button
                         onClick={() => router.push("/profile/me/complete?step=physical")}
-                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: `1px dashed rgba(0,201,177,0.3)`, borderRadius: 10, color: "#00C9B1", fontSize: 13, fontWeight: 700, cursor: "pointer", background: "transparent", fontFamily: "'Cairo',sans-serif" }}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: `1px dashed rgba(0,201,177,0.3)`, borderRadius: 10, color: "#00C9B1", fontSize: 13, fontWeight: 700, cursor: "pointer", background: "transparent", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
                       >
                         <span style={{ fontSize: 18 }}>📏</span>
                         {lang === "ar" ? "أضف بياناتك الشخصية" : "Add your personal details"}
@@ -902,7 +902,7 @@ export default function DashboardPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                   <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.packages}</h3>
                   {edit && (
-                    <button onClick={addPkg} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: "rgba(0,210,106,0.1)", border: "1px solid rgba(0,210,106,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                    <button onClick={addPkg} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: "rgba(0,210,106,0.1)", border: "1px solid rgba(0,210,106,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Plus size={13} />{t.addPackage}
                     </button>
                   )}
@@ -937,7 +937,7 @@ export default function DashboardPage() {
                               <button onClick={() => delFeat(pkg.id, fi)} style={{ background: "rgba(220,38,38,0.15)", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", padding: "0 10px", fontSize: 13 }}>✕</button>
                             </div>
                           ))}
-                          <button onClick={() => addFeat(pkg.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", backgroundColor: "transparent", border: `1px dashed ${BORDER}`, borderRadius: 7, color: MUTED, fontSize: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                          <button onClick={() => addFeat(pkg.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", backgroundColor: "transparent", border: `1px dashed ${BORDER}`, borderRadius: 7, color: MUTED, fontSize: 12, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                             <Plus size={11} />{t.addFeature}
                           </button>
                         </div>
@@ -967,7 +967,7 @@ export default function DashboardPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                   <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.usageAddons}</h3>
                   {edit && (
-                    <button onClick={addAddonItem} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 8, color: "#a78bfa", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                    <button onClick={addAddonItem} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 8, color: "#a78bfa", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Plus size={13} />{t.addAddon}
                     </button>
                   )}
@@ -1062,7 +1062,7 @@ export default function DashboardPage() {
                   />
                   <button
                     onClick={() => { if (newBrand.trim()) { setBrands(bs => [...bs, newBrand.trim()]); setNewBrand(""); } }}
-                    style={{ padding: "0 16px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Cairo',sans-serif", flexShrink: 0 }}
+                    style={{ padding: "0 16px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", flexShrink: 0 }}
                   >{t.addBrand}</button>
                 </div>
               )}
@@ -1109,7 +1109,7 @@ export default function DashboardPage() {
       {/* ── Physical Info Quick-Edit Modal ── */}
       {showWelcomeModal && (
         <div onClick={e => e.target === e.currentTarget && setShowWelcomeModal(false)} style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
-          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:440, width:"100%", fontFamily:"'Cairo',sans-serif", textAlign:"center" }} dir={lang === "ar" ? "rtl" : "ltr"}>
+          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:440, width:"100%", fontFamily:"'IBM Plex Sans Arabic',sans-serif", textAlign:"center" }} dir={lang === "ar" ? "rtl" : "ltr"}>
             <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(0,210,106,0.12)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:26 }}>
               🚀
             </div>
@@ -1123,13 +1123,13 @@ export default function DashboardPage() {
             </p>
             <button
               onClick={() => { setShowWelcomeModal(false); setEdit(true); }}
-              style={{ width:"100%", padding:"12px 0", background:"#00C9B1", border:"none", borderRadius:10, color:"#fff", fontSize:14.5, fontWeight:700, cursor:"pointer", fontFamily:"'Cairo',sans-serif" }}
+              style={{ width:"100%", padding:"12px 0", background:"#00C9B1", border:"none", borderRadius:10, color:"#fff", fontSize:14.5, fontWeight:700, cursor:"pointer", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}
             >
               {lang === "ar" ? "كمّل دلوقتي ←" : "Complete now →"}
             </button>
             <button
               onClick={() => setShowWelcomeModal(false)}
-              style={{ width:"100%", padding:"10px 0", marginTop:8, background:"transparent", border:"none", color:MUTED, fontSize:13, cursor:"pointer", fontFamily:"'Cairo',sans-serif" }}
+              style={{ width:"100%", padding:"10px 0", marginTop:8, background:"transparent", border:"none", color:MUTED, fontSize:13, cursor:"pointer", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}
             >
               {lang === "ar" ? "لاحقاً" : "Later"}
             </button>
@@ -1139,7 +1139,7 @@ export default function DashboardPage() {
 
       {physicalModal && (
         <div onClick={e => e.target === e.currentTarget && setPhysicalModal(false)} style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
-          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:480, width:"100%", maxHeight:"90vh", overflowY:"auto", fontFamily:"'Cairo',sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
+          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:480, width:"100%", maxHeight:"90vh", overflowY:"auto", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
               <h3 style={{ color:TEXT, fontSize:17, fontWeight:700, margin:0 }}>📏 {t.physicalInfo}</h3>
               <button onClick={() => setPhysicalModal(false)} style={{ background: dark?"rgba(255,255,255,0.08)":"#f1f5f9", border:"none", borderRadius:8, width:32, height:32, cursor:"pointer", fontSize:16, color:MUTED, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
@@ -1177,7 +1177,7 @@ export default function DashboardPage() {
             <button
               onClick={savePhysical}
               disabled={physSaving}
-              style={{ width:"100%", padding:"12px 0", marginTop:16, background: physSaving ? (dark?"rgba(255,255,255,0.06)":"#e2e8f0") : "#00C9B1", border:"none", borderRadius:10, color: physSaving ? MUTED : "#fff", fontSize:15, fontWeight:700, cursor: physSaving ? "not-allowed" : "pointer", fontFamily:"'Cairo',sans-serif" }}
+              style={{ width:"100%", padding:"12px 0", marginTop:16, background: physSaving ? (dark?"rgba(255,255,255,0.06)":"#e2e8f0") : "#00C9B1", border:"none", borderRadius:10, color: physSaving ? MUTED : "#fff", fontSize:15, fontWeight:700, cursor: physSaving ? "not-allowed" : "pointer", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}
             >
               {physSaving ? (lang === "ar" ? "جاري الحفظ..." : "Saving...") : (lang === "ar" ? "حفظ" : "Save")}
             </button>

@@ -485,7 +485,7 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
                   style={{
                     flex: 1, resize: "none", border: `1px solid ${BORDER}`, borderRadius: 10,
                     padding: "8px 12px", backgroundColor: INPUT, color: TEXT,
-                    fontSize: 13, outline: "none", fontFamily: "'Cairo',sans-serif",
+                    fontSize: 13, outline: "none", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                     lineHeight: 1.5, maxHeight: 100, direction: ar ? "rtl" : "ltr",
                   }}
                   onInput={(e) => {

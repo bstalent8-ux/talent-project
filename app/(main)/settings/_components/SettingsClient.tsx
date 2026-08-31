@@ -110,7 +110,7 @@ export default function SettingsClient({ profile, email, talentStatus, talentCat
           color: active ? GREEN : MUTED,
           fontSize: 13.5, fontWeight: active ? 700 : 500,
           whiteSpace: "nowrap", flexShrink: 0,
-          fontFamily: "'Cairo', sans-serif",
+          fontFamily: "'IBM Plex Sans Arabic', sans-serif",
           textAlign: ar ? "right" : "left",
           width: isMobile ? "auto" : "100%",
         }}
@@ -124,7 +124,7 @@ export default function SettingsClient({ profile, email, talentStatus, talentCat
   const sectionProps = { profile, email, talentStatus, talentCategory, dark, lang, isMobile };
 
   return (
-    <main dir={ar ? "rtl" : "ltr"} style={{ fontFamily: "'Cairo', sans-serif", backgroundColor: BG, minHeight: "100vh", paddingBottom: 60 }}>
+    <main dir={ar ? "rtl" : "ltr"} style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif", backgroundColor: BG, minHeight: "100vh", paddingBottom: 60 }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "20px 16px" : "32px 24px" }}>
         <h1 style={{ color: TEXT, fontSize: isMobile ? 20 : 24, fontWeight: 900, margin: "0 0 20px" }}>{t.title}</h1>
 

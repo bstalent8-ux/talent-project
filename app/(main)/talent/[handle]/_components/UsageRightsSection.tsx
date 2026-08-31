@@ -82,7 +82,7 @@ export default function UsageRightsSection({ selectedPackage, addons: addonsProp
             <span style={{ color: GREEN, fontWeight: 900, fontSize: 18 }}>{fmt(total)} EGP</span>
           </div>
           {showBookButton && (
-            <motion.button whileHover={{ scale: 1.02 }} style={{ backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", width: "100%", fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif", marginTop: 4 }}>
+            <motion.button whileHover={{ scale: 1.02 }} style={{ backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", width: "100%", fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", marginTop: 4 }}>
               {ar ? "احجز الآن" : "Book Now"}
             </motion.button>
           )}

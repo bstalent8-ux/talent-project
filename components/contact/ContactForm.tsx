@@ -91,7 +91,7 @@ export default function ContactForm() {
     borderRadius: 10,
     color:        TEXT,
     fontSize:     14,
-    fontFamily:   "'Cairo', sans-serif",
+    fontFamily:   "'IBM Plex Sans Arabic', sans-serif",
     outline:      "none",
     boxSizing:    "border-box",
     transition:   "border-color 0.15s",
@@ -103,7 +103,7 @@ export default function ContactForm() {
     fontSize:   12,
     fontWeight: 600,
     marginBottom: 6,
-    fontFamily: "'Cairo', sans-serif",
+    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
     letterSpacing: 0.5,
   };
 
@@ -116,7 +116,7 @@ export default function ContactForm() {
           background:   dark ? "rgba(0,210,106,0.08)" : "rgba(0,210,106,0.06)",
           border:       "1px solid rgba(0,210,106,0.3)",
           borderRadius: 16, padding: "40px 32px",
-          textAlign:    "center", fontFamily: "'Cairo', sans-serif",
+          textAlign:    "center", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
         }}
       >
         <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
@@ -143,7 +143,7 @@ export default function ContactForm() {
             onFocus={e => (e.target.style.borderColor = GREEN)}
             onBlur={e => (e.target.style.borderColor = errors.name ? "#ef4444" : BORDER)}
           />
-          {errors.name && <p style={{ color: "#ef4444", fontSize: 11, margin: "4px 0 0", fontFamily: "'Cairo', sans-serif" }}>{errors.name}</p>}
+          {errors.name && <p style={{ color: "#ef4444", fontSize: 11, margin: "4px 0 0", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>{errors.name}</p>}
         </div>
         <div>
           <label style={labelStyle}>{t.email}</label>
@@ -155,7 +155,7 @@ export default function ContactForm() {
             onFocus={e => (e.target.style.borderColor = GREEN)}
             onBlur={e => (e.target.style.borderColor = errors.email ? "#ef4444" : BORDER)}
           />
-          {errors.email && <p style={{ color: "#ef4444", fontSize: 11, margin: "4px 0 0", fontFamily: "'Cairo', sans-serif" }}>{errors.email}</p>}
+          {errors.email && <p style={{ color: "#ef4444", fontSize: 11, margin: "4px 0 0", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>{errors.email}</p>}
         </div>
       </div>
 
@@ -177,7 +177,7 @@ export default function ContactForm() {
                 fontSize:     13,
                 fontWeight:   form.type === opt ? 700 : 400,
                 cursor:       "pointer",
-                fontFamily:   "'Cairo', sans-serif",
+                fontFamily:   "'IBM Plex Sans Arabic', sans-serif",
                 transition:   "all 0.15s",
               }}
             >
@@ -197,7 +197,7 @@ export default function ContactForm() {
           onFocus={e => (e.target.style.borderColor = GREEN)}
           onBlur={e => (e.target.style.borderColor = errors.subject ? "#ef4444" : BORDER)}
         />
-        {errors.subject && <p style={{ color: "#ef4444", fontSize: 11, margin: "4px 0 0", fontFamily: "'Cairo', sans-serif" }}>{errors.subject}</p>}
+        {errors.subject && <p style={{ color: "#ef4444", fontSize: 11, margin: "4px 0 0", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>{errors.subject}</p>}
       </div>
 
       {/* Message */}
@@ -212,11 +212,11 @@ export default function ContactForm() {
           onFocus={e => (e.target.style.borderColor = GREEN)}
           onBlur={e => (e.target.style.borderColor = errors.message ? "#ef4444" : BORDER)}
         />
-        {errors.message && <p style={{ color: "#ef4444", fontSize: 11, margin: "4px 0 0", fontFamily: "'Cairo', sans-serif" }}>{errors.message}</p>}
+        {errors.message && <p style={{ color: "#ef4444", fontSize: 11, margin: "4px 0 0", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>{errors.message}</p>}
       </div>
 
       {status === "error" && (
-        <p style={{ color: "#ef4444", fontSize: 13, fontFamily: "'Cairo', sans-serif", margin: 0 }}>{t.error}</p>
+        <p style={{ color: "#ef4444", fontSize: 13, fontFamily: "'IBM Plex Sans Arabic', sans-serif", margin: 0 }}>{t.error}</p>
       )}
 
       <button
@@ -230,7 +230,7 @@ export default function ContactForm() {
           color:        "#fff",
           fontSize:     15,
           fontWeight:   700,
-          fontFamily:   "'Cairo', sans-serif",
+          fontFamily:   "'IBM Plex Sans Arabic', sans-serif",
           cursor:       status === "sending" ? "not-allowed" : "pointer",
           transition:   "transform 0.2s, box-shadow 0.2s",
           boxShadow:    "0 4px 16px rgba(0,210,106,0.3)",

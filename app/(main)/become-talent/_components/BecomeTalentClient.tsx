@@ -113,7 +113,7 @@ export default function BecomeTalentClient() {
   const PURPLE = "#8B2FC9";
 
   return (
-    <div dir={ar ? "rtl" : "ltr"} style={{ background: BG, minHeight: "100vh", fontFamily: "'Cairo', sans-serif" }}>
+    <div dir={ar ? "rtl" : "ltr"} style={{ background: BG, minHeight: "100vh", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
 
       {/* ── Hero ── */}
       <section style={{ position: "relative", overflow: "hidden", padding: "100px 24px 80px", textAlign: "center" }}>
@@ -166,7 +166,7 @@ export default function BecomeTalentClient() {
               display: "inline-flex", alignItems: "center", gap: 10,
               padding: "16px 36px", borderRadius: 14,
               background: `linear-gradient(135deg, ${TEAL}, ${GREEN})`,
-              color: "#fff", fontFamily: "'Cairo', sans-serif",
+              color: "#fff", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
               fontSize: 16, fontWeight: 700, textDecoration: "none",
               boxShadow: "0 6px 24px rgba(0,201,177,0.35)",
               transition: "transform 0.2s, box-shadow 0.2s",
@@ -333,7 +333,7 @@ export default function BecomeTalentClient() {
             display: "inline-flex", alignItems: "center", gap: 10,
             padding: "16px 40px", borderRadius: 14,
             background: `linear-gradient(135deg, ${TEAL}, ${GREEN})`,
-            color: "#fff", fontFamily: "'Cairo', sans-serif",
+            color: "#fff", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
             fontSize: 16, fontWeight: 700, textDecoration: "none",
             boxShadow: "0 6px 24px rgba(0,201,177,0.35)",
           }}>

@@ -53,7 +53,7 @@ export default function MissionVision({ dark, lang }: Props) {
       borderTop: `1px solid ${BORDER}`,
       padding: "80px 24px",
       direction: ar ? "rtl" : "ltr",
-      fontFamily: "'Cairo', sans-serif",
+      fontFamily: "'IBM Plex Sans Arabic', sans-serif",
     }}>
       <div style={{
         maxWidth: 1100, margin: "0 auto",

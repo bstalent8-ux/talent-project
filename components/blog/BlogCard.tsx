@@ -95,7 +95,7 @@ export default function BlogCard({ post, index }: Props) {
               color:        accent,
               fontSize:     11,
               fontWeight:   700,
-              fontFamily:   "'Cairo', sans-serif",
+              fontFamily:   "'IBM Plex Sans Arabic', sans-serif",
             }}>
               {post.category}
             </span>
@@ -108,7 +108,7 @@ export default function BlogCard({ post, index }: Props) {
               fontWeight: 700,
               color:      TEXT,
               margin:     "0 0 10px",
-              fontFamily: "'Cairo', sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic', sans-serif",
               lineHeight: 1.5,
               display:    "-webkit-box",
               WebkitLineClamp: 2,
@@ -123,7 +123,7 @@ export default function BlogCard({ post, index }: Props) {
               color:      MUTED,
               lineHeight: 1.7,
               margin:     "0 0 16px",
-              fontFamily: "'Cairo', sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic', sans-serif",
               display:    "-webkit-box",
               WebkitLineClamp: 3,
               WebkitBoxOrient: "vertical",
@@ -138,14 +138,14 @@ export default function BlogCard({ post, index }: Props) {
               justifyContent: "space-between",
               gap:        8,
             }}>
-              <span style={{ color: MUTED, fontSize: 12, fontFamily: "'Cairo', sans-serif" }}>
+              <span style={{ color: MUTED, fontSize: 12, fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
                 {post.date}
               </span>
               <span style={{
                 color:      accent,
                 fontSize:   11,
                 fontWeight: 600,
-                fontFamily: "'Cairo', sans-serif",
+                fontFamily: "'IBM Plex Sans Arabic', sans-serif",
               }}>
                 {post.readTime}
               </span>

@@ -86,7 +86,7 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "10px 14px", borderRadius: 10,
     backgroundColor: INPUT, border: `1px solid ${BORDER}`,
-    color: TEXT, fontSize: 13, fontFamily: "'Cairo',sans-serif",
+    color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif",
     outline: "none", boxSizing: "border-box",
   };
 
@@ -132,7 +132,7 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
   };
 
   return (
-    <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 24px", fontFamily: "'Cairo',sans-serif", direction: ar ? "rtl" : "ltr" }}>
+    <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 24px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
         <Upload size={18} color={GREEN} />
         <h3 style={{ margin: 0, color: TEXT, fontSize: 16, fontWeight: 800 }}>{t.title}</h3>
@@ -163,12 +163,12 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
             {myRole === "brand" && d.status === "submitted" && (
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <button onClick={() => handleApprove(d.id)} disabled={loading}
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 900, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   <CheckCircle2 size={13} /> {t.approve}
                 </button>
                 {revMode !== d.id ? (
                   <button onClick={() => setRevMode(d.id)} disabled={loading}
-                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                     <Clock size={13} /> {t.askRevision}
                   </button>
                 ) : (
@@ -176,8 +176,8 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
                     <textarea value={revNote} onChange={(e) => setRevNote(e.target.value)} placeholder={t.revPh} rows={2}
                       style={{ ...inputStyle, resize: "none", fontSize: 12 }} />
                     <div style={{ display: "flex", gap: 6 }}>
-                      <button onClick={() => handleRevision(d.id)} disabled={loading} style={{ flex: 1, backgroundColor: "#f59e0b", color: "#000", border: "none", borderRadius: 6, padding: "7px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>{t.send}</button>
-                      <button onClick={() => setRevMode(null)} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 6, padding: "7px 0", fontSize: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>{t.cancel}</button>
+                      <button onClick={() => handleRevision(d.id)} disabled={loading} style={{ flex: 1, backgroundColor: "#f59e0b", color: "#000", border: "none", borderRadius: 6, padding: "7px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>{t.send}</button>
+                      <button onClick={() => setRevMode(null)} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 6, padding: "7px 0", fontSize: 12, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>{t.cancel}</button>
                     </div>
                   </div>
                 )}
@@ -203,7 +203,7 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t.notesPh} rows={2} style={{ ...inputStyle, resize: "vertical" }} />
           </div>
           {error && <p style={{ color: "#f87171", fontSize: 12, margin: 0 }}>{error}</p>}
-          <button type="submit" disabled={loading} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: loading ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'Cairo',sans-serif" }}>
+          <button type="submit" disabled={loading} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: loading ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <Send size={14} /> {loading ? t.sending : t.submit}
           </button>
         </form>

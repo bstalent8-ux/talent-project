@@ -66,7 +66,7 @@ export default function AboutHero({ dark, lang }: Props) {
             borderRadius: 100, padding: "5px 18px",
             color: GREEN, fontSize: 11, fontWeight: 700,
             letterSpacing: 1.2, textTransform: "uppercase",
-            fontFamily: "'Cairo', sans-serif",
+            fontFamily: "'IBM Plex Sans Arabic', sans-serif",
           }}
         >
           {t.tag}
@@ -80,7 +80,7 @@ export default function AboutHero({ dark, lang }: Props) {
             fontSize: "clamp(30px, 5vw, 56px)",
             fontWeight: 900, lineHeight: 1.2,
             margin: "0 0 20px",
-            fontFamily: "'Cairo', sans-serif",
+            fontFamily: "'IBM Plex Sans Arabic', sans-serif",
             color: dark ? "#ffffff" : "#0f172a",
           }}
         >
@@ -96,7 +96,7 @@ export default function AboutHero({ dark, lang }: Props) {
             fontSize: "clamp(14px, 2vw, 17px)",
             color: dark ? "#94a3b8" : "#475569",
             lineHeight: 1.8, maxWidth: 520, margin: "0 auto",
-            fontFamily: "'Cairo', sans-serif",
+            fontFamily: "'IBM Plex Sans Arabic', sans-serif",
           }}
         >
           {t.sub}

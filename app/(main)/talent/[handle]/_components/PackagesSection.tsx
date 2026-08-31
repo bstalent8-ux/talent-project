@@ -127,7 +127,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                     border: `1px solid ${TEAL}`,
                     borderRadius: 10, padding: "10px 0", width: "100%",
                     fontSize: 13, fontWeight: 800, cursor: "pointer",
-                    fontFamily: "'Cairo',sans-serif",
+                    fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                   }}
                 >
                   {selected ? (ar ? "الباقة المختارة" : "Selected") : ar ? "اختر الباقة" : "Choose Package"}
@@ -360,7 +360,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                   fontSize: 13,
                   fontWeight: 900,
                   cursor: "pointer",
-                  fontFamily: "'Cairo',sans-serif",
+                  fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                 }}
               >
                 {selected ? (ar ? "الباقة المختارة" : "Selected Plan") : ar ? "اختر الباقة" : "Choose Package"}

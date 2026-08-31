@@ -59,7 +59,7 @@ export default function BrandsFilters({
         </div>
         <button onClick={onReset} style={{
           background: "none", border: "none", cursor: "pointer",
-          color: GOLD, fontSize: 12, fontWeight: 600, fontFamily: "'Cairo',sans-serif",
+          color: GOLD, fontSize: 12, fontWeight: 600, fontFamily: "'IBM Plex Sans Arabic',sans-serif",
         }}>{ar ? "إعادة ضبط" : "Reset"}</button>
       </div>
 
@@ -87,7 +87,7 @@ export default function BrandsFilters({
               backgroundColor: active ? (dark ? "rgba(0,210,106,0.1)" : "rgba(0,210,106,0.06)") : SURFACE,
               color: active ? GREEN : MUTED,
               fontSize: 13, fontWeight: active ? 700 : 400,
-              cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+              cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
               textAlign: "start" as const, transition: "all 0.15s",
             }}>
               <span style={{
@@ -119,7 +119,7 @@ export default function BrandsFilters({
               backgroundColor: active ? (dark ? "rgba(244,183,64,0.1)" : "rgba(244,183,64,0.06)") : SURFACE,
               color: active ? GOLD : MUTED,
               fontSize: 13, fontWeight: active ? 700 : 400,
-              cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+              cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
               textAlign: "start" as const, transition: "all 0.15s",
             }}>
               <span style={{
@@ -140,7 +140,7 @@ export default function BrandsFilters({
         padding: "9px 12px", borderRadius: 8,
         border: `1px solid ${verified ? GREEN : BORDER}`,
         backgroundColor: verified ? (dark ? "rgba(0,210,106,0.1)" : "rgba(0,210,106,0.06)") : "transparent",
-        cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+        cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
       }}>
         <BadgeCheck size={18} color={verified ? GREEN : MUTED} />
         <span style={{ color: verified ? GREEN : MUTED, fontSize: 13, fontWeight: verified ? 700 : 400 }}>

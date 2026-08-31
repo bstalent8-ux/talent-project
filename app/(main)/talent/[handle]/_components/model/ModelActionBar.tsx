@@ -58,7 +58,7 @@ export default function ModelActionBar({ talentId, talentName, talentAvatar, tal
     }}>
       <button
         onClick={() => (window.history.length > 1 ? router.back() : router.push("/explore"))}
-        style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: MUTED, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+        style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: MUTED, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
       >
         <ArrowRight size={15} style={{ transform: ar ? "none" : "scaleX(-1)" }} />
         {ar ? "رجوع إلى النتائج" : "Back to results"}
@@ -69,7 +69,7 @@ export default function ModelActionBar({ talentId, talentName, talentAvatar, tal
           <button
             onClick={onToggleFavorite}
             style={{
-              display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+              display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
               backgroundColor: isFavorited ? "rgba(244,63,94,0.12)" : SURFACE,
               color: isFavorited ? "#fb7185" : MUTED,
               border: `1px solid ${isFavorited ? "#f43f5e80" : BORDER}`,
@@ -87,7 +87,7 @@ export default function ModelActionBar({ talentId, talentName, talentAvatar, tal
 
         <button
           onClick={handleShare}
-          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: MUTED, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: MUTED, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
         >
           <Share2 size={15} />{copied ? (ar ? "تم النسخ" : "Copied") : (ar ? "مشاركة" : "Share")}
         </button>
@@ -95,7 +95,7 @@ export default function ModelActionBar({ talentId, talentName, talentAvatar, tal
         <ProtectedAction action="start_conversation">
           <button
             onClick={openMessage}
-            style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 800, color: "#0b0d13", background: `linear-gradient(135deg, #e5a93c, #c88924)`, border: "none", borderRadius: 10, padding: "9px 18px", cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+            style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 800, color: "#0b0d13", background: `linear-gradient(135deg, #e5a93c, #c88924)`, border: "none", borderRadius: 10, padding: "9px 18px", cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
           >
             <MessageCircle size={15} />{ar ? `تواصل مع ${talentName}` : `Contact ${talentName}`}
           </button>

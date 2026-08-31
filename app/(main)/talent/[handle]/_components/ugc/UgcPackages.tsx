@@ -81,7 +81,7 @@ export default function UgcPackages({ packages, selectedId, onSelectPackage }: P
               onClick={() => onSelectPackage(pkg)}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "11px 0", borderRadius: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+                padding: "11px 0", borderRadius: 12, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                 border: selectedId === pkg.id ? `1px solid ${EMERALD}` : "none",
                 background: selectedId === pkg.id ? "transparent" : (pkg.popular ? `linear-gradient(90deg, ${EMERALD}, #14B8A6)` : "#0F172A"),
                 color: selectedId === pkg.id ? EMERALD : (pkg.popular ? "#052e16" : "#fff"),

@@ -35,7 +35,7 @@ export default function BriefCard({ talentUserId, talentName, talentAvatar, tale
           <motion.button
             whileHover={{ scale: 1.02, translateY: -2 }}
             onClick={() => setShowModal(true)}
-            style={{ backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", width: "100%", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+            style={{ backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", width: "100%", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
           >
             {ar ? "طلب حجز" : "Book Talent"}
           </motion.button>

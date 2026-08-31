@@ -124,7 +124,7 @@ export default function DashboardClient({ role, profile, recentBookings, talentP
   const sectionTitle: React.CSSProperties = { color: TEXT, fontSize: 16, fontWeight: 800, margin: "0 0 16px" };
 
   return (
-    <main dir={ar ? "rtl" : "ltr"} style={{ fontFamily: "'Cairo', sans-serif", backgroundColor: BG, minHeight: "100vh", paddingBottom: 60 }}>
+    <main dir={ar ? "rtl" : "ltr"} style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif", backgroundColor: BG, minHeight: "100vh", paddingBottom: 60 }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "20px 16px" : "32px 24px" }}>
         <h1 style={{ color: TEXT, fontSize: isMobile ? 20 : 24, fontWeight: 900, margin: "0 0 4px" }}>{t.dashboard}</h1>
         <p style={{ color: MUTED, fontSize: 14, margin: "0 0 24px" }}>{t.welcome(displayName)}</p>

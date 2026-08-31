@@ -70,7 +70,7 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
         </div>
         <ProtectedAction action="create_booking">
           <motion.button onClick={onOpenBrief} whileHover={{ scale: 1.02 }}
-            style={{ padding: "11px 0", borderRadius: 12, border: "none", backgroundColor: EMERALD, color: "#052e16", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+            style={{ padding: "11px 0", borderRadius: 12, border: "none", backgroundColor: EMERALD, color: "#052e16", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             {ar ? "احجز الآن" : "Book Talent"}
           </motion.button>
         </ProtectedAction>
@@ -88,7 +88,7 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
         </div>
         <ProtectedAction action="start_conversation">
           <motion.button onClick={askQuestion} whileHover={{ scale: 1.02 }}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 12, border: "none", backgroundColor: "#0F172A", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 12, border: "none", backgroundColor: "#0F172A", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <Send size={13} />{ar ? "إرسال سؤال" : "Send Question"}
           </motion.button>
         </ProtectedAction>

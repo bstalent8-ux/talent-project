@@ -213,7 +213,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
             alignItems: "center",
             justifyContent: "center",
             padding: 20,
-            fontFamily: "'Cairo',sans-serif",
+            fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             direction: lang === "ar" ? "rtl" : "ltr",
           }}
         >
@@ -273,7 +273,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
                     backgroundColor: green,
                     color: "#050B12",
                     fontWeight: 900,
-                    fontFamily: "'Cairo',sans-serif",
+                    fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                     cursor: "pointer",
                   }}
                 >
@@ -292,7 +292,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
                   backgroundColor: green,
                   color: "#050B12",
                   fontWeight: 900,
-                  fontFamily: "'Cairo',sans-serif",
+                  fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -313,7 +313,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
                   backgroundColor: dark ? "rgba(0,210,106,0.08)" : "#ECFDF5",
                   color: green,
                   fontWeight: 900,
-                  fontFamily: "'Cairo',sans-serif",
+                  fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -334,7 +334,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
                   backgroundColor: "transparent",
                   color: text,
                   fontWeight: 800,
-                  fontFamily: "'Cairo',sans-serif",
+                  fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",

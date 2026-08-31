@@ -13,7 +13,7 @@ import ProtectedAction from "@/components/auth/ProtectedAction";
 import { FIELD_LABELS as MODEL_FIELD_LABELS, FIELD_ORDER as MODEL_FIELD_ORDER } from "./MeasurementsSection";
 
 const btn: React.CSSProperties = {
-  cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+  cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
   border: "none", outline: "none",
 };
 

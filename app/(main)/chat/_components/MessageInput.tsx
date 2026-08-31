@@ -71,7 +71,7 @@ export default function MessageInput({ onSend, disabled }: Props) {
           borderRadius: 12, padding: "10px 14px",
           backgroundColor: INPUT, color: TEXT,
           fontSize: 14, outline: "none",
-          fontFamily: "'Cairo', sans-serif",
+          fontFamily: "'IBM Plex Sans Arabic', sans-serif",
           lineHeight: 1.5, height: "42px", maxHeight: 160,
           transition: "border-color 0.2s",
           direction: ar ? "rtl" : "ltr",

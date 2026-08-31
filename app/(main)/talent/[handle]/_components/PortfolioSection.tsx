@@ -149,7 +149,7 @@ export default function PortfolioSection({ portfolioItems, variant = "default" }
             color: isModel ? TEAL : GREEN,
             fontSize: 13,
             cursor: "pointer",
-            fontFamily: "'Cairo',sans-serif",
+            fontFamily: "'IBM Plex Sans Arabic',sans-serif",
           }}
         >
           {ar ? "عرض الكل ›" : "View All ›"}

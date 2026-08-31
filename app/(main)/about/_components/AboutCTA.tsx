@@ -35,7 +35,7 @@ export default function AboutCTA({ dark, lang }: Props) {
       borderTop: `1px solid ${BORDER}`,
       padding: "90px 24px 100px",
       direction: ar ? "rtl" : "ltr",
-      fontFamily: "'Cairo', sans-serif",
+      fontFamily: "'IBM Plex Sans Arabic', sans-serif",
     }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -83,7 +83,7 @@ export default function AboutCTA({ dark, lang }: Props) {
             backgroundColor: GREEN, color: "#000",
             padding: "13px 28px", borderRadius: 12,
             fontWeight: 800, fontSize: 14,
-            textDecoration: "none", fontFamily: "'Cairo', sans-serif",
+            textDecoration: "none", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
             transition: "transform 0.2s, box-shadow 0.2s",
           }}
             onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,210,106,0.35)"; }}
@@ -98,7 +98,7 @@ export default function AboutCTA({ dark, lang }: Props) {
             border: `1.5px solid ${GOLD}`,
             color: GOLD, padding: "13px 28px", borderRadius: 12,
             fontWeight: 700, fontSize: 14,
-            textDecoration: "none", fontFamily: "'Cairo', sans-serif",
+            textDecoration: "none", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
             transition: "background-color 0.2s, color 0.2s, transform 0.2s",
           }}
             onMouseEnter={e => { e.currentTarget.style.backgroundColor = GOLD; e.currentTarget.style.color = "#000"; e.currentTarget.style.transform = "translateY(-2px)"; }}

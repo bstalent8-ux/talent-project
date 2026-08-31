@@ -313,7 +313,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
             <motion.button
               onClick={onOpenBrief}
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px 16px", borderRadius: 12, border: "none", background: `linear-gradient(90deg, ${VIOLET}, #0f766e)`, color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px 16px", borderRadius: 12, border: "none", background: `linear-gradient(90deg, ${VIOLET}, #0f766e)`, color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
             >
               <ShieldCheck size={16} color={EMERALD} />{ar ? "وظف الآن" : "Hire Now"}
             </motion.button>
@@ -326,7 +326,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           <button
             disabled
             title={ar ? "غير متاح حالياً" : "Not available yet"}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", borderRadius: 12, border: "1px solid #1E293B", backgroundColor: "rgba(15,23,42,0.7)", color: "#64748B", fontWeight: 700, fontSize: 12.5, cursor: "not-allowed", fontFamily: "'Cairo',sans-serif" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", borderRadius: 12, border: "1px solid #1E293B", backgroundColor: "rgba(15,23,42,0.7)", color: "#64748B", fontWeight: 700, fontSize: 12.5, cursor: "not-allowed", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
           >
             <FolderPlus size={14} />{ar ? "إضافة إلى حملة" : "Add to Campaign"}
           </button>
@@ -340,7 +340,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
                 },
               }))}
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", borderRadius: 12, border: "1px solid #1E293B", backgroundColor: "rgba(15,23,42,0.7)", color: "#fff", fontWeight: 700, fontSize: 12.5, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", borderRadius: 12, border: "1px solid #1E293B", backgroundColor: "rgba(15,23,42,0.7)", color: "#fff", fontWeight: 700, fontSize: 12.5, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
             >
               <MessageSquare size={14} color={EMERALD} />{ar ? "إرسال رسالة" : "Message"}
             </motion.button>
@@ -352,7 +352,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
                 onClick={onToggleFavorite}
                 style={{
                   flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  padding: "8px 0", borderRadius: 10, cursor: "pointer", fontFamily: "'Cairo',sans-serif", fontSize: 12,
+                  padding: "8px 0", borderRadius: 10, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", fontSize: 12,
                   border: isFavorited ? "1px solid #F43F5E" : "1px solid #1E293B",
                   backgroundColor: isFavorited ? "rgba(244,63,94,0.12)" : "transparent",
                   color: isFavorited ? "#FB7185" : "#94A3B8",
@@ -361,7 +361,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
                 <Heart size={13} fill={isFavorited ? "#FB7185" : "none"} />{isFavorited ? (ar ? "في المفضلة" : "Favorited") : (ar ? "إضافة للمفضلة" : "Favorite")}
               </button>
             </ProtectedAction>
-            <button onClick={handleShare} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 0", borderRadius: 10, border: "1px solid #1E293B", backgroundColor: "transparent", color: "#94A3B8", fontSize: 12, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+            <button onClick={handleShare} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 0", borderRadius: 10, border: "1px solid #1E293B", backgroundColor: "transparent", color: "#94A3B8", fontSize: 12, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
               <Share2 size={13} />{copied ? (ar ? "تم النسخ" : "Copied!") : ar ? "مشاركة" : "Share"}
             </button>
           </div>

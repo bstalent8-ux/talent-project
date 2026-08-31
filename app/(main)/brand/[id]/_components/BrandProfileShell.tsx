@@ -29,7 +29,7 @@ export default function BrandProfileShell({
     <main
       dir={lang === "en" ? "ltr" : "rtl"}
       style={{
-        fontFamily:      "'Cairo', sans-serif",
+        fontFamily:      "'IBM Plex Sans Arabic', sans-serif",
         backgroundColor: dark ? "#050B12" : "#F1F5F9",
         minHeight:       "100vh",
         paddingBottom:   64,

@@ -34,7 +34,7 @@ export default function AppearanceSection({ dark }: SectionProps) {
         backgroundColor: active ? "rgba(0,210,106,0.1)" : "transparent",
         color: active ? GREEN : TEXT,
         fontSize: 13.5, fontWeight: active ? 700 : 500, cursor: "pointer",
-        fontFamily: "'Cairo', sans-serif",
+        fontFamily: "'IBM Plex Sans Arabic', sans-serif",
       }}
     >
       {icon}{label}

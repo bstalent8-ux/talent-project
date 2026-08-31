@@ -52,7 +52,7 @@ export default function BrandsClient({ brands }: Props) {
     <div style={{
       minHeight: "100vh",
       backgroundColor: dark ? "#050B12" : "#F1F5F9",
-      fontFamily: "'Cairo', sans-serif",
+      fontFamily: "'IBM Plex Sans Arabic', sans-serif",
       direction: ar ? "rtl" : "ltr",
     }}>
       {/* ── Hero / search bar ── */}
@@ -87,7 +87,7 @@ export default function BrandsClient({ brands }: Props) {
                 backgroundColor: dark ? "#0D1623" : "#fff",
                 border: `1px solid ${dark ? "rgba(0,255,163,0.2)" : "#e2e8f0"}`,
                 borderRadius: 12, color: dark ? "#f1f5f9" : "#0f172a",
-                fontSize: 14, outline: "none", fontFamily: "'Cairo',sans-serif",
+                fontSize: 14, outline: "none", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                 boxSizing: "border-box",
                 direction: ar ? "rtl" : "ltr",
               }}
@@ -113,7 +113,7 @@ export default function BrandsClient({ brands }: Props) {
                     backgroundColor: active ? "rgba(0,210,106,0.12)" : "transparent",
                     color: active ? "#00D26A" : (dark ? "#94a3b8" : "#64748b"),
                     fontSize: 13, fontWeight: active ? 700 : 400,
-                    cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+                    cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                     transition: "all 0.15s",
                   }}
                 >

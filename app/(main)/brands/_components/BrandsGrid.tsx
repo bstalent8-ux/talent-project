@@ -90,7 +90,7 @@ function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: b
             <span style={{ fontSize: 40 }}>{industryIcon}</span>
             <span style={{
               fontSize: 36, fontWeight: 900, color: "rgba(255,255,255,0.15)",
-              fontFamily: "'Cairo',sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}>{initial}</span>
           </div>
         )}
@@ -187,7 +187,7 @@ function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: b
               border: `1px solid ${BORDER}`,
               color: TEXT, borderRadius: 8,
               padding: "6px 12px", fontSize: 12, fontWeight: 700,
-              cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+              cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
               transition: "all 0.15s",
             }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = GREEN; e.currentTarget.style.color = GREEN; }}

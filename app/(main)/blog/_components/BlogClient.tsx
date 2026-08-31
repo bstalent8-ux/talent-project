@@ -82,7 +82,7 @@ export default function BlogClient() {
   });
 
   return (
-    <div dir={ar ? "rtl" : "ltr"} style={{ background: BG, minHeight: "100vh", fontFamily: "'Cairo', sans-serif" }}>
+    <div dir={ar ? "rtl" : "ltr"} style={{ background: BG, minHeight: "100vh", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
 
       {/* ── Hero ── */}
       <section style={{ position: "relative", overflow: "hidden", padding: "90px 24px 60px", textAlign: "center" }}>
@@ -138,7 +138,7 @@ export default function BlogClient() {
                 padding: `12px 44px`,
                 background: INPUT, border: `1px solid ${BORDER}`,
                 borderRadius: 12, color: TEXT, fontSize: 14,
-                fontFamily: "'Cairo', sans-serif", outline: "none",
+                fontFamily: "'IBM Plex Sans Arabic', sans-serif", outline: "none",
               }}
             />
           </motion.div>
@@ -157,7 +157,7 @@ export default function BlogClient() {
                 background: active ? "rgba(139,47,201,0.12)" : "transparent",
                 color: active ? "#8B2FC9" : MUTED,
                 fontSize: 13, fontWeight: active ? 700 : 400,
-                cursor: "pointer", fontFamily: "'Cairo', sans-serif",
+                cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
                 transition: "all 0.15s",
               }}>
                 {cat === "All" ? t.all : cat}

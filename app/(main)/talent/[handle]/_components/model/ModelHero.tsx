@@ -102,7 +102,7 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   backgroundColor: "rgba(10,13,20,0.85)", color: "#e2e8f0", border: "1px solid rgba(255,255,255,0.15)",
                   borderRadius: 10, padding: "9px 12px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-                  fontFamily: "'Cairo',sans-serif", backdropFilter: "blur(6px)", width: "calc(100% - 24px)",
+                  fontFamily: "'IBM Plex Sans Arabic',sans-serif", backdropFilter: "blur(6px)", width: "calc(100% - 24px)",
                 }}
               >
                 <Maximize2 size={14} color={GOLD} />{ar ? "عرض جميع الصور" : "View All Photos"}

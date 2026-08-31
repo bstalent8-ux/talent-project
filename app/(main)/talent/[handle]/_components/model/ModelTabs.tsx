@@ -52,7 +52,7 @@ export default function ModelTabs({ tabs, active, onChange }: Props) {
               backgroundColor: isActive ? `${GOLD}1a` : "transparent",
               color: isActive ? GOLD : dark ? "var(--text-muted)" : "#64748B",
               fontWeight: isActive ? 800 : 600, fontSize: 13, cursor: "pointer",
-              fontFamily: "'Cairo',sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}
           >
             {tab.label}

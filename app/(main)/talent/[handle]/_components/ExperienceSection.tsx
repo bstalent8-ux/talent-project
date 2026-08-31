@@ -199,7 +199,7 @@ export default function ExperienceSection({ experience, variant = "default" }: P
               fontSize: 13,
               fontWeight: 800,
               cursor: "pointer",
-              fontFamily: "'Cairo',sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}
           >
             {ar ? "احجز أول حملة" : "Book First Campaign"}

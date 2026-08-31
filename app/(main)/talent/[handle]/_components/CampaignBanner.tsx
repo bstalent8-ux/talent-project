@@ -189,7 +189,7 @@ export default function CampaignBanner({ campaignStats, featuredCampaign }: Prop
               padding: "6px 12px",
               fontSize: 12,
               cursor: "pointer",
-              fontFamily: "'Cairo',sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}
           >
             <Play size={11} />{t.watch}
@@ -207,7 +207,7 @@ export default function CampaignBanner({ campaignStats, featuredCampaign }: Prop
               padding: "6px 12px",
               fontSize: 12,
               cursor: "pointer",
-              fontFamily: "'Cairo',sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}
           >
             <FileText size={11} />{t.caseStudy}

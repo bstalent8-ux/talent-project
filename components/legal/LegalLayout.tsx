@@ -28,7 +28,7 @@ export default function LegalLayout({ badge, title, subtitle, lastUpdated, secti
   const GREEN  = "#00D26A";
 
   return (
-    <div dir={ar ? "rtl" : "ltr"} style={{ background: BG, minHeight: "100vh", fontFamily: "'Cairo', sans-serif" }}>
+    <div dir={ar ? "rtl" : "ltr"} style={{ background: BG, minHeight: "100vh", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
 
       {/* Hero */}
       <section style={{

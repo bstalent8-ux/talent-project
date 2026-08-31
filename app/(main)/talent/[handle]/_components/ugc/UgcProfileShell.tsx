@@ -173,7 +173,7 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
     <main
       dir={ar ? "rtl" : "ltr"}
       style={{
-        fontFamily: "'Cairo', sans-serif",
+        fontFamily: "'IBM Plex Sans Arabic', sans-serif",
         backgroundColor: dark ? "#050B12" : "#F1F5F9",
         minHeight: "100vh",
         paddingBottom: 90,

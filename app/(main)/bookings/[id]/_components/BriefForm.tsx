@@ -67,7 +67,7 @@ export default function BriefForm({ bookingId, dark, lang, onClose, onSuccess }:
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "10px 14px", borderRadius: 10,
     backgroundColor: INPUT, border: `1px solid ${INBDR}`,
-    color: TEXT, fontSize: 14, fontFamily: "'Cairo',sans-serif",
+    color: TEXT, fontSize: 14, fontFamily: "'IBM Plex Sans Arabic',sans-serif",
     outline: "none", boxSizing: "border-box",
   };
   const labelStyle: React.CSSProperties = {
@@ -93,7 +93,7 @@ export default function BriefForm({ bookingId, dark, lang, onClose, onSuccess }:
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1000, backgroundColor: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "'Cairo',sans-serif" }}
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, backgroundColor: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ backgroundColor: BG, borderRadius: 20, width: "100%", maxWidth: 580, border: `1px solid ${BORDER}`, maxHeight: "92vh", overflowY: "auto", direction: ar ? "rtl" : "ltr" }}>
         <div style={{ padding: "20px 24px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -134,10 +134,10 @@ export default function BriefForm({ bookingId, dark, lang, onClose, onSuccess }:
           {error && <div style={{ padding: "8px 12px", borderRadius: 8, backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171", fontSize: 12 }}>{error}</div>}
 
           <div style={{ display: "flex", gap: 10 }}>
-            <button type="submit" disabled={sending} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: sending ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: sending ? "default" : "pointer", fontFamily: "'Cairo',sans-serif" }}>
+            <button type="submit" disabled={sending} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: sending ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: sending ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
               <Send size={14} /> {sending ? t.sending : t.send}
             </button>
-            <button type="button" onClick={onClose} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 12, padding: "12px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+            <button type="button" onClick={onClose} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 12, padding: "12px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
               {t.cancel}
             </button>
           </div>

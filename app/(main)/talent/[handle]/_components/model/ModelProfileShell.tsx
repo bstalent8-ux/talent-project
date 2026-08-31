@@ -163,7 +163,7 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
   return (
     <main
       dir={ar ? "rtl" : "ltr"}
-      style={{ fontFamily: "'Cairo', sans-serif", backgroundColor: dark ? "var(--bg-page)" : "#F1F5F9", minHeight: "100vh", paddingBottom: 90 }}
+      style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif", backgroundColor: dark ? "var(--bg-page)" : "#F1F5F9", minHeight: "100vh", paddingBottom: 90 }}
     >
       <ProfileViewTracker profileUserId={talent.id} />
       <ModelActionBar

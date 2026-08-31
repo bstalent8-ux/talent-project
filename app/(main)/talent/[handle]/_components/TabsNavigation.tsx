@@ -219,7 +219,7 @@ export default function TabsNavigation({
                   padding: "0 16px",
                   height: "100%",
                   cursor: "pointer",
-                  fontFamily: "'Cairo',sans-serif",
+                  fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                   whiteSpace: "nowrap",
                   transition: "color 0.2s",
                   outline: "none",

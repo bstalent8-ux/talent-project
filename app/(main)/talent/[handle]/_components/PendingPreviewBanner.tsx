@@ -61,7 +61,7 @@ export default function PendingPreviewBanner({
         border: `1px solid ${BORDER}`,
         borderRadius: 12,
         color: TEXT,
-        fontFamily: "'Cairo', sans-serif",
+        fontFamily: "'IBM Plex Sans Arabic', sans-serif",
         fontSize: 13.5,
         fontWeight: 700,
         textAlign: "center",

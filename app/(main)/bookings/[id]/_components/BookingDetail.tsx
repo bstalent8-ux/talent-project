@@ -193,12 +193,12 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
   );
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: BG, fontFamily: "'Cairo',sans-serif", direction: ar ? "rtl" : "ltr", padding: "24px 16px" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: BG, fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr", padding: "24px 16px" }}>
       <div style={{ maxWidth: 820, margin: "0 auto" }}>
 
         {/* Back */}
         <button onClick={() => router.push("/bookings")}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: MUTED, cursor: "pointer", fontSize: 13, fontFamily: "'Cairo',sans-serif", marginBottom: 16, padding: 0 }}>
+          style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: MUTED, cursor: "pointer", fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", marginBottom: 16, padding: 0 }}>
           <ArrowLeft size={14} /> {t.back}
         </button>
 
@@ -247,7 +247,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
 
           {/* Chat button */}
           <button onClick={openChat}
-            style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, padding: "9px 18px", backgroundColor: dark ? "rgba(255,184,0,0.08)" : "rgba(255,184,0,0.06)", color: GOLD, border: `1px solid ${GOLD}33`, borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "'Cairo',sans-serif" }}>
+            style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, padding: "9px 18px", backgroundColor: dark ? "rgba(255,184,0,0.08)" : "rgba(255,184,0,0.06)", color: GOLD, border: `1px solid ${GOLD}33`, borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <MessageSquare size={15} /> {t.chat}
           </button>
         </div>
@@ -289,7 +289,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
 
         {st === "contacting" && isBrand && section(t.sendBrief,
           <button onClick={() => setShowBrief(true)}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'Cairo',sans-serif" }}>
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <Send size={14} /> {t.sendBrief}
           </button>
         )}
@@ -300,7 +300,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
 
         {st === "accepted" && isBrand && section(t.confirmPay,
           <button onClick={handlePayment} disabled={paying}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: paying ? "rgba(0,210,106,0.5)" : GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: paying ? "default" : "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'Cairo',sans-serif" }}>
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: paying ? "rgba(0,210,106,0.5)" : GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: paying ? "default" : "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <CreditCard size={14} /> {paying ? t.paying : t.confirmPay}
           </button>
         )}

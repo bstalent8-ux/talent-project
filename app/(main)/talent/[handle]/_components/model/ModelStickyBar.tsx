@@ -66,7 +66,7 @@ export default function ModelStickyBar({ selectedPackage, addonsTotal = 0, ident
             style={{
               display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 10, border: "none",
               background: `linear-gradient(135deg, #e5a93c, #c88924)`, color: "#0b0d13", fontWeight: 800, fontSize: 13.5,
-              cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+              cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}
           >
             {ar ? "المتابعة للحجز" : "Continue to Brief"}<ArrowLeft size={15} style={{ transform: ar ? "scaleX(-1)" : "none" }} />

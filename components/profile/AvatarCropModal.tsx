@@ -170,14 +170,14 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: Props) {
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
           <button
             onClick={onCancel}
-            style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 13, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}
+            style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 13, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
           >
             {TX.cancel}
           </button>
           <button
             disabled={!naturalSize || saving}
             onClick={handleSave}
-            style={{ padding: "9px 20px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary, #0f766e)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: saving ? 0.7 : 1, fontFamily: "'Cairo',sans-serif" }}
+            style={{ padding: "9px 20px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary, #0f766e)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: saving ? 0.7 : 1, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
           >
             {saving ? "…" : TX.save}
           </button>

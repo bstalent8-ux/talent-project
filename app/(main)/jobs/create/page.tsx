@@ -45,7 +45,7 @@ export default function CreateJobPage() {
     backgroundColor: INPUT,
     border: `1px solid ${BORDER}`, borderRadius: 10,
     color: TEXT, fontSize: 14,
-    fontFamily: "'Cairo',sans-serif", outline: "none",
+    fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none",
     boxSizing: "border-box",
     direction: ar ? "rtl" : "ltr",
   };
@@ -89,7 +89,7 @@ export default function CreateJobPage() {
     <div style={{
       minHeight: "100vh",
       backgroundColor: dark ? "#050B12" : "#F1F5F9",
-      fontFamily: "'Cairo',sans-serif",
+      fontFamily: "'IBM Plex Sans Arabic',sans-serif",
       direction: ar ? "rtl" : "ltr",
       padding: "40px 24px 80px",
     }}>
@@ -100,7 +100,7 @@ export default function CreateJobPage() {
           <button onClick={() => router.back()} style={{
             display: "flex", alignItems: "center", gap: 6,
             background: "none", border: "none", cursor: "pointer",
-            color: MUTED, fontSize: 13, fontFamily: "'Cairo',sans-serif", marginBottom: 20,
+            color: MUTED, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", marginBottom: 20,
           }}>
             {ar ? "→" : "←"} {ar ? "رجوع" : "Back"}
           </button>
@@ -172,7 +172,7 @@ export default function CreateJobPage() {
                         backgroundColor: active ? (dark ? "rgba(255,184,0,0.12)" : "rgba(255,184,0,0.08)") : SURFACE,
                         color: active ? GOLD : MUTED,
                         fontSize: 13, fontWeight: active ? 700 : 400,
-                        cursor: "pointer", fontFamily: "'Cairo',sans-serif",
+                        cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                       }}
                     >
                       {cat.icon} {ar ? cat.label_ar : cat.label_en}
@@ -261,7 +261,7 @@ export default function CreateJobPage() {
                 color: "#000", border: "none", borderRadius: 12,
                 padding: "14px 0", fontSize: 15, fontWeight: 900,
                 cursor: loading ? "default" : "pointer",
-                fontFamily: "'Cairo',sans-serif", transition: "opacity 0.2s",
+                fontFamily: "'IBM Plex Sans Arabic',sans-serif", transition: "opacity 0.2s",
               }}
             >
               {loading

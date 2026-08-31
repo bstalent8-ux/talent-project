@@ -29,14 +29,14 @@ export default function BookingTimeline({ status, dark, lang }: { status: string
 
   if (["cancelled", "rejected"].includes(status)) {
     return (
-      <div style={{ textAlign: "center", padding: "16px 0", color: RED, fontWeight: 700, fontSize: 14, fontFamily: "'Cairo',sans-serif" }}>
+      <div style={{ textAlign: "center", padding: "16px 0", color: RED, fontWeight: 700, fontSize: 14, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
         {ar ? "تم إغلاق طلب الحجز" : "This booking request is closed"}
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 0, overflowX: "auto", paddingBottom: 4, fontFamily: "'Cairo',sans-serif" }}>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 0, overflowX: "auto", paddingBottom: 4, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
       {STEPS.map((step, i) => {
         const done    = i < currentIdx;
         const current = i === currentIdx;

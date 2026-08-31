@@ -61,7 +61,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
   return (
     <>
     <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4, ease: "easeOut" }}
-      style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100, backgroundColor: dark ? "#0A121C" : "#FFFFFF", borderTop: `1px solid ${BORDER}`, backdropFilter: "blur(16px)", height: 90, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Cairo',sans-serif", direction: "rtl" }}>
+      style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100, backgroundColor: dark ? "#0A121C" : "#FFFFFF", borderTop: `1px solid ${BORDER}`, backdropFilter: "blur(16px)", height: 90, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: "rtl" }}>
       {/* Avatar + info */}
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg,#111C35,#0D1623)", border: "2px solid rgba(0,210,106,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>👩</div>
@@ -105,7 +105,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
               border: `1.5px solid ${GREEN}`,
               borderRadius: 12, padding: "0 20px", height: 44,
               fontSize: 14, fontWeight: 800, cursor: "pointer",
-              fontFamily: "'Cairo',sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic',sans-serif",
               opacity: contactLoading ? 0.6 : 1,
             }}
           >
@@ -127,7 +127,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
               border: "1.5px solid #FFB800",
               borderRadius: 12, padding: "0 20px", height: 44,
               fontSize: 14, fontWeight: 800, cursor: "pointer",
-              fontFamily: "'Cairo',sans-serif",
+              fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}
           >
             <Send size={15} />
@@ -136,7 +136,7 @@ export default function StickyBookingBar({ talent, selectedPackage }: Props) {
         )}
 
         <ProtectedAction action="create_booking">
-          <motion.button onClick={() => canBook ? setShowBrief(true) : router.push("/explore")} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 12, padding: "0 28px", height: 44, fontSize: 15, fontWeight: 900, cursor: "pointer", fontFamily: "'Cairo',sans-serif", boxShadow: "0 0 24px rgba(0,210,106,0.35)" }}>
+          <motion.button onClick={() => canBook ? setShowBrief(true) : router.push("/explore")} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 12, padding: "0 28px", height: 44, fontSize: 15, fontWeight: 900, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", boxShadow: "0 0 24px rgba(0,210,106,0.35)" }}>
             <Calendar size={16} />{ar ? "احجز الآن" : "Book Now"}
           </motion.button>
         </ProtectedAction>
