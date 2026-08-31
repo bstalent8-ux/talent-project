@@ -920,6 +920,11 @@ export interface AdminVisitor {
   sessionId:  string;
   handle:     string | null;
   fullName:   string | null;
+  /** True the moment a `profiles` row exists for them — i.e. they finished
+   * registration, independent of whether they ever completed their profile
+   * afterward (see AdminVisitorDetail.profileData for that). */
+  registered: boolean;
+  role:       string | null;
   firstSeen:  string;
   lastSeen:   string;
   eventCount: number;
@@ -958,7 +963,7 @@ export async function fetchAdminUserActivityVisitors(range: AdminUserActivityDat
 
   const userIds = [...new Set([...byKey.values()].map((v) => v.userId).filter((id): id is string => Boolean(id)))];
   const { data: profiles } = userIds.length
-    ? await adminClient.from("profiles").select("id, handle, full_name").in("id", userIds)
+    ? await adminClient.from("profiles").select("id, handle, full_name, role").in("id", userIds)
     : { data: [] };
   const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
 
@@ -969,6 +974,12 @@ export async function fetchAdminUserActivityVisitors(range: AdminUserActivityDat
       sessionId:  v.sessionId,
       handle:     v.userId ? profileMap[v.userId]?.handle ?? null : null,
       fullName:   v.userId ? profileMap[v.userId]?.full_name ?? null : null,
+      // A user_events row with a user_id always came from a signed-in
+      // request, and profiles.id === auth.users.id 1:1 — so a match here
+      // (or even just v.userId being set) means they finished registration,
+      // not merely that they're "logged in right now."
+      registered: Boolean(v.userId),
+      role:       v.userId ? profileMap[v.userId]?.role ?? null : null,
       firstSeen:  v.first,
       lastSeen:   v.last,
       eventCount: v.count,
@@ -978,12 +989,30 @@ export async function fetchAdminUserActivityVisitors(range: AdminUserActivityDat
 
 // ─── Single-visitor detail ──────────────────────────────────────────────────
 
+/** What a registered visitor has actually filled in so far — profiles'
+ * columns plus, for a talent, the handful of talent_profiles fields an
+ * admin would otherwise have to open the full editor to see. null fields
+ * are rendered as "not filled yet", not hidden — that gap is the point of
+ * showing this at all (2026-08-31: "what data did they fill in"). */
+export interface AdminVisitorProfileData {
+  role:         string | null;
+  phoneNumber:  string | null;
+  city:         string | null;
+  bio:          string | null;
+  category:     string | null;
+  specialties:  string[] | null;
+  availability: string | null;
+}
+
 export interface AdminVisitorDetail {
   key:        string;
   userId:     string | null;
   sessionId:  string;
   handle:     string | null;
   fullName:   string | null;
+  registered: boolean;
+  /** null for a guest who never signed up — there is nothing to show. */
+  profileData: AdminVisitorProfileData | null;
   events:     AdminUserEvent[];
   /** Total time spent per page, reconstructed from page_engagement
    * heartbeats — see features/admin/services/page-duration-clustering.ts. */
@@ -1012,10 +1041,40 @@ export async function fetchAdminVisitorDetail(key: string): Promise<AdminVisitor
 
   let handle: string | null = null;
   let fullName: string | null = null;
+  let profileData: AdminVisitorProfileData | null = null;
   if (userId) {
-    const { data: profile } = await adminClient.from("profiles").select("handle, full_name").eq("id", userId).maybeSingle();
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("handle, full_name, role, phone_number, city, bio")
+      .eq("id", userId)
+      .maybeSingle();
     handle = profile?.handle ?? null;
     fullName = profile?.full_name ?? null;
+
+    if (profile) {
+      let category: string | null = null;
+      let specialties: string[] | null = null;
+      let availability: string | null = null;
+      if (profile.role === "talent") {
+        const { data: tp } = await adminClient
+          .from("talent_profiles")
+          .select("category, specialties, availability")
+          .eq("user_id", userId)
+          .maybeSingle();
+        category = tp?.category ?? null;
+        specialties = tp?.specialties?.length ? tp.specialties : null;
+        availability = tp?.availability ?? null;
+      }
+      profileData = {
+        role:         profile.role ?? null,
+        phoneNumber:  profile.phone_number ?? null,
+        city:         profile.city ?? null,
+        bio:          profile.bio ?? null,
+        category,
+        specialties,
+        availability,
+      };
+    }
   }
 
   const events: AdminUserEvent[] = rows.map((r) => ({
@@ -1048,6 +1107,8 @@ export async function fetchAdminVisitorDetail(key: string): Promise<AdminVisitor
     sessionId: sessionId ?? rows[0].session_id,
     handle,
     fullName,
+    registered: Boolean(userId),
+    profileData,
     events,
     pageTotals,
   };

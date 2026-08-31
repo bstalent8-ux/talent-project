@@ -20,6 +20,7 @@ const TX = {
     guest: "زائر",
     noEvents: "لا توجد بيانات في هذه الفترة",
     visitors: "الزوار", firstSeen: "أول ظهور", lastSeen: "آخر نشاط", eventCount: "عدد الأحداث",
+    registered: "سجل؟", registeredYes: "سجل", registeredNo: "لم يسجل",
     noVisitors: "لا يوجد زوار في هذه الفترة",
     trafficSources: "مصادر التسجيل", source: "المصدر", campaign: "الحملة", signups: "عدد التسجيلات",
     noTrafficSources: "لا توجد تسجيلات في هذه الفترة", organic: "عضوي (بدون رابط معلَّم)",
@@ -31,6 +32,7 @@ const TX = {
     guest: "Guest",
     noEvents: "No data in this range",
     visitors: "Visitors", firstSeen: "First seen", lastSeen: "Last active", eventCount: "Events",
+    registered: "Registered?", registeredYes: "Registered", registeredNo: "Not registered",
     noVisitors: "No visitors in this range",
     trafficSources: "Signup sources", source: "Source", campaign: "Campaign", signups: "Signups",
     noTrafficSources: "No signups in this range", organic: "Organic (untagged link)",
@@ -168,7 +170,7 @@ export default function UserActivityView({
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ background: TH }}>
-                  {[t.user, t.firstSeen, t.lastSeen, t.eventCount].map((h) => (
+                  {[t.user, t.registered, t.firstSeen, t.lastSeen, t.eventCount].map((h) => (
                     <th key={h} style={{ textAlign: "start", padding: "10px 16px", color: MUTED, fontWeight: 500 }}>{h}</th>
                   ))}
                 </tr>
@@ -183,6 +185,15 @@ export default function UserActivityView({
                       >
                         {v.handle ?? v.fullName ?? (v.userId ? v.userId.slice(0, 8) : `${t.guest} · ${v.sessionId.slice(0, 8)}`)}
                       </Link>
+                    </td>
+                    <td style={{ padding: "10px 16px" }}>
+                      <span style={{
+                        padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
+                        backgroundColor: v.registered ? "rgba(0,210,106,0.15)" : "rgba(148,163,184,0.15)",
+                        color: v.registered ? "#00D26A" : MUTED,
+                      }}>
+                        {v.registered ? (v.role ? `${t.registeredYes} · ${v.role}` : t.registeredYes) : t.registeredNo}
+                      </span>
                     </td>
                     <td style={{ padding: "10px 16px", color: MUTED }}>{new Date(v.firstSeen).toLocaleString(lang === "ar" ? "ar-EG" : "en-GB")}</td>
                     <td style={{ padding: "10px 16px", color: MUTED }}>{new Date(v.lastSeen).toLocaleString(lang === "ar" ? "ar-EG" : "en-GB")}</td>

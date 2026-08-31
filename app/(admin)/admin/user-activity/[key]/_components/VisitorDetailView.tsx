@@ -12,6 +12,11 @@ const TX = {
     back: "رجوع لكل الزوار",
     guest: "زائر",
     firstSeen: "أول ظهور", lastSeen: "آخر نشاط", totalEvents: "إجمالي الأحداث",
+    registeredYes: "سجل", registeredNo: "لم يسجل بعد",
+    profileData: "البيانات اللي ملاها",
+    role: "الحساب", phone: "التليفون", city: "المدينة", bio: "نبذة",
+    category: "التخصص", specialties: "المجالات", availability: "الحالة",
+    notFilled: "لسه ملهاش",
     timePerPage: "الوقت في كل صفحة",
     page: "الصفحة", totalTime: "إجمالي الوقت", visits: "زيارات",
     noPageTime: "لا توجد بيانات وقت بعد",
@@ -23,6 +28,11 @@ const TX = {
     back: "Back to all visitors",
     guest: "Guest",
     firstSeen: "First seen", lastSeen: "Last active", totalEvents: "Total events",
+    registeredYes: "Registered", registeredNo: "Not registered yet",
+    profileData: "Data filled in",
+    role: "Account", phone: "Phone", city: "City", bio: "Bio",
+    category: "Category", specialties: "Specialties", availability: "Availability",
+    notFilled: "Not filled in yet",
     timePerPage: "Time per page",
     page: "Page", totalTime: "Total time", visits: "Visits",
     noPageTime: "No time data yet",
@@ -80,7 +90,41 @@ export default function VisitorDetailView({ visitor }: { visitor: AdminVisitorDe
           <p style={{ margin: 0, fontSize: 12, color: MUTED }}>{t.totalEvents}</p>
           <p style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 700, color: TEXT }}>{visitor.events.length}</p>
         </div>
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>
+          <p style={{ margin: 0, fontSize: 12, color: MUTED }}>{t.registeredYes}</p>
+          <p style={{ margin: "6px 0 0", fontSize: 15, fontWeight: 700, color: visitor.registered ? "#00D26A" : MUTED }}>
+            {visitor.registered ? t.registeredYes : t.registeredNo}
+          </p>
+        </div>
       </div>
+
+      {visitor.profileData && (
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
+          <p style={{ margin: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
+            {t.profileData}
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 0 }}>
+            {([
+              [t.role,         visitor.profileData.role],
+              [t.phone,        visitor.profileData.phoneNumber],
+              [t.city,         visitor.profileData.city],
+              [t.bio,          visitor.profileData.bio],
+              ...(visitor.profileData.role === "talent" ? [
+                [t.category,     visitor.profileData.category] as const,
+                [t.specialties,  visitor.profileData.specialties?.join("، ") ?? null] as const,
+                [t.availability, visitor.profileData.availability] as const,
+              ] : []),
+            ] as const).map(([label, value]) => (
+              <div key={label} style={{ padding: "12px 16px", borderTop: `1px solid ${BORDER}` }}>
+                <p style={{ margin: 0, fontSize: 11, color: MUTED }}>{label}</p>
+                <p style={{ margin: "4px 0 0", fontSize: 13.5, fontWeight: 600, color: value ? TEXT : MUTED, fontStyle: value ? "normal" : "italic" }}>
+                  {value || t.notFilled}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
         <p style={{ margin: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
