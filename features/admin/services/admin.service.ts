@@ -1251,3 +1251,84 @@ export async function fetchAdminNotificationLogPage({
 
   return { notifications, total: count ?? notifications.length };
 }
+
+// ─── New-signup profile-completion nudge ───────────────────────────────────────
+// Backs the Dashboard's "new registrations" card — every active talent with
+// zero portfolio_items, regardless of approval status, newest first. Same
+// criteria this session used by hand (scripts/_tmp_find_incomplete_talents,
+// _tmp_find_today_incomplete) before it became a standing feature — a
+// profile with no photos/videos never crosses COMPLETION_THRESHOLDS.
+// appearInSearch (60) no matter what else is filled in, so it's the single
+// highest-value nudge to send a fresh signup.
+
+export interface AdminIncompleteSignup {
+  userId:          string;
+  fullName:        string | null;
+  handle:          string | null;
+  email:           string | null;
+  createdAt:       string;
+  talentStatus:    string;
+  alreadyReminded: boolean;
+}
+
+const INCOMPLETE_SIGNUPS_SCAN_LIMIT = 200;
+
+export async function fetchAdminIncompleteSignups(): Promise<AdminIncompleteSignup[]> {
+  const { data: profiles, error } = await adminClient
+    .from("profiles")
+    .select("id, full_name, handle, created_at")
+    .eq("role", "talent")
+    .eq("account_status", "active")
+    .order("created_at", { ascending: false })
+    .limit(INCOMPLETE_SIGNUPS_SCAN_LIMIT);
+  if (error || !profiles?.length) return [];
+
+  const userIds = profiles.map((p) => p.id);
+  const { data: tps } = await adminClient
+    .from("talent_profiles")
+    .select("id, user_id, status")
+    .in("user_id", userIds);
+  const tpByUser = Object.fromEntries((tps ?? []).map((t) => [t.user_id, t]));
+
+  const tpIds = (tps ?? []).map((t) => t.id);
+  const { data: portfolioRows } = tpIds.length
+    ? await adminClient.from("portfolio_items").select("talent_id").in("talent_id", tpIds)
+    : { data: [] };
+  const portfolioCount: Record<string, number> = {};
+  for (const row of portfolioRows ?? []) portfolioCount[row.talent_id] = (portfolioCount[row.talent_id] ?? 0) + 1;
+
+  const { data: reminded } = await adminClient
+    .from("email_log")
+    .select("recipient_id")
+    .eq("template", "complete_profile_reminder")
+    .eq("status", "sent")
+    .in("recipient_id", userIds);
+  const remindedSet = new Set((reminded ?? []).map((r) => r.recipient_id));
+
+  const targets = profiles
+    .map((p) => {
+      const tp = tpByUser[p.id];
+      return { profile: p, tp, portfolioCount: tp ? portfolioCount[tp.id] ?? 0 : 0 };
+    })
+    .filter(({ tp, portfolioCount }) => tp && portfolioCount === 0);
+
+  // Auth emails aren't in `profiles` — one lookup per row, same pattern the
+  // one-off backfill scripts used. Small scale (new signups, not the whole
+  // user base) so N sequential admin API calls is fine.
+  const withEmail = await Promise.all(
+    targets.map(async ({ profile, tp }) => {
+      const { data: authUser } = await adminClient.auth.admin.getUserById(profile.id);
+      return {
+        userId:          profile.id,
+        fullName:        profile.full_name,
+        handle:          profile.handle,
+        email:           authUser?.user?.email ?? null,
+        createdAt:       profile.created_at,
+        talentStatus:    tp!.status,
+        alreadyReminded: remindedSet.has(profile.id),
+      };
+    })
+  );
+
+  return withEmail;
+}
