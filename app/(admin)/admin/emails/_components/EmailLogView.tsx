@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
@@ -16,8 +16,11 @@ const TEMPLATE_LABEL: Record<string, { ar: string; en: string }> = {
 
 const TX = {
   ar: {
-    compose: "إرسال إيميل", to: "المستلم", recipient: "recipientId (اختياري)",
-    recipientHint: "اسيبه فاضي وحط الإيميل يدوي، أو حط profiles.id لو الشخص عنده حساب",
+    compose: "إرسال إيميل", to: "المستلم", recipient: "المستخدم (اختياري)",
+    recipientHint: "دور بالاسم لو الشخص عنده حساب، أو سيبه فاضي وحط الإيميل يدوي تحت",
+    recipientSearchPlaceholder: "دور بالاسم أو اليوزرنيم...",
+    recipientNoResults: "مفيش نتايج",
+    recipientClear: "إلغاء الاختيار",
     email: "الإيميل", subject: "الموضوع", body: "المحتوى (HTML)",
     send: "إرسال", sending: "بيتبعت...", cancel: "إلغاء",
     recipientCol: "المستلم", subjectCol: "الموضوع", templateCol: "النوع",
@@ -28,8 +31,11 @@ const TX = {
     close: "إغلاق", error: "الخطأ",
   },
   en: {
-    compose: "Send Email", to: "Recipient", recipient: "recipientId (optional)",
-    recipientHint: "Leave blank and type an email manually, or pass a profiles.id if they have an account",
+    compose: "Send Email", to: "Recipient", recipient: "User (optional)",
+    recipientHint: "Search by name if they have an account, or leave blank and type an email manually below",
+    recipientSearchPlaceholder: "Search by name or handle...",
+    recipientNoResults: "No results",
+    recipientClear: "Clear selection",
     email: "Email", subject: "Subject", body: "Body (HTML)",
     send: "Send", sending: "Sending...", cancel: "Cancel",
     recipientCol: "Recipient", subjectCol: "Subject", templateCol: "Type",
@@ -67,6 +73,62 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
+  // Recipient picker — search-by-name instead of the raw profiles.id text box
+  // this used to be. Typing a name/handle in there always 404'd server-side
+  // (getUserById on a non-UUID), and that 404 happens before sendEmail() ever
+  // logs anything, so failed sends here used to silently vanish with no row
+  // in the history at all — this replaces the guesswork with the same
+  // search endpoint the notification composer already uses.
+  type RecipientOption = { id: string; full_name: string | null; handle: string | null };
+  const [recipientQuery, setRecipientQuery] = useState("");
+  const [recipientResults, setRecipientResults] = useState<RecipientOption[]>([]);
+  const [recipientOpen, setRecipientOpen] = useState(false);
+  const [recipientLoading, setRecipientLoading] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<RecipientOption | null>(null);
+  const recipientSearchSeq = useRef(0);
+
+  useEffect(() => {
+    if (!recipientOpen || selectedRecipient) return;
+    const query = recipientQuery.trim();
+    if (!query) { setRecipientResults([]); return; }
+
+    const seq = ++recipientSearchSeq.current;
+    const timer = setTimeout(async () => {
+      setRecipientLoading(true);
+      try {
+        const res = await fetch(`/api/admin/notifications/recipients?q=${encodeURIComponent(query)}`);
+        const json = await res.json().catch(() => ({}));
+        if (seq === recipientSearchSeq.current) setRecipientResults(json.users ?? []);
+      } catch {
+        if (seq === recipientSearchSeq.current) setRecipientResults([]);
+      } finally {
+        if (seq === recipientSearchSeq.current) setRecipientLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [recipientQuery, recipientOpen, selectedRecipient]);
+
+  function pickRecipient(user: RecipientOption) {
+    setSelectedRecipient(user);
+    setForm((f) => ({ ...f, recipientId: user.id }));
+    setRecipientOpen(false);
+    setRecipientResults([]);
+  }
+
+  function clearRecipient() {
+    setSelectedRecipient(null);
+    setForm((f) => ({ ...f, recipientId: "" }));
+    setRecipientQuery("");
+  }
+
+  function closeCompose() {
+    setComposing(false);
+    setForm({ recipientId: "", to: "", subject: "", html: "" });
+    clearRecipient();
+    setSendError(null);
+  }
+
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "#1e293b" : "#E2E8F0";
   const TEXT = dark ? "#f1f5f9" : "#0f172a";
@@ -103,8 +165,7 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
       setSendError(json.error ?? "send failed");
       return;
     }
-    setComposing(false);
-    setForm({ recipientId: "", to: "", subject: "", html: "" });
+    closeCompose();
     router.refresh();
   }
 
@@ -252,7 +313,7 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
 
       {composing && (
         <div
-          onClick={() => !sending && setComposing(false)}
+          onClick={() => !sending && closeCompose()}
           style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
           <div
@@ -261,21 +322,64 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h2 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.compose}</h2>
-              <button onClick={() => setComposing(false)} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}>
+              <button onClick={closeCompose} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}>
                 <X size={18} />
               </button>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div>
+              <div style={{ position: "relative" }}>
                 <label style={labelStyle}>{t.recipient}</label>
-                <input value={form.recipientId} onChange={(e) => setForm((f) => ({ ...f, recipientId: e.target.value }))} placeholder="profiles.id" style={inputStyle} />
+                {selectedRecipient ? (
+                  <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {selectedRecipient.full_name ?? selectedRecipient.handle ?? selectedRecipient.id}
+                      {selectedRecipient.handle && <span style={{ color: MUTED }}> · @{selectedRecipient.handle}</span>}
+                    </span>
+                    <button type="button" onClick={clearRecipient} aria-label={t.recipientClear} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, display: "flex" }}>
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    value={recipientQuery}
+                    onChange={(e) => { setRecipientQuery(e.target.value); setRecipientOpen(true); }}
+                    onFocus={() => setRecipientOpen(true)}
+                    onBlur={() => setTimeout(() => setRecipientOpen(false), 150)}
+                    placeholder={t.recipientSearchPlaceholder}
+                    style={inputStyle}
+                  />
+                )}
+                {recipientOpen && !selectedRecipient && recipientQuery.trim() && (
+                  <div style={{ position: "absolute", top: "100%", insetInlineStart: 0, insetInlineEnd: 0, marginTop: 4, backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 8, maxHeight: 220, overflowY: "auto", zIndex: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.18)" }}>
+                    {recipientLoading ? (
+                      <div style={{ padding: 10, color: MUTED, fontSize: 12.5 }}>…</div>
+                    ) : recipientResults.length ? (
+                      recipientResults.map((u) => (
+                        <button
+                          type="button"
+                          key={u.id}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => pickRecipient(u)}
+                          style={{ display: "block", width: "100%", textAlign: ar ? "right" : "left", padding: "8px 10px", background: "none", border: "none", cursor: "pointer", color: TEXT, fontSize: 13 }}
+                        >
+                          {u.full_name ?? u.handle ?? u.id}
+                          {u.handle && <span style={{ color: MUTED }}> · @{u.handle}</span>}
+                        </button>
+                      ))
+                    ) : (
+                      <div style={{ padding: 10, color: MUTED, fontSize: 12.5 }}>{t.recipientNoResults}</div>
+                    )}
+                  </div>
+                )}
                 <p style={{ color: MUTED, fontSize: 11, margin: "4px 0 0" }}>{t.recipientHint}</p>
               </div>
-              <div>
-                <label style={labelStyle}>{t.email}</label>
-                <input value={form.to} onChange={(e) => setForm((f) => ({ ...f, to: e.target.value }))} placeholder="name@example.com" style={inputStyle} />
-              </div>
+              {!selectedRecipient && (
+                <div>
+                  <label style={labelStyle}>{t.email}</label>
+                  <input value={form.to} onChange={(e) => setForm((f) => ({ ...f, to: e.target.value }))} placeholder="name@example.com" style={inputStyle} />
+                </div>
+              )}
               <div>
                 <label style={labelStyle}>{t.subject}</label>
                 <input value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} style={inputStyle} />
@@ -288,7 +392,7 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
               {sendError && <p style={{ color: "#EF4444", fontSize: 12, margin: 0 }}>{sendError}</p>}
 
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button onClick={() => setComposing(false)} disabled={sending} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 12.5, cursor: "pointer" }}>
+                <button onClick={closeCompose} disabled={sending} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 12.5, cursor: "pointer" }}>
                   {t.cancel}
                 </button>
                 <button
