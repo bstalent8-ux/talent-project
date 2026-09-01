@@ -11,7 +11,8 @@
 // .autoOnTimeRate — auto-computed by recalc_talent_response_metrics() (see
 // supabase/migrations/20260821_auto_model_metrics.sql) from real bookings,
 // NULL (tile hidden) until a talent clears the 5-booking sample floor. AI
-// Match Score stays HARDCODED — no scoring model exists for it at all.
+// Match Score shows "coming soon" — no scoring model exists for it at all
+// (was hardcoded to a fake 96%, same fix ModelMatchScore.tsx already had).
 // Completion Rate and Availability stay real (bookingStats, talent.availability).
 //
 // Dropped vs. source (no real feature behind them — see integration report):
@@ -288,19 +289,22 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
               ))}
             </div>
 
-            {/* AI Match Score — hardcoded, no scoring model exists. Same
-                treatment as the reference widget, teal instead of violet. */}
+            {/* AI Match Score — no scoring model exists (matching a talent
+                against a specific brief needs a target brief a public
+                profile page doesn't have). Was hardcoded to a fake 96%;
+                shown as an honest "coming soon" now, same treatment as
+                ModelMatchScore.tsx's equivalent placeholder on Model profiles. */}
             <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 16, background: `linear-gradient(90deg, ${VIOLET}22, rgba(15,23,42,0.4) 60%, ${EMERALD}1a)`, border: `1px solid ${VIOLET}44` }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#7dd3c0", fontWeight: 700 }}>
                   <Sparkles size={13} color={VIOLET} />{ar ? "نسبة التطابق الذكي" : "AI Match Score"}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, fontSize: 11, color: "#CBD5E1", fontWeight: 600 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: EMERALD }} />
-                  {ar ? "تطابق ممتاز لمشاريع الـ UGC" : "Excellent Match for UGC & Ads"}
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#94A3B8" }} />
+                  {ar ? "الميزة دي جاية قريب" : "This feature is coming soon"}
                 </div>
               </div>
-              <div style={{ fontSize: 26, fontWeight: 900, color: EMERALD }}>96%</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#94A3B8" }}>{ar ? "قريباً" : "Soon"}</div>
             </div>
           </div>
         )}
