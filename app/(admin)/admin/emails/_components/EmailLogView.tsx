@@ -5,6 +5,7 @@ import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminEmailLogRow } from "@/features/admin/services/admin.service";
+import { escapeHtml } from "@/lib/email/escapeHtml";
 import { Mail, RefreshCw, Send, X } from "lucide-react";
 
 const TEMPLATE_LABEL: Record<string, { ar: string; en: string }> = {
@@ -217,10 +218,24 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
               </div>
             )}
 
+            {/* S-6 fix (2026-08-31): this used to be dangerouslySetInnerHTML
+                on the raw stored body_html. Template-generated rows are now
+                safe at the source (S-2's escapeHtml on the interpolated
+                name), but "custom" rows are the admin's own free-text HTML
+                from the compose form below — POST /api/admin/emails stores
+                it completely unsanitized, because the actual send is
+                supposed to render as real HTML in the recipient's inbox.
+                That's fine for the email itself; it's not fine to replay
+                unsanitized HTML back into another admin's browser via
+                dangerouslySetInnerHTML. Rendering the preview as escaped
+                text (line breaks preserved) closes that with zero bypass
+                risk — the real, sent email is completely unaffected, this
+                only changes how it looks in this history viewer. */}
             <div
-              style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#0a121c" : "#f8fafc" }}
-              dangerouslySetInnerHTML={{ __html: selected.bodyHtml }}
-            />
+              style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#0a121c" : "#f8fafc", whiteSpace: "pre-wrap", wordBreak: "break-word", color: TEXT, fontSize: 13 }}
+            >
+              {escapeHtml(selected.bodyHtml)}
+            </div>
 
             <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
               <button

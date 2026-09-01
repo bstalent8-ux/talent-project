@@ -8,8 +8,11 @@
 // (a client component) for live preview, same reasoning as
 // profile-approved.ts.
 
+import { escapeHtml } from "@/lib/email/escapeHtml";
+
 export function verificationApprovedEmail(lang: "ar" | "en", name: string): { subject: string; html: string } {
-  const displayName = name?.trim() || (lang === "ar" ? "بطلنا" : "there");
+  // See S-2 note in profile-approved.ts — `name` is user-controlled.
+  const displayName = escapeHtml(name?.trim() || (lang === "ar" ? "بطلنا" : "there"));
 
   if (lang === "ar") {
     return {

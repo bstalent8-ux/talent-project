@@ -5,8 +5,11 @@
 // Pure function, no imports — safe to import from an admin approve popup
 // for live preview, same reasoning as the other approval templates.
 
+import { escapeHtml } from "@/lib/email/escapeHtml";
+
 export function brandApprovedEmail(lang: "ar" | "en", name: string): { subject: string; html: string } {
-  const displayName = name?.trim() || (lang === "ar" ? "صديقنا" : "there");
+  // See S-2 note in profile-approved.ts — `name` is user-controlled.
+  const displayName = escapeHtml(name?.trim() || (lang === "ar" ? "صديقنا" : "there"));
 
   if (lang === "ar") {
     return {

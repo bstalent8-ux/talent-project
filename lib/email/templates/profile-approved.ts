@@ -4,8 +4,13 @@
 // approved-but-thin profile still won't show up in Explore — see
 // lib/profile-completion.ts's COMPLETION_THRESHOLDS.appearInSearch.
 
+import { escapeHtml } from "@/lib/email/escapeHtml";
+
 export function profileApprovedEmail(lang: "ar" | "en", name: string): { subject: string; html: string } {
-  const displayName = name?.trim() || (lang === "ar" ? "بطلنا" : "there");
+  // `name` is a talent's own profiles.full_name — user-controlled, no
+  // format restriction at signup. Escaped before interpolation so it's
+  // always treated as text, never as markup (S-2 fix, 2026-08-31).
+  const displayName = escapeHtml(name?.trim() || (lang === "ar" ? "بطلنا" : "there"));
 
   if (lang === "ar") {
     return {
