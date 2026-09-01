@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { TalentCard } from "../page";
 import { cdnImage } from "@/lib/images";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
+import ProtectedAction from "@/components/auth/ProtectedAction";
 import styles from "./ExplorePage.module.css";
 
 // Compact hero — was a ~700px-tall stack (badge + title + subtitle + search
@@ -77,34 +78,38 @@ export default function ExploreHero({ lang, search, onSearch, resultCount, featu
             className={styles.heroCarouselTrack}
             style={{ animationDuration: `${marqueeItems.length * 3}s` }}
           >
-            {marqueeItems.map((t, i) => (
-              <Link
-                key={`${t.id}-${i}`}
-                href={canonicalTalentPath(t.category, t.handle)}
-                className={styles.heroCarouselCard}
-                tabIndex={-1}
-              >
-                <span className={styles.heroCarouselAvatar}>
-                  {t.avatar_url ? (
-                    <img src={cdnImage(t.avatar_url, 120)} alt="" loading="lazy" />
-                  ) : (
-                    <span className={styles.heroCarouselInitial}>{t.name.charAt(0).toUpperCase()}</span>
-                  )}
-                </span>
-                <span className={styles.heroCarouselMeta}>
-                  <span className={styles.heroCarouselName}>
-                    {t.name}
-                    {t.verified && <BadgeCheck size={11} />}
-                  </span>
-                  {t.rating > 0 && (
-                    <span className={styles.heroCarouselRating}>
-                      <Star size={10} fill="currentColor" />
-                      {t.rating.toFixed(1)}
+            {marqueeItems.map((t, i) => {
+              const profileHref = canonicalTalentPath(t.category, t.handle);
+              return (
+                <ProtectedAction key={`${t.id}-${i}`} action="view_talent_profile" nextPathOverride={profileHref}>
+                  <Link
+                    href={profileHref}
+                    className={styles.heroCarouselCard}
+                    tabIndex={-1}
+                  >
+                    <span className={styles.heroCarouselAvatar}>
+                      {t.avatar_url ? (
+                        <img src={cdnImage(t.avatar_url, 120)} alt="" loading="lazy" />
+                      ) : (
+                        <span className={styles.heroCarouselInitial}>{t.name.charAt(0).toUpperCase()}</span>
+                      )}
                     </span>
-                  )}
-                </span>
-              </Link>
-            ))}
+                    <span className={styles.heroCarouselMeta}>
+                      <span className={styles.heroCarouselName}>
+                        {t.name}
+                        {t.verified && <BadgeCheck size={11} />}
+                      </span>
+                      {t.rating > 0 && (
+                        <span className={styles.heroCarouselRating}>
+                          <Star size={10} fill="currentColor" />
+                          {t.rating.toFixed(1)}
+                        </span>
+                      )}
+                    </span>
+                  </Link>
+                </ProtectedAction>
+              );
+            })}
           </div>
         </div>
       )}

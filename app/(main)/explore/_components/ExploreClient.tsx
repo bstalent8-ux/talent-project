@@ -263,6 +263,49 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
             </div>
           </div>
 
+          {favoriteError && (
+            <p style={{ margin: "0 0 0.75rem", color: "var(--color-error)", fontSize: "var(--text-sm)", fontWeight: 700 }}>
+              {ar ? "تعذر تحديث المفضلة، حاول مرة أخرى" : "Couldn't update favorites, try again"}
+            </p>
+          )}
+          <div className={styles.resultsBar}>
+            <span className={styles.resultsCount}>
+              {ar ? <><strong>{filtered.length}</strong> نتيجة</> : <><strong>{filtered.length}</strong> results</>}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button
+                type="button"
+                className={styles.mobileFilterBtn}
+                onClick={() => setFiltersOpen(true)}
+              >
+                <SlidersHorizontal size={15} />
+                {ar ? "تصفية" : "Filters"}
+              </button>
+              <div className={styles.sortWrap}>
+                <label htmlFor="explore-sort">{ar ? "ترتيب" : "Sort"}</label>
+                <select
+                  id="explore-sort"
+                  className={styles.sortSelect}
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortOption)}
+                >
+                  <option value="rating">{ar ? "الأعلى تقييماً" : "Top rated"}</option>
+                  <option value="price_asc">{ar ? "الأرخص أولاً" : "Price: low to high"}</option>
+                  <option value="price_desc">{ar ? "الأعلى سعراً" : "Price: high to low"}</option>
+                  <option value="newest">{ar ? "الأحدث" : "Newest"}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters and the results grid now start at the same top edge —
+              the results bar (count + sort + mobile filter toggle) used to
+              live inside this grid's right column, pushing the grid down
+              below .filters' top while the sidebar itself started higher.
+              Moved above .layout instead: it doesn't need to be a grid
+              child at all (it isn't part of the sidebar/grid columns), and
+              on mobile .filters is `position: fixed` anyway so this move
+              doesn't affect the drawer. */}
           <div className={styles.layout}>
             <ExploreFilters
               lang={lang}
@@ -276,41 +319,6 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
             />
 
             <div>
-              {favoriteError && (
-                <p style={{ margin: "0 0 0.75rem", color: "var(--color-error)", fontSize: "var(--text-sm)", fontWeight: 700 }}>
-                  {ar ? "تعذر تحديث المفضلة، حاول مرة أخرى" : "Couldn't update favorites, try again"}
-                </p>
-              )}
-              <div className={styles.resultsBar}>
-                <span className={styles.resultsCount}>
-                  {ar ? <><strong>{filtered.length}</strong> نتيجة</> : <><strong>{filtered.length}</strong> results</>}
-                </span>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <button
-                    type="button"
-                    className={styles.mobileFilterBtn}
-                    onClick={() => setFiltersOpen(true)}
-                  >
-                    <SlidersHorizontal size={15} />
-                    {ar ? "تصفية" : "Filters"}
-                  </button>
-                  <div className={styles.sortWrap}>
-                    <label htmlFor="explore-sort">{ar ? "ترتيب" : "Sort"}</label>
-                    <select
-                      id="explore-sort"
-                      className={styles.sortSelect}
-                      value={sort}
-                      onChange={(e) => setSort(e.target.value as SortOption)}
-                    >
-                      <option value="rating">{ar ? "الأعلى تقييماً" : "Top rated"}</option>
-                      <option value="price_asc">{ar ? "الأرخص أولاً" : "Price: low to high"}</option>
-                      <option value="price_desc">{ar ? "الأعلى سعراً" : "Price: high to low"}</option>
-                      <option value="newest">{ar ? "الأحدث" : "Newest"}</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
               <ExploreGrid
                 lang={lang} talents={paginated}
                 myRole={myRole} myId={myId}
