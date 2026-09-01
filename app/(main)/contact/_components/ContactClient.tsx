@@ -13,7 +13,6 @@ const TX = {
     sub:      "سواء كنت براند أو موهبة أو مجرد مهتم، نحب أن نسمع منك.",
     formTitle: "أرسل لنا رسالة",
     orTitle:   "أو تواصل معنا مباشرة",
-    email:     "📧 hello@talents.com",
     waTitle:   "واتساب",
     waSub:     "رد سريع خلال ساعات العمل",
     infoCards: [
@@ -29,7 +28,6 @@ const TX = {
     sub:      "Whether you're a brand, a talent, or simply curious — we'd love to hear from you.",
     formTitle: "Send Us a Message",
     orTitle:   "Or Reach Us Directly",
-    email:     "📧 hello@talents.com",
     waTitle:   "WhatsApp",
     waSub:     "Quick response during business hours",
     infoCards: [
@@ -144,20 +142,6 @@ export default function ContactClient() {
           {/* Sidebar */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <h2 style={{ color: TEXT, fontSize: 20, fontWeight: 700, margin: 0 }}>{t.orTitle}</h2>
-
-            {/* Email */}
-            <div style={{
-              background: CARD, border: `1px solid ${BORDER}`,
-              borderRadius: 16, padding: "22px 24px",
-            }}>
-              <p style={{ color: TEXT, fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>📧 Email</p>
-              <a
-                href="mailto:hello@talents.com"
-                style={{ color: GREEN, fontSize: 14, textDecoration: "none", fontWeight: 600 }}
-              >
-                hello@talents.com
-              </a>
-            </div>
 
             {/* WhatsApp */}
             <div style={{
