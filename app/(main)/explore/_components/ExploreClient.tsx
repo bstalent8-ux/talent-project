@@ -11,7 +11,6 @@ import ExploreHero from "./ExploreHero";
 import ExploreFilters from "./ExploreFilters";
 import ExploreGrid from "./ExploreGrid";
 import { useSite } from "@/contexts/SiteContext";
-import { useGuestGuard } from "@/contexts/GuestGuard";
 import { categoryMatchRank, MATCH_RANK_NONE } from "@/features/categories/matching";
 import DirectBriefModal from "@/components/DirectBriefModal";
 import { trackEvent } from "@/lib/analytics/track";
@@ -22,10 +21,10 @@ import styles from "./ExplorePage.module.css";
 // height instead of running several rows past it.
 const PAGE_SIZE = 8;
 
-// A guest can browse, but only gets a taste of the catalog — registering is
-// what unlocks the rest (and, separately, ProtectedAction gates opening any
-// single profile at all).
-const GUEST_RESULT_CAP = 5;
+// Guests used to see only the first 5 results (registering unlocked the
+// rest) — removed per explicit request: a guest now sees the full catalog,
+// same as everyone else. ProtectedAction still gates opening any single
+// profile, sending a brief, etc.
 
 export type SortOption = "price_asc" | "price_desc" | "rating" | "newest";
 
@@ -62,7 +61,6 @@ interface Props {
 export default function ExploreClient({ talents, viewerBrandCategory = null }: Props) {
   const { lang, dark } = useSite();
   const ar = lang === "ar";
-  const { isGuest } = useGuestGuard();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -203,10 +201,8 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
     return list;
   }, [talents, search, type, sort, minPrice, maxPrice, verified, sex, matchRankById]);
 
-  const visibleToViewer = isGuest ? filtered.slice(0, GUEST_RESULT_CAP) : filtered;
-  const totalPages = Math.max(1, Math.ceil(visibleToViewer.length / PAGE_SIZE));
-  const paginated  = visibleToViewer.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const guestHiddenCount = isGuest ? Math.max(0, filtered.length - GUEST_RESULT_CAP) : 0;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Debounced so a search event fires once per pause in typing, not once
   // per keystroke — filtering itself stays instant (the useMemo above),
@@ -321,20 +317,6 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
                 favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite}
                 onSendBrief={(t) => setBriefTarget(t)}
               />
-
-              {guestHiddenCount > 0 && (
-                <div
-                  style={{
-                    marginTop: 20, padding: "16px 20px", borderRadius: "var(--radius-lg)",
-                    border: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-card)",
-                    textAlign: "center", fontSize: "var(--text-sm)", color: "var(--text-secondary)",
-                  }}
-                >
-                  {ar
-                    ? <>فيه <strong>{guestHiddenCount}</strong> موهبة تانية — <a href="/register" style={{ color: "var(--color-primary)", fontWeight: 700 }}>سجل مجاناً</a> عشان تشوفهم كلهم.</>
-                    : <>There {guestHiddenCount === 1 ? "is" : "are"} <strong>{guestHiddenCount}</strong> more talent{guestHiddenCount === 1 ? "" : "s"} — <a href="/register" style={{ color: "var(--color-primary)", fontWeight: 700 }}>sign up free</a> to see them all.</>}
-                </div>
-              )}
 
               {totalPages > 1 && (
                 <div className={styles.pagination}>
