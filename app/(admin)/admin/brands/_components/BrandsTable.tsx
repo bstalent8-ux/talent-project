@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import type { AdminBrand } from "@/features/admin/services/admin.service";
-import { CheckCircle, XCircle, RotateCcw, ShieldBan, ShieldCheck, ExternalLink } from "lucide-react";
+import { CheckCircle, XCircle, RotateCcw, ShieldBan, ShieldCheck, ExternalLink, Eye } from "lucide-react";
 
 const BRAND_STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   pending:  { bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
@@ -185,6 +186,10 @@ export default function BrandsTable({ brands, total, page, pageSize, status }: P
                       </td>
                       <td style={cellStyle}>
                         <div style={{ display: "flex", gap: 4 }}>
+                          <Link href={`/brand/${b.id}`} target="_blank" rel="noopener noreferrer" title={t.view}
+                            style={{ color: MUTED, padding: 4, borderRadius: 6, display: "flex" }}>
+                            <Eye size={16} />
+                          </Link>
                           {b.brandStatus !== "approved" && (
                             <button onClick={() => setModal({ type: "approve", brand: b })} title={t.approve}
                               style={{ background: "none", border: "none", cursor: "pointer", color: "#00D26A", padding: 4, borderRadius: 6, display: "flex" }}>

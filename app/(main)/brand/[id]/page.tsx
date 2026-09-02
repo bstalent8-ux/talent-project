@@ -16,6 +16,7 @@ export const runtime = 'edge';
 import { notFound } from "next/navigation";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import { adminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { ProfileError, profileService } from "@/features/profiles";
 import type { PublicProfileDTO } from "@/features/profiles/types/dto";
 import BrandProfileShell from "./_components/BrandProfileShell";
@@ -32,6 +33,36 @@ async function loadBrand(id: string): Promise<PublicProfileDTO | null> {
     const error = ProfileError.from(e);
     if (error.status === 404) return null;
     throw error;
+  }
+}
+
+/**
+ * The public gate hid this id/handle. Check whether the current signed-in
+ * visitor is an admin — if so, they get the same read-only preview an admin
+ * gets of a not-yet-approved (or suspended/blocked) talent listing, so the
+ * "View" icon in /admin/brands works on every row, not just approved+active
+ * ones. Never runs for anyone whose role isn't "admin" in `profiles` (RLS
+ * only allows reading one's own row here, so this can't be used to probe
+ * another visitor's role). Mirrors getAdminPreviewIfAllowed in
+ * app/(main)/_lib/load-talent-profile.ts.
+ */
+async function getAdminPreviewIfAllowed(id: string): Promise<PublicProfileDTO | null> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data: viewer } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (viewer?.role !== "admin") return null;
+
+    const { profile } = UUID_RE.test(id)
+      ? await profileService.getAdminPreviewProfileById(id)
+      : await profileService.getAdminPreviewProfileByHandle(id);
+    if (profile.meta.typeSlug !== "brand") return null;
+
+    return profile;
+  } catch {
+    return null;
   }
 }
 
@@ -68,7 +99,24 @@ export default async function BrandDetailPage({
     },
   );
 
-  if (!payload) notFound();
+  if (!payload) {
+    // Never cached (per-viewer, admin-only) — deliberately outside cachedPublic.
+    const adminProfile = await getAdminPreviewIfAllowed(id);
+    if (!adminProfile) notFound();
+
+    const { data: bookings } = await adminClient
+      .from("bookings")
+      .select("id")
+      .eq("brand_id", adminProfile.identity.id)
+      .eq("status", "completed");
+
+    return (
+      <BrandProfileShell
+        completedBookings={bookings?.length ?? 0}
+        profile={adminProfile}
+      />
+    );
+  }
 
   return (
     <BrandProfileShell

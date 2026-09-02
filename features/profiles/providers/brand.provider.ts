@@ -85,12 +85,16 @@ export const brandProvider: ProfileProvider<RawBrandCore, BrandPublicCore, Brand
     return brandRepository.findByUserId(profileId);
   },
 
-  async getPublicProfile({ shared }: ProviderLoadInput) {
+  async getPublicProfile({ shared, bypassApprovalGate }: ProviderLoadInput) {
     const core = await brandRepository.findByUserId(shared.id);
     if (!core) return null;
 
-    // Public gate — approved brands only (CLAUDE.md §8).
-    if (core.status && core.status !== "approved") return null;
+    // Public gate — approved brands only (CLAUDE.md §8). Skipped for an
+    // admin's own review preview (getAdminPreviewProfileByHandle/ById) —
+    // same bypassApprovalGate contract talent.provider.ts already honors;
+    // this provider had silently dropped the flag, so an admin previewing
+    // a pending/rejected brand still hit a 404 instead of the listing.
+    if (!bypassApprovalGate && core.status && core.status !== "approved") return null;
 
     return buildPublicCore(core);
   },

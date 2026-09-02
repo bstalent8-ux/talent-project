@@ -294,6 +294,40 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
     };
   }
 
+  /** Shared by getAdminPreviewProfileByHandle/ById — builds the same
+   * bypass-approval-gate DTO either lookup produces. See the doc comment on
+   * getAdminPreviewProfileByHandle for why isPublicallyVisible is skipped. */
+  async function buildAdminPreview(ctx: {
+    identity: IdentityRow;
+    typeSlug: string;
+    provider: ProfileProvider<any, any, any>;
+  }): Promise<{ profile: PublicProfileDTO; moderationStatus: ModerationStatus | null }> {
+    const { profile } = ctx.identity;
+
+    const [core, sections, layout, rawCore] = await Promise.all([
+      ctx.provider.getPublicProfile({ shared: profile, bypassApprovalGate: true }),
+      deps.dynamic.getSectionsForProfile(profile.id, ctx.typeSlug, "public"),
+      deps.dynamic.getLayout(ctx.typeSlug),
+      ctx.provider.loadCore(profile.id),
+    ]);
+
+    if (!core) throw ProfileError.notFound({ profileId: profile.id, reason: "core row missing" });
+
+    const dto: PublicProfileDTO = {
+      identity:   toIdentityDTO(profile, ctx.typeSlug, true),
+      meta:       toMetaDTO(ctx.provider.meta),
+      core:       core as AnyPublicCore,
+      sections:   mergeSections(sections),
+      layout,
+      isBookable: ctx.provider.meta.bookable,
+    };
+    dto.sections = dto.sections.filter((section) => ctx.provider.hasContent(section, dto));
+
+    const moderationStatus = (rawCore as { status?: ModerationStatus | null } | null)?.status ?? null;
+
+    return { profile: dto, moderationStatus };
+  }
+
   return {
     // ─── Public reads ───────────────────────────────────────────────────────
 
@@ -363,38 +397,31 @@ export function createProfileService(overrides: Partial<ProfileServiceDeps> = {}
      * listing that hasn't cleared the approval gate yet, before deciding to
      * approve it. Caller MUST have already verified the requester is an
      * admin; this function does no authorization of its own.
+     *
+     * Deliberately does NOT call isPublicallyVisible: that gate exists to
+     * hide a blocked/suspended ACCOUNT from the public, but an admin
+     * reviewing a listing needs to see it in exactly that state — a
+     * suspended account is one of the main reasons an admin opens this
+     * preview in the first place (e.g. the "View" icon in /admin/brands or
+     * /admin/talents on a suspended row). Bypassing it here never makes the
+     * profile public; the public route's own gate is untouched.
      */
     async getAdminPreviewProfileByHandle(handle: string): Promise<{
       profile:          PublicProfileDTO;
       moderationStatus: ModerationStatus | null;
     }> {
       const ctx = await resolveContext(await deps.profiles.findIdentityByHandle(handle));
-      const { profile } = ctx.identity;
+      return buildAdminPreview(ctx);
+    },
 
-      if (!isPublicallyVisible(profile)) throw ProfileError.notFound({ profileId: profile.id });
-
-      const [core, sections, layout, rawCore] = await Promise.all([
-        ctx.provider.getPublicProfile({ shared: profile, bypassApprovalGate: true }),
-        deps.dynamic.getSectionsForProfile(profile.id, ctx.typeSlug, "public"),
-        deps.dynamic.getLayout(ctx.typeSlug),
-        ctx.provider.loadCore(profile.id),
-      ]);
-
-      if (!core) throw ProfileError.notFound({ profileId: profile.id, reason: "core row missing" });
-
-      const dto: PublicProfileDTO = {
-        identity:   toIdentityDTO(profile, ctx.typeSlug, true),
-        meta:       toMetaDTO(ctx.provider.meta),
-        core:       core as AnyPublicCore,
-        sections:   mergeSections(sections),
-        layout,
-        isBookable: ctx.provider.meta.bookable,
-      };
-      dto.sections = dto.sections.filter((section) => ctx.provider.hasContent(section, dto));
-
-      const moderationStatus = (rawCore as { status?: ModerationStatus | null } | null)?.status ?? null;
-
-      return { profile: dto, moderationStatus };
+    /** Same as getAdminPreviewProfileByHandle, keyed by profiles.id instead
+     * of handle — for routes like /brand/[id] that accept a UUID. */
+    async getAdminPreviewProfileById(profileId: string): Promise<{
+      profile:          PublicProfileDTO;
+      moderationStatus: ModerationStatus | null;
+    }> {
+      const ctx = await resolveContext(await deps.profiles.findIdentityById(profileId));
+      return buildAdminPreview(ctx);
     },
 
     /** Caller MUST have already verified that userId is the signed-in user. */
