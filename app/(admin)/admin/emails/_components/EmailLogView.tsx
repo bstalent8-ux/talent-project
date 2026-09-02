@@ -16,13 +16,14 @@ const TEMPLATE_LABEL: Record<string, { ar: string; en: string }> = {
 
 const TX = {
   ar: {
-    compose: "إرسال إيميل", to: "المستلم", recipient: "المستخدم (اختياري)",
-    recipientHint: "دور بالاسم لو الشخص عنده حساب، أو سيبه فاضي وحط الإيميل يدوي تحت",
+    compose: "إرسال إيميل", to: "المستلم", recipient: "المستلمين (اختياري)",
+    recipientHint: "دور بالاسم وضيف أكتر من شخص لو عايز، أو سيبه فاضي وحط إيميل يدوي تحت",
     recipientSearchPlaceholder: "دور بالاسم أو اليوزرنيم...",
     recipientNoResults: "مفيش نتايج",
-    recipientClear: "إلغاء الاختيار",
+    recipientClear: "شيل",
     email: "الإيميل", subject: "الموضوع", body: "المحتوى (HTML)",
-    send: "إرسال", sending: "بيتبعت...", cancel: "إلغاء",
+    send: "إرسال", sendingProgress: "بيتبعت (@sent/@total)...", cancel: "إلغاء",
+    partialFail: "اتبعت لـ @sent من @total. اللي فشل لسه في القايمة، جرب تاني:",
     recipientCol: "المستلم", subjectCol: "الموضوع", templateCol: "النوع",
     statusCol: "الحالة", dateCol: "التاريخ",
     sent: "اتبعت", failed: "فشل",
@@ -31,13 +32,14 @@ const TX = {
     close: "إغلاق", error: "الخطأ",
   },
   en: {
-    compose: "Send Email", to: "Recipient", recipient: "User (optional)",
-    recipientHint: "Search by name if they have an account, or leave blank and type an email manually below",
+    compose: "Send Email", to: "Recipient", recipient: "Recipients (optional)",
+    recipientHint: "Search by name and add as many as you like, or leave blank and type an email manually below",
     recipientSearchPlaceholder: "Search by name or handle...",
     recipientNoResults: "No results",
-    recipientClear: "Clear selection",
+    recipientClear: "Remove",
     email: "Email", subject: "Subject", body: "Body (HTML)",
-    send: "Send", sending: "Sending...", cancel: "Cancel",
+    send: "Send", sendingProgress: "Sending (@sent/@total)...", cancel: "Cancel",
+    partialFail: "Sent to @sent of @total. The failed ones are still listed — try again:",
     recipientCol: "Recipient", subjectCol: "Subject", templateCol: "Type",
     statusCol: "Status", dateCol: "Date",
     sent: "Sent", failed: "Failed",
@@ -69,8 +71,9 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
   const [selected, setSelected] = useState<AdminEmailLogRow | null>(null);
   const [composing, setComposing] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ recipientId: "", to: "", subject: "", html: "" });
+  const [form, setForm] = useState({ to: "", subject: "", html: "" });
   const [sending, setSending] = useState(false);
+  const [sendProgress, setSendProgress] = useState({ sent: 0, total: 0 });
   const [sendError, setSendError] = useState<string | null>(null);
 
   // Recipient picker — search-by-name instead of the raw profiles.id text box
@@ -79,16 +82,30 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
   // logs anything, so failed sends here used to silently vanish with no row
   // in the history at all — this replaces the guesswork with the same
   // search endpoint the notification composer already uses.
+  //
+  // Multi-recipient: an admin composing a real announcement isn't going to
+  // remember everyone's exact registered email — they pick people by name,
+  // one at a time, same email/subject fanned out to all of them, each
+  // getting its own /api/admin/emails call and its own email_log row (same
+  // as sending them individually N times, just batched from one form).
   type RecipientOption = { id: string; full_name: string | null; handle: string | null };
   const [recipientQuery, setRecipientQuery] = useState("");
   const [recipientResults, setRecipientResults] = useState<RecipientOption[]>([]);
   const [recipientOpen, setRecipientOpen] = useState(false);
   const [recipientLoading, setRecipientLoading] = useState(false);
-  const [selectedRecipient, setSelectedRecipient] = useState<RecipientOption | null>(null);
+  const [selectedRecipients, setSelectedRecipients] = useState<RecipientOption[]>([]);
   const recipientSearchSeq = useRef(0);
+  // A blur schedules closing the dropdown 150ms later (so a click on a
+  // result registers before the input's blur would otherwise hide it
+  // first). Without cancelling that timer on the next focus, a quick
+  // blur-then-refocus (e.g. clicking the field again right after typing)
+  // leaves the stale timer armed — it fires after the refocus and closes
+  // a dropdown that just legitimately reopened, even though recipientOpen
+  // was correctly set back to true.
+  const recipientBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!recipientOpen || selectedRecipient) return;
+    if (!recipientOpen) return;
     const query = recipientQuery.trim();
     if (!query) { setRecipientResults([]); return; }
 
@@ -107,26 +124,27 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [recipientQuery, recipientOpen, selectedRecipient]);
+  }, [recipientQuery, recipientOpen]);
 
   function pickRecipient(user: RecipientOption) {
-    setSelectedRecipient(user);
-    setForm((f) => ({ ...f, recipientId: user.id }));
+    setSelectedRecipients((prev) => (prev.some((p) => p.id === user.id) ? prev : [...prev, user]));
+    setRecipientQuery("");
     setRecipientOpen(false);
     setRecipientResults([]);
   }
 
-  function clearRecipient() {
-    setSelectedRecipient(null);
-    setForm((f) => ({ ...f, recipientId: "" }));
-    setRecipientQuery("");
+  function removeRecipient(id: string) {
+    setSelectedRecipients((prev) => prev.filter((p) => p.id !== id));
   }
 
   function closeCompose() {
+    if (recipientBlurTimer.current) clearTimeout(recipientBlurTimer.current);
     setComposing(false);
-    setForm({ recipientId: "", to: "", subject: "", html: "" });
-    clearRecipient();
+    setForm({ to: "", subject: "", html: "" });
+    setSelectedRecipients([]);
+    setRecipientQuery("");
     setSendError(null);
+    setSendProgress({ sent: 0, total: 0 });
   }
 
   const CARD = dark ? "#0D1623" : "#FFFFFF";
@@ -147,25 +165,58 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
   }
 
   async function submitCompose() {
+    // One target per selected account, plus the manual email field if it's
+    // filled in too (they're additive, not either/or, now that there can be
+    // several account recipients already).
+    const targets: { kind: "recipient" | "manual"; recipient?: RecipientOption; email?: string }[] = [
+      ...selectedRecipients.map((r) => ({ kind: "recipient" as const, recipient: r })),
+      ...(form.to.trim() ? [{ kind: "manual" as const, email: form.to.trim() }] : []),
+    ];
+    if (!targets.length) return;
+
     setSending(true);
     setSendError(null);
-    const res = await fetch("/api/admin/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        recipientId: form.recipientId.trim() || undefined,
-        to: form.to.trim() || undefined,
-        subject: form.subject,
-        html: form.html,
-      }),
-    });
+    setSendProgress({ sent: 0, total: targets.length });
+
+    const outcomes = await Promise.all(
+      targets.map(async (target) => {
+        const res = await fetch("/api/admin/emails", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientId: target.recipient?.id,
+            to: target.email,
+            subject: form.subject,
+            html: form.html,
+          }),
+        });
+        setSendProgress((p) => ({ ...p, sent: p.sent + 1 }));
+        if (res.ok) return { target, ok: true as const };
+        const json = await res.json().catch(() => ({}));
+        return { target, ok: false as const, error: json.error ?? "send failed" };
+      })
+    );
+
     setSending(false);
-    if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
-      setSendError(json.error ?? "send failed");
+    const failed = outcomes.filter((o) => !o.ok);
+
+    if (!failed.length) {
+      closeCompose();
+      router.refresh();
       return;
     }
-    closeCompose();
+
+    // Leave only the failed targets in the form so retrying doesn't re-send
+    // to people it already reached.
+    const failedIds = new Set(failed.filter((f) => f.target.kind === "recipient").map((f) => f.target.recipient!.id));
+    setSelectedRecipients((prev) => prev.filter((r) => failedIds.has(r.id)));
+    if (!failed.some((f) => f.target.kind === "manual")) setForm((f) => ({ ...f, to: "" }));
+
+    const names = failed.map((f) => f.target.recipient?.full_name ?? f.target.recipient?.handle ?? f.target.email).join(", ");
+    setSendError(
+      t.partialFail.replace("@sent", String(outcomes.length - failed.length)).replace("@total", String(outcomes.length)) +
+        " " + names
+    );
     router.refresh();
   }
 
@@ -279,24 +330,43 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
               </div>
             )}
 
-            {/* S-6 fix (2026-08-31): this used to be dangerouslySetInnerHTML
-                on the raw stored body_html. Template-generated rows are now
-                safe at the source (S-2's escapeHtml on the interpolated
-                name), but "custom" rows are the admin's own free-text HTML
-                from the compose form below — POST /api/admin/emails stores
-                it completely unsanitized, because the actual send is
-                supposed to render as real HTML in the recipient's inbox.
-                That's fine for the email itself; it's not fine to replay
-                unsanitized HTML back into another admin's browser via
-                dangerouslySetInnerHTML. Rendering the preview as escaped
-                text (line breaks preserved) closes that with zero bypass
-                risk — the real, sent email is completely unaffected, this
-                only changes how it looks in this history viewer. */}
-            <div
-              style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#0a121c" : "#f8fafc", whiteSpace: "pre-wrap", wordBreak: "break-word", color: TEXT, fontSize: 13 }}
-            >
-              {escapeHtml(selected.bodyHtml)}
-            </div>
+            {/* S-6 fix (2026-08-31), refined (2026-09-02): the original fix
+                escaped every row's body_html to plain text, which closed the
+                XSS hole but made every "sent" preview unreadable — the admin
+                just sees literal &lt;div&gt; markup instead of the actual
+                email (reported live: opening a profile_approved row showed
+                raw escaped source, not the message).
+
+                The real risk was always narrower than "all rows": a
+                template-generated row (profile_approved, verification_
+                approved, complete_profile_reminder, ...) is safe to render
+                as real HTML, because S-2 already escapes the one
+                interpolated value (the recipient's name) before the
+                template function ever returns it — the stored body_html
+                cannot contain a live <script>/<img onerror> no matter what
+                the name was. Only `template === "custom"` rows are actually
+                dangerous: that's the admin's own free-text HTML from the
+                compose form below, and POST /api/admin/emails stores it
+                completely unsanitized (intentionally — the real send is
+                supposed to render as real HTML in the recipient's inbox).
+                Replaying THAT back into another admin's browser via
+                dangerouslySetInnerHTML is what S-6 needed to stop.
+
+                So: template rows render as real HTML (readable, matches
+                what was actually sent); custom rows keep the escaped-text
+                fallback from the original fix. */}
+            {selected.template === "custom" ? (
+              <div
+                style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#0a121c" : "#f8fafc", whiteSpace: "pre-wrap", wordBreak: "break-word", color: TEXT, fontSize: 13 }}
+              >
+                {escapeHtml(selected.bodyHtml)}
+              </div>
+            ) : (
+              <div
+                style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#0a121c" : "#f8fafc", color: TEXT, fontSize: 13 }}
+                dangerouslySetInnerHTML={{ __html: selected.bodyHtml }}
+              />
+            )}
 
             <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
               <button
@@ -330,27 +400,37 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ position: "relative" }}>
                 <label style={labelStyle}>{t.recipient}</label>
-                {selectedRecipient ? (
-                  <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {selectedRecipient.full_name ?? selectedRecipient.handle ?? selectedRecipient.id}
-                      {selectedRecipient.handle && <span style={{ color: MUTED }}> · @{selectedRecipient.handle}</span>}
-                    </span>
-                    <button type="button" onClick={clearRecipient} aria-label={t.recipientClear} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, display: "flex" }}>
-                      <X size={14} />
-                    </button>
+                {selectedRecipients.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                    {selectedRecipients.map((r) => (
+                      <span
+                        key={r.id}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, backgroundColor: dark ? "#0a121c" : "#f8fafc", border: `1px solid ${BORDER}`, borderRadius: 999, padding: "4px 6px 4px 10px", fontSize: 12.5, color: TEXT }}
+                      >
+                        {r.full_name ?? r.handle ?? r.id}
+                        {r.handle && <span style={{ color: MUTED }}>· @{r.handle}</span>}
+                        <button type="button" onClick={() => removeRecipient(r.id)} aria-label={t.recipientClear} disabled={sending} style={{ background: "none", border: "none", cursor: sending ? "default" : "pointer", color: MUTED, display: "flex", padding: 0 }}>
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
                   </div>
-                ) : (
-                  <input
-                    value={recipientQuery}
-                    onChange={(e) => { setRecipientQuery(e.target.value); setRecipientOpen(true); }}
-                    onFocus={() => setRecipientOpen(true)}
-                    onBlur={() => setTimeout(() => setRecipientOpen(false), 150)}
-                    placeholder={t.recipientSearchPlaceholder}
-                    style={inputStyle}
-                  />
                 )}
-                {recipientOpen && !selectedRecipient && recipientQuery.trim() && (
+                <input
+                  value={recipientQuery}
+                  onChange={(e) => { setRecipientQuery(e.target.value); setRecipientOpen(true); }}
+                  onFocus={() => {
+                    if (recipientBlurTimer.current) clearTimeout(recipientBlurTimer.current);
+                    setRecipientOpen(true);
+                  }}
+                  onBlur={() => {
+                    recipientBlurTimer.current = setTimeout(() => setRecipientOpen(false), 150);
+                  }}
+                  placeholder={t.recipientSearchPlaceholder}
+                  disabled={sending}
+                  style={inputStyle}
+                />
+                {recipientOpen && recipientQuery.trim() && (
                   <div style={{ position: "absolute", top: "100%", insetInlineStart: 0, insetInlineEnd: 0, marginTop: 4, backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 8, maxHeight: 220, overflowY: "auto", zIndex: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.18)" }}>
                     {recipientLoading ? (
                       <div style={{ padding: 10, color: MUTED, fontSize: 12.5 }}>…</div>
@@ -374,19 +454,17 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
                 )}
                 <p style={{ color: MUTED, fontSize: 11, margin: "4px 0 0" }}>{t.recipientHint}</p>
               </div>
-              {!selectedRecipient && (
-                <div>
-                  <label style={labelStyle}>{t.email}</label>
-                  <input value={form.to} onChange={(e) => setForm((f) => ({ ...f, to: e.target.value }))} placeholder="name@example.com" style={inputStyle} />
-                </div>
-              )}
+              <div>
+                <label style={labelStyle}>{t.email}</label>
+                <input value={form.to} onChange={(e) => setForm((f) => ({ ...f, to: e.target.value }))} placeholder="name@example.com" disabled={sending} style={inputStyle} />
+              </div>
               <div>
                 <label style={labelStyle}>{t.subject}</label>
-                <input value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} style={inputStyle} />
+                <input value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} disabled={sending} style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>{t.body}</label>
-                <textarea value={form.html} onChange={(e) => setForm((f) => ({ ...f, html: e.target.value }))} rows={8} style={{ ...inputStyle, resize: "vertical", direction: "ltr" }} />
+                <textarea value={form.html} onChange={(e) => setForm((f) => ({ ...f, html: e.target.value }))} rows={8} disabled={sending} style={{ ...inputStyle, resize: "vertical", direction: "ltr" }} />
               </div>
 
               {sendError && <p style={{ color: "#EF4444", fontSize: 12, margin: 0 }}>{sendError}</p>}
@@ -396,11 +474,11 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
                   {t.cancel}
                 </button>
                 <button
-                  disabled={sending || !form.subject.trim() || !form.html.trim() || (!form.recipientId.trim() && !form.to.trim())}
+                  disabled={sending || !form.subject.trim() || !form.html.trim() || (!selectedRecipients.length && !form.to.trim())}
                   onClick={submitCompose}
                   style={{ padding: "8px 16px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer", opacity: sending ? 0.7 : 1 }}
                 >
-                  {sending ? t.sending : t.send}
+                  {sending ? t.sendingProgress.replace("@sent", String(sendProgress.sent)).replace("@total", String(sendProgress.total)) : t.send}
                 </button>
               </div>
             </div>
