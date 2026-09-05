@@ -39,8 +39,14 @@ export default function AdminShell({ title, children }: Props) {
   // dozens of hardcoded fontSize values across every admin component.
   // `height: 100vh` above needs to shrink to match, or the scaled-up content
   // would overflow the (now effectively smaller) viewport.
+  // Text across the panel is set with many different explicit fontWeight
+  // literals (400/500/600/700...), so there's no single number to bump like
+  // there was for font-size. `-webkit-text-stroke` fakes a slightly bolder
+  // look uniformly, on top of whatever weight each element already has,
+  // without touching every component. Same browser support caveat as `zoom`
+  // (Chrome/Edge/Safari, not Firefox).
   return (
-    <div dir="ltr" style={{ display: "flex", height: `${100 / 1.15}vh`, overflow: "hidden", backgroundColor: BG, zoom: 1.15 }}>
+    <div dir="ltr" style={{ display: "flex", height: `${100 / 1.15}vh`, overflow: "hidden", backgroundColor: BG, zoom: 1.15, WebkitTextStroke: "0.25px currentColor" }}>
       <AdminSidebar
         open={sidebarOpen}
         mode={sidebarMode}
