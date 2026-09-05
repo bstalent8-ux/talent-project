@@ -33,8 +33,14 @@ export default function AdminShell({ title, children }: Props) {
 
   const BG = dark ? "#050B12" : "#F1F5F9";
 
+  // Every admin page routes through this one shell, so a single `zoom` here
+  // scales the whole panel at once — text, icons, spacing all together,
+  // keeping the existing size hierarchy intact instead of hand-editing
+  // dozens of hardcoded fontSize values across every admin component.
+  // `height: 100vh` above needs to shrink to match, or the scaled-up content
+  // would overflow the (now effectively smaller) viewport.
   return (
-    <div dir="ltr" style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: BG }}>
+    <div dir="ltr" style={{ display: "flex", height: `${100 / 1.15}vh`, overflow: "hidden", backgroundColor: BG, zoom: 1.15 }}>
       <AdminSidebar
         open={sidebarOpen}
         mode={sidebarMode}

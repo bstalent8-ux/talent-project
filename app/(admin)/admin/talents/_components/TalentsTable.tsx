@@ -68,10 +68,11 @@ interface Props {
   status:   string;
 }
 
-function hrefFor(page: number, status: string) {
+function hrefFor(page: number, status: string, pageSize: number) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (status !== "all") params.set("status", status);
+  if (pageSize !== 10) params.set("pageSize", String(pageSize));
   const qs = params.toString();
   return qs ? `/admin/talents?${qs}` : "/admin/talents";
 }
@@ -288,7 +289,14 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
         )}
       </div>
 
-      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        buildHref={(p) => hrefFor(p, status, pageSize)}
+        total={total}
+        pageSize={pageSize}
+        buildPageSizeHref={(size) => hrefFor(1, status, size)}
+      />
 
       {modal && confirmConfig && (
         <ConfirmationModal
