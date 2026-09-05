@@ -8,6 +8,8 @@ import DashboardStatsSection from "./_components/DashboardStatsSection";
 import DashboardStatsSkeleton from "./_components/DashboardStatsSkeleton";
 import IncompleteSignupsSection from "./_components/IncompleteSignupsSection";
 import IncompleteSignupsSkeleton from "./_components/IncompleteSignupsSkeleton";
+import NewMediaUploadsSection from "./_components/NewMediaUploadsSection";
+import NewMediaUploadsSkeleton from "./_components/NewMediaUploadsSkeleton";
 
 export default function AdminDashboardPage() {
   return (
@@ -17,6 +19,9 @@ export default function AdminDashboardPage() {
       </Suspense>
       <Suspense fallback={<IncompleteSignupsSkeleton />}>
         <IncompleteSignupsSection />
+      </Suspense>
+      <Suspense fallback={<NewMediaUploadsSkeleton />}>
+        <NewMediaUploadsSection />
       </Suspense>
     </AdminDashboardShell>
   );

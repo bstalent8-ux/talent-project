@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
@@ -14,6 +14,7 @@ const TX = {
     title: "تسجيلات جديدة محتاجة تكمّل بروفايلها",
     subtitle: "صفر صور/فيديوهات بورتفوليو — أهم سبب مانع ظهورهم في البحث",
     name: "الاسم", status: "حالة الموافقة", registered: "تاريخ التسجيل",
+    email: "الإيميل", registeredAt: "وقت التسجيل", account: "الحساب",
     reminded: "اتبعتله قبل كده", notReminded: "لسه متبعتش",
     sendOne: "ابعت تذكير", sending: "بيتبعت...", sent: "اتبعت ✓",
     sendAll: "ابعت لكل اللي لسه متبعتش", sendingAll: "بيتبعت للكل...",
@@ -28,6 +29,7 @@ const TX = {
     title: "New registrations that still need to complete their profile",
     subtitle: "Zero portfolio photos/videos — the top reason they don't show up in search",
     name: "Name", status: "Approval status", registered: "Registered",
+    email: "Email", registeredAt: "Registered at", account: "Account",
     reminded: "Reminded already", notReminded: "Not reminded yet",
     sendOne: "Send reminder", sending: "Sending...", sent: "Sent ✓",
     sendAll: "Send to everyone not reminded yet", sendingAll: "Sending to all...",
@@ -64,6 +66,10 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
   const [sendingAll, setSendingAll] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  // Which row is expanded to show the account's email + exact registration
+  // time — same click-to-reveal pattern as the "Preview template" toggle
+  // above, just per-row instead of for the whole card.
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   // Whole-card collapse — persisted, so dismissing it stays dismissed across
   // dashboard visits instead of reappearing every load. Read after mount
   // only (same reasoning as AdminShell's sidebar-mode: localStorage isn't
@@ -197,39 +203,76 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
               {signups.map((s) => {
                 const col = STATUS_COLOR[s.talentStatus] ?? STATUS_COLOR.pending;
                 const wasReminded = s.alreadyReminded || sentIds.has(s.userId);
+                const isExpanded = expandedId === s.userId;
                 return (
-                  <tr key={s.userId}>
-                    <td style={cellStyle}>
-                      <div style={{ fontWeight: 600 }}>{s.fullName ?? "—"}</div>
-                      {s.handle && <div style={{ color: MUTED, fontSize: 11 }}>@{s.handle}</div>}
-                    </td>
-                    <td style={cellStyle}>
-                      <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: col.bg, color: col.text }}>
-                        {STATUS_LABEL[s.talentStatus]?.[lang] ?? s.talentStatus}
-                      </span>
-                    </td>
-                    <td style={{ ...cellStyle, color: MUTED, whiteSpace: "nowrap" }}>
-                      {new Date(s.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}
-                    </td>
-                    <td style={{ ...cellStyle, width: 1, whiteSpace: "nowrap" }}>
-                      {wasReminded ? (
-                        <span style={{ color: "#00D26A", fontSize: 12, fontWeight: 700 }}>{t.sent}</span>
-                      ) : (
-                        <button
-                          disabled={sendingId === s.userId || !s.email}
-                          onClick={() => sendOne(s.userId)}
-                          title={s.email ?? undefined}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
-                            border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: "var(--color-primary)",
-                            fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: sendingId === s.userId ? 0.7 : 1,
-                          }}
-                        >
-                          <Send size={12} />{sendingId === s.userId ? t.sending : t.sendOne}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                  <Fragment key={s.userId}>
+                    <tr
+                      onClick={() => setExpandedId(isExpanded ? null : s.userId)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td style={cellStyle}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {isExpanded ? <ChevronUp size={13} color={MUTED} /> : <ChevronDown size={13} color={MUTED} />}
+                          <div>
+                            <div style={{ fontWeight: 600 }}>{s.fullName ?? "—"}</div>
+                            {s.handle && <div style={{ color: MUTED, fontSize: 11 }}>@{s.handle}</div>}
+                          </div>
+                        </div>
+                      </td>
+                      <td style={cellStyle}>
+                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: col.bg, color: col.text }}>
+                          {STATUS_LABEL[s.talentStatus]?.[lang] ?? s.talentStatus}
+                        </span>
+                      </td>
+                      <td style={{ ...cellStyle, color: MUTED, whiteSpace: "nowrap" }}>
+                        {new Date(s.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}
+                      </td>
+                      <td style={{ ...cellStyle, width: 1, whiteSpace: "nowrap" }} onClick={(e) => e.stopPropagation()}>
+                        {wasReminded ? (
+                          <span style={{ color: "#00D26A", fontSize: 12, fontWeight: 700 }}>{t.sent}</span>
+                        ) : (
+                          <button
+                            disabled={sendingId === s.userId || !s.email}
+                            onClick={() => sendOne(s.userId)}
+                            title={s.email ?? undefined}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
+                              border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: "var(--color-primary)",
+                              fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: sendingId === s.userId ? 0.7 : 1,
+                            }}
+                          >
+                            <Send size={12} />{sendingId === s.userId ? t.sending : t.sendOne}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={4} style={{ ...cellStyle, backgroundColor: TH }}>
+                          <div style={{ display: "flex", gap: 28, flexWrap: "wrap", fontSize: 12.5 }}>
+                            <div>
+                              <div style={{ color: MUTED, fontSize: 11, marginBottom: 2 }}>{t.account}</div>
+                              <div style={{ fontWeight: 600 }}>{s.fullName ?? "—"} {s.handle && <span style={{ color: MUTED, fontWeight: 400 }}>· @{s.handle}</span>}</div>
+                            </div>
+                            <div>
+                              <div style={{ color: MUTED, fontSize: 11, marginBottom: 2 }}>{t.email}</div>
+                              {s.email ? (
+                                <a href={`mailto:${s.email}`} style={{ color: "var(--color-primary)", fontWeight: 600, textDecoration: "none" }}>{s.email}</a>
+                              ) : (
+                                <span style={{ color: MUTED }}>—</span>
+                              )}
+                            </div>
+                            <div>
+                              <div style={{ color: MUTED, fontSize: 11, marginBottom: 2 }}>{t.registeredAt}</div>
+                              <div style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+                                {new Date(s.createdAt).toLocaleString(ar ? "ar-EG" : "en-US", { dateStyle: "medium", timeStyle: "short" })}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 );
               })}
             </tbody>

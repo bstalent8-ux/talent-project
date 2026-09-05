@@ -1332,3 +1332,76 @@ export async function fetchAdminIncompleteSignups(): Promise<AdminIncompleteSign
 
   return withEmail;
 }
+
+// ─── New media uploaded — pending talents who now have portfolio content ──────
+// The counterpart to fetchAdminIncompleteSignups: instead of "who still has
+// zero photos/videos", this is "who has added at least one since — go review
+// and approve them". Scoped to status = 'pending' only, since an
+// approved/rejected/suspended talent isn't waiting on this decision anymore.
+
+export interface AdminNewMediaUpload {
+  userId:          string;
+  talentProfileId: string;
+  fullName:        string | null;
+  handle:          string | null;
+  email:           string | null;
+  registeredAt:    string;
+  photoCount:      number;
+  videoCount:      number;
+  latestUploadAt:  string;
+}
+
+export async function fetchAdminNewMediaUploads(): Promise<AdminNewMediaUpload[]> {
+  const { data: tps, error } = await adminClient
+    .from("talent_profiles")
+    .select("id, user_id, status")
+    .eq("status", "pending");
+  if (error || !tps?.length) return [];
+
+  const tpIds = tps.map((t) => t.id);
+  const { data: portfolioRows } = await adminClient
+    .from("portfolio_items")
+    .select("talent_id, media_type, created_at")
+    .in("talent_id", tpIds);
+
+  const stats: Record<string, { photo: number; video: number; latest: string }> = {};
+  for (const row of portfolioRows ?? []) {
+    const s = (stats[row.talent_id] ??= { photo: 0, video: 0, latest: row.created_at });
+    if (row.media_type === "video") s.video++; else s.photo++;
+    if (row.created_at > s.latest) s.latest = row.created_at;
+  }
+
+  const targets = tps
+    .map((tp) => ({ tp, stat: stats[tp.id] }))
+    .filter((t): t is { tp: typeof tps[number]; stat: NonNullable<typeof t.stat> } => !!t.stat);
+  if (!targets.length) return [];
+
+  const userIds = targets.map((t) => t.tp.user_id);
+  const { data: profiles } = await adminClient
+    .from("profiles")
+    .select("id, full_name, handle, created_at")
+    .in("id", userIds);
+  const profileById = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));
+
+  // Same bounded one-lookup-per-row pattern as fetchAdminIncompleteSignups —
+  // small set (pending talents with new uploads, not the whole user base).
+  const withEmail = await Promise.all(
+    targets.map(async ({ tp, stat }) => {
+      const profile = profileById[tp.user_id];
+      const { data: authUser } = await adminClient.auth.admin.getUserById(tp.user_id);
+      return {
+        userId:          tp.user_id,
+        talentProfileId: tp.id,
+        fullName:        profile?.full_name ?? null,
+        handle:          profile?.handle ?? null,
+        email:           authUser?.user?.email ?? null,
+        registeredAt:    profile?.created_at ?? stat.latest,
+        photoCount:      stat.photo,
+        videoCount:      stat.video,
+        latestUploadAt:  stat.latest,
+      };
+    })
+  );
+
+  return withEmail.sort((a, b) => (a.latestUploadAt < b.latestUploadAt ? 1 : -1));
+}
