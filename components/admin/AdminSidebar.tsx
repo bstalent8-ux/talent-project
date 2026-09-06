@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Contact2,
   Handshake,
   History,
   LayoutDashboard,
@@ -40,6 +41,7 @@ export type SidebarMode = "expanded" | "collapsed" | "hover";
 const TX = {
   ar: {
     dashboard: "لوحة التحكم",
+    leads: "العملاء المحتملين",
     talents: "المواهب",
     talentDemand: "طلب أنواع المواهب",
     userActivity: "نشاط المستخدمين",
@@ -70,6 +72,7 @@ const TX = {
   },
   en: {
     dashboard: "Dashboard",
+    leads: "Leads",
     talents: "Talents",
     talentDemand: "Talent Type Demand",
     userActivity: "User Activity",
@@ -109,6 +112,7 @@ const TX = {
 // never has to render a group header with no room for its label.
 const NAV_ITEM = {
   dashboard:        { key: "dashboard",        href: "/admin",                    icon: LayoutDashboard },
+  leads:            { key: "leads",            href: "/admin/leads",              icon: Contact2 },
   talents:          { key: "talents",          href: "/admin/talents",            icon: Users },
   verifications:    { key: "verifications",    href: "/admin/verifications",      icon: ShieldCheck },
   talentDemand:     { key: "talentDemand",     href: "/admin/talent-demand",      icon: BarChart3 },
@@ -136,6 +140,7 @@ type NavEntry =
 
 const NAV_STRUCTURE: NavEntry[] = [
   { type: "item", item: NAV_ITEM.dashboard },
+  { type: "item", item: NAV_ITEM.leads },
   { type: "group", key: "talentsGroup", labelKey: "groupTalents", icon: Users,
     items: [NAV_ITEM.talents, NAV_ITEM.verifications, NAV_ITEM.talentDemand] },
   { type: "group", key: "bookingsGroup", labelKey: "groupBookings", icon: CalendarCheck,

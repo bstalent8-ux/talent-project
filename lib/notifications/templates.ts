@@ -85,6 +85,7 @@ export const TYPE_ICON: Record<NotificationType, string> = {
   TESTIMONIAL_SUBMITTED:    "💬",
   BRAND_MOMENT_SUBMITTED:   "📸",
   SUPPORT_TICKET_SUBMITTED: "🆘",
+  LEAD_FOLLOW_UP_DUE:       "📞",
 };
 
 export const TYPE_COLOR: Record<NotificationType, string> = {
@@ -110,6 +111,7 @@ export const TYPE_COLOR: Record<NotificationType, string> = {
   TESTIMONIAL_SUBMITTED:    "#16a3a3",
   BRAND_MOMENT_SUBMITTED:   "#16a3a3",
   SUPPORT_TICKET_SUBMITTED: "#EF4444",
+  LEAD_FOLLOW_UP_DUE:       "#F59E0B",
 };
 
 export const PRIORITY_COLOR: Record<NotificationPriority, string> = {
@@ -142,6 +144,7 @@ export const TYPE_LABEL: Record<NotificationType, BilingualText> = {
   TESTIMONIAL_SUBMITTED:    { ar: "رأي جديد",          en: "New testimonial" },
   BRAND_MOMENT_SUBMITTED:   { ar: "لحظة براند جديدة",  en: "New brand moment" },
   SUPPORT_TICKET_SUBMITTED: { ar: "تذكرة دعم جديدة",   en: "New support ticket" },
+  LEAD_FOLLOW_UP_DUE:       { ar: "موعد فولو أب",       en: "Follow-up due" },
 };
 
 export const DEFAULT_PRIORITY: Record<NotificationType, NotificationPriority> = {
@@ -167,6 +170,7 @@ export const DEFAULT_PRIORITY: Record<NotificationType, NotificationPriority> = 
   TESTIMONIAL_SUBMITTED:    "normal",
   BRAND_MOMENT_SUBMITTED:   "normal",
   SUPPORT_TICKET_SUBMITTED: "high",
+  LEAD_FOLLOW_UP_DUE:       "normal",
 };
 
 /**
@@ -203,6 +207,8 @@ export function fallbackActionUrl(
       return "/profile/me";
     case "SUBSCRIPTION_UPDATED":
       return "/packages";
+    case "LEAD_FOLLOW_UP_DUE":
+      return metadata.lead_id ? `/admin/leads/${metadata.lead_id}` : "/admin/leads";
     default:
       return ref ? null : null;
   }

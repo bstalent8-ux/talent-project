@@ -1,0 +1,23 @@
+name: Lead follow-up reminders
+
+# Cloudflare Pages doesn't run scheduled Workers the way plain Cloudflare
+# Workers do, so this is the scheduler for app/api/cron/lead-follow-ups —
+# a daily ping, authenticated with a shared secret (not a user session).
+#
+# Requires two repo secrets (Settings -> Secrets and variables -> Actions):
+#   SITE_URL         e.g. https://talent-s.com
+#   LEAD_CRON_SECRET must match the LEAD_CRON_SECRET env var set on the
+#                    Cloudflare Pages project (same name, same value).
+on:
+  schedule:
+    - cron: "0 8 * * *" # 08:00 UTC daily
+  workflow_dispatch: {} # manual "Run workflow" button for testing
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger follow-up check
+        run: |
+          curl -sf -X POST "${{ secrets.SITE_URL }}/api/cron/lead-follow-ups" \
+            -H "Authorization: Bearer ${{ secrets.LEAD_CRON_SECRET }}"

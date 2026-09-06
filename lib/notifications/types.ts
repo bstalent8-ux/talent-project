@@ -27,6 +27,7 @@ export const NOTIFICATION_TYPES = [
   "TESTIMONIAL_SUBMITTED",
   "BRAND_MOMENT_SUBMITTED",
   "SUPPORT_TICKET_SUBMITTED",
+  "LEAD_FOLLOW_UP_DUE",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -46,6 +47,7 @@ export interface NotificationMetadata {
   brand_id?:       string;
   talent_id?:      string;
   subscription_id?: string;
+  lead_id?:        string;
   /** Legacy v1 fields, folded in by the 20260730 migration. */
   reference_id?:   string;
   reference_type?: string;
