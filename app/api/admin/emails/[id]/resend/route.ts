@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/auth/require-admin";
+import { requirePermission } from "@/lib/auth/permissions";
 import { adminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { privateNoStoreHeaders } from "@/lib/cache";
@@ -13,6 +14,8 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requirePermission("emails", "create");
+  if (denied) return denied;
   const admin = await getAdminUser();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { requirePermission } from "@/lib/auth/permissions";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -13,14 +14,24 @@ async function requireAdmin() {
   return data?.role === "admin" ? user : null;
 }
 
+// Shared block/suspend/unblock action for BOTH talents and brands (one
+// profiles-table route, no type split) — so the permission gate has to look
+// up which tab this specific target belongs to before deciding, rather than
+// assuming one resourceKey for the whole route.
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ profileId: string }> }
 ) {
+  const { profileId } = await params;
+
+  const { data: target } = await adminClient.from("profiles").select("role").eq("id", profileId).single();
+  const resourceKey = target?.role === "brand" ? "brands" : "talents";
+  const denied = await requirePermission(resourceKey, "update");
+  if (denied) return denied;
+
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { profileId } = await params;
   const { action, reason } = await req.json() as { action: string; reason?: string };
 
   const updates: Record<string, unknown> = {};

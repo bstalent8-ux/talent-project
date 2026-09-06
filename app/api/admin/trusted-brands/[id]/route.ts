@@ -10,6 +10,7 @@ import {
   setTrustedBrandActive,
   updateTrustedBrand,
 } from "@/features/trusted-brands/trusted-brands.service";
+import { requirePermission } from "@/lib/auth/permissions";
 
 const trustedBrandSchema = z.object({
   name: z.string().trim().min(1),
@@ -42,6 +43,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requirePermission("trustedBrands", "update");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
@@ -75,6 +78,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requirePermission("trustedBrands", "delete");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { privateNoStoreHeaders } from "@/lib/cache";
+import { requirePermission } from "@/lib/auth/permissions";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -20,6 +21,8 @@ async function requireAdmin() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("trustedBrands", "create");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 

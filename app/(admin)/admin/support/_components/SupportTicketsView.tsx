@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
+import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
@@ -71,6 +72,8 @@ function hrefFor(page: number, status: string) {
 
 export default function SupportTicketsView({ tickets, total, page, pageSize, status, emailConfigured }: Props) {
   const { dark, lang } = useSite();
+  const permissions = useAdminPermissions();
+  const canDelete = permissions === null || !!permissions.support?.canDelete;
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
@@ -180,14 +183,16 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                         {new Date(v.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}
                       </td>
                       <td style={{ ...cellStyle, width: 1 }}>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setPendingDelete(v); }}
-                          title={t.delete}
-                          aria-label={t.delete}
-                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-error)", display: "flex", padding: 4 }}
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        {canDelete && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setPendingDelete(v); }}
+                            title={t.delete}
+                            aria-label={t.delete}
+                            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-error)", display: "flex", padding: 4 }}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -325,15 +330,17 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
               >
                 {t.send}
               </button>
-              <button
-                disabled={saving}
-                onClick={() => setPendingDelete(selected)}
-                title={t.delete}
-                aria-label={t.delete}
-                style={{ marginInlineStart: "auto", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--color-error)", backgroundColor: "transparent", color: "var(--color-error)", display: "flex", cursor: "pointer" }}
-              >
-                <Trash2 size={15} />
-              </button>
+              {canDelete && (
+                <button
+                  disabled={saving}
+                  onClick={() => setPendingDelete(selected)}
+                  title={t.delete}
+                  aria-label={t.delete}
+                  style={{ marginInlineStart: "auto", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--color-error)", backgroundColor: "transparent", color: "var(--color-error)", display: "flex", cursor: "pointer" }}
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
             </div>
           </div>
         </div>

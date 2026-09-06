@@ -12,6 +12,7 @@ export const runtime = "edge";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/auth/permissions";
 import { profileConfigService } from "@/features/profiles/services/profile-config.service";
 import { reorderSchema } from "@/features/profiles/validation/config-schemas";
 import { toErrorResponse } from "@/features/profiles/errors/http";
@@ -22,6 +23,8 @@ const scopedReorderSchema = reorderSchema.extend({
 });
 
 export async function PATCH(req: NextRequest) {
+  const denied = await requirePermission("profileConfig", "update");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 

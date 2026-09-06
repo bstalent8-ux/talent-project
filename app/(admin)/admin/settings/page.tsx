@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { useEffect, useRef, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import { useSite } from "@/contexts/SiteContext";
+import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import { Camera, Save, User } from "lucide-react";
 
 const TX = {
@@ -69,6 +70,8 @@ interface ProfileData {
 
 export default function AdminSettingsPage() {
   const { dark, lang } = useSite();
+  const permissions = useAdminPermissions();
+  const isSuperAdmin = permissions === null;
   const t = TX[lang];
   const ar = lang === "ar";
   const fileRef = useRef<HTMLInputElement>(null);
@@ -342,7 +345,11 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* Temporary — promote any user to admin. Remove this card + the
-            /api/admin/promote-admin route once you don't need it. */}
+            /api/admin/promote-admin route once you don't need it.
+            Super-admin only — the route itself now enforces this too
+            (requireSuperAdmin), this just keeps a restricted admin from
+            seeing a button that would 403 anyway. */}
+        {isSuperAdmin && (
         <div style={{
           marginTop: 20, backgroundColor: CARD, border: `1px solid ${BORDER}`,
           borderRadius: 20, overflow: "hidden",
@@ -385,6 +392,7 @@ export default function AdminSettingsPage() {
             )}
           </div>
         </div>
+        )}
       </div>
     </AdminShell>
   );

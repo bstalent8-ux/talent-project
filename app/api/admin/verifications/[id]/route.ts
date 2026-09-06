@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { notifyProfileApproved, notifyProfileRejected } from "@/lib/notifications/events";
 import { sendEmail } from "@/lib/email/send";
 import { verificationApprovedEmail } from "@/lib/email/templates/verification-approved";
+import { requirePermission } from "@/lib/auth/permissions";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -20,6 +21,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requirePermission("verifications", "update");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { setCategoryActive, upsertCategory } from "@/features/categories/services/category.service";
+import { requirePermission } from "@/lib/auth/permissions";
 
 const categorySchema = z.object({
   id: z.string().trim().min(2),
@@ -39,6 +40,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requirePermission("categories", "update");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

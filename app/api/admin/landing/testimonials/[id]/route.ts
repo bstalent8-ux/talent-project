@@ -7,6 +7,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { createNotification } from "@/lib/notifications/events";
 import { withI18n } from "@/lib/notifications/templates";
 import { CACHE_TAGS } from "@/lib/cache";
+import { requirePermission } from "@/lib/auth/permissions";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -20,6 +21,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requirePermission("testimonials", "update");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

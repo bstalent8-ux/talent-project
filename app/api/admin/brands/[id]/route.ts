@@ -6,6 +6,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { notifyProfileApproved, notifyProfileRejected } from "@/lib/notifications/events";
 import { invalidateBrand, privateNoStoreHeaders } from "@/lib/cache";
+import { requirePermission } from "@/lib/auth/permissions";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -19,6 +20,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requirePermission("brands", "update");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 

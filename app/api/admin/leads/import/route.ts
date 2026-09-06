@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/auth/require-admin";
+import { requirePermission } from "@/lib/auth/permissions";
 import { importLeads } from "@/features/leads/services/leads.service";
 import { csvRowsToRecords, mapRowToLeadIdentity, parseCsv, toSheetCsvExportUrl } from "@/lib/leads/csv";
 
@@ -12,6 +13,8 @@ import { csvRowsToRecords, mapRowToLeadIdentity, parseCsv, toSheetCsvExportUrl }
 //    CSV export of a Google Sheet link and parses it here.
 // Both funnel into the same column-name heuristic + importLeads() dedupe.
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("leads", "create");
+  if (denied) return denied;
   const admin = await getAdminUser();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 

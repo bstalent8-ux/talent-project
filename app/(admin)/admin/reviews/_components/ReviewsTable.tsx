@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
+import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import EmptyState from "@/components/admin/EmptyState";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import AdminPagination from "@/components/admin/AdminPagination";
@@ -61,6 +62,8 @@ function hrefFor(page: number, status: string) {
 
 export default function ReviewsTable({ reviews, total, page, pageSize, status }: Props) {
   const { dark, lang } = useSite();
+  const permissions = useAdminPermissions();
+  const canDelete = permissions === null || !!permissions.reviews?.canDelete;
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
@@ -177,11 +180,13 @@ export default function ReviewsTable({ reviews, total, page, pageSize, status }:
                               <XCircle size={16} />
                             </button>
                           )}
-                          <button onClick={() => setModal({ action: "delete", id: r.id })}
-                            title={t.delete}
-                            style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", padding: 4, borderRadius: 6, display: "flex" }}>
-                            <Trash2 size={16} />
-                          </button>
+                          {canDelete && (
+                            <button onClick={() => setModal({ action: "delete", id: r.id })}
+                              title={t.delete}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", padding: 4, borderRadius: 6, display: "flex" }}>
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

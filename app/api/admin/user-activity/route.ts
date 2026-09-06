@@ -15,6 +15,7 @@ import {
   fetchAdminTrafficSources,
   type UserEventName,
 } from "@/features/admin/services/admin.service";
+import { requirePermission } from "@/lib/auth/permissions";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -31,6 +32,8 @@ async function requireAdmin() {
 }
 
 export async function GET(req: NextRequest) {
+  const denied = await requirePermission("userActivity", "read");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 

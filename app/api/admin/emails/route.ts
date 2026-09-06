@@ -1,7 +1,8 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, getAdminUser } from "@/lib/auth/require-admin";
+import { getAdminUser } from "@/lib/auth/require-admin";
+import { requirePermission } from "@/lib/auth/permissions";
 import { adminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { privateNoStoreHeaders } from "@/lib/cache";
@@ -11,7 +12,7 @@ import { privateNoStoreHeaders } from "@/lib/cache";
 // so the client view can refetch after a manual send/resend without a
 // full page reload.
 export async function GET(req: NextRequest) {
-  const denied = await requireAdmin();
+  const denied = await requirePermission("emails", "read");
   if (denied) return denied;
 
   const { fetchAdminEmailLogPage } = await import("@/features/admin/services/admin.service");
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
 // Exactly one of recipientId/to must be given; recipientId resolves the
 // real address server-side so the admin never has to know/paste it.
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("emails", "create");
+  if (denied) return denied;
   const admin = await getAdminUser();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 

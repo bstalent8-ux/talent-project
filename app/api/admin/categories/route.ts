@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { fetchCategories, upsertCategory } from "@/features/categories/services/category.service";
+import { requirePermission } from "@/lib/auth/permissions";
 
 const categorySchema = z.object({
   id: z.string().trim().min(2),
@@ -31,6 +32,8 @@ async function requireAdmin() {
 }
 
 export async function GET() {
+  const denied = await requirePermission("categories", "read");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -39,6 +42,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("categories", "create");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

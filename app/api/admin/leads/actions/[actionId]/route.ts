@@ -1,13 +1,13 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth/require-admin";
+import { requirePermission } from "@/lib/auth/permissions";
 import { updateActionFollowUp } from "@/features/leads/services/leads.service";
 
 // Editable by any admin, not just the action's author — per the leads-CRM
 // discussion, follow-up dates are a shared team schedule, not personal.
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ actionId: string }> }) {
-  const denied = await requireAdmin();
+  const denied = await requirePermission("leads", "update");
   if (denied) return denied;
 
   const { actionId } = await params;

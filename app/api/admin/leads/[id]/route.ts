@@ -1,7 +1,7 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth/require-admin";
+import { requirePermission } from "@/lib/auth/permissions";
 import {
   deleteLead,
   fetchLeadById,
@@ -12,7 +12,7 @@ import {
 import { LEAD_STATUSES } from "@/features/leads/types";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const denied = await requireAdmin();
+  const denied = await requirePermission("leads", "read");
   if (denied) return denied;
 
   const { id } = await params;
@@ -24,7 +24,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 // Handles two distinct edits: changing the pipeline status, and resolving a
 // possible-duplicate flag (merge into the earlier lead, or dismiss it).
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const denied = await requireAdmin();
+  const denied = await requirePermission("leads", "update");
   if (denied) return denied;
 
   const { id } = await params;
@@ -65,7 +65,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const denied = await requireAdmin();
+  const denied = await requirePermission("leads", "delete");
   if (denied) return denied;
 
   const { id } = await params;

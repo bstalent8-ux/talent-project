@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, Pencil, Trash2, Mail, Phone, AtSign, AlertTriangle } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
@@ -61,6 +62,8 @@ function hrefFor(page: number, status: string, pageSize: number) {
 
 export default function LeadsTable({ leads, total, page, pageSize, status }: Props) {
   const { dark, lang } = useSite();
+  const permissions = useAdminPermissions();
+  const canDelete = permissions === null || !!permissions.leads?.canDelete;
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
@@ -202,14 +205,16 @@ export default function LeadsTable({ leads, total, page, pageSize, status }: Pro
                           >
                             <Pencil size={16} />
                           </button>
-                          <button
-                            type="button"
-                            title={t.delete}
-                            onClick={() => setDeleteTarget(lead)}
-                            style={{ display: "flex", background: "none", border: "none", padding: 0, cursor: "pointer", color: "#EF4444" }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {canDelete && (
+                            <button
+                              type="button"
+                              title={t.delete}
+                              onClick={() => setDeleteTarget(lead)}
+                              style={{ display: "flex", background: "none", border: "none", padding: 0, cursor: "pointer", color: "#EF4444" }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

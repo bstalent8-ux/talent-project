@@ -6,6 +6,8 @@ import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { createClient } from "@/lib/supabase/client";
+import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
+import type { AdminResourceKey, PermissionMap } from "@/lib/auth/admin-resources";
 import {
   Activity,
   BarChart3,
@@ -19,6 +21,7 @@ import {
   Contact2,
   Handshake,
   History,
+  KeyRound,
   LayoutDashboard,
   LayoutGrid,
   LifeBuoy,
@@ -58,6 +61,7 @@ const TX = {
     profileConfig: "إعدادات الملفات",
     notifications: "الإشعارات",
     notificationsLog: "سجل الإشعارات",
+    roles: "الأدوار والصلاحيات",
     settings: "الإعدادات",
     logout: "تسجيل الخروج",
     modeExpanded: "مفتوحة دائماً",
@@ -90,6 +94,7 @@ const TX = {
     profileConfig: "Profile Config",
     notifications: "Notifications",
     notificationsLog: "Notification Log",
+    roles: "Roles & Permissions",
     settings: "Settings",
     logout: "Logout",
     modeExpanded: "Always expanded",
@@ -130,6 +135,7 @@ const NAV_ITEM = {
   categories:       { key: "categories",       href: "/admin/categories",         icon: ListTree },
   packages:         { key: "packages",         href: "/admin/packages",           icon: PackageIcon },
   profileConfig:    { key: "profileConfig",    href: "/admin/profile-config",     icon: SlidersHorizontal },
+  roles:            { key: "roles",            href: "/admin/roles",              icon: KeyRound },
   settings:         { key: "settings",         href: "/admin/settings",           icon: Settings },
 } as const;
 
@@ -153,8 +159,33 @@ const NAV_STRUCTURE: NavEntry[] = [
     items: [NAV_ITEM.userActivity] },
   { type: "group", key: "contentGroup", labelKey: "groupContent", icon: LayoutGrid,
     items: [NAV_ITEM.testimonials, NAV_ITEM.brandMoments, NAV_ITEM.categories, NAV_ITEM.packages, NAV_ITEM.profileConfig] },
+  { type: "item", item: NAV_ITEM.roles },
   { type: "item", item: NAV_ITEM.settings },
 ];
+
+/**
+ * Filters the nav down to what this admin can actually see. `permissions`
+ * comes from the server (AdminPermissionsContext, set by the (admin) layout)
+ * so this is correct on the very first render — never a wider flash that
+ * narrows down a beat later. `permissions === null` means full access
+ * (unrestricted admin) — everything shows, "roles" included. A non-null map
+ * hides any item/group with no read permission for its key, and "roles" is
+ * ALWAYS hidden for a restricted admin regardless of their matrix — only an
+ * unrestricted admin manages roles (see requireSuperAdmin()), so granting
+ * "roles" read in the matrix would be meaningless and is deliberately not
+ * even an option (it isn't in ADMIN_RESOURCE_KEYS).
+ */
+function filterNavStructure(structure: NavEntry[], permissions: PermissionMap | null): NavEntry[] {
+  if (permissions === null) return structure;
+
+  const canSee = (item: NavItemDef) => item.key === "roles" ? false : !!permissions[item.key as AdminResourceKey]?.canRead;
+
+  return structure.flatMap((entry): NavEntry[] => {
+    if (entry.type === "item") return canSee(entry.item) ? [entry] : [];
+    const items = entry.items.filter(canSee);
+    return items.length > 0 ? [{ ...entry, items }] : [];
+  });
+}
 
 /** Collapsed-rail view ignores grouping entirely — just every item's icon, in
  * the same priority order, same as before this change. */
@@ -188,6 +219,10 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
 
   const [adminName, setAdminName] = useState<string | null>(null);
   const [adminAvatar, setAdminAvatar] = useState<string | null>(null);
+  // Server-computed by the (admin) layout and handed down via context — see
+  // AdminPermissionsContext.tsx. Correct on the very first render, no
+  // client fetch delay and nothing to narrow down from after a wider flash.
+  const permissions = useAdminPermissions();
   const [isHovering, setIsHovering] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null);
@@ -256,6 +291,8 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
       })
       .catch(() => {});
   }, []);
+
+  const visibleNavStructure = filterNavStructure(NAV_STRUCTURE, permissions);
 
   // The sidebar shell is deliberately always dark navy, regardless of
   // [data-theme] — a fixed nav rail, not a themed surface (same class of
@@ -471,8 +508,8 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
 
         <nav style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 8px" }}>
           {collapsed
-            ? flattenNavItems(NAV_STRUCTURE).map((item) => renderNavLink(item, false))
-            : NAV_STRUCTURE.map((entry) => {
+            ? flattenNavItems(visibleNavStructure).map((item) => renderNavLink(item, false))
+            : visibleNavStructure.map((entry) => {
                 if (entry.type === "item") return renderNavLink(entry.item, false);
 
                 const GroupIcon = entry.icon;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Mail, Phone, AtSign, AlertTriangle, Clock, Pencil, Trash2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import { LEAD_ACTION_TYPES, LEAD_STATUSES, type LeadWithActions } from "@/features/leads/types";
 
@@ -58,6 +59,8 @@ const ACTION_LABEL_KEY: Record<string, "call" | "message" | "email" | "meeting" 
 
 export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
   const { dark, lang } = useSite();
+  const permissions = useAdminPermissions();
+  const canDelete = permissions === null || !!permissions.leads?.canDelete;
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
@@ -173,13 +176,15 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
         <Link href="/admin/leads" style={{ display: "flex", alignItems: "center", gap: 6, color: MUTED, fontSize: 13, textDecoration: "none", width: "fit-content" }}>
           <BackIcon size={14} />{t.back}
         </Link>
-        <button
-          type="button"
-          onClick={() => setDeleteOpen(true)}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "#EF4444", fontSize: 12.5, fontWeight: 600 }}
-        >
-          <Trash2 size={14} />{t.deleteLead}
-        </button>
+        {canDelete && (
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "#EF4444", fontSize: 12.5, fontWeight: 600 }}
+          >
+            <Trash2 size={14} />{t.deleteLead}
+          </button>
+        )}
       </div>
 
       {lead.possibleDuplicateOf && (

@@ -1,12 +1,13 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, getAdminUser } from "@/lib/auth/require-admin";
+import { getAdminUser } from "@/lib/auth/require-admin";
+import { requirePermission } from "@/lib/auth/permissions";
 import { createLead, fetchLeadsPage } from "@/features/leads/services/leads.service";
 import type { LeadIdentityInput } from "@/features/leads/types";
 
 export async function GET(req: NextRequest) {
-  const denied = await requireAdmin();
+  const denied = await requirePermission("leads", "read");
   if (denied) return denied;
 
   const sp = req.nextUrl.searchParams;
@@ -22,6 +23,8 @@ export async function GET(req: NextRequest) {
 // /api/admin/leads/import instead, which calls the same createLead()
 // underneath.
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("leads", "create");
+  if (denied) return denied;
   const admin = await getAdminUser();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 

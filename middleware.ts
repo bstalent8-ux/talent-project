@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { fetchPermissionsForRoleId } from "@/lib/auth/get-admin-permissions";
+import { firstReadableRoute, resolveResourceKeyForPath } from "@/lib/auth/admin-resources";
 
 // Paths that are always accessible regardless of account status
 const ALWAYS_ALLOWED = ["/blocked", "/login", "/register", "/forgot-password", "/system_design.html"];
@@ -105,7 +107,7 @@ export async function middleware(request: NextRequest) {
   // client-construction code in its own separate edge bundle.
   const { data: profile } = await adminClient
     .from("profiles")
-    .select("role, account_status, block_reason")
+    .select("role, account_status, block_reason, admin_role_id")
     .eq("id", user.id)
     .single();
 
@@ -143,6 +145,29 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/home";
     return NextResponse.redirect(url);
+  }
+
+  // A restricted admin (admin_role_id set) is confined further, to only the
+  // tabs their role can read — same enforcement the API routes already do
+  // for mutations, extended here to page LOADS. Sidebar-hiding a link was
+  // never real protection on its own: this is what stops "type the URL
+  // directly" from bypassing it. `/admin/roles` and `/admin/no-access`
+  // aren't in ADMIN_ROUTE_MAP (resolveResourceKeyForPath returns null for
+  // them), so they fall through untouched — the roles page gates itself
+  // (requireSuperAdmin), and no-access must always be reachable or a
+  // zero-permission role would redirect in a loop.
+  if (!isApiPath && role === "admin" && profile?.admin_role_id && pathname.startsWith("/admin")) {
+    const resourceKey = resolveResourceKeyForPath(pathname);
+    if (resourceKey) {
+      // admin_role_id is already on `profile` from the query above — no need
+      // to look the same row up again.
+      const permissions = await fetchPermissionsForRoleId(profile.admin_role_id);
+      if (!permissions?.[resourceKey]?.canRead) {
+        const url = request.nextUrl.clone();
+        url.pathname = firstReadableRoute(permissions ?? {}) ?? "/admin/no-access";
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   // Talents can browse the job board but not post jobs or review applicants

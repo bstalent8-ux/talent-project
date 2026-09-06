@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/auth/require-admin";
+import { requirePermission } from "@/lib/auth/permissions";
 import { adminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { completeProfileReminderEmail } from "@/lib/email/templates/complete-profile-reminder";
@@ -11,6 +12,8 @@ import { completeProfileReminderEmail } from "@/lib/email/templates/complete-pro
 // (scripts/_tmp_send_incomplete_profile_emails and friends). Accepts either
 // a single userId or a userIds array so the client doesn't need two routes.
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("dashboard", "create");
+  if (denied) return denied;
   const admin = await getAdminUser();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 

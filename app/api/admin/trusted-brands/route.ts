@@ -10,6 +10,7 @@ import {
   fetchAdminTrustedBrands,
   reorderTrustedBrands,
 } from "@/features/trusted-brands/trusted-brands.service";
+import { requirePermission } from "@/lib/auth/permissions";
 
 const trustedBrandSchema = z.object({
   name: z.string().trim().min(1),
@@ -39,6 +40,8 @@ async function requireAdmin() {
 }
 
 export async function GET() {
+  const denied = await requirePermission("trustedBrands", "read");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
@@ -54,6 +57,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("trustedBrands", "create");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 

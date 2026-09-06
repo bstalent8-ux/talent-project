@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { sendAdminAnnouncement } from "@/lib/notifications/events";
 import { parseAnnouncement, parseAudience } from "@/lib/notifications/validate";
+import { requirePermission } from "@/lib/auth/permissions";
 
 /**
  * The admin group layout only guards *pages*. Every /api/admin route has to
@@ -26,6 +27,8 @@ async function requireAdmin() {
 
 // POST /api/admin/notifications — send an announcement
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("notifications", "create");
+  if (denied) return denied;
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
 
@@ -63,6 +66,8 @@ export async function POST(req: NextRequest) {
 
 // GET /api/admin/notifications?page=1 — broadcast history, newest first
 export async function GET(req: NextRequest) {
+  const denied = await requirePermission("notifications", "read");
+  if (denied) return denied;
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
 

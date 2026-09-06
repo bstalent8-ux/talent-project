@@ -1,21 +1,19 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requirePermission } from "@/lib/auth/permissions";
 
 // GET /api/admin/notifications/recipients?q=ahmed
 // Feeds the composer's user picker (single / multiple modes) and its role +
 // category dropdowns. Returns at most 20 users — the picker is a search box,
-// not a full directory dump.
+// not a full directory dump. Gated the same as the composer page itself
+// (notifications:read) — this was previously reachable by any admin
+// regardless of role, a minor info-disclosure gap (names/handles/avatars)
+// for a restricted admin with no notifications access at all.
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-
-  const { data: profile } = await adminClient
-    .from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const denied = await requirePermission("notifications", "read");
+  if (denied) return denied;
 
   const q = (new URL(req.url).searchParams.get("q") ?? "").trim();
 

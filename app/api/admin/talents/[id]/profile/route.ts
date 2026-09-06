@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
+import { requirePermission } from "@/lib/auth/permissions";
 import { ProfileError, profileService } from "@/features/profiles";
 
 async function requireAdmin() {
@@ -19,6 +20,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requirePermission("talents", "update");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 

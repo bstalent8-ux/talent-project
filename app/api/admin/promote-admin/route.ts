@@ -6,20 +6,19 @@ export const runtime = 'edge';
 // app/(admin)/admin/settings/page.tsx) once you don't need it anymore.
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireSuperAdmin } from "@/lib/auth/permissions";
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-
-  const { data: requester } = await adminClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (requester?.role !== "admin") return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  // This mints a brand-new, UNRESTRICTED admin (no admin_role_id is set
+  // below, so the promoted account defaults to full access) — a plain
+  // "is this caller an admin" check let ANY admin, including one on a
+  // restricted RBAC role with zero tabs granted, promote an arbitrary
+  // handle to full-access admin and route straight around the whole
+  // permissions system. Only an unrestricted admin may do this, same gate
+  // as /admin/roles itself.
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
 
   const body = await req.json().catch(() => null);
   const handle = typeof body?.handle === "string" ? body.handle.trim().toLowerCase() : "";

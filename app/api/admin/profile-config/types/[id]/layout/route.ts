@@ -8,12 +8,15 @@ export const runtime = "edge";
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/auth/permissions";
 import { profileConfigService } from "@/features/profiles/services/profile-config.service";
 import { layoutSchema } from "@/features/profiles/validation/config-schemas";
 import { toErrorResponse } from "@/features/profiles/errors/http";
 import { privateNoStoreHeaders } from "@/lib/cache";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await requirePermission("profileConfig", "read");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 
@@ -28,6 +31,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await requirePermission("profileConfig", "update");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 

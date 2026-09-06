@@ -10,6 +10,7 @@ import {
   upsertAdminPackage,
 } from "@/features/packages/services/package.service";
 import { invalidatePackages, privateNoStoreHeaders } from "@/lib/cache";
+import { requirePermission } from "@/lib/auth/permissions";
 
 const planSchema = z.object({
   duration_months: z.coerce.number().int().positive(),
@@ -47,6 +48,8 @@ async function requireAdmin() {
 }
 
 export async function GET() {
+  const denied = await requirePermission("packages", "read");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
@@ -65,6 +68,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("packages", "create");
+  if (denied) return denied;
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 

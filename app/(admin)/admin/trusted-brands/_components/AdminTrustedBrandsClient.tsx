@@ -5,6 +5,7 @@ import { type DragEvent, useMemo, useRef, useState } from "react";
 import { ExternalLink, GripVertical, ImagePlus, Trash2 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import { useSite } from "@/contexts/SiteContext";
+import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import type { TrustedBrand } from "@/features/trusted-brands/types";
 import styles from "./AdminTrustedBrands.module.css";
 
@@ -46,6 +47,8 @@ function isValidUrl(value: string) {
 
 export default function AdminTrustedBrandsClient({ initialBrands }: { initialBrands: TrustedBrand[] }) {
   const { lang } = useSite();
+  const permissions = useAdminPermissions();
+  const canDelete = permissions === null || !!permissions.trustedBrands?.canDelete;
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [brands, setBrands] = useState(initialBrands);
   const [selectedId, setSelectedId] = useState<string | null>(initialBrands[0]?.id ?? null);
@@ -300,10 +303,12 @@ export default function AdminTrustedBrandsClient({ initialBrands }: { initialBra
                 >
                   {selected.is_active ? tx.deactivate : tx.activate}
                 </button>
-                <button className={styles.dangerButton} disabled={saving} type="button" onClick={deleteBrand}>
-                  <Trash2 size={15} />
-                  {tx.delete}
-                </button>
+                {canDelete && (
+                  <button className={styles.dangerButton} disabled={saving} type="button" onClick={deleteBrand}>
+                    <Trash2 size={15} />
+                    {tx.delete}
+                  </button>
+                )}
               </div>
             ) : null}
           </div>

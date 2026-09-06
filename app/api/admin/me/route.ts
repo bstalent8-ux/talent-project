@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { getAdminPermissions } from "@/lib/auth/permissions";
 
 export async function GET() {
   const denied = await requireAdmin();
@@ -15,11 +16,15 @@ export async function GET() {
 
   const { data } = await adminClient
     .from("profiles")
-    .select("id, full_name, handle, avatar_url, city, bio, role")
+    .select("id, full_name, handle, avatar_url, city, bio, role, admin_role_id")
     .eq("id", user.id)
     .single();
 
-  return NextResponse.json({ profile: data, email: user.email });
+  // `null` = full access (unrestricted admin) — the sidebar shows every
+  // tab in that case; a non-null map hides any tab with no read permission.
+  const permissions = await getAdminPermissions(user.id);
+
+  return NextResponse.json({ profile: data, email: user.email, permissions });
 }
 
 export async function PATCH(req: NextRequest) {

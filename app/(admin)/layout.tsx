@@ -4,6 +4,8 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { getAdminPermissions } from "@/lib/auth/get-admin-permissions";
+import { AdminPermissionsProvider } from "@/contexts/AdminPermissionsContext";
 
 export default async function AdminGroupLayout({ children }: { children: React.ReactNode }) {
   // getUser() revalidates the token with Supabase — more secure than getSession()
@@ -20,11 +22,15 @@ export default async function AdminGroupLayout({ children }: { children: React.R
     .select("role")
     .eq("id", user.id)
     .single();
-    console.log("User profile:", profile);
 
   if (profile?.role !== "admin") {
     redirect("/");
   }
 
-  return <>{children}</>;
+  // Computed server-side and handed down via context so a restricted
+  // admin's sidebar never has a wider first frame to narrow down from —
+  // see AdminPermissionsContext.tsx.
+  const permissions = await getAdminPermissions(user.id);
+
+  return <AdminPermissionsProvider value={permissions}>{children}</AdminPermissionsProvider>;
 }

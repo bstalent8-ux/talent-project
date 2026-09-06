@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
+import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import StatusBadge from "@/components/admin/StatusBadge";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import EmptyState from "@/components/admin/EmptyState";
@@ -79,6 +80,8 @@ function hrefFor(page: number, status: string, pageSize: number) {
 
 export default function TalentsTable({ talents, total, page, pageSize, status }: Props) {
   const { dark, lang } = useSite();
+  const permissions = useAdminPermissions();
+  const canDelete = permissions === null || !!permissions.talents?.canDelete;
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
@@ -278,7 +281,7 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
                         {talent.status !== "rejected" && (
                           actionBtn(() => setModal({ type: "reject", talent }), <XCircle size={16} />, t.reject, "#EF4444")
                         )}
-                        {actionBtn(() => setModal({ type: "delete", talent }), <Trash2 size={16} />, t.delete, "#EF4444")}
+                        {canDelete && actionBtn(() => setModal({ type: "delete", talent }), <Trash2 size={16} />, t.delete, "#EF4444")}
                       </div>
                     </td>
                   </tr>
