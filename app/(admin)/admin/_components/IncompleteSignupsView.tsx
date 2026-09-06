@@ -20,6 +20,7 @@ const TX = {
     sendAll: "ابعت لكل اللي لسه متبعتش", sendingAll: "بيتبعت للكل...",
     preview: "معاينة القالب", hidePreview: "إخفاء المعاينة",
     subject: "الموضوع",
+    sendFailed: "فشل الإرسال", retry: "إعادة المحاولة",
     none: "مفيش حد جديد ناقصه صور دلوقتي",
     close: "إخفاء الكارت", reopen: "إظهار الكارت",
     pending: "قيد الانتظار", approved: "معتمد", rejected: "مرفوض", suspended: "موقوف",
@@ -35,6 +36,7 @@ const TX = {
     sendAll: "Send to everyone not reminded yet", sendingAll: "Sending to all...",
     preview: "Preview template", hidePreview: "Hide preview",
     subject: "Subject",
+    sendFailed: "Send failed", retry: "Retry",
     none: "No one new is missing photos right now",
     close: "Hide card", reopen: "Show card",
     pending: "Pending", approved: "Approved", rejected: "Rejected", suspended: "Suspended",
@@ -64,6 +66,10 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
 
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+  // Per-row error message from the last failed attempt — e.g. Resend
+  // rejecting a malformed address (422). Cleared as soon as a retry is
+  // kicked off, so a stale error never lingers next to a fresh attempt.
+  const [failedInfo, setFailedInfo] = useState<Record<string, string>>({});
   const [sendingAll, setSendingAll] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   // Which row is expanded to show the account's email + exact registration
@@ -98,29 +104,72 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
 
   async function sendOne(userId: string) {
     setSendingId(userId);
-    await fetch("/api/admin/dashboard/complete-profile-reminder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    }).catch(() => {});
+    setFailedInfo((prev) => {
+      if (!(userId in prev)) return prev;
+      const next = { ...prev };
+      delete next[userId];
+      return next;
+    });
+    try {
+      const res = await fetch("/api/admin/dashboard/complete-profile-reminder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json().catch(() => null) as { results?: { userId: string; ok: boolean; error?: string }[] } | null;
+      const result = data?.results?.find((r) => r.userId === userId);
+      if (res.ok && result?.ok) {
+        setSentIds((prev) => new Set(prev).add(userId));
+      } else {
+        setFailedInfo((prev) => ({ ...prev, [userId]: result?.error ?? `HTTP ${res.status}` }));
+      }
+    } catch {
+      setFailedInfo((prev) => ({ ...prev, [userId]: "network error" }));
+    }
     setSendingId(null);
-    setSentIds((prev) => new Set(prev).add(userId));
     router.refresh();
   }
 
   async function sendAll() {
     setSendingAll(true);
-    await fetch("/api/admin/dashboard/complete-profile-reminder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userIds: notReminded.map((s) => s.userId) }),
-    }).catch(() => {});
-    setSendingAll(false);
-    setSentIds((prev) => {
-      const next = new Set(prev);
-      for (const s of notReminded) next.add(s.userId);
+    const targetIds = notReminded.map((s) => s.userId);
+    setFailedInfo((prev) => {
+      const next = { ...prev };
+      for (const id of targetIds) delete next[id];
       return next;
     });
+    try {
+      const res = await fetch("/api/admin/dashboard/complete-profile-reminder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: targetIds }),
+      });
+      const data = await res.json().catch(() => null) as { results?: { userId: string; ok: boolean; error?: string }[] } | null;
+      const results = data?.results ?? [];
+      const okIds = new Set(results.filter((r) => r.ok).map((r) => r.userId));
+      setSentIds((prev) => {
+        const next = new Set(prev);
+        for (const id of okIds) next.add(id);
+        return next;
+      });
+      const newFailures: Record<string, string> = {};
+      for (const r of results) {
+        if (!r.ok) newFailures[r.userId] = r.error ?? "send failed";
+      }
+      // A target with no matching result row at all (request never reached
+      // the server) still needs a visible failure, not silence.
+      for (const id of targetIds) {
+        if (!okIds.has(id) && !(id in newFailures)) newFailures[id] = `HTTP ${res.status}`;
+      }
+      setFailedInfo((prev) => ({ ...prev, ...newFailures }));
+    } catch {
+      setFailedInfo((prev) => {
+        const next = { ...prev };
+        for (const id of targetIds) next[id] = "network error";
+        return next;
+      });
+    }
+    setSendingAll(false);
     router.refresh();
   }
 
@@ -231,18 +280,27 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
                         {wasReminded ? (
                           <span style={{ color: "#00D26A", fontSize: 12, fontWeight: 700 }}>{t.sent}</span>
                         ) : (
-                          <button
-                            disabled={sendingId === s.userId || !s.email}
-                            onClick={() => sendOne(s.userId)}
-                            title={s.email ?? undefined}
-                            style={{
-                              display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
-                              border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: "var(--color-primary)",
-                              fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: sendingId === s.userId ? 0.7 : 1,
-                            }}
-                          >
-                            <Send size={12} />{sendingId === s.userId ? t.sending : t.sendOne}
-                          </button>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
+                            {failedInfo[s.userId] && (
+                              <span style={{ color: "#EF4444", fontSize: 11, fontWeight: 600 }} title={failedInfo[s.userId]}>
+                                {t.sendFailed}
+                              </span>
+                            )}
+                            <button
+                              disabled={sendingId === s.userId || !s.email}
+                              onClick={() => sendOne(s.userId)}
+                              title={s.email ?? undefined}
+                              style={{
+                                display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
+                                border: `1px solid ${failedInfo[s.userId] ? "#EF4444" : BORDER}`,
+                                backgroundColor: "transparent",
+                                color: failedInfo[s.userId] ? "#EF4444" : "var(--color-primary)",
+                                fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: sendingId === s.userId ? 0.7 : 1,
+                              }}
+                            >
+                              <Send size={12} />{sendingId === s.userId ? t.sending : failedInfo[s.userId] ? t.retry : t.sendOne}
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
