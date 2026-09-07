@@ -51,7 +51,8 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
         zIndex: 30,
       }}
     >
-      {/* ── Left: Menu toggle ── */}
+      {/* ── Left: Menu toggle + language/theme (kept on the sidebar side, out
+          of the notification panel's way on the right) ── */}
       <button
         onClick={onMenuClick}
         title={ar ? "القائمة" : "Menu"}
@@ -65,15 +66,8 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
         <Menu size={20} />
       </button>
 
-      {/* The admin's own incoming notifications — not the "send an
-          announcement" composer (that's AdminSidebar's dedicated
-          /admin/notifications nav entry). Same bell/dropdown every other
-          surface uses. NotificationBell's styling reads the --nav-* tokens
-          that Navbar's own dark/lightChrome wrapper defines — replicate
-          that scope here since AdminTopbar isn't the Navbar. */}
-      <span className={dark ? chromeStyles.darkChrome : chromeStyles.lightChrome}>
-        <NotificationBell viewAllHref="/admin/notifications-feed" />
-      </span>
+      {iconBtn(toggleLang, <Globe size={17} />, ar ? "English" : "عربي")}
+      {iconBtn(toggleMode, dark ? <Sun size={17} /> : <Moon size={17} />, ar ? "تبديل المظهر" : "Toggle theme")}
 
       {/* ── Center: Title (flex: 1 pushes right group to edge) ── */}
       <h1 style={{
@@ -83,8 +77,19 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
         {title}
       </h1>
 
-      {/* ── Right: Search + actions ── */}
+      {/* ── Right: Bell then search (search stays the very last element) ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        {/* The admin's own incoming notifications — not the "send an
+            announcement" composer (that's AdminSidebar's dedicated
+            /admin/notifications nav entry). Same bell/dropdown every other
+            surface uses. NotificationBell's styling reads the --nav-*
+            tokens that Navbar's own dark/lightChrome wrapper defines —
+            replicate that scope here since AdminTopbar isn't the Navbar.
+            `align="right"` keeps the panel opening into open canvas. */}
+        <span className={dark ? chromeStyles.darkChrome : chromeStyles.lightChrome}>
+          <NotificationBell viewAllHref="/admin/notifications-feed" align="right" />
+        </span>
+
         {/* Search */}
         <div style={{ position: "relative" }} className="admin-search-wrap">
           <Search
@@ -109,9 +114,6 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
             }}
           />
         </div>
-
-        {iconBtn(toggleLang, <Globe size={17} />, ar ? "English" : "عربي")}
-        {iconBtn(toggleMode, dark ? <Sun size={17} /> : <Moon size={17} />, ar ? "تبديل المظهر" : "Toggle theme")}
       </div>
 
       <style>{`

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import { useNotifications } from "@/hooks/notifications";
@@ -10,9 +10,14 @@ import styles from "@/components/SiteChrome.module.css";
 interface Props {
   /** Forwarded to NotificationDropdown — see its own doc comment. */
   viewAllHref?: string;
+  /** "auto" (default) opens toward the language's reading-start side, same
+   *  as ever. "right" always opens toward the screen's right edge — for a
+   *  bell that sits right next to a fixed left sidebar (AdminTopbar), so
+   *  the panel grows into open canvas instead of over the sidebar. */
+  align?: "auto" | "right";
 }
 
-export default function NotificationBell({ viewAllHref }: Props) {
+export default function NotificationBell({ viewAllHref, align = "auto" }: Props) {
   const { lang } = useSite();
   const {
     notifications,
@@ -23,6 +28,7 @@ export default function NotificationBell({ viewAllHref }: Props) {
     deleteNotification,
   } = useNotifications();
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const badgeCount = unreadCount > 99 ? "99+" : unreadCount;
   const label = lang === "ar" ? "الإشعارات" : "Notifications";
@@ -50,6 +56,7 @@ export default function NotificationBell({ viewAllHref }: Props) {
   return (
     <div style={{ position: "relative", display: "inline-flex" }}>
       <button
+        ref={buttonRef}
         onClick={() => setOpen((o) => !o)}
         aria-label={label}
         aria-expanded={open}
@@ -75,6 +82,8 @@ export default function NotificationBell({ viewAllHref }: Props) {
           onDelete={deleteNotification}
           onClose={() => setOpen(false)}
           viewAllHref={viewAllHref}
+          anchorEl={buttonRef.current}
+          align={align}
         />
       )}
     </div>

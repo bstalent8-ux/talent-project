@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { BellOff } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import type { Notification } from "@/lib/notifications/types";
 import NotificationItem from "./NotificationItem";
+
+const PANEL_WIDTH = 360;
+const VIEWPORT_MARGIN = 12;
 
 interface Props {
   notifications: Notification[];
@@ -18,6 +22,15 @@ interface Props {
    * its own full-history page instead of the public /notifications page,
    * which middleware.ts bounces an admin session away from. */
   viewAllHref?:  string;
+  /** The bell button — panel position is computed from its real screen
+   *  rect and portaled to <body> (see NotificationBell), so a fixed left
+   *  sidebar (or any ancestor's overflow/transform) can never clip or
+   *  bury it regardless of how high its own z-index is. */
+  anchorEl?:     HTMLElement | null;
+  /** "auto" opens toward the language's reading-start side (old default
+   *  behavior). "right" always opens toward the screen's right edge —
+   *  see NotificationBell's doc comment. */
+  align?:        "auto" | "right";
 }
 
 const TX = {
@@ -46,10 +59,34 @@ export default function NotificationDropdown({
   onDelete,
   onClose,
   viewAllHref = "/notifications",
+  anchorEl,
+  align = "auto",
 }: Props) {
   const { lang, dark } = useSite();
   const isRTL = lang === "ar";
   const tx    = TX[lang];
+
+  // Real screen coordinates, not a CSS anchor — see anchorEl's doc comment.
+  // Falls back to a top-right guess only if somehow mounted with no button
+  // yet measured (shouldn't happen: NotificationBell only renders this
+  // after its own ref is attached).
+  const rect = anchorEl?.getBoundingClientRect();
+  const top = (rect?.bottom ?? 0) + 12;
+  let left: number;
+  if (rect) {
+    if (align === "right") {
+      // Grow rightward from the button's own left edge, clamped so it
+      // never runs off the right side of the viewport.
+      left = Math.min(rect.left, window.innerWidth - PANEL_WIDTH - VIEWPORT_MARGIN);
+    } else if (isRTL) {
+      left = rect.left;
+    } else {
+      left = rect.right - PANEL_WIDTH;
+    }
+    left = Math.max(VIEWPORT_MARGIN, left);
+  } else {
+    left = window.innerWidth - PANEL_WIDTH - VIEWPORT_MARGIN;
+  }
 
   const surface = dark ? "#1E293B" : "#FFFFFF";
   const border  = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
@@ -64,18 +101,21 @@ export default function NotificationDropdown({
   // /notifications, so it never renders more than 10 rows.
   const preview = notifications.slice(0, 10);
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 998 }} />
 
-      {/* Panel */}
+      {/* Panel — portaled to <body> and positioned from the bell's real
+          screen rect (not a CSS anchor on a relative-positioned parent) so
+          a fixed sidebar's stacking context, or any ancestor's overflow,
+          can never clip or bury it. */}
       <div
         dir={isRTL ? "rtl" : "ltr"}
         style={{
-          position:      "absolute",
-          top:           "calc(100% + 12px)",
-          [isRTL ? "left" : "right"]: 0,
+          position:      "fixed",
+          top,
+          left,
           width:         "360px",
           maxWidth:      "calc(100vw - 24px)",
           maxHeight:     "480px",
@@ -197,6 +237,7 @@ export default function NotificationDropdown({
           </Link>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
