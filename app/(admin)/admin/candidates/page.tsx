@@ -21,7 +21,7 @@ export default async function AdminCandidatesPage({ searchParams }: Props) {
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
   const stage = typeof sp.stage === "string" ? sp.stage : "all";
-  const view = sp.view === "table" ? "table" : "board";
+  const view = sp.view === "table" ? "table" : sp.view === "activity" ? "activity" : "board";
   const requestedPageSize = Number(sp.pageSize);
   const pageSize = ALLOWED_PAGE_SIZES.includes(requestedPageSize) ? requestedPageSize : DEFAULT_PAGE_SIZE;
   const category = typeof sp.category === "string" ? sp.category : undefined;
@@ -34,14 +34,14 @@ export default async function AdminCandidatesPage({ searchParams }: Props) {
       stage={stage} view={view} stages={stages} categories={categories}
       category={category} assignedTo={assignedTo}
     >
-      <CandidateImportPanel categories={categories} />
+      {view !== "activity" && <CandidateImportPanel categories={categories} />}
       {view === "board" ? (
         <CandidatesBoardView stages={stages} category={category} assignedTo={assignedTo} />
-      ) : (
+      ) : view === "table" ? (
         <Suspense key={`${page}-${stage}-${pageSize}-${category}-${assignedTo}`} fallback={<CandidatesTableSkeleton />}>
           <CandidatesTableSection page={page} pageSize={pageSize} stage={stage} category={category} assignedTo={assignedTo} />
         </Suspense>
-      )}
+      ) : null}
     </AdminCandidatesShell>
   );
 }

@@ -2,29 +2,32 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Columns3, List, Settings2 } from "lucide-react";
+import { Columns3, History, List, Settings2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import CandidateSettingsPanel from "./CandidateSettingsPanel";
 import CandidateMoveStageModal from "./CandidateMoveStageModal";
 import TodayDueButton from "../../leads/_components/TodayDueButton";
+import ActivityPanel from "../../leads/_components/ActivityPanel";
 import type { CandidateCategoryTerm, CandidateStage } from "@/features/candidates/types";
 import type { AdminSearchResult } from "@/features/admin-roles/types";
 
 const TX = {
   ar: {
-    title: "المرشحين", all: "الكل", manageStages: "إعدادات المرشحين", dropHint: "سيب المرشح هنا", table: "جدول", board: "المراحل",
+    title: "المرشحين", all: "الكل", manageStages: "إعدادات المرشحين", dropHint: "سيب المرشح هنا", table: "جدول", board: "المراحل", activity: "سجل النشاط",
     filterAssignee: "المسؤول: الكل", filterCategory: "الكاتيجوري: الكل",
   },
   en: {
-    title: "Candidates", all: "All", manageStages: "Candidate settings", dropHint: "Drop candidate here", table: "Table", board: "Stages",
+    title: "Candidates", all: "All", manageStages: "Candidate settings", dropHint: "Drop candidate here", table: "Table", board: "Stages", activity: "Activity",
     filterAssignee: "Assignee: All", filterCategory: "Category: All",
   },
 };
 
+type CandidatesView = "table" | "board" | "activity";
+
 interface Props {
   stage: string;
-  view: "table" | "board";
+  view: CandidatesView;
   stages: CandidateStage[];
   categories: CandidateCategoryTerm[];
   category?: string;
@@ -55,7 +58,7 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
       .catch(() => {});
   }, []);
 
-  function hrefFor(overrides: Partial<{ stage: string; view: "table" | "board"; category: string; assignedTo: string }>) {
+  function hrefFor(overrides: Partial<{ stage: string; view: CandidatesView; category: string; assignedTo: string }>) {
     const next = { stage, view, category, assignedTo, ...overrides };
     const params = new URLSearchParams();
     if (next.stage && next.stage !== "all") params.set("stage", next.stage);
@@ -124,7 +127,7 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
               );
             })}
           </div>
-        ) : <TodayDueButton module="candidate" />}
+        ) : view === "board" ? <TodayDueButton module="candidate" /> : <div />}
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <div style={{ display: "flex", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
@@ -151,6 +154,18 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
             >
               <List size={15} />
             </Link>
+            <Link
+              href={hrefFor({ view: "activity" })}
+              title={t.activity}
+              style={{
+                padding: "7px 12px", display: "flex", alignItems: "center",
+                backgroundColor: view === "activity" ? "rgba(0,210,106,0.1)" : "transparent",
+                color: view === "activity" ? "#00D26A" : MUTED, textDecoration: "none",
+                borderInlineStart: `1px solid ${BORDER}`,
+              }}
+            >
+              <History size={15} />
+            </Link>
           </div>
           <button
             type="button"
@@ -166,6 +181,7 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
         </div>
       </div>
 
+      {view !== "activity" && (
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
         <select
           value={assignedTo ?? ""}
@@ -184,8 +200,11 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
           {categories.map((c) => <option key={c.id} value={c.key}>{lang === "ar" ? c.labelAr : c.labelEn}</option>)}
         </select>
       </div>
+      )}
 
-      {children}
+      {view === "activity" ? (
+        <ActivityPanel module="candidate" assigneesApiPath="/api/admin/candidates/assignees" recordBasePath="/admin/candidates" />
+      ) : children}
 
       {managingStages && (
         <CandidateSettingsPanel

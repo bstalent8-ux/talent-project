@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const permissions = await getAdminPermissions(admin.id);
-  const modules: ActivityModule[] = [];
+  let modules: ActivityModule[] = [];
   if (permissionFor(permissions, "leads").canRead) modules.push("lead");
   if (permissionFor(permissions, "candidates").canRead) modules.push("candidate");
   if (modules.length === 0) return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -28,6 +28,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "date must be YYYY-MM-DD" }, { status: 400 });
   }
   const personId = sp.get("personId") || undefined;
+
+  // Optional narrowing for a module-embedded view (Leads/Candidates page's
+  // own Activity tab) — intersected with what the caller can actually read,
+  // never a way to see a module permissions would otherwise hide.
+  const moduleParam = sp.get("module");
+  if (moduleParam === "lead" || moduleParam === "candidate") {
+    modules = modules.filter((m) => m === moduleParam);
+    if (modules.length === 0) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   const result = await fetchActivity({ date, personId, modules });
   return NextResponse.json(result);

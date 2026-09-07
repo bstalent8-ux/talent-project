@@ -22,8 +22,8 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
   const page = Math.max(1, Number(sp.page) || 1);
   const stage = typeof sp.stage === "string" ? sp.stage : "all";
   // Board (every stage visible at once, no clicking a tab to switch) is the
-  // default — table is the explicit opt-in for a flat sortable/paginated list.
-  const view = sp.view === "table" ? "table" : "board";
+  // default — table and activity are explicit opt-ins.
+  const view = sp.view === "table" ? "table" : sp.view === "activity" ? "activity" : "board";
   const requestedPageSize = Number(sp.pageSize);
   const pageSize = ALLOWED_PAGE_SIZES.includes(requestedPageSize) ? requestedPageSize : DEFAULT_PAGE_SIZE;
   const channel = typeof sp.channel === "string" ? sp.channel : undefined;
@@ -41,14 +41,14 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
       stage={stage} view={view} stages={stages} channels={channels} categories={categories}
       channel={channel} category={category} assignedTo={assignedTo}
     >
-      <LeadImportPanel channels={channels} categories={categories} />
+      {view !== "activity" && <LeadImportPanel channels={channels} categories={categories} />}
       {view === "board" ? (
         <LeadsBoardView stages={stages} channel={channel} category={category} assignedTo={assignedTo} />
-      ) : (
+      ) : view === "table" ? (
         <Suspense key={`${page}-${stage}-${pageSize}-${channel}-${category}-${assignedTo}`} fallback={<LeadsTableSkeleton />}>
           <LeadsTableSection page={page} pageSize={pageSize} stage={stage} channel={channel} category={category} assignedTo={assignedTo} />
         </Suspense>
-      )}
+      ) : null}
     </AdminLeadsShell>
   );
 }

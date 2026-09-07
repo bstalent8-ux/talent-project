@@ -2,29 +2,32 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Columns3, List, Settings2 } from "lucide-react";
+import { Columns3, History, List, Settings2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import LeadSettingsPanel from "./LeadSettingsPanel";
 import MoveStageModal from "./MoveStageModal";
 import TodayDueButton from "./TodayDueButton";
+import ActivityPanel from "./ActivityPanel";
 import type { LeadStage, LeadTaxonomyTerm } from "@/features/leads/types";
 import type { AdminSearchResult } from "@/features/admin-roles/types";
 
 const TX = {
   ar: {
-    title: "العملاء المحتملين", all: "الكل", manageStages: "إعدادات الليدز", dropHint: "سيب الليد هنا", table: "جدول", board: "المراحل",
+    title: "العملاء المحتملين", all: "الكل", manageStages: "إعدادات الليدز", dropHint: "سيب الليد هنا", table: "جدول", board: "المراحل", activity: "سجل النشاط",
     filterAssignee: "المسؤول: الكل", filterChannel: "المصدر: الكل", filterCategory: "الكاتيجوري: الكل",
   },
   en: {
-    title: "Leads", all: "All", manageStages: "Lead settings", dropHint: "Drop lead here", table: "Table", board: "Stages",
+    title: "Leads", all: "All", manageStages: "Lead settings", dropHint: "Drop lead here", table: "Table", board: "Stages", activity: "Activity",
     filterAssignee: "Assignee: All", filterChannel: "Source: All", filterCategory: "Category: All",
   },
 };
 
+type LeadsView = "table" | "board" | "activity";
+
 interface Props {
   stage: string;
-  view: "table" | "board";
+  view: LeadsView;
   stages: LeadStage[];
   channels: LeadTaxonomyTerm[];
   categories: LeadTaxonomyTerm[];
@@ -61,7 +64,7 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
 
   // Every stage-pill/view-toggle/filter-select link goes through this one
   // builder so none of them accidentally drop another active filter.
-  function hrefFor(overrides: Partial<{ stage: string; view: "table" | "board"; channel: string; category: string; assignedTo: string }>) {
+  function hrefFor(overrides: Partial<{ stage: string; view: LeadsView; channel: string; category: string; assignedTo: string }>) {
     const next = { stage, view, channel, category, assignedTo, ...overrides };
     const params = new URLSearchParams();
     if (next.stage && next.stage !== "all") params.set("stage", next.stage);
@@ -131,7 +134,7 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
               );
             })}
           </div>
-        ) : <TodayDueButton module="lead" />}
+        ) : view === "board" ? <TodayDueButton module="lead" /> : <div />}
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <div style={{ display: "flex", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
@@ -158,6 +161,18 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
             >
               <List size={15} />
             </Link>
+            <Link
+              href={hrefFor({ view: "activity" })}
+              title={t.activity}
+              style={{
+                padding: "7px 12px", display: "flex", alignItems: "center",
+                backgroundColor: view === "activity" ? "rgba(0,210,106,0.1)" : "transparent",
+                color: view === "activity" ? "#00D26A" : MUTED, textDecoration: "none",
+                borderInlineStart: `1px solid ${BORDER}`,
+              }}
+            >
+              <History size={15} />
+            </Link>
           </div>
           <button
             type="button"
@@ -173,6 +188,7 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
         </div>
       </div>
 
+      {view !== "activity" && (
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
         <select
           value={assignedTo ?? ""}
@@ -199,8 +215,11 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
           {categories.map((c) => <option key={c.id} value={c.key}>{lang === "ar" ? c.labelAr : c.labelEn}</option>)}
         </select>
       </div>
+      )}
 
-      {children}
+      {view === "activity" ? (
+        <ActivityPanel module="lead" assigneesApiPath="/api/admin/leads/assignees" recordBasePath="/admin/leads" />
+      ) : children}
 
       {managingStages && (
         <LeadSettingsPanel
