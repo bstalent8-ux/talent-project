@@ -16,6 +16,7 @@ import {
   Briefcase,
   Building2,
   CalendarCheck,
+  CalendarClock,
   Camera,
   ChevronDown,
   ChevronLeft,
@@ -48,6 +49,7 @@ const TX = {
     dashboard: "لوحة التحكم",
     leads: "العملاء المحتملين",
     candidates: "المرشحين",
+    activity: "سجل النشاط",
     talents: "المواهب",
     talentDemand: "طلب أنواع المواهب",
     userActivity: "نشاط المستخدمين",
@@ -82,6 +84,7 @@ const TX = {
     dashboard: "Dashboard",
     leads: "Leads",
     candidates: "Candidates",
+    activity: "Activity Log",
     talents: "Talents",
     talentDemand: "Talent Type Demand",
     userActivity: "User Activity",
@@ -125,6 +128,7 @@ const NAV_ITEM = {
   dashboard:        { key: "dashboard",        href: "/admin",                    icon: LayoutDashboard },
   leads:            { key: "leads",            href: "/admin/leads",              icon: Contact2 },
   candidates:       { key: "candidates",       href: "/admin/candidates",         icon: Briefcase },
+  activity:         { key: "activity",         href: "/admin/activity",           icon: CalendarClock },
   talents:          { key: "talents",          href: "/admin/talents",            icon: Users },
   verifications:    { key: "verifications",    href: "/admin/verifications",      icon: ShieldCheck },
   talentDemand:     { key: "talentDemand",     href: "/admin/talent-demand",      icon: BarChart3 },
@@ -154,7 +158,7 @@ type NavEntry =
 const NAV_STRUCTURE: NavEntry[] = [
   { type: "item", item: NAV_ITEM.dashboard },
   { type: "group", key: "crmGroup", labelKey: "groupCrm", icon: Contact2,
-    items: [NAV_ITEM.leads, NAV_ITEM.candidates] },
+    items: [NAV_ITEM.leads, NAV_ITEM.candidates, NAV_ITEM.activity] },
   { type: "group", key: "talentsGroup", labelKey: "groupTalents", icon: Users,
     items: [NAV_ITEM.talents, NAV_ITEM.verifications, NAV_ITEM.talentDemand] },
   { type: "group", key: "bookingsGroup", labelKey: "groupBookings", icon: CalendarCheck,
@@ -187,9 +191,13 @@ function filterNavStructure(structure: NavEntry[], permissions: PermissionMap | 
   // neither is in ADMIN_RESOURCE_KEYS. "roles" is always hidden for a
   // restricted admin; "settings" is always shown (see ADMIN_ROUTE_MAP's
   // comment — every admin can always reach their own account settings).
+  // "activity" is also outside the matrix (no resource key of its own —
+  // /api/admin/activity self-gates per module) — shown only if the admin
+  // can read at least one of the two CRM tabs it summarizes.
   const canSee = (item: NavItemDef) => {
     if (item.key === "roles") return false;
     if (item.key === "settings") return true;
+    if (item.key === "activity") return !!permissions.leads?.canRead || !!permissions.candidates?.canRead;
     return !!permissions[item.key as AdminResourceKey]?.canRead;
   };
 

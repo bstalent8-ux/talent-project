@@ -7,6 +7,7 @@ import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import CandidateSettingsPanel from "./CandidateSettingsPanel";
 import CandidateMoveStageModal from "./CandidateMoveStageModal";
+import TodayDueButton from "../../leads/_components/TodayDueButton";
 import type { CandidateCategoryTerm, CandidateStage } from "@/features/candidates/types";
 import type { AdminSearchResult } from "@/features/admin-roles/types";
 
@@ -123,7 +124,7 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
               );
             })}
           </div>
-        ) : <div />}
+        ) : <TodayDueButton module="candidate" />}
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <div style={{ display: "flex", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>

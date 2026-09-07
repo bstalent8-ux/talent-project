@@ -7,6 +7,7 @@ import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import LeadSettingsPanel from "./LeadSettingsPanel";
 import MoveStageModal from "./MoveStageModal";
+import TodayDueButton from "./TodayDueButton";
 import type { LeadStage, LeadTaxonomyTerm } from "@/features/leads/types";
 import type { AdminSearchResult } from "@/features/admin-roles/types";
 
@@ -130,7 +131,7 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
               );
             })}
           </div>
-        ) : <div />}
+        ) : <TodayDueButton module="lead" />}
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <div style={{ display: "flex", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
