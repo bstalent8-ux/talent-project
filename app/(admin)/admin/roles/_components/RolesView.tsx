@@ -10,6 +10,7 @@ import type { AdminRole, AdminRoleAuditEntry, AdminSearchResult } from "@/featur
 const RESOURCE_LABELS: Record<AdminResourceKey, { ar: string; en: string }> = {
   dashboard: { ar: "لوحة التحكم", en: "Dashboard" },
   leads: { ar: "العملاء المحتملين", en: "Leads" },
+  candidates: { ar: "المرشحين", en: "Candidates" },
   talents: { ar: "المواهب", en: "Talents" },
   verifications: { ar: "طلبات التحقق", en: "Verifications" },
   talentDemand: { ar: "طلب أنواع المواهب", en: "Talent Demand" },

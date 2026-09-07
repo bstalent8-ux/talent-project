@@ -17,7 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const { id } = await params;
-  const body = await req.json() as { actionType?: string; note?: string; followUpAt?: string | null };
+  const body = await req.json() as { actionType?: string; note?: string; followUpAt?: string | null; assignedTo?: string | null };
 
   if (!body.actionType || !LEAD_ACTION_TYPES.includes(body.actionType as (typeof LEAD_ACTION_TYPES)[number])) {
     return NextResponse.json({ error: "invalid actionType" }, { status: 400 });
@@ -28,6 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     note: body.note ?? null,
     performedBy: admin.id,
     followUpAt: body.followUpAt,
+    assignedTo: body.assignedTo ?? null,
   });
 
   if (!action) return NextResponse.json({ error: "failed to log action" }, { status: 500 });

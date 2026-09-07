@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { ChevronDown, ChevronUp, FileSpreadsheet, Link2, Plus, UserPlus } from "lucide-react";
+import type { LeadTaxonomyTerm } from "@/features/leads/types";
 
 type Tab = "manual" | "excel" | "sheet";
 
@@ -11,6 +12,7 @@ const TX = {
     addLead: "إضافة ليد", hide: "إخفاء",
     tabManual: "يدوي", tabExcel: "ملف إكسيل", tabSheet: "رابط جوجل شيت",
     name: "الاسم", phone: "رقم التليفون", email: "الإيميل", handle: "اكونت السوشيال ميديا", note: "ملاحظة",
+    channelPh: "المصدر (اختياري)", categoryPh: "الكاتيجوري (اختياري)",
     submit: "إضافة", submitting: "بيتضاف...",
     dropHint: "اسحب ملف .xlsx هنا أو دوس تختار", dropActive: "سيبه هنا", uploading: "بيترفع...",
     sheetUrlLabel: "رابط الشيت (لازم يكون Anyone with the link)", sheetUrlPlaceholder: "https://docs.google.com/spreadsheets/d/...",
@@ -27,6 +29,7 @@ const TX = {
     addLead: "Add lead", hide: "Hide",
     tabManual: "Manual", tabExcel: "Excel file", tabSheet: "Google Sheet link",
     name: "Name", phone: "Phone", email: "Email", handle: "Social handle", note: "Note",
+    channelPh: "Source (optional)", categoryPh: "Category (optional)",
     submit: "Add", submitting: "Adding...",
     dropHint: "Drag a .xlsx file here, or click to browse", dropActive: "Drop it here", uploading: "Uploading...",
     sheetUrlLabel: "Sheet link (must be 'Anyone with the link')", sheetUrlPlaceholder: "https://docs.google.com/spreadsheets/d/...",
@@ -43,7 +46,7 @@ const TX = {
 
 interface ImportSummary { total: number; created: number; merged: number; flaggedDuplicate: number; failed: number }
 
-export default function LeadImportPanel() {
+export default function LeadImportPanel({ channels, categories }: { channels: LeadTaxonomyTerm[]; categories: LeadTaxonomyTerm[] }) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -56,7 +59,7 @@ export default function LeadImportPanel() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [manual, setManual] = useState({ fullName: "", phone: "", email: "", socialHandle: "", note: "" });
+  const [manual, setManual] = useState({ fullName: "", phone: "", email: "", socialHandle: "", note: "", channelId: "", categoryId: "" });
   const [sheetUrl, setSheetUrl] = useState("");
 
   const CARD = dark ? "#0D1623" : "#FFFFFF";
@@ -82,12 +85,14 @@ export default function LeadImportPanel() {
           email: manual.email || null,
           socialHandle: manual.socialHandle || null,
           extra: manual.note ? { note: manual.note } : {},
+          channelId: manual.channelId || null,
+          categoryId: manual.categoryId || null,
         }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json() as { merged: boolean };
       setSummary({ total: 1, created: data.merged ? 0 : 1, merged: data.merged ? 1 : 0, flaggedDuplicate: 0, failed: 0 });
-      setManual({ fullName: "", phone: "", email: "", socialHandle: "", note: "" });
+      setManual({ fullName: "", phone: "", email: "", socialHandle: "", note: "", channelId: "", categoryId: "" });
       router.refresh();
     } catch {
       setError(t.error);
@@ -232,6 +237,14 @@ export default function LeadImportPanel() {
                   onChange={(e) => setManual((m) => ({ ...m, email: e.target.value }))} />
                 <input style={inputStyle} placeholder={t.handle} value={manual.socialHandle}
                   onChange={(e) => setManual((m) => ({ ...m, socialHandle: e.target.value }))} />
+                <select style={inputStyle} value={manual.channelId} onChange={(e) => setManual((m) => ({ ...m, channelId: e.target.value }))}>
+                  <option value="">{t.channelPh}</option>
+                  {channels.map((c) => <option key={c.id} value={c.id}>{lang === "ar" ? c.labelAr : c.labelEn}</option>)}
+                </select>
+                <select style={inputStyle} value={manual.categoryId} onChange={(e) => setManual((m) => ({ ...m, categoryId: e.target.value }))}>
+                  <option value="">{t.categoryPh}</option>
+                  {categories.map((c) => <option key={c.id} value={c.id}>{lang === "ar" ? c.labelAr : c.labelEn}</option>)}
+                </select>
               </div>
               <input style={inputStyle} placeholder={t.note} value={manual.note}
                 onChange={(e) => setManual((m) => ({ ...m, note: e.target.value }))} />

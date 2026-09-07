@@ -12,7 +12,7 @@
  *  manageable tab. `admin_role_permissions` still has old seed rows for a
  *  'settings' key from before this change; they're just inert now. */
 export const ADMIN_RESOURCE_KEYS = [
-  "dashboard", "leads", "talents", "verifications", "talentDemand", "bookings", "reviews",
+  "dashboard", "leads", "candidates", "talents", "verifications", "talentDemand", "bookings", "reviews",
   "brands", "trustedBrands", "support", "emails", "notifications", "notificationsLog",
   "userActivity", "testimonials", "brandMoments", "categories", "packages", "profileConfig",
 ] as const;
@@ -48,6 +48,7 @@ export type PermissionMap = Partial<Record<AdminResourceKey, ResourcePermission>
 export const ADMIN_ROUTE_MAP: Record<AdminResourceKey, string> = {
   dashboard: "/admin",
   leads: "/admin/leads",
+  candidates: "/admin/candidates",
   talents: "/admin/talents",
   verifications: "/admin/verifications",
   talentDemand: "/admin/talent-demand",
@@ -72,7 +73,7 @@ export const ADMIN_ROUTE_MAP: Record<AdminResourceKey, string> = {
 // their granted tabs (first one they can actually read). "settings" isn't a
 // candidate here either, for the same reason it isn't in ADMIN_ROUTE_MAP.
 export const ADMIN_NAV_PRIORITY: AdminResourceKey[] = [
-  "dashboard", "leads", "talents", "verifications", "talentDemand", "bookings", "reviews",
+  "dashboard", "leads", "candidates", "talents", "verifications", "talentDemand", "bookings", "reviews",
   "brands", "trustedBrands", "support", "emails", "notifications", "notificationsLog",
   "userActivity", "testimonials", "brandMoments", "categories", "packages", "profileConfig",
 ];

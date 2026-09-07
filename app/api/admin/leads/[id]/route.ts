@@ -7,9 +7,8 @@ import {
   fetchLeadById,
   resolveDuplicate,
   updateLeadIdentity,
-  updateLeadStatus,
+  updateLeadTaxonomy,
 } from "@/features/leads/services/leads.service";
-import { LEAD_STATUSES } from "@/features/leads/types";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const denied = await requirePermission("leads", "read");
@@ -21,20 +20,25 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json({ lead });
 }
 
-// Handles two distinct edits: changing the pipeline status, and resolving a
-// possible-duplicate flag (merge into the earlier lead, or dismiss it).
+// Handles two distinct edits: resolving a possible-duplicate flag (merge
+// into the earlier lead, or dismiss it), and correcting identity fields.
+// Moving a lead to a different stage is a separate endpoint —
+// /api/admin/leads/[id]/stage — since a move always produces a
+// stage_change history entry and validates that stage's own questions,
+// unlike a plain field edit.
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const denied = await requirePermission("leads", "update");
   if (denied) return denied;
 
   const { id } = await params;
   const body = await req.json() as {
-    status?: string;
     duplicateDecision?: "merge" | "dismiss";
     fullName?: string | null;
     phone?: string | null;
     email?: string | null;
     socialHandle?: string | null;
+    channelId?: string | null;
+    categoryId?: string | null;
   };
 
   if (body.duplicateDecision) {
@@ -43,21 +47,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true });
   }
 
-  if (body.status) {
-    if (!LEAD_STATUSES.includes(body.status as (typeof LEAD_STATUSES)[number])) {
-      return NextResponse.json({ error: "invalid status" }, { status: 400 });
-    }
-    const ok = await updateLeadStatus(id, body.status as (typeof LEAD_STATUSES)[number]);
-    if (!ok) return NextResponse.json({ error: "failed to update status" }, { status: 400 });
-    return NextResponse.json({ ok: true });
-  }
-
   const identityKeys = ["fullName", "phone", "email", "socialHandle"] as const;
-  if (identityKeys.some((k) => k in body)) {
-    const patch: Record<string, string | null> = {};
-    for (const k of identityKeys) if (k in body) patch[k] = body[k] ?? null;
-    const ok = await updateLeadIdentity(id, patch);
-    if (!ok) return NextResponse.json({ error: "failed to update lead" }, { status: 400 });
+  const taxonomyKeys = ["channelId", "categoryId"] as const;
+  const hasIdentity = identityKeys.some((k) => k in body);
+  const hasTaxonomy = taxonomyKeys.some((k) => k in body);
+
+  if (hasIdentity || hasTaxonomy) {
+    if (hasIdentity) {
+      const patch: Record<string, string | null> = {};
+      for (const k of identityKeys) if (k in body) patch[k] = body[k] ?? null;
+      const ok = await updateLeadIdentity(id, patch);
+      if (!ok) return NextResponse.json({ error: "failed to update lead" }, { status: 400 });
+    }
+    if (hasTaxonomy) {
+      const patch: Record<string, string | null> = {};
+      for (const k of taxonomyKeys) if (k in body) patch[k] = body[k] ?? null;
+      const ok = await updateLeadTaxonomy(id, patch);
+      if (!ok) return NextResponse.json({ error: "failed to update lead" }, { status: 400 });
+    }
     return NextResponse.json({ ok: true });
   }
 

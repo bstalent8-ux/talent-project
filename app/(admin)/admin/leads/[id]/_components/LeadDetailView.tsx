@@ -2,17 +2,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Mail, Phone, AtSign, AlertTriangle, Clock, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Mail, Phone, AtSign, AlertTriangle, Clock, Pencil, Trash2, UserCircle2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
-import { LEAD_ACTION_TYPES, LEAD_STATUSES, type LeadWithActions } from "@/features/leads/types";
+import MoveStageModal from "../../_components/MoveStageModal";
+import { LeadCallButton, LeadWhatsAppButton } from "../../_components/LeadContactActions";
+import LeadAssigneePicker from "../../_components/LeadAssigneePicker";
+import { LEAD_ACTION_TYPES, LEAD_ASSIGN_ACTION_TYPE, STAGE_CHANGE_ACTION_TYPE, type LeadStage, type LeadTaxonomyTerm, type LeadWithActions } from "@/features/leads/types";
+import type { AdminSearchResult } from "@/features/admin-roles/types";
 
 const TX = {
   ar: {
     back: "رجوع للقائمة",
     contact: "بيانات التواصل", extra: "بيانات إضافية", status: "الحالة", assigned: "المسؤول",
-    createdBy: "أضافه", createdAt: "تاريخ الإضافة", source: "المصدر",
+    createdBy: "أضافه", createdAt: "تاريخ الإضافة", source: "طريقة الإضافة",
+    channel: "المصدر", category: "الكاتيجوري", unset: "بدون تحديد",
     manual: "يدوي", excel: "إكسيل", sheet: "شيت",
     unnamed: "بدون اسم", none: "—",
     new: "جديد", contacted: "تم التواصل", interested: "مهتم", not_interested: "مش مهتم", converted: "اتحول لعميل",
@@ -25,15 +30,19 @@ const TX = {
     call: "مكالمة", message: "رسالة", email: "إيميل", meeting: "اجتماع",
     editFollowUp: "عدّل المعاد", save: "حفظ", saving: "بيتحفظ...",
     performedBy: "بواسطة", overdue: "متأخر", upcoming: "جاي",
-    changeStatus: "غيّر الحالة",
+    changeStatus: "المرحلة",
     editContact: "تعديل بيانات التواصل", saveContact: "حفظ", cancel: "إلغاء",
     deleteLead: "مسح الليد", deleteTitle: "مسح الليد؟",
     deleteDesc: "هيتمسح وكل سجل المتابعة بتاعه — الخطوة دي مش هترجع.",
+    stageChange: "اتنقل للمرحلة",
+    leadAssigned: "اتعين لـ", editAssignee: "غيّر المسؤول",
+    taskAssignee: "التاسك ده لمين؟", taskFor: "لـ",
   },
   en: {
     back: "Back to list",
     contact: "Contact", extra: "Extra data", status: "Status", assigned: "Assigned to",
-    createdBy: "Added by", createdAt: "Added", source: "Source",
+    createdBy: "Added by", createdAt: "Added", source: "Entry method",
+    channel: "Source", category: "Category", unset: "Unset",
     manual: "Manual", excel: "Excel", sheet: "Sheet",
     unnamed: "Unnamed", none: "—",
     new: "New", contacted: "Contacted", interested: "Interested", not_interested: "Not interested", converted: "Converted",
@@ -46,10 +55,13 @@ const TX = {
     call: "Call", message: "Message", email: "Email", meeting: "Meeting",
     editFollowUp: "Edit date", save: "Save", saving: "Saving...",
     performedBy: "by", overdue: "overdue", upcoming: "upcoming",
-    changeStatus: "Change status",
+    changeStatus: "Stage",
     editContact: "Edit contact info", saveContact: "Save", cancel: "Cancel",
     deleteLead: "Delete lead", deleteTitle: "Delete this lead?",
     deleteDesc: "It and its whole follow-up history will be deleted — this can't be undone.",
+    stageChange: "Moved to stage",
+    leadAssigned: "Assigned to", editAssignee: "Change assignee",
+    taskAssignee: "Assign this task to", taskFor: "for",
   },
 };
 
@@ -57,7 +69,14 @@ const ACTION_LABEL_KEY: Record<string, "call" | "message" | "email" | "meeting" 
   call: "call", message: "message", email: "email", meeting: "meeting", note: "note",
 };
 
-export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
+interface Props {
+  lead: LeadWithActions;
+  stages: LeadStage[];
+  channels: LeadTaxonomyTerm[];
+  categories: LeadTaxonomyTerm[];
+}
+
+export default function LeadDetailView({ lead, stages, channels, categories }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.leads?.canDelete;
@@ -83,6 +102,15 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
     fullName: lead.fullName ?? "", phone: lead.phone ?? "", email: lead.email ?? "", socialHandle: lead.socialHandle ?? "",
   });
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pendingStage, setPendingStage] = useState<LeadStage | null>(null);
+
+  const [editingAssignee, setEditingAssignee] = useState(false);
+  // Defaults the new-action "assign this task to" field to the lead's
+  // current owner — the common case is a task staying with whoever already
+  // owns the lead; picking someone else here doesn't touch leads.assigned_to.
+  const [taskAssignee, setTaskAssignee] = useState<{ id: string; name: string | null } | null>(
+    lead.assignedTo ? { id: lead.assignedTo, name: lead.assignedToName } : null
+  );
 
   const cardStyle: React.CSSProperties = {
     backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18,
@@ -93,13 +121,40 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
   };
   const labelStyle: React.CSSProperties = { fontSize: 11, color: MUTED, marginBottom: 4, display: "block" };
 
-  async function changeStatus(status: string) {
+  async function changeStage(stageId: string) {
+    const target = stages.find((s) => s.id === stageId);
+    if (!target) return;
+    if (target.fields.length > 0) {
+      setPendingStage(target);
+      return;
+    }
+    setBusy(true);
+    await fetch(`/api/admin/leads/${lead.id}/stage`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stageId }),
+    }).catch(() => {});
+    setBusy(false);
+    router.refresh();
+  }
+
+  async function changeTaxonomy(field: "channelId" | "categoryId", value: string) {
     setBusy(true);
     await fetch(`/api/admin/leads/${lead.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ [field]: value || null }),
     }).catch(() => {});
     setBusy(false);
+    router.refresh();
+  }
+
+  async function changeAssignee(admin: AdminSearchResult | null) {
+    setBusy(true);
+    await fetch(`/api/admin/leads/${lead.id}/assign`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignedTo: admin?.id ?? null }),
+    }).catch(() => {});
+    setBusy(false);
+    setEditingAssignee(false);
     router.refresh();
   }
 
@@ -150,6 +205,7 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
         actionType,
         note: note || null,
         followUpAt: followUpAt ? new Date(followUpAt).toISOString() : undefined,
+        assignedTo: taskAssignee?.id ?? null,
       }),
     }).catch(() => {});
     setBusy(false);
@@ -251,6 +307,12 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, color: lead.phone ? TEXT : MUTED }}>
                 <Phone size={13} />{lead.phone ?? t.none}
+                {lead.phone && (
+                  <span style={{ display: "flex", alignItems: "center", gap: 10, marginInlineStart: "auto" }}>
+                    <LeadWhatsAppButton phone={lead.phone} size={16} />
+                    <LeadCallButton phone={lead.phone} size={16} />
+                  </span>
+                )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, color: lead.email ? TEXT : MUTED }}>
                 <Mail size={13} />{lead.email ?? t.none}
@@ -278,16 +340,59 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
         <div style={cardStyle}>
           <span style={labelStyle}>{t.changeStatus}</span>
           <select
-            value={lead.status}
+            value={lead.stage?.id ?? ""}
             disabled={busy}
-            onChange={(e) => changeStatus(e.target.value)}
+            onChange={(e) => changeStage(e.target.value)}
             style={{ ...inputStyle, marginBottom: 14, cursor: "pointer" }}
           >
-            {LEAD_STATUSES.map((s) => <option key={s} value={s}>{t[s]}</option>)}
+            {!lead.stage && <option value="">{t.none}</option>}
+            {stages.map((s) => <option key={s.id} value={s.id}>{ar ? s.labelAr : s.labelEn}</option>)}
           </select>
 
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+            <div>
+              <span style={labelStyle}>{t.channel}</span>
+              <select value={lead.channel?.id ?? ""} disabled={busy} onChange={(e) => changeTaxonomy("channelId", e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                <option value="">{t.unset}</option>
+                {channels.map((c) => <option key={c.id} value={c.id}>{ar ? c.labelAr : c.labelEn}</option>)}
+              </select>
+            </div>
+            <div>
+              <span style={labelStyle}>{t.category}</span>
+              <select value={lead.category?.id ?? ""} disabled={busy} onChange={(e) => changeTaxonomy("categoryId", e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                <option value="">{t.unset}</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{ar ? c.labelAr : c.labelEn}</option>)}
+              </select>
+            </div>
+          </div>
+
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5 }}>
-            <div><span style={{ color: MUTED }}>{t.assigned}: </span>{lead.assignedToName ?? t.none}</div>
+            <div style={{ position: "relative" }}>
+              <span style={{ color: MUTED }}>{t.assigned}: </span>
+              {editingAssignee ? (
+                <div style={{ marginTop: 6, display: "flex", gap: 6, alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
+                    <LeadAssigneePicker autoFocus placeholder={lead.assignedToName ?? undefined} onPick={changeAssignee} />
+                  </div>
+                  <button type="button" onClick={() => setEditingAssignee(false)}
+                    style={{ padding: "9px 10px", background: "none", border: `1px solid ${BORDER}`, borderRadius: 8, cursor: "pointer", color: MUTED, fontSize: 12 }}>
+                    {t.cancel}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {lead.assignedToName ?? t.none}
+                  <button
+                    type="button"
+                    title={t.editAssignee}
+                    onClick={() => setEditingAssignee(true)}
+                    style={{ display: "inline-flex", verticalAlign: "middle", marginInlineStart: 6, background: "none", border: "none", cursor: "pointer", color: "#60A5FA" }}
+                  >
+                    <Pencil size={12} />
+                  </button>
+                </>
+              )}
+            </div>
             <div><span style={{ color: MUTED }}>{t.createdBy}: </span>{lead.createdByName ?? t.none}</div>
             <div><span style={{ color: MUTED }}>{t.source}: </span>{t[lead.source]}</div>
             <div><span style={{ color: MUTED }}>{t.createdAt}: </span>{new Date(lead.createdAt).toLocaleString(ar ? "ar-EG" : "en-US", { dateStyle: "medium", timeStyle: "short" })}</div>
@@ -308,6 +413,13 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
             <div>
               <span style={labelStyle}>{t.followUp} <span style={{ opacity: 0.7 }}>({t.followUpDefault})</span></span>
               <input type="date" value={followUpAt} onChange={(e) => setFollowUpAt(e.target.value)} style={inputStyle} />
+            </div>
+            <div>
+              <span style={labelStyle}>{t.taskAssignee}</span>
+              <LeadAssigneePicker
+                placeholder={taskAssignee?.name ?? undefined}
+                onPick={(admin) => setTaskAssignee(admin ? { id: admin.id, name: admin.fullName ?? admin.handle } : null)}
+              />
             </div>
           </div>
           <div>
@@ -341,7 +453,18 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
                 <div key={action.id} style={{ padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 12.5 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                     <span style={{ fontWeight: 700, color: TEXT }}>
-                      {t[ACTION_LABEL_KEY[action.actionType] ?? "note"]}
+                      {action.actionType === STAGE_CHANGE_ACTION_TYPE ? (
+                        <>{t.stageChange} <span style={{ color: action.stage?.color }}>{action.stage ? (ar ? action.stage.labelAr : action.stage.labelEn) : ""}</span></>
+                      ) : action.actionType === LEAD_ASSIGN_ACTION_TYPE ? (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <UserCircle2 size={13} />{t.leadAssigned} {action.assignedToName ?? t.none}
+                        </span>
+                      ) : (
+                        <>
+                          {t[ACTION_LABEL_KEY[action.actionType] ?? "note"]}
+                          {action.assignedToName && <span style={{ color: MUTED, fontWeight: 400 }}> · {t.taskFor} {action.assignedToName}</span>}
+                        </>
+                      )}
                       <span style={{ color: MUTED, fontWeight: 400 }}> · {t.performedBy} {action.performedByName ?? t.none}</span>
                     </span>
                     <span style={{ color: MUTED }}>
@@ -349,6 +472,15 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
                     </span>
                   </div>
                   {action.note && <p style={{ margin: "6px 0 0", color: TEXT }}>{action.note}</p>}
+                  {action.stageAnswers && Object.keys(action.stageAnswers).length > 0 && (
+                    <div style={{ margin: "6px 0 0", display: "flex", flexDirection: "column", gap: 2 }}>
+                      {Object.entries(action.stageAnswers).map(([key, value]) => (
+                        <div key={key} style={{ fontSize: 12, color: TEXT }}>
+                          <span style={{ color: MUTED }}>{key}: </span>{value}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
                     <Clock size={12} color={isPast && !action.notifiedAt ? "#F59E0B" : MUTED} />
                     {isEditing ? (
@@ -400,6 +532,15 @@ export default function LeadDetailView({ lead }: { lead: LeadWithActions }) {
         onConfirm={deleteThisLead}
         onCancel={() => setDeleteOpen(false)}
       />
+
+      {pendingStage && (
+        <MoveStageModal
+          leadId={lead.id}
+          stage={pendingStage}
+          onClose={() => setPendingStage(null)}
+          onMoved={() => { setPendingStage(null); router.refresh(); }}
+        />
+      )}
     </div>
   );
 }

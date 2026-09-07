@@ -7,11 +7,13 @@ import { usePathname } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { createClient } from "@/lib/supabase/client";
 import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
+import { useAdminIdentity } from "@/contexts/AdminIdentityContext";
 import type { AdminResourceKey, PermissionMap } from "@/lib/auth/admin-resources";
 import {
   Activity,
   BarChart3,
   Bell,
+  Briefcase,
   Building2,
   CalendarCheck,
   Camera,
@@ -45,6 +47,7 @@ const TX = {
   ar: {
     dashboard: "لوحة التحكم",
     leads: "العملاء المحتملين",
+    candidates: "المرشحين",
     talents: "المواهب",
     talentDemand: "طلب أنواع المواهب",
     userActivity: "نشاط المستخدمين",
@@ -67,6 +70,7 @@ const TX = {
     modeExpanded: "مفتوحة دائماً",
     modeCollapsed: "مصغّرة دائماً",
     modeHover: "تفاعلية عند التمرير",
+    groupCrm: "CRM",
     groupTalents: "المواهب",
     groupBookings: "الحجوزات والتقييمات",
     groupBrands: "الشركات",
@@ -77,6 +81,7 @@ const TX = {
   en: {
     dashboard: "Dashboard",
     leads: "Leads",
+    candidates: "Candidates",
     talents: "Talents",
     talentDemand: "Talent Type Demand",
     userActivity: "User Activity",
@@ -100,6 +105,7 @@ const TX = {
     modeExpanded: "Always expanded",
     modeCollapsed: "Always collapsed",
     modeHover: "Interactive (hover)",
+    groupCrm: "CRM",
     groupTalents: "Talents",
     groupBookings: "Bookings & Reviews",
     groupBrands: "Brands",
@@ -118,6 +124,7 @@ const TX = {
 const NAV_ITEM = {
   dashboard:        { key: "dashboard",        href: "/admin",                    icon: LayoutDashboard },
   leads:            { key: "leads",            href: "/admin/leads",              icon: Contact2 },
+  candidates:       { key: "candidates",       href: "/admin/candidates",         icon: Briefcase },
   talents:          { key: "talents",          href: "/admin/talents",            icon: Users },
   verifications:    { key: "verifications",    href: "/admin/verifications",      icon: ShieldCheck },
   talentDemand:     { key: "talentDemand",     href: "/admin/talent-demand",      icon: BarChart3 },
@@ -146,7 +153,8 @@ type NavEntry =
 
 const NAV_STRUCTURE: NavEntry[] = [
   { type: "item", item: NAV_ITEM.dashboard },
-  { type: "item", item: NAV_ITEM.leads },
+  { type: "group", key: "crmGroup", labelKey: "groupCrm", icon: Contact2,
+    items: [NAV_ITEM.leads, NAV_ITEM.candidates] },
   { type: "group", key: "talentsGroup", labelKey: "groupTalents", icon: Users,
     items: [NAV_ITEM.talents, NAV_ITEM.verifications, NAV_ITEM.talentDemand] },
   { type: "group", key: "bookingsGroup", labelKey: "groupBookings", icon: CalendarCheck,
@@ -222,12 +230,12 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const [adminName, setAdminName] = useState<string | null>(null);
-  const [adminAvatar, setAdminAvatar] = useState<string | null>(null);
-  // Server-computed by the (admin) layout and handed down via context — see
-  // AdminPermissionsContext.tsx. Correct on the very first render, no
-  // client fetch delay and nothing to narrow down from after a wider flash.
+  // Both server-computed by the (admin) layout and handed down via context
+  // — see AdminPermissionsContext.tsx / AdminIdentityContext.tsx. Correct on
+  // the very first render: no client fetch, no per-navigation round trip,
+  // nothing to narrow down from after a wider flash.
   const permissions = useAdminPermissions();
+  const { name: adminName, avatarUrl: adminAvatar } = useAdminIdentity();
   const [isHovering, setIsHovering] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null);
@@ -284,18 +292,6 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
-
-  useEffect(() => {
-    fetch("/api/admin/me")
-      .then((r) => r.json())
-      .then(({ profile }) => {
-        if (profile) {
-          setAdminName(profile.full_name ?? null);
-          setAdminAvatar(profile.avatar_url ?? null);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   const visibleNavStructure = filterNavStructure(NAV_STRUCTURE, permissions);
 

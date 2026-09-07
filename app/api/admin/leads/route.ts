@@ -13,9 +13,12 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
   const page = Math.max(1, Number(sp.get("page")) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(sp.get("pageSize")) || 10));
-  const status = sp.get("status") ?? "all";
+  const stage = sp.get("stage") ?? "all";
+  const channel = sp.get("channel") || undefined;
+  const category = sp.get("category") || undefined;
+  const assignedTo = sp.get("assignedTo") || undefined;
 
-  const { leads, total } = await fetchLeadsPage({ page, pageSize, status });
+  const { leads, total } = await fetchLeadsPage({ page, pageSize, stage, channel, category, assignedTo });
   return NextResponse.json({ leads, total });
 }
 
@@ -28,11 +31,11 @@ export async function POST(req: NextRequest) {
   const admin = await getAdminUser();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  const body = await req.json() as LeadIdentityInput;
+  const body = await req.json() as LeadIdentityInput & { channelId?: string | null; categoryId?: string | null };
   if (!body.fullName && !body.phone && !body.email && !body.socialHandle) {
     return NextResponse.json({ error: "at least one field is required" }, { status: 400 });
   }
 
-  const result = await createLead(body, admin.id, "manual");
+  const result = await createLead(body, admin.id, "manual", { channelId: body.channelId, categoryId: body.categoryId });
   return NextResponse.json(result, { status: 201 });
 }
