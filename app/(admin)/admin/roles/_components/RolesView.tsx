@@ -27,7 +27,8 @@ const RESOURCE_LABELS: Record<AdminResourceKey, { ar: string; en: string }> = {
   categories: { ar: "التصنيفات", en: "Categories" },
   packages: { ar: "الباقات", en: "Packages" },
   profileConfig: { ar: "إعدادات الملفات", en: "Profile Config" },
-  settings: { ar: "الإعدادات", en: "Settings" },
+  // No "settings" entry — it's no longer a gated resource, see
+  // lib/auth/admin-resources.ts's ADMIN_ROUTE_MAP comment.
 };
 
 const TX = {

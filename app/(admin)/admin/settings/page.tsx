@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import { useSite } from "@/contexts/SiteContext";
 import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
+import { createClient } from "@/lib/supabase/client";
 import { Camera, Save, User } from "lucide-react";
 
 const TX = {
@@ -23,6 +24,12 @@ const TX = {
     errSave: "فشل الحفظ",
     uploading: "جاري رفع الصورة...",
     emailNote: "لا يمكن تغيير البريد الإلكتروني من هنا",
+    changePassword: "تغيير كلمة المرور",
+    newPassword: "كلمة المرور الجديدة", confirmPassword: "تأكيد كلمة المرور",
+    savePassword: "حفظ كلمة المرور",
+    passwordTooShort: "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+    passwordMismatch: "كلمتا المرور غير متطابقتين.",
+    passwordSaved: "تم تغيير كلمة المرور ✓",
     promoteTitle: "ترقية مستخدم لأدمن (مؤقت)",
     promoteNote: "أداة مؤقتة لعمل أدمن احتياطي. هتتشال بعد ما تخلص منها.",
     promoteHandle: "اسم المستخدم (handle)",
@@ -48,6 +55,12 @@ const TX = {
     errSave: "Failed to save",
     uploading: "Uploading photo...",
     emailNote: "Email cannot be changed here",
+    changePassword: "Change Password",
+    newPassword: "New Password", confirmPassword: "Confirm Password",
+    savePassword: "Save Password",
+    passwordTooShort: "Password must be at least 8 characters.",
+    passwordMismatch: "Passwords do not match.",
+    passwordSaved: "Password changed ✓",
     promoteTitle: "Promote user to admin (temporary)",
     promoteNote: "Temporary tool for a backup admin. Remove once you're done with it.",
     promoteHandle: "Handle",
@@ -82,6 +95,11 @@ export default function AdminSettingsPage() {
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "uploading" | "error">("idle");
   const [errMsg, setErrMsg] = useState("");
   const [loaded, setLoaded] = useState(false);
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwStatus, setPwStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [pwMsg, setPwMsg] = useState("");
 
   const [promoteHandle, setPromoteHandle] = useState("");
   const [promoteStatus, setPromoteStatus] = useState<"idle" | "working" | "done" | "error">("idle");
@@ -157,6 +175,23 @@ export default function AdminSettingsPage() {
       setStatus("error");
       setErrMsg(err instanceof Error ? err.message : t.errSave);
     }
+  }
+
+  async function handleChangePassword() {
+    setPwMsg("");
+    if (newPassword.length < 8) { setPwStatus("error"); setPwMsg(t.passwordTooShort); return; }
+    if (newPassword !== confirmPassword) { setPwStatus("error"); setPwMsg(t.passwordMismatch); return; }
+    setPwStatus("saving");
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      setPwStatus("error");
+      setPwMsg(error.message || t.errSave);
+      return;
+    }
+    setPwStatus("saved");
+    setPwMsg(t.passwordSaved);
+    setNewPassword(""); setConfirmPassword("");
   }
 
   async function handlePromote() {
@@ -341,6 +376,50 @@ export default function AdminSettingsPage() {
                 {status === "saving" ? t.saving : status === "saved" ? t.saved : t.save}
               </button>
             </div>
+          </div>
+        </div>
+
+        <div style={{
+          marginTop: 20, backgroundColor: CARD, border: `1px solid ${BORDER}`,
+          borderRadius: 20, overflow: "hidden",
+        }}>
+          <div style={{
+            padding: "20px 28px", borderBottom: `1px solid ${BORDER}`,
+            fontWeight: 700, fontSize: 16, color: TEXT,
+          }}>
+            {t.changePassword}
+          </div>
+          <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 14, maxWidth: 360 }}>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder={t.newPassword}
+              style={inputStyle}
+            />
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder={t.confirmPassword}
+              style={inputStyle}
+            />
+            {pwMsg && (
+              <p style={{ margin: 0, fontSize: 12.5, color: pwStatus === "error" ? "#EF4444" : GREEN }}>{pwMsg}</p>
+            )}
+            <button
+              onClick={handleChangePassword}
+              disabled={pwStatus === "saving" || !newPassword || !confirmPassword}
+              style={{
+                alignSelf: "flex-start", padding: "10px 22px", borderRadius: 10, border: "none",
+                backgroundColor: GREEN, color: "#fff", fontWeight: 700, fontSize: 14,
+                cursor: pwStatus === "saving" ? "wait" : "pointer",
+                opacity: (!newPassword || !confirmPassword) ? 0.5 : 1,
+                fontFamily: "inherit",
+              }}
+            >
+              {pwStatus === "saving" ? t.saving : t.savePassword}
+            </button>
           </div>
         </div>
 

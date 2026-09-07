@@ -168,17 +168,22 @@ const NAV_STRUCTURE: NavEntry[] = [
  * comes from the server (AdminPermissionsContext, set by the (admin) layout)
  * so this is correct on the very first render — never a wider flash that
  * narrows down a beat later. `permissions === null` means full access
- * (unrestricted admin) — everything shows, "roles" included. A non-null map
- * hides any item/group with no read permission for its key, and "roles" is
- * ALWAYS hidden for a restricted admin regardless of their matrix — only an
- * unrestricted admin manages roles (see requireSuperAdmin()), so granting
- * "roles" read in the matrix would be meaningless and is deliberately not
- * even an option (it isn't in ADMIN_RESOURCE_KEYS).
+ * (unrestricted admin) — everything shows. A non-null map hides any
+ * item/group with no read permission for its key, except "roles" and
+ * "settings" — see canSee() below.
  */
 function filterNavStructure(structure: NavEntry[], permissions: PermissionMap | null): NavEntry[] {
   if (permissions === null) return structure;
 
-  const canSee = (item: NavItemDef) => item.key === "roles" ? false : !!permissions[item.key as AdminResourceKey]?.canRead;
+  // "roles" and "settings" are both special-cased outside the matrix —
+  // neither is in ADMIN_RESOURCE_KEYS. "roles" is always hidden for a
+  // restricted admin; "settings" is always shown (see ADMIN_ROUTE_MAP's
+  // comment — every admin can always reach their own account settings).
+  const canSee = (item: NavItemDef) => {
+    if (item.key === "roles") return false;
+    if (item.key === "settings") return true;
+    return !!permissions[item.key as AdminResourceKey]?.canRead;
+  };
 
   return structure.flatMap((entry): NavEntry[] => {
     if (entry.type === "item") return canSee(entry.item) ? [entry] : [];

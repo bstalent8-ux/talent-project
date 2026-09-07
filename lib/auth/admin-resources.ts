@@ -6,11 +6,15 @@
 // client" file, even transitively through a types-only import.
 
 /** Mirrors AdminSidebar.tsx's NAV_ITEM keys — kept in lockstep deliberately,
- *  see the RBAC migration's comment. Add a key here AND there together. */
+ *  see the RBAC migration's comment. Add a key here AND there together.
+ *  "settings" is deliberately NOT in this list — see the note by
+ *  ADMIN_ROUTE_MAP below, it's every admin's own account page, not a
+ *  manageable tab. `admin_role_permissions` still has old seed rows for a
+ *  'settings' key from before this change; they're just inert now. */
 export const ADMIN_RESOURCE_KEYS = [
   "dashboard", "leads", "talents", "verifications", "talentDemand", "bookings", "reviews",
   "brands", "trustedBrands", "support", "emails", "notifications", "notificationsLog",
-  "userActivity", "testimonials", "brandMoments", "categories", "packages", "profileConfig", "settings",
+  "userActivity", "testimonials", "brandMoments", "categories", "packages", "profileConfig",
 ] as const;
 export type AdminResourceKey = (typeof ADMIN_RESOURCE_KEYS)[number];
 
@@ -33,6 +37,14 @@ export type PermissionMap = Partial<Record<AdminResourceKey, ResourcePermission>
 // just whether they can call its mutating API routes. Keep both in lockstep:
 // a new admin page needs an entry here too, or a restricted admin can browse
 // straight past a hidden sidebar link by typing the URL.
+//
+// "/admin/settings" is intentionally absent — like "/admin/roles" and
+// "/admin/no-access", resolveResourceKeyForPath() returns null for it, so
+// middleware never blocks it and it's never in firstReadableRoute()'s
+// candidate list either. Every admin can always change their own name,
+// photo, and password no matter what role they're on — the promote-admin
+// card on that same page has its own separate super-admin-only check
+// (isSuperAdmin in the page itself), so this doesn't reopen that hole.
 export const ADMIN_ROUTE_MAP: Record<AdminResourceKey, string> = {
   dashboard: "/admin",
   leads: "/admin/leads",
@@ -53,16 +65,16 @@ export const ADMIN_ROUTE_MAP: Record<AdminResourceKey, string> = {
   categories: "/admin/categories",
   packages: "/admin/packages",
   profileConfig: "/admin/profile-config",
-  settings: "/admin/settings",
 };
 
 // Same priority order as AdminSidebar.tsx's flattened NAV_STRUCTURE — used to
 // pick where a restricted admin lands when their current page isn't one of
-// their granted tabs (first one they can actually read).
+// their granted tabs (first one they can actually read). "settings" isn't a
+// candidate here either, for the same reason it isn't in ADMIN_ROUTE_MAP.
 export const ADMIN_NAV_PRIORITY: AdminResourceKey[] = [
   "dashboard", "leads", "talents", "verifications", "talentDemand", "bookings", "reviews",
   "brands", "trustedBrands", "support", "emails", "notifications", "notificationsLog",
-  "userActivity", "testimonials", "brandMoments", "categories", "packages", "profileConfig", "settings",
+  "userActivity", "testimonials", "brandMoments", "categories", "packages", "profileConfig",
 ];
 
 /** Longest-prefix match against ADMIN_ROUTE_MAP, with an exact-or-"/"-boundary
