@@ -19,6 +19,7 @@ export type PermissionAction =
   | "access_payments"
   | "manage_applications"
   | "view_talent_profile"
+  | "view_price"
   | "admin";
 
 export interface PermissionUser {
@@ -159,6 +160,7 @@ export function canPerformAction(
       return allowIfAuthenticated(user);
     case "favorite_talent":
     case "view_talent_profile":
+    case "view_price":
       return allowIfAuthenticated(user);
     default:
       return { allowed: false, reason: "role" };
@@ -237,6 +239,10 @@ export const AUTH_MODAL_COPY: Record<PermissionAction, { ar: string; en: string 
   view_talent_profile: {
     ar: "أنشئ حساباً مجانياً لعرض هذا الملف الشخصي.",
     en: "Create a free account to view this profile.",
+  },
+  view_price: {
+    ar: "أنشئ حساباً مجانياً لعرض الأسعار.",
+    en: "Create a free account to view pricing.",
   },
   admin: {
     ar: "تحتاج إلى صلاحيات مسؤول.",

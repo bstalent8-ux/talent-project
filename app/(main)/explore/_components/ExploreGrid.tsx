@@ -33,7 +33,7 @@ function TalentCardItem({
   const initial = talent.name.charAt(0).toUpperCase();
   const favorited = favoriteIds?.has(talent.id) ?? false;
   const router = useRouter();
-  const { isGuest } = useGuestGuard();
+  const { isGuest, requestAuth } = useGuestGuard();
 
   // Explore lists many talents on one page, so the generic guest-auth
   // redirect (which returns to the CURRENT page — see GuestGuard.tsx's
@@ -123,9 +123,15 @@ function TalentCardItem({
         )}
 
         <div className={styles.talentFooter}>
-          <div>
+          <div
+            onClick={isGuest ? (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              requestAuth("view_price");
+            } : undefined}
+          >
             <p className={styles.priceLabel}>{lang === "ar" ? "يبدأ من" : "Starting at"}</p>
-            <p className={styles.priceValue}>
+            <p className={styles.priceValue} style={isGuest ? { filter: "blur(6px)", userSelect: "none" } : undefined}>
               {talent.starting_price
                 ? `${talent.starting_price.toLocaleString()} ${lang === "ar" ? "ج.م" : "EGP"}`
                 : lang === "ar" ? "اطلب عرض سعر" : "Get quote"}

@@ -159,10 +159,25 @@
   }
 
   html {
-    direction: rtl;
+    /* No unconditional `direction: rtl` here — it used to override the
+     * `dir` attribute app/layout.tsx sets per-language (rtl for Arabic,
+     * ltr for English) since an author CSS rule beats the attribute's own
+     * UA-stylesheet mapping. That silently forced RTL bidi on English
+     * pages too — invisible for plain prose, but it reorders trailing
+     * neutral punctuation (a "?" at the end of an English sentence
+     * visually jumping to the front). Explicit per-attribute rules keep
+     * the toggle working everywhere instead of relying on the UA default. */
     scroll-behavior: smooth;
     text-rendering: optimizeLegibility;
     overflow-x: hidden;
+  }
+
+  html[dir="rtl"] {
+    direction: rtl;
+  }
+
+  html[dir="ltr"] {
+    direction: ltr;
   }
 
   body {

@@ -29,7 +29,21 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   const countTalentsByStatus = (status: string) =>
     safe(adminClient.from("talent_profiles").select("id", { count: "exact", head: true }).eq("status", status));
 
-  const [approved, pending, rejected, suspended, brands, bookings, reviews, newRegistrations] = await Promise.all([
+  // No SQL GROUP BY through the JS client — fetch every category value and
+  // tally in-process. The talent pool is small enough (dozens, not
+  // thousands) that this is one cheap query, same posture as other
+  // JS-side-join spots this codebase already uses (CLAUDE.md §11.10).
+  const countsByCategory = async (): Promise<Record<string, number>> => {
+    const { data } = await adminClient.from("talent_profiles").select("category");
+    const counts: Record<string, number> = {};
+    for (const row of data ?? []) {
+      const key = row.category ?? "unknown";
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    return counts;
+  };
+
+  const [approved, pending, rejected, suspended, brands, bookings, reviews, newRegistrations, byCategory] = await Promise.all([
     countTalentsByStatus("approved"),
     countTalentsByStatus("pending"),
     countTalentsByStatus("rejected"),
@@ -38,6 +52,7 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
     safe(adminClient.from("bookings").select("id", { count: "exact", head: true })),
     safe(adminClient.from("reviews").select("id", { count: "exact", head: true })),
     safe(adminClient.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", REGISTRATION_COUNTER_START)),
+    countsByCategory(),
   ]);
 
   return {
@@ -49,6 +64,7 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
     bookings,
     reviews,
     newRegistrations,
+    byCategory,
   };
 }
 

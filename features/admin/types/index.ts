@@ -34,6 +34,12 @@ export interface AdminDashboardStats {
    * started — grows over time, not reset daily. See
    * REGISTRATION_COUNTER_START in admin.service.ts. */
   newRegistrations: number;
+  /** Every talent_profiles.category value seen, with its count — regardless
+   *  of status (pending/approved/etc), so it reads as "our talent pool
+   *  composition" rather than duplicating the approved-only stat above.
+   *  Whatever categories exist show up here automatically, not just the
+   *  two the platform ships with (ugc/model) — see DashboardStatsGrid.tsx. */
+  byCategory: Record<string, number>;
 }
 
 type ProfileRef = { full_name: string | null; handle: string | null } | { full_name: string | null; handle: string | null }[] | null;

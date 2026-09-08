@@ -2,7 +2,17 @@
 import { useSite } from "@/contexts/SiteContext";
 import DashboardCard from "@/components/admin/DashboardCard";
 import type { AdminDashboardStats } from "@/features/admin/types";
-import { Users, CheckCircle, XCircle, PauseCircle, Building2, CalendarCheck, Star, UserPlus } from "lucide-react";
+import { formatTalentTag } from "@/lib/talent-tags";
+import { Users, CheckCircle, XCircle, PauseCircle, Building2, CalendarCheck, Star, UserPlus, Video, Sparkles } from "lucide-react";
+
+// Icon + color per known category, cycling through a small neutral palette
+// for anything the platform adds later that isn't ugc/model — see
+// AdminDashboardStats.byCategory's doc comment for why this is dynamic.
+const CATEGORY_STYLE: Record<string, { color: string; icon: React.ReactNode }> = {
+  ugc:   { color: "#F97316", icon: <Video size={20} /> },
+  model: { color: "#8B5CF6", icon: <Sparkles size={20} /> },
+};
+const FALLBACK_CATEGORY_COLORS = ["#22D3EE", "#FB923C", "#4ADE80", "#F472B6", "#A78BFA"];
 
 const TX = {
   ar: {
@@ -30,6 +40,7 @@ const TX = {
 export default function DashboardStatsGrid({ stats }: { stats: AdminDashboardStats }) {
   const { lang } = useSite();
   const t = TX[lang];
+  const categories = Object.entries(stats.byCategory ?? {}).sort(([, a], [, b]) => b - a);
 
   return (
     <div
@@ -47,6 +58,21 @@ export default function DashboardStatsGrid({ stats }: { stats: AdminDashboardSta
       <DashboardCard label={t.brands}    value={stats.brands}    color="#60A5FA" icon={<Building2 size={20} />} />
       <DashboardCard label={t.bookings}  value={stats.bookings}  color="#A78BFA" icon={<CalendarCheck size={20} />} />
       <DashboardCard label={t.reviews}   value={stats.reviews}   color="#F472B6" icon={<Star size={20} />} />
+      {categories.map(([category, count], i) => {
+        const style = CATEGORY_STYLE[category] ?? {
+          color: FALLBACK_CATEGORY_COLORS[i % FALLBACK_CATEGORY_COLORS.length],
+          icon: <Users size={20} />,
+        };
+        return (
+          <DashboardCard
+            key={category}
+            label={formatTalentTag(category, lang)}
+            value={count}
+            color={style.color}
+            icon={style.icon}
+          />
+        );
+      })}
     </div>
   );
 }
