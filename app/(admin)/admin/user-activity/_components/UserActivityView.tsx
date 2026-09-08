@@ -4,8 +4,14 @@ import Link from "next/link";
 import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
-import { USER_EVENT_NAMES, summarizeTrafficSources, type UserEventName, type AdminUserEvent, type AdminUserActivityStats, type AdminVisitor, type AdminTrafficSource } from "@/features/admin/services/admin.service";
+import {
+  USER_EVENT_NAMES, summarizeTrafficSources,
+  type UserEventName, type AdminUserEvent, type AdminUserActivityStats, type AdminVisitor, type AdminTrafficSource,
+  type AdminDailyTrafficPoint, type AdminTopPage, type AdminSignupBreakdown,
+} from "@/features/admin/services/admin.service";
+import { formatTalentTag } from "@/lib/talent-tags";
 import { EVENT_LABEL, EVENT_COLOR, detailFor } from "../_lib/eventFormat";
+import { MultiLineTrendChart, ChartLegend, RankedBarList } from "./charts";
 
 // How often the client re-polls /api/admin/user-activity for fresh data —
 // see the effect below. Short enough to feel live, long enough that eight
@@ -25,6 +31,14 @@ const TX = {
     trafficSources: "مصادر التسجيل", source: "المصدر", campaign: "الحملة", signups: "عدد التسجيلات",
     noTrafficSources: "لا توجد تسجيلات في هذه الفترة", organic: "عضوي (بدون رابط معلَّم)",
     registerTotal: "إجمالي التسجيلات", fromCampaigns: "من حملات إعلانية", fromOrganic: "عضوي (جروبات فيسبوك)",
+    trafficTrend: "الزيارات والتسجيلات عبر الوقت", noTrend: "لا توجد بيانات كافية لعرض جراف",
+    pageViewsLegend: "زيارات صفحات", signupsLegend: "تسجيلات", clicksLegend: "دوسات", profileViewsLegend: "زيارات بروفايل",
+    conversionRate: "نسبة التحويل لتسجيل", visitedNotRegistered: "دخلوا ومسجلوش",
+    topPages: "أكتر الصفحات نشاطاً", page: "الصفحة", views: "زيارات", clicks: "دوسات", avgTime: "متوسط الوقت",
+    noTopPages: "لا توجد بيانات كافية عن الصفحات",
+    signupsByRole: "التسجيلات حسب النوع", signupsByCategory: "تسجيلات المواهب حسب الفئة",
+    noBreakdown: "لا توجد بيانات",
+    talent: "موهبة", brand: "شركة", unknown: "غير محدد",
   },
   en: {
     recent: "Recent events",
@@ -37,15 +51,33 @@ const TX = {
     trafficSources: "Signup sources", source: "Source", campaign: "Campaign", signups: "Signups",
     noTrafficSources: "No signups in this range", organic: "Organic (untagged link)",
     registerTotal: "Total registered", fromCampaigns: "From ad campaigns", fromOrganic: "Organic (Facebook Groups)",
+    trafficTrend: "Traffic & signups over time", noTrend: "Not enough data to chart yet",
+    pageViewsLegend: "Page views", signupsLegend: "Signups", clicksLegend: "Clicks", profileViewsLegend: "Profile views",
+    conversionRate: "Visitor-to-signup rate", visitedNotRegistered: "Visited, didn't register",
+    topPages: "Top pages by activity", page: "Page", views: "Views", clicks: "Clicks", avgTime: "Avg. time",
+    noTopPages: "Not enough page data yet",
+    signupsByRole: "Signups by type", signupsByCategory: "Talent signups by category",
+    noBreakdown: "No data",
+    talent: "Talent", brand: "Brand", unknown: "Unknown",
   },
 };
 
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.round(ms / 1000);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 interface Props {
-  stats:          AdminUserActivityStats;
-  events:         AdminUserEvent[];
-  total:          number;
-  visitors:       AdminVisitor[];
-  trafficSources: AdminTrafficSource[];
+  stats:           AdminUserActivityStats;
+  events:          AdminUserEvent[];
+  total:           number;
+  visitors:        AdminVisitor[];
+  trafficSources:  AdminTrafficSource[];
+  dailyTraffic:    AdminDailyTrafficPoint[];
+  topPages:        AdminTopPage[];
+  signupBreakdown: AdminSignupBreakdown;
   page:       number;
   pageSize:   number;
   from?:      string;
@@ -65,17 +97,21 @@ function hrefFor(page: number, from?: string, to?: string, eventName?: string) {
 
 export default function UserActivityView({
   stats: initialStats, events: initialEvents, total: initialTotal, visitors: initialVisitors,
-  trafficSources: initialTrafficSources,
+  trafficSources: initialTrafficSources, dailyTraffic: initialDailyTraffic,
+  topPages: initialTopPages, signupBreakdown: initialSignupBreakdown,
   page, pageSize, from, to, eventName,
 }: Props) {
   const { dark, lang } = useSite();
   const t = TX[lang];
 
-  const [stats,          setStats]          = useState(initialStats);
-  const [events,         setEvents]         = useState(initialEvents);
-  const [total,          setTotal]          = useState(initialTotal);
-  const [visitors,       setVisitors]       = useState(initialVisitors);
-  const [trafficSources, setTrafficSources] = useState(initialTrafficSources);
+  const [stats,           setStats]           = useState(initialStats);
+  const [events,          setEvents]          = useState(initialEvents);
+  const [total,           setTotal]           = useState(initialTotal);
+  const [visitors,        setVisitors]        = useState(initialVisitors);
+  const [trafficSources,  setTrafficSources]  = useState(initialTrafficSources);
+  const [dailyTraffic,    setDailyTraffic]    = useState(initialDailyTraffic);
+  const [topPages,        setTopPages]        = useState(initialTopPages);
+  const [signupBreakdown, setSignupBreakdown] = useState(initialSignupBreakdown);
 
   // A real navigation (filter pill, pagination link) re-renders this
   // component with fresh server props — resync local state to that instead
@@ -86,7 +122,10 @@ export default function UserActivityView({
     setTotal(initialTotal);
     setVisitors(initialVisitors);
     setTrafficSources(initialTrafficSources);
-  }, [initialStats, initialEvents, initialTotal, initialVisitors, initialTrafficSources]);
+    setDailyTraffic(initialDailyTraffic);
+    setTopPages(initialTopPages);
+    setSignupBreakdown(initialSignupBreakdown);
+  }, [initialStats, initialEvents, initialTotal, initialVisitors, initialTrafficSources, initialDailyTraffic, initialTopPages, initialSignupBreakdown]);
 
   // Polls the same data this page was server-rendered with, on a timer, so
   // new events (page views, clicks, engagement heartbeats) show up without
@@ -115,6 +154,9 @@ export default function UserActivityView({
         setTotal(data.total);
         setVisitors(data.visitors);
         setTrafficSources(data.trafficSources);
+        setDailyTraffic(data.dailyTraffic);
+        setTopPages(data.topPages);
+        setSignupBreakdown(data.signupBreakdown);
       } catch {
         // Fire-and-forget — the next tick just tries again.
       }
@@ -134,6 +176,22 @@ export default function UserActivityView({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const trafficSummary = summarizeTrafficSources(trafficSources);
   const SUMMARY_CARD_COLOR = { total: TEXT, campaign: "#00D26A", organic: MUTED } as const;
+
+  // "Visited but didn't register" — every visitor in this range's rollup
+  // already carries a `registered` flag (see fetchAdminUserActivityVisitors),
+  // so this reads straight off that instead of a separate query.
+  const registeredCount = visitors.filter((v) => v.registered).length;
+  const guestCount = visitors.length - registeredCount;
+  const conversionPct = visitors.length > 0 ? (registeredCount / visitors.length) * 100 : 0;
+
+  const TREND_SERIES = [
+    { key: "pageViews",          label: t.pageViewsLegend,     color: "#60A5FA", data: dailyTraffic.map((d) => ({ date: d.date, value: d.pageViews })) },
+    { key: "signups",            label: t.signupsLegend,       color: "#00D26A", data: dailyTraffic.map((d) => ({ date: d.date, value: d.signups })) },
+    { key: "clicks",             label: t.clicksLegend,        color: "#F472B6", data: dailyTraffic.map((d) => ({ date: d.date, value: d.clicks })) },
+    { key: "talentProfileViews", label: t.profileViewsLegend,  color: "#F4B740", data: dailyTraffic.map((d) => ({ date: d.date, value: d.talentProfileViews })) },
+  ];
+
+  const roleLabel = (role: string) => (role === "talent" ? t.talent : role === "brand" ? t.brand : t.unknown);
 
   return (
     <>
@@ -157,6 +215,87 @@ export default function UserActivityView({
             <p style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 700, color: SUMMARY_CARD_COLOR[key] }}>{value}</p>
           </div>
         ))}
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>
+          <p style={{ margin: 0, fontSize: 12, color: MUTED }}>{t.conversionRate}</p>
+          <p style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 700, color: "#00D26A" }}>{conversionPct.toFixed(1)}%</p>
+          <p style={{ margin: "2px 0 0", fontSize: 11, color: MUTED }}>{guestCount} {t.visitedNotRegistered}</p>
+        </div>
+      </div>
+
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
+        <p style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 600, color: TEXT }}>{t.trafficTrend}</p>
+        {dailyTraffic.length < 2 ? (
+          <EmptyState message={t.noTrend} />
+        ) : (
+          <>
+            <div style={{ marginBottom: 12 }}>
+              <ChartLegend series={TREND_SERIES} textColor={MUTED} />
+            </div>
+            <MultiLineTrendChart series={TREND_SERIES} />
+          </>
+        )}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 24 }}>
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
+          <p style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 600, color: TEXT }}>{t.signupsByRole}</p>
+          {signupBreakdown.byRole.length === 0 ? (
+            <EmptyState message={t.noBreakdown} />
+          ) : (
+            <RankedBarList
+              data={signupBreakdown.byRole.map((r) => ({ label: roleLabel(r.role), value: r.count }))}
+              color="#60A5FA"
+              mutedColor={dark ? "#1e293b" : "#E2E8F0"}
+              textColor={TEXT}
+              formatValue={(v) => String(v)}
+            />
+          )}
+        </div>
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
+          <p style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 600, color: TEXT }}>{t.signupsByCategory}</p>
+          {signupBreakdown.byCategory.length === 0 ? (
+            <EmptyState message={t.noBreakdown} />
+          ) : (
+            <RankedBarList
+              data={signupBreakdown.byCategory.map((c) => ({ label: c.category === "unknown" ? t.unknown : formatTalentTag(c.category, lang), value: c.count }))}
+              color="#F97316"
+              mutedColor={dark ? "#1e293b" : "#E2E8F0"}
+              textColor={TEXT}
+              formatValue={(v) => String(v)}
+            />
+          )}
+        </div>
+      </div>
+
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
+        <p style={{ margin: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
+          {t.topPages} ({topPages.length})
+        </p>
+        {topPages.length === 0 ? (
+          <EmptyState message={t.noTopPages} />
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: TH }}>
+                  {[t.page, t.views, t.clicks, t.avgTime].map((h) => (
+                    <th key={h} style={{ textAlign: "start", padding: "10px 16px", color: MUTED, fontWeight: 500 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {topPages.slice(0, 20).map((p) => (
+                  <tr key={p.path} style={{ borderTop: `1px solid ${BORDER}` }}>
+                    <td style={{ padding: "10px 16px", color: TEXT, direction: "ltr", textAlign: lang === "ar" ? "right" : "left", fontFamily: "monospace", fontSize: 12.5 }}>{p.path}</td>
+                    <td style={{ padding: "10px 16px", color: TEXT, fontVariantNumeric: "tabular-nums" }}>{p.views}</td>
+                    <td style={{ padding: "10px 16px", color: TEXT, fontVariantNumeric: "tabular-nums" }}>{p.clicks}</td>
+                    <td style={{ padding: "10px 16px", color: MUTED, fontVariantNumeric: "tabular-nums" }}>{p.totalTimeMs > 0 ? formatDuration(p.avgTimeMs) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>

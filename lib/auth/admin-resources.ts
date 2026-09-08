@@ -14,7 +14,7 @@
 export const ADMIN_RESOURCE_KEYS = [
   "dashboard", "leads", "candidates", "talents", "verifications", "talentDemand", "bookings", "reviews",
   "brands", "trustedBrands", "support", "emails", "notifications", "notificationsLog",
-  "userActivity", "metaAds", "testimonials", "brandMoments", "categories", "packages", "profileConfig",
+  "userActivity", "healthCheck", "testimonials", "brandMoments", "categories", "packages", "profileConfig",
 ] as const;
 export type AdminResourceKey = (typeof ADMIN_RESOURCE_KEYS)[number];
 
@@ -61,7 +61,7 @@ export const ADMIN_ROUTE_MAP: Record<AdminResourceKey, string> = {
   notifications: "/admin/notifications",
   notificationsLog: "/admin/notifications-log",
   userActivity: "/admin/user-activity",
-  metaAds: "/admin/meta-ads",
+  healthCheck: "/admin/health-check",
   testimonials: "/admin/testimonials",
   brandMoments: "/admin/brand-moments",
   categories: "/admin/categories",
@@ -76,7 +76,7 @@ export const ADMIN_ROUTE_MAP: Record<AdminResourceKey, string> = {
 export const ADMIN_NAV_PRIORITY: AdminResourceKey[] = [
   "dashboard", "leads", "candidates", "talents", "verifications", "talentDemand", "bookings", "reviews",
   "brands", "trustedBrands", "support", "emails", "notifications", "notificationsLog",
-  "userActivity", "metaAds", "testimonials", "brandMoments", "categories", "packages", "profileConfig",
+  "userActivity", "healthCheck", "testimonials", "brandMoments", "categories", "packages", "profileConfig",
 ];
 
 /** Longest-prefix match against ADMIN_ROUTE_MAP, with an exact-or-"/"-boundary

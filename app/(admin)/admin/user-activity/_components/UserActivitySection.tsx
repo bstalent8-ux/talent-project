@@ -1,4 +1,8 @@
-import { fetchAdminUserActivityStats, fetchAdminUserActivityPage, fetchAdminUserActivityVisitors, fetchAdminTrafficSources, type UserEventName } from "@/features/admin/services/admin.service";
+import {
+  fetchAdminUserActivityStats, fetchAdminUserActivityPage, fetchAdminUserActivityVisitors,
+  fetchAdminTrafficSources, fetchAdminDailyTraffic, fetchAdminTopPages, fetchAdminSignupBreakdown,
+  type UserEventName,
+} from "@/features/admin/services/admin.service";
 import UserActivityView from "./UserActivityView";
 
 interface Props {
@@ -15,16 +19,20 @@ interface Props {
 // fetches the whole table. Mirrors TalentDemandSection.
 export default async function UserActivitySection({ page, pageSize, from, to, eventName }: Props) {
   const typedEventName = eventName as UserEventName | undefined;
-  const [stats, { events, total }, visitors, trafficSources] = await Promise.all([
+  const [stats, { events, total }, visitors, trafficSources, dailyTraffic, topPages, signupBreakdown] = await Promise.all([
     fetchAdminUserActivityStats({ from, to }),
     fetchAdminUserActivityPage({ page, pageSize, from, to, eventName: typedEventName }),
     fetchAdminUserActivityVisitors({ from, to }),
     fetchAdminTrafficSources({ from, to }),
+    fetchAdminDailyTraffic({ from, to }),
+    fetchAdminTopPages({ from, to }),
+    fetchAdminSignupBreakdown({ from, to }),
   ]);
 
   return (
     <UserActivityView
       stats={stats} events={events} total={total} visitors={visitors} trafficSources={trafficSources}
+      dailyTraffic={dailyTraffic} topPages={topPages} signupBreakdown={signupBreakdown}
       page={page} pageSize={pageSize} from={from} to={to} eventName={eventName}
     />
   );

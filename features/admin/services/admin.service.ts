@@ -1,6 +1,6 @@
 import { adminClient } from "@/lib/supabase/admin";
 import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminReview } from "../types";
-import { clusterPageVisits, totalDurationByPage, type PageTotal } from "./page-duration-clustering";
+import { clusterPageVisits, totalDurationByPage, type PageTotal, type EngagementSample } from "./page-duration-clustering";
 
 export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   // { count: "exact", head: true } returns just the row count — no rows are
@@ -944,6 +944,191 @@ export function summarizeTrafficSources(sources: AdminTrafficSource[]): AdminTra
     summary[s.channel] += s.count;
   }
   return summary;
+}
+
+// ─── Daily traffic trend ────────────────────────────────────────────────────
+// Backs the /admin/user-activity trend graph — page views, signups, clicks
+// and profile views per day. No GROUP BY available through the Supabase
+// query builder for a jsonb-free straight count-by-day, so this fetches
+// (event_name, created_at) for the four tracked event types and buckets by
+// calendar day in JS — same "resolve in JS, not a DB join/aggregate" posture
+// as fetchAdminUserActivityVisitors right below, and capped the same way for
+// the same reason (see DAILY_TRAFFIC_SCAN_LIMIT).
+
+export interface AdminDailyTrafficPoint {
+  date:               string; // "YYYY-MM-DD"
+  pageViews:          number;
+  signups:            number;
+  clicks:             number;
+  talentProfileViews: number;
+}
+
+const DAILY_TRAFFIC_SCAN_LIMIT = 20_000;
+
+export async function fetchAdminDailyTraffic(range: AdminUserActivityDateRange = {}): Promise<AdminDailyTrafficPoint[]> {
+  let query = adminClient
+    .from("user_events")
+    .select("event_name, created_at")
+    .in("event_name", ["page_view", "signup", "click", "talent_profile_view"])
+    .order("created_at", { ascending: true })
+    .limit(DAILY_TRAFFIC_SCAN_LIMIT);
+  query = applyUserActivityDateRange(query, range);
+
+  const { data: rows, error } = await query;
+  if (error || !rows?.length) return [];
+
+  const byDate = new Map<string, AdminDailyTrafficPoint>();
+  for (const r of rows) {
+    const date = r.created_at.slice(0, 10);
+    let point = byDate.get(date);
+    if (!point) {
+      point = { date, pageViews: 0, signups: 0, clicks: 0, talentProfileViews: 0 };
+      byDate.set(date, point);
+    }
+    if (r.event_name === "page_view") point.pageViews += 1;
+    else if (r.event_name === "signup") point.signups += 1;
+    else if (r.event_name === "click") point.clicks += 1;
+    else if (r.event_name === "talent_profile_view") point.talentProfileViews += 1;
+  }
+
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// ─── Top pages (sitewide) ───────────────────────────────────────────────────
+// "Where do events/clicks pile up" — page_view + click counts, and total/avg
+// time-on-page, aggregated by path across every visitor. Time-on-page reuses
+// clusterPageVisits()/totalDurationByPage() — but those two are written for
+// ONE visitor's own timeline (see page-duration-clustering.ts's own comment):
+// naively feeding them every visitor's heartbeats pooled together would let
+// two different people's same-path heartbeats that happen to land close in
+// time get merged into one fictitious "visit". So heartbeats are grouped by
+// visitor key FIRST, clustered per visitor, THEN rolled up by path — the
+// same per-visitor clustering fetchAdminVisitorDetail does, just for every
+// visitor at once instead of one.
+
+export interface AdminTopPage {
+  path:        string;
+  views:       number;
+  clicks:      number;
+  totalTimeMs: number;
+  avgTimeMs:   number;
+}
+
+const TOP_PAGES_SCAN_LIMIT = 20_000;
+
+export async function fetchAdminTopPages(range: AdminUserActivityDateRange = {}): Promise<AdminTopPage[]> {
+  let query = adminClient
+    .from("user_events")
+    .select("event_name, metadata, user_id, session_id, created_at")
+    .in("event_name", ["page_view", "click", "page_engagement"])
+    .limit(TOP_PAGES_SCAN_LIMIT);
+  query = applyUserActivityDateRange(query, range);
+
+  const { data: rows, error } = await query;
+  if (error || !rows?.length) return [];
+
+  const views = new Map<string, number>();
+  const clicks = new Map<string, number>();
+  const engagementByVisitor = new Map<string, EngagementSample[]>();
+
+  for (const r of rows) {
+    const m = (r.metadata ?? {}) as Record<string, unknown>;
+    const path = typeof m.path === "string" ? m.path : null;
+    if (!path) continue;
+
+    if (r.event_name === "page_view") {
+      views.set(path, (views.get(path) ?? 0) + 1);
+    } else if (r.event_name === "click") {
+      clicks.set(path, (clicks.get(path) ?? 0) + 1);
+    } else {
+      const key = r.user_id ?? `guest:${r.session_id}`;
+      const list = engagementByVisitor.get(key) ?? [];
+      list.push({ path, duration_ms: typeof m.duration_ms === "number" ? m.duration_ms : 0, created_at: r.created_at });
+      engagementByVisitor.set(key, list);
+    }
+  }
+
+  const timeByPath = new Map<string, { totalMs: number; visitCount: number }>();
+  for (const samples of engagementByVisitor.values()) {
+    for (const v of clusterPageVisits(samples)) {
+      const existing = timeByPath.get(v.path);
+      if (existing) { existing.totalMs += v.durationMs; existing.visitCount += 1; }
+      else timeByPath.set(v.path, { totalMs: v.durationMs, visitCount: 1 });
+    }
+  }
+
+  const allPaths = new Set<string>([...views.keys(), ...clicks.keys(), ...timeByPath.keys()]);
+  return [...allPaths]
+    .map((path) => {
+      const t = timeByPath.get(path);
+      return {
+        path,
+        views:       views.get(path) ?? 0,
+        clicks:      clicks.get(path) ?? 0,
+        totalTimeMs: t?.totalMs ?? 0,
+        avgTimeMs:   t && t.visitCount > 0 ? Math.round(t.totalMs / t.visitCount) : 0,
+      };
+    })
+    .sort((a, b) => (b.views + b.clicks) - (a.views + a.clicks));
+}
+
+// ─── Signup breakdown (role + talent category) ──────────────────────────────
+// "How many of the signups are UGC vs Model" — signup events only carry
+// `role` (talent|brand, see app/api/events/route.ts's metadata schema); a
+// talent's category isn't decided at signup, it's whatever talent_profiles.
+// category is RIGHT NOW for that user (a second join, talent signups only)
+// — so this is "current category mix of everyone who signed up in range",
+// not "what they picked at signup time". Good enough for "how many UGC
+// signed up this month", not meant to survive someone changing category
+// after the fact and still calling it a historical breakdown.
+
+export interface AdminSignupBreakdown {
+  byRole:     { role: string; count: number }[];
+  byCategory: { category: string; count: number }[];
+}
+
+const SIGNUP_BREAKDOWN_SCAN_LIMIT = 10_000;
+
+export async function fetchAdminSignupBreakdown(range: AdminUserActivityDateRange = {}): Promise<AdminSignupBreakdown> {
+  let query = adminClient
+    .from("user_events")
+    .select("user_id, metadata")
+    .eq("event_name", "signup")
+    .limit(SIGNUP_BREAKDOWN_SCAN_LIMIT);
+  query = applyUserActivityDateRange(query, range);
+
+  const { data: rows, error } = await query;
+  if (error || !rows?.length) return { byRole: [], byCategory: [] };
+
+  const roleCounts = new Map<string, number>();
+  const talentUserIds: string[] = [];
+  for (const r of rows) {
+    const m = (r.metadata ?? {}) as Record<string, unknown>;
+    const role = typeof m.role === "string" ? m.role : "unknown";
+    roleCounts.set(role, (roleCounts.get(role) ?? 0) + 1);
+    if (role === "talent" && r.user_id) talentUserIds.push(r.user_id);
+  }
+
+  let byCategory: { category: string; count: number }[] = [];
+  if (talentUserIds.length) {
+    const { data: talentRows } = await adminClient
+      .from("talent_profiles")
+      .select("user_id, category")
+      .in("user_id", talentUserIds);
+    const categoryCounts = new Map<string, number>();
+    for (const t of talentRows ?? []) {
+      const category = t.category ?? "unknown";
+      categoryCounts.set(category, (categoryCounts.get(category) ?? 0) + 1);
+    }
+    byCategory = [...categoryCounts.entries()]
+      .map(([category, count]) => ({ category, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  return {
+    byRole: [...roleCounts.entries()].map(([role, count]) => ({ role, count })).sort((a, b) => b.count - a.count),
+    byCategory,
+  };
 }
 
 // ─── Per-visitor rollup ─────────────────────────────────────────────────────

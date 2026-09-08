@@ -852,50 +852,60 @@ hardening pass).
 
 ---
 
-## Meta Ads Insights — 2026-09-08
+## Admin Health Checkup — 2026-09-08
 
-New admin page **`/admin/meta-ads`** (sidebar: Analytics group, next to User
-Activity) — read-only campaign dashboard backed by Meta's Marketing API
-`/insights` endpoint. No new DB table and no new dependency: `features/meta-
-ads/service.ts` calls `graph.facebook.com` directly with `fetch` (edge-safe),
-and the two charts (`_components/charts.tsx`) are hand-rolled inline SVG per
-CLAUDE.md §11 rule 7 (no charting library added).
+New admin page **`/admin/health-check`** (sidebar: Analytics group) — an
+on-demand "Run Checkup" button, not a background job or cron. Clicking it
+fires four independent live checks in parallel (`features/health-check/
+service.ts`) and rolls them into one 0-100 score for a hand-rolled SVG
+half-circle gauge (`_components/HealthGauge.tsx` — no charting library,
+CLAUDE.md §11 rule 7):
 
-**Auth model — deliberately simpler than Lead Ads/Messenger sync.** This only
-needs a Business-Manager **System User token** with `ads_read` on the
-business's own ad account — no Meta App Review, since the business is
-reading its own account. Two server-only env vars gate it:
-`META_ADS_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID` (+ optional `META_API_VERSION`,
-default `v21.0`). Unset = `fetchMetaAdsInsights()` returns
-`{ configured: false }` and the page renders setup instructions instead of
-erroring — same posture as `NEXT_PUBLIC_META_PIXEL_ID` being unset for the
-Pixel.
+1. **Cloudinary usage** — one call to Cloudinary's own `/usage` endpoint
+   (storage, bandwidth, resource count, plan credit %). Needs
+   `CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` (server-only — distinct from
+   the `NEXT_PUBLIC_CLOUDINARY_*` unsigned-upload vars, which grant no read
+   access). Unconfigured = shown as "not configured", excluded from the
+   score rather than penalized (`scoreCloudinary()` returns `null`).
+2. **Security checklist** — 5 LIVE self-probes against the site's own origin
+   (derived from the incoming request, not a hardcoded URL): CSP header
+   present, `frame-ancestors` present, `/admin` redirects an unauthenticated
+   visitor, `/api/admin/categories` rejects an unauthenticated request
+   (401/403), HTTPS. **This is a config self-audit, not a penetration test**
+   — the UI says so explicitly (`HealthCheckView.tsx`'s disclaimer line) so
+   it's never mistaken for real security testing.
+3. **Performance probe** — times 3 live requests (`/home`, `/explore`,
+   `/api/me`) right now. There is no historical per-request timing log
+   anywhere in this app (that would mean instrumenting `middleware.ts` to
+   write every request's duration somewhere — a real, separate feature, not
+   built here) — so "slowest request" here means slowest THIS run, and
+   `health_check_runs`'s history is the closest thing to a trend over time
+   (each run's score, not sub-metrics).
+4. **Traffic snapshot** — reuses `fetchAdminUserActivityStats()` from
+   `/admin/user-activity`'s own service, trailing 7 days.
 
-**What it shows:** spend, impressions, reach, clicks, CTR, a best-effort
-"results" count, cost-per-result, and `messaging_conversation_started` (Click-
-to-Messenger/WhatsApp conversation starts — Meta's own count, 0 for every
-other campaign objective, not an error) — as KPI cards, two trend lines
-(spend/results by day, `time_increment=1`), a top-campaigns-by-spend bar list,
-and a full campaign table. Date range is a preset selector
-(`features/meta-ads/types.ts`'s `META_DATE_PRESETS`) that navigates (server
-refetch), mirroring `/admin/user-activity`'s from/to filter pattern.
+**AI Recommendations** (`fetchAiRecommendations()`) sends the four reports'
+summary to Anthropic's Messages API (`claude-haiku-4-5-20251001` — cheap/fast
+is the right tool for a utility call an admin can re-trigger on a whim, not
+Sonnet) and asks for ≤5 prioritized action items. Needs `ANTHROPIC_API_KEY`;
+unset = shown as "not enabled", same posture as every other optional
+integration on this page.
 
-**`features/meta-ads/parse.ts` is pure and unit-tested** (`parse.test.ts`) —
-it picks one "primary result" out of Meta's `actions` array (a list of
-`{action_type, value}` pairs, not a single number) via a fixed priority order
-(lead > conversation-started > purchase > landing-page-view > link-click).
-This is a judgment call, not a guarantee it matches what Ads Manager itself
-would highlight for a given objective — documented in the file.
+**Scoring is pure and unit-tested** (`features/health-check/score.ts` +
+`score.test.ts`) — security/performance/cloudinary each score 0-100 (or
+`null` if not applicable), then `computeOverallScore()` does a weighted
+average (security 40%, performance 35%, cloudinary 25%) that **excludes**
+any `null` category instead of treating it as a 0, so an admin who hasn't
+set up Cloudinary isn't punished for it.
 
-**RBAC:** new resource key `"metaAds"` in `lib/auth/admin-resources.ts`
-(`ADMIN_RESOURCE_KEYS`/`ADMIN_ROUTE_MAP`/`ADMIN_NAV_PRIORITY`) + a label in
-`RolesView.tsx`'s `RESOURCE_LABELS` — same lockstep-with-`AdminSidebar.tsx`
-pattern as every other tab. No RBAC migration needed: a restricted role
-simply has no row for the new key until a super-admin grants it via
-`/admin/roles`; a `NULL admin_role_id` (full-access) admin sees it immediately.
+**New table** `health_check_runs` (`supabase/migrations/
+20260908_health_check_runs.sql`, not auto-applied per §6) — one row per run
+(`score int`, `results jsonb`, `created_by`), no RLS policies (service-role
+only, same pattern as `leads`/`user_events`). `/admin/health-check` reads the
+latest row + last 10 for the history strip; `POST /api/admin/health-check/
+run` is the only writer.
 
-**Not built (see the Meta-integration feasibility discussion this followed):**
-Lead Ads → CRM auto-create (needs Meta App Review, external/weeks-long,
-must be initiated by the business) and full Messenger/Instagram chat sync
-(needs `pages_messaging` + App Review + the 24-hour messaging window) are
-both out of scope for this page — it is insights-only, by design.
+**RBAC:** new resource key `"healthCheck"` in `lib/auth/admin-resources.ts` +
+`RolesView.tsx`'s `RESOURCE_LABELS`, same lockstep-with-`AdminSidebar.tsx`
+pattern as every other tab. The run route itself is gated on the `"create"`
+action (it writes a row), not `"read"`.

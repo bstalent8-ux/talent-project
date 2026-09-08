@@ -13,6 +13,9 @@ import {
   fetchAdminUserActivityPage,
   fetchAdminUserActivityVisitors,
   fetchAdminTrafficSources,
+  fetchAdminDailyTraffic,
+  fetchAdminTopPages,
+  fetchAdminSignupBreakdown,
   type UserEventName,
 } from "@/features/admin/services/admin.service";
 import { requirePermission } from "@/lib/auth/permissions";
@@ -44,12 +47,15 @@ export async function GET(req: NextRequest) {
   const to       = sp.get("to") ?? undefined;
   const eventName = (sp.get("event") ?? undefined) as UserEventName | undefined;
 
-  const [stats, { events, total }, visitors, trafficSources] = await Promise.all([
+  const [stats, { events, total }, visitors, trafficSources, dailyTraffic, topPages, signupBreakdown] = await Promise.all([
     fetchAdminUserActivityStats({ from, to }),
     fetchAdminUserActivityPage({ page, pageSize, from, to, eventName }),
     fetchAdminUserActivityVisitors({ from, to }),
     fetchAdminTrafficSources({ from, to }),
+    fetchAdminDailyTraffic({ from, to }),
+    fetchAdminTopPages({ from, to }),
+    fetchAdminSignupBreakdown({ from, to }),
   ]);
 
-  return NextResponse.json({ stats, events, total, visitors, trafficSources });
+  return NextResponse.json({ stats, events, total, visitors, trafficSources, dailyTraffic, topPages, signupBreakdown });
 }

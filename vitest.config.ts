@@ -27,7 +27,7 @@ export default defineConfig({
     include: [
       "features/profiles/**/*.test.ts",
       "features/admin/**/*.test.ts",
-      "features/meta-ads/**/*.test.ts",
+      "features/health-check/**/*.test.ts",
       "components/profile/**/*.test.ts",
       "lib/**/*.test.ts",
       "app/api/profile/**/*.test.ts",
