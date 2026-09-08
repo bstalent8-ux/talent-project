@@ -9,6 +9,7 @@ import { Eye, EyeOff, Languages, Moon, Sun } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import { safeNextPath } from "@/lib/safe-next-path";
+import { deriveHandle } from "@/lib/handle";
 import SupportTicketModal from "@/components/support/SupportTicketModal";
 import { trackEvent } from "@/lib/analytics/track";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
@@ -322,7 +323,7 @@ export default function RegisterPage() {
         return;
       }
 
-      const handle = form.email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-");
+      const handle = deriveHandle(form.fullName, form.email);
 
       // "other" is demand-tracking only — it must never become a real
       // talent category. No categoryIds, no talent_profiles row at all (see

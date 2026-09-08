@@ -67,18 +67,22 @@ interface Props {
   page:     number;
   pageSize: number;
   status:   string;
+  category?: string;
+  city?:     string;
 }
 
-function hrefFor(page: number, status: string, pageSize: number) {
+function hrefFor(page: number, status: string, pageSize: number, category?: string, city?: string) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (status !== "all") params.set("status", status);
   if (pageSize !== 10) params.set("pageSize", String(pageSize));
+  if (category) params.set("category", category);
+  if (city) params.set("city", city);
   const qs = params.toString();
   return qs ? `/admin/talents?${qs}` : "/admin/talents";
 }
 
-export default function TalentsTable({ talents, total, page, pageSize, status }: Props) {
+export default function TalentsTable({ talents, total, page, pageSize, status, category, city }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.talents?.canDelete;
@@ -295,10 +299,10 @@ export default function TalentsTable({ talents, total, page, pageSize, status }:
       <AdminPagination
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => hrefFor(p, status, pageSize)}
+        buildHref={(p) => hrefFor(p, status, pageSize, category, city)}
         total={total}
         pageSize={pageSize}
-        buildPageSizeHref={(size) => hrefFor(1, status, size)}
+        buildPageSizeHref={(size) => hrefFor(1, status, size, category, city)}
       />
 
       {modal && confirmConfig && (

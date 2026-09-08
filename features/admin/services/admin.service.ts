@@ -72,6 +72,29 @@ export interface AdminTalentsPageParams {
   page?:     number;
   pageSize?: number;
   status?:   string;
+  category?: string;
+  city?:     string;
+}
+
+/** Feeds the Category/City filter selects with only values that actually
+ *  exist — the platform's category list can change (see the Dashboard's
+ *  byCategory card), and city is free text typed by each talent, so a
+ *  hardcoded option list would drift from reality immediately. */
+export interface AdminTalentFilterOptions {
+  categories: string[];
+  cities:     string[];
+}
+
+export async function fetchAdminTalentFilterOptions(): Promise<AdminTalentFilterOptions> {
+  const [{ data: categoryRows }, { data: cityRows }] = await Promise.all([
+    adminClient.from("talent_profiles").select("category"),
+    adminClient.from("profiles").select("city").eq("role", "talent"),
+  ]);
+
+  const categories = Array.from(new Set((categoryRows ?? []).map((r) => r.category).filter((c): c is string => !!c))).sort();
+  const cities = Array.from(new Set((cityRows ?? []).map((r) => r.city).filter((c): c is string => !!c))).sort();
+
+  return { categories, cities };
 }
 
 export interface AdminTalentsPageResult {
@@ -90,6 +113,8 @@ export async function fetchAdminTalentsPage({
   page = 1,
   pageSize = 10,
   status,
+  category,
+  city,
 }: AdminTalentsPageParams): Promise<AdminTalentsPageResult> {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
@@ -108,6 +133,8 @@ export async function fetchAdminTalentsPage({
     .range(from, to);
 
   if (status && status !== "all") query = query.eq("talent_profiles.status", status);
+  if (category) query = query.eq("talent_profiles.category", category);
+  if (city) query = query.eq("city", city);
 
   const { data, count, error } = await query;
   if (error) return { talents: [], total: 0 };
