@@ -15,7 +15,9 @@ export async function GET(req: NextRequest) {
   const channel = sp.get("channel") || undefined;
   const category = sp.get("category") || undefined;
   const assignedTo = sp.get("assignedTo") || undefined;
+  const actionDate = sp.get("actionDate") || undefined;
+  const actionPersonId = sp.get("actionPersonId") || undefined;
 
-  const leads = await fetchAllLeadsForBoard({ channel, category, assignedTo });
+  const leads = await fetchAllLeadsForBoard({ channel, category, assignedTo, actionDate, actionPersonId });
   return NextResponse.json({ leads });
 }

@@ -21,9 +21,11 @@ interface Props {
   channel?: string;
   category?: string;
   assignedTo?: string;
+  actionDate?: string;
+  actionPersonId?: string;
 }
 
-export default function LeadsBoardView({ stages, channel, category, assignedTo }: Props) {
+export default function LeadsBoardView({ stages, channel, category, assignedTo, actionDate, actionPersonId }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -44,12 +46,14 @@ export default function LeadsBoardView({ stages, channel, category, assignedTo }
     if (channel) params.set("channel", channel);
     if (category) params.set("category", category);
     if (assignedTo) params.set("assignedTo", assignedTo);
+    if (actionDate) params.set("actionDate", actionDate);
+    if (actionPersonId) params.set("actionPersonId", actionPersonId);
     const qs = params.toString();
     const res = await fetch(`/api/admin/leads/board${qs ? `?${qs}` : ""}`).catch(() => null);
     const data = await res?.json().catch(() => null) as { leads?: Lead[] } | null;
     setLeads(data?.leads ?? []);
   }
-  useEffect(() => { load(); }, [channel, category, assignedTo]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [channel, category, assignedTo, actionDate, actionPersonId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function moveTo(leadId: string, stage: LeadStage) {
     if (stage.fields.length > 0) {

@@ -2,7 +2,6 @@ import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import { parsePrice } from "@/lib/price";
 import { adminClient } from "@/lib/supabase/admin";
 import { safePublicDisplayName } from "@/lib/public-display-name";
-import { calculateCompletion, COMPLETION_THRESHOLDS } from "@/lib/profile-completion";
 
 export interface PublicTalentCard {
   id: string;
@@ -86,27 +85,20 @@ const PUBLIC_TALENT_SELECT_ATTEMPTS = [
 ] as const;
 
 /**
- * A profile with no real content behind it (no photo/video, nothing filled
- * in) reads as fake to a visitor even when it's technically "approved" —
- * CLAUDE.md's COMPLETION_THRESHOLDS.appearInSearch (60) has existed since
- * the completion system shipped but was never enforced anywhere. This is
- * the first enforcement: Explore/Home simply omit anyone under it, reusing
- * the exact same scoring the talent sees on their own completion card, so
- * "why don't I show up" always has the same answer as "what's left to fill."
+ * Reverted 2026-09-08 at the admin's explicit request: approving a talent
+ * used to not be enough to show them in Explore — a completion-score gate
+ * (COMPLETION_THRESHOLDS.appearInSearch, 60) silently hid anyone under it
+ * even after approval, which read as a bug ("I approved 40, only 39 show").
+ * Approval is now the only gate here — score is no longer computed or
+ * checked in this path. The completion card/thresholds elsewhere (the
+ * talent's own dashboard) are untouched; this only affects public listing.
  */
-function toPublicTalentCards(
-  rows: PublicTalentProfile[],
-  portfolioCountByTalentProfileId: Record<string, number>,
-): PublicTalentCard[] {
+function toPublicTalentCards(rows: PublicTalentProfile[]): PublicTalentCard[] {
   return rows.flatMap((p) => {
     const tp = Array.isArray(p.talent_profiles) ? p.talent_profiles[0] : p.talent_profiles;
     if (!tp || !p.handle) return [];
     if (p.account_status && ["blocked", "suspended", "rejected"].includes(p.account_status)) return [];
     if (tp.status && tp.status !== "approved") return [];
-
-    const portfolioCount = portfolioCountByTalentProfileId[tp.id] ?? 0;
-    const { score } = calculateCompletion(p, tp, new Array(portfolioCount).fill(null));
-    if (score < COMPLETION_THRESHOLDS.appearInSearch) return [];
 
     const sl = (tp.social_links ?? {}) as Record<string, unknown>;
     const pkgs = Array.isArray(tp.packages) ? tp.packages as Array<Record<string, unknown>> : [];
@@ -129,28 +121,6 @@ function toPublicTalentCards(
       gender:         (sl.gender as string) ?? null,
     }];
   });
-}
-
-/** One batched count query instead of N — see CLAUDE.md §11.10. */
-async function fetchPortfolioCounts(talentProfileIds: string[]): Promise<Record<string, number>> {
-  if (talentProfileIds.length === 0) return {};
-
-  const { data, error } = await adminClient
-    .from("portfolio_items")
-    .select("talent_id")
-    .eq("is_approved", true)
-    .in("talent_id", talentProfileIds);
-
-  if (error) {
-    console.error("[public-talents] portfolio count query failed", error);
-    return {};
-  }
-
-  const counts: Record<string, number> = {};
-  for (const row of (data as { talent_id: string }[]) ?? []) {
-    counts[row.talent_id] = (counts[row.talent_id] ?? 0) + 1;
-  }
-  return counts;
 }
 
 async function queryPublicTalentRows(limit?: number): Promise<PublicTalentProfile[]> {
@@ -190,14 +160,7 @@ async function queryPublicTalentRows(limit?: number): Promise<PublicTalentProfil
 
 export async function fetchPublicTalentCards(limit?: number): Promise<PublicTalentCard[]> {
   const rows = await queryPublicTalentRows(limit);
-
-  const talentProfileIds = rows.flatMap((p) => {
-    const tp = Array.isArray(p.talent_profiles) ? p.talent_profiles[0] : p.talent_profiles;
-    return tp?.id ? [tp.id] : [];
-  });
-  const portfolioCounts = await fetchPortfolioCounts(talentProfileIds);
-
-  return toPublicTalentCards(rows, portfolioCounts);
+  return toPublicTalentCards(rows);
 }
 
 export async function getCachedPublicTalentCards(

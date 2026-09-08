@@ -11,7 +11,9 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
   const category = sp.get("category") || undefined;
   const assignedTo = sp.get("assignedTo") || undefined;
+  const actionDate = sp.get("actionDate") || undefined;
+  const actionPersonId = sp.get("actionPersonId") || undefined;
 
-  const candidates = await fetchAllCandidatesForBoard({ category, assignedTo });
+  const candidates = await fetchAllCandidatesForBoard({ category, assignedTo, actionDate, actionPersonId });
   return NextResponse.json({ candidates });
 }

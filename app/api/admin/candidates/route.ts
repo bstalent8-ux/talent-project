@@ -16,8 +16,10 @@ export async function GET(req: NextRequest) {
   const stage = sp.get("stage") ?? "all";
   const category = sp.get("category") || undefined;
   const assignedTo = sp.get("assignedTo") || undefined;
+  const actionDate = sp.get("actionDate") || undefined;
+  const actionPersonId = sp.get("actionPersonId") || undefined;
 
-  const { candidates, total } = await fetchCandidatesPage({ page, pageSize, stage, category, assignedTo });
+  const { candidates, total } = await fetchCandidatesPage({ page, pageSize, stage, category, assignedTo, actionDate, actionPersonId });
   return NextResponse.json({ candidates, total });
 }
 

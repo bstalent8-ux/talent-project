@@ -128,6 +128,39 @@ export interface LeadFilterParams {
   channel?: string;
   category?: string;
   assignedTo?: string;
+  /** Narrows to leads with a lead_actions row logged on this day (server's
+   *  UTC calendar day — see dayRangeUtc). Combines with actionPersonId when
+   *  both are set (AND, not two separate filters). */
+  actionDate?: string;
+  /** Narrows to leads with a lead_actions row performed by this admin —
+   *  "who did something to this lead", distinct from `assignedTo` (who
+   *  currently owns it). */
+  actionPersonId?: string;
+}
+
+function dayRangeUtc(dateStr: string): { start: string; end: string } {
+  const start = new Date(`${dateStr}T00:00:00.000Z`);
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
+/** Resolves actionDate/actionPersonId into the set of lead ids that have a
+ *  matching lead_actions row — null means "no such filter active" (caller
+ *  applies no restriction), an array (possibly empty) is the actual match
+ *  set. Kept separate from applyLeadFilters since it needs its own query
+ *  against a different table before the leads query can be built. */
+async function resolveActionFilterLeadIds(actionDate?: string, actionPersonId?: string): Promise<string[] | null> {
+  if (!actionDate && !actionPersonId) return null;
+
+  let q = adminClient.from("lead_actions").select("lead_id");
+  if (actionDate) {
+    const range = dayRangeUtc(actionDate);
+    q = q.gte("created_at", range.start).lt("created_at", range.end);
+  }
+  if (actionPersonId) q = q.eq("performed_by", actionPersonId);
+
+  const { data } = await q;
+  return Array.from(new Set((data ?? []).map((r) => r.lead_id as string)));
 }
 
 /** Returns null if a filter names a channel/category/stage key that no
@@ -140,7 +173,8 @@ function applyLeadFilters(
   query: any,
   filters: LeadFilterParams,
   stages: Record<string, LeadStageSummary>,
-  taxonomies: Taxonomies
+  taxonomies: Taxonomies,
+  actionLeadIds: string[] | null
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any | null {
   let q = query;
@@ -163,6 +197,10 @@ function applyLeadFilters(
   if (filters.assignedTo) {
     q = q.eq("assigned_to", filters.assignedTo);
   }
+  if (actionLeadIds !== null) {
+    if (actionLeadIds.length === 0) return null; // no lead matches the actionDate/actionPersonId filter
+    q = q.in("id", actionLeadIds);
+  }
   return q;
 }
 
@@ -174,7 +212,9 @@ export interface LeadsPageParams extends LeadFilterParams {
 export async function fetchLeadsPage({ page = 1, pageSize = 10, ...filters }: LeadsPageParams): Promise<LeadsPageResult> {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
-  const [stages, taxonomies] = await Promise.all([fetchStageSummaries(), fetchTaxonomies()]);
+  const [stages, taxonomies, actionLeadIds] = await Promise.all([
+    fetchStageSummaries(), fetchTaxonomies(), resolveActionFilterLeadIds(filters.actionDate, filters.actionPersonId),
+  ]);
 
   const base = adminClient
     .from("leads")
@@ -182,7 +222,7 @@ export async function fetchLeadsPage({ page = 1, pageSize = 10, ...filters }: Le
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  const query = applyLeadFilters(base, filters, stages, taxonomies);
+  const query = applyLeadFilters(base, filters, stages, taxonomies, actionLeadIds);
   if (!query) return { leads: [], total: 0 };
 
   const { data, count, error } = await query;
@@ -198,9 +238,11 @@ export async function fetchLeadsPage({ page = 1, pageSize = 10, ...filters }: Le
  *  `stage` is never passed here — the board shows every stage as its own
  *  column, so filtering it out client-side would be pointless. */
 export async function fetchAllLeadsForBoard(filters: Omit<LeadFilterParams, "stage"> = {}): Promise<Lead[]> {
-  const [stages, taxonomies] = await Promise.all([fetchStageSummaries(), fetchTaxonomies()]);
+  const [stages, taxonomies, actionLeadIds] = await Promise.all([
+    fetchStageSummaries(), fetchTaxonomies(), resolveActionFilterLeadIds(filters.actionDate, filters.actionPersonId),
+  ]);
   const base = adminClient.from("leads").select("*").order("created_at", { ascending: false });
-  const query = applyLeadFilters(base, filters, stages, taxonomies);
+  const query = applyLeadFilters(base, filters, stages, taxonomies, actionLeadIds);
   if (!query) return [];
 
   const { data, error } = await query;

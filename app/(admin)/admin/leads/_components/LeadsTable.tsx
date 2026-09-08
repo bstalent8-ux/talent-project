@@ -47,9 +47,11 @@ interface Props {
   channel?: string;
   category?: string;
   assignedTo?: string;
+  actionDate?: string;
+  actionPersonId?: string;
 }
 
-function hrefFor(page: number, stage: string, pageSize: number, channel?: string, category?: string, assignedTo?: string) {
+function hrefFor(page: number, stage: string, pageSize: number, channel?: string, category?: string, assignedTo?: string, actionDate?: string, actionPersonId?: string) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (stage !== "all") params.set("stage", stage);
@@ -57,12 +59,14 @@ function hrefFor(page: number, stage: string, pageSize: number, channel?: string
   if (channel) params.set("channel", channel);
   if (category) params.set("category", category);
   if (assignedTo) params.set("assignedTo", assignedTo);
+  if (actionDate) params.set("actionDate", actionDate);
+  if (actionPersonId) params.set("actionPersonId", actionPersonId);
   params.set("view", "table");
   const qs = params.toString();
   return qs ? `/admin/leads?${qs}` : "/admin/leads";
 }
 
-export default function LeadsTable({ leads, total, page, pageSize, stage, channel, category, assignedTo }: Props) {
+export default function LeadsTable({ leads, total, page, pageSize, stage, channel, category, assignedTo, actionDate, actionPersonId }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.leads?.canDelete;
@@ -339,10 +343,10 @@ export default function LeadsTable({ leads, total, page, pageSize, stage, channe
       <AdminPagination
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => hrefFor(p, stage, pageSize, channel, category, assignedTo)}
+        buildHref={(p) => hrefFor(p, stage, pageSize, channel, category, assignedTo, actionDate, actionPersonId)}
         total={total}
         pageSize={pageSize}
-        buildPageSizeHref={(size) => hrefFor(1, stage, size, channel, category, assignedTo)}
+        buildPageSizeHref={(size) => hrefFor(1, stage, size, channel, category, assignedTo, actionDate, actionPersonId)}
       />
 
       <ConfirmationModal

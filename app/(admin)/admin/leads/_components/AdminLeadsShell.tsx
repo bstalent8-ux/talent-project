@@ -2,28 +2,29 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Columns3, History, List, Settings2 } from "lucide-react";
+import { Columns3, List, Settings2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import LeadSettingsPanel from "./LeadSettingsPanel";
 import MoveStageModal from "./MoveStageModal";
 import TodayDueButton from "./TodayDueButton";
-import ActivityPanel from "./ActivityPanel";
 import type { LeadStage, LeadTaxonomyTerm } from "@/features/leads/types";
 import type { AdminSearchResult } from "@/features/admin-roles/types";
 
 const TX = {
   ar: {
-    title: "العملاء المحتملين", all: "الكل", manageStages: "إعدادات الليدز", dropHint: "سيب الليد هنا", table: "جدول", board: "المراحل", activity: "سجل النشاط",
+    title: "العملاء المحتملين", all: "الكل", manageStages: "إعدادات الليدز", dropHint: "سيب الليد هنا", table: "جدول", board: "المراحل",
     filterAssignee: "المسؤول: الكل", filterChannel: "المصدر: الكل", filterCategory: "الكاتيجوري: الكل",
+    filterActionPerson: "بواسطة: الكل", filterActionDate: "التاريخ",
   },
   en: {
-    title: "Leads", all: "All", manageStages: "Lead settings", dropHint: "Drop lead here", table: "Table", board: "Stages", activity: "Activity",
+    title: "Leads", all: "All", manageStages: "Lead settings", dropHint: "Drop lead here", table: "Table", board: "Stages",
     filterAssignee: "Assignee: All", filterChannel: "Source: All", filterCategory: "Category: All",
+    filterActionPerson: "Action by: All", filterActionDate: "Date",
   },
 };
 
-type LeadsView = "table" | "board" | "activity";
+type LeadsView = "table" | "board";
 
 interface Props {
   stage: string;
@@ -34,6 +35,11 @@ interface Props {
   channel?: string;
   category?: string;
   assignedTo?: string;
+  /** Who logged an action, and on what day — filters which leads show up
+   *  in both board and table (a lead needs a matching lead_actions row),
+   *  distinct from `assignedTo` (who currently owns the lead). */
+  actionDate?: string;
+  actionPersonId?: string;
   children: React.ReactNode;
 }
 
@@ -42,7 +48,7 @@ interface Props {
 // + table/board toggle. In table view, the tabs double as drag-and-drop
 // targets: dragging a row onto a tab moves that lead onto this stage —
 // same move-stage flow the board's column drop uses, see MoveStageModal.
-export default function AdminLeadsShell({ stage, view, stages, channels, categories, channel, category, assignedTo, children }: Props) {
+export default function AdminLeadsShell({ stage, view, stages, channels, categories, channel, category, assignedTo, actionDate, actionPersonId, children }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -64,14 +70,16 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
 
   // Every stage-pill/view-toggle/filter-select link goes through this one
   // builder so none of them accidentally drop another active filter.
-  function hrefFor(overrides: Partial<{ stage: string; view: LeadsView; channel: string; category: string; assignedTo: string }>) {
-    const next = { stage, view, channel, category, assignedTo, ...overrides };
+  function hrefFor(overrides: Partial<{ stage: string; view: LeadsView; channel: string; category: string; assignedTo: string; actionDate: string; actionPersonId: string }>) {
+    const next = { stage, view, channel, category, assignedTo, actionDate, actionPersonId, ...overrides };
     const params = new URLSearchParams();
     if (next.stage && next.stage !== "all") params.set("stage", next.stage);
     if (next.view && next.view !== "board") params.set("view", next.view);
     if (next.channel) params.set("channel", next.channel);
     if (next.category) params.set("category", next.category);
     if (next.assignedTo) params.set("assignedTo", next.assignedTo);
+    if (next.actionDate) params.set("actionDate", next.actionDate);
+    if (next.actionPersonId) params.set("actionPersonId", next.actionPersonId);
     const qs = params.toString();
     return qs ? `/admin/leads?${qs}` : "/admin/leads";
   }
@@ -134,7 +142,7 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
               );
             })}
           </div>
-        ) : view === "board" ? <TodayDueButton module="lead" /> : <div />}
+        ) : <TodayDueButton module="lead" />}
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <div style={{ display: "flex", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
@@ -161,18 +169,6 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
             >
               <List size={15} />
             </Link>
-            <Link
-              href={hrefFor({ view: "activity" })}
-              title={t.activity}
-              style={{
-                padding: "7px 12px", display: "flex", alignItems: "center",
-                backgroundColor: view === "activity" ? "rgba(0,210,106,0.1)" : "transparent",
-                color: view === "activity" ? "#00D26A" : MUTED, textDecoration: "none",
-                borderInlineStart: `1px solid ${BORDER}`,
-              }}
-            >
-              <History size={15} />
-            </Link>
           </div>
           <button
             type="button"
@@ -188,7 +184,6 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
         </div>
       </div>
 
-      {view !== "activity" && (
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
         <select
           value={assignedTo ?? ""}
@@ -214,12 +209,28 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
           <option value="">{t.filterCategory}</option>
           {categories.map((c) => <option key={c.id} value={c.key}>{lang === "ar" ? c.labelAr : c.labelEn}</option>)}
         </select>
-      </div>
-      )}
 
-      {view === "activity" ? (
-        <ActivityPanel module="lead" assigneesApiPath="/api/admin/leads/assignees" recordBasePath="/admin/leads" />
-      ) : children}
+        {/* Who logged an action + on what day — narrows the board/table to
+         *  leads with a matching lead_actions row. Kept separate from the
+         *  Assignee select above (that's "who owns the lead"). */}
+        <select
+          value={actionPersonId ?? ""}
+          onChange={(e) => router.push(hrefFor({ actionPersonId: e.target.value || undefined }))}
+          style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: actionPersonId ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
+        >
+          <option value="">{t.filterActionPerson}</option>
+          {assignees.map((a) => <option key={a.id} value={a.id}>{a.fullName ?? a.handle}</option>)}
+        </select>
+        <input
+          type="date"
+          value={actionDate ?? ""}
+          onChange={(e) => router.push(hrefFor({ actionDate: e.target.value || undefined }))}
+          title={t.filterActionDate}
+          style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: actionDate ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
+        />
+      </div>
+
+      {children}
 
       {managingStages && (
         <LeadSettingsPanel

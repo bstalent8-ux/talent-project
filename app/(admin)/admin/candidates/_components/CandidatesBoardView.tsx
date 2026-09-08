@@ -16,9 +16,11 @@ interface Props {
   stages: CandidateStage[];
   category?: string;
   assignedTo?: string;
+  actionDate?: string;
+  actionPersonId?: string;
 }
 
-export default function CandidatesBoardView({ stages, category, assignedTo }: Props) {
+export default function CandidatesBoardView({ stages, category, assignedTo, actionDate, actionPersonId }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -38,12 +40,14 @@ export default function CandidatesBoardView({ stages, category, assignedTo }: Pr
     const params = new URLSearchParams();
     if (category) params.set("category", category);
     if (assignedTo) params.set("assignedTo", assignedTo);
+    if (actionDate) params.set("actionDate", actionDate);
+    if (actionPersonId) params.set("actionPersonId", actionPersonId);
     const qs = params.toString();
     const res = await fetch(`/api/admin/candidates/board${qs ? `?${qs}` : ""}`).catch(() => null);
     const data = await res?.json().catch(() => null) as { candidates?: Candidate[] } | null;
     setCandidates(data?.candidates ?? []);
   }
-  useEffect(() => { load(); }, [category, assignedTo]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [category, assignedTo, actionDate, actionPersonId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function moveTo(candidateId: string, stage: CandidateStage) {
     if (stage.fields.length > 0) {

@@ -22,13 +22,15 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
   const page = Math.max(1, Number(sp.page) || 1);
   const stage = typeof sp.stage === "string" ? sp.stage : "all";
   // Board (every stage visible at once, no clicking a tab to switch) is the
-  // default — table and activity are explicit opt-ins.
-  const view = sp.view === "table" ? "table" : sp.view === "activity" ? "activity" : "board";
+  // default — table is the explicit opt-in.
+  const view = sp.view === "table" ? "table" : "board";
   const requestedPageSize = Number(sp.pageSize);
   const pageSize = ALLOWED_PAGE_SIZES.includes(requestedPageSize) ? requestedPageSize : DEFAULT_PAGE_SIZE;
   const channel = typeof sp.channel === "string" ? sp.channel : undefined;
   const category = typeof sp.category === "string" ? sp.category : undefined;
   const assignedTo = typeof sp.assignedTo === "string" ? sp.assignedTo : undefined;
+  const actionDate = typeof sp.actionDate === "string" ? sp.actionDate : undefined;
+  const actionPersonId = typeof sp.actionPersonId === "string" ? sp.actionPersonId : undefined;
 
   const [stages, channels, categories] = await Promise.all([
     fetchStages(),
@@ -40,15 +42,16 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
     <AdminLeadsShell
       stage={stage} view={view} stages={stages} channels={channels} categories={categories}
       channel={channel} category={category} assignedTo={assignedTo}
+      actionDate={actionDate} actionPersonId={actionPersonId}
     >
-      {view !== "activity" && <LeadImportPanel channels={channels} categories={categories} />}
+      <LeadImportPanel channels={channels} categories={categories} />
       {view === "board" ? (
-        <LeadsBoardView stages={stages} channel={channel} category={category} assignedTo={assignedTo} />
-      ) : view === "table" ? (
-        <Suspense key={`${page}-${stage}-${pageSize}-${channel}-${category}-${assignedTo}`} fallback={<LeadsTableSkeleton />}>
-          <LeadsTableSection page={page} pageSize={pageSize} stage={stage} channel={channel} category={category} assignedTo={assignedTo} />
+        <LeadsBoardView stages={stages} channel={channel} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} />
+      ) : (
+        <Suspense key={`${page}-${stage}-${pageSize}-${channel}-${category}-${assignedTo}-${actionDate}-${actionPersonId}`} fallback={<LeadsTableSkeleton />}>
+          <LeadsTableSection page={page} pageSize={pageSize} stage={stage} channel={channel} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} />
         </Suspense>
-      ) : null}
+      )}
     </AdminLeadsShell>
   );
 }

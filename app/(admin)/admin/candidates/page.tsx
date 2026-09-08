@@ -21,11 +21,13 @@ export default async function AdminCandidatesPage({ searchParams }: Props) {
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
   const stage = typeof sp.stage === "string" ? sp.stage : "all";
-  const view = sp.view === "table" ? "table" : sp.view === "activity" ? "activity" : "board";
+  const view = sp.view === "table" ? "table" : "board";
   const requestedPageSize = Number(sp.pageSize);
   const pageSize = ALLOWED_PAGE_SIZES.includes(requestedPageSize) ? requestedPageSize : DEFAULT_PAGE_SIZE;
   const category = typeof sp.category === "string" ? sp.category : undefined;
   const assignedTo = typeof sp.assignedTo === "string" ? sp.assignedTo : undefined;
+  const actionDate = typeof sp.actionDate === "string" ? sp.actionDate : undefined;
+  const actionPersonId = typeof sp.actionPersonId === "string" ? sp.actionPersonId : undefined;
 
   const [stages, categories] = await Promise.all([fetchStages(), fetchCategories()]);
 
@@ -33,15 +35,16 @@ export default async function AdminCandidatesPage({ searchParams }: Props) {
     <AdminCandidatesShell
       stage={stage} view={view} stages={stages} categories={categories}
       category={category} assignedTo={assignedTo}
+      actionDate={actionDate} actionPersonId={actionPersonId}
     >
-      {view !== "activity" && <CandidateImportPanel categories={categories} />}
+      <CandidateImportPanel categories={categories} />
       {view === "board" ? (
-        <CandidatesBoardView stages={stages} category={category} assignedTo={assignedTo} />
-      ) : view === "table" ? (
-        <Suspense key={`${page}-${stage}-${pageSize}-${category}-${assignedTo}`} fallback={<CandidatesTableSkeleton />}>
-          <CandidatesTableSection page={page} pageSize={pageSize} stage={stage} category={category} assignedTo={assignedTo} />
+        <CandidatesBoardView stages={stages} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} />
+      ) : (
+        <Suspense key={`${page}-${stage}-${pageSize}-${category}-${assignedTo}-${actionDate}-${actionPersonId}`} fallback={<CandidatesTableSkeleton />}>
+          <CandidatesTableSection page={page} pageSize={pageSize} stage={stage} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} />
         </Suspense>
-      ) : null}
+      )}
     </AdminCandidatesShell>
   );
 }

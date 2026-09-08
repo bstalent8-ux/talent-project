@@ -48,21 +48,25 @@ interface Props {
   stage: string;
   category?: string;
   assignedTo?: string;
+  actionDate?: string;
+  actionPersonId?: string;
 }
 
-function hrefFor(page: number, stage: string, pageSize: number, category?: string, assignedTo?: string) {
+function hrefFor(page: number, stage: string, pageSize: number, category?: string, assignedTo?: string, actionDate?: string, actionPersonId?: string) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (stage !== "all") params.set("stage", stage);
   if (pageSize !== 10) params.set("pageSize", String(pageSize));
   if (category) params.set("category", category);
   if (assignedTo) params.set("assignedTo", assignedTo);
+  if (actionDate) params.set("actionDate", actionDate);
+  if (actionPersonId) params.set("actionPersonId", actionPersonId);
   params.set("view", "table");
   const qs = params.toString();
   return qs ? `/admin/candidates?${qs}` : "/admin/candidates";
 }
 
-export default function CandidatesTable({ candidates, total, page, pageSize, stage, category, assignedTo }: Props) {
+export default function CandidatesTable({ candidates, total, page, pageSize, stage, category, assignedTo, actionDate, actionPersonId }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.candidates?.canDelete;
@@ -335,10 +339,10 @@ export default function CandidatesTable({ candidates, total, page, pageSize, sta
       <AdminPagination
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => hrefFor(p, stage, pageSize, category, assignedTo)}
+        buildHref={(p) => hrefFor(p, stage, pageSize, category, assignedTo, actionDate, actionPersonId)}
         total={total}
         pageSize={pageSize}
-        buildPageSizeHref={(size) => hrefFor(1, stage, size, category, assignedTo)}
+        buildPageSizeHref={(size) => hrefFor(1, stage, size, category, assignedTo, actionDate, actionPersonId)}
       />
 
       <ConfirmationModal

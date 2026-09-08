@@ -115,6 +115,33 @@ export interface CandidateFilterParams {
   stage?: string;
   category?: string;
   assignedTo?: string;
+  /** Narrows to candidates with a candidate_actions row logged on this day
+   *  (server's UTC calendar day). Combines with actionPersonId (AND). */
+  actionDate?: string;
+  /** Narrows to candidates with a candidate_actions row performed by this
+   *  admin — distinct from `assignedTo` (who currently owns the record). */
+  actionPersonId?: string;
+}
+
+function dayRangeUtc(dateStr: string): { start: string; end: string } {
+  const start = new Date(`${dateStr}T00:00:00.000Z`);
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
+/** Same reasoning as leads.service.ts's resolveActionFilterLeadIds. */
+async function resolveActionFilterCandidateIds(actionDate?: string, actionPersonId?: string): Promise<string[] | null> {
+  if (!actionDate && !actionPersonId) return null;
+
+  let q = adminClient.from("candidate_actions").select("candidate_id");
+  if (actionDate) {
+    const range = dayRangeUtc(actionDate);
+    q = q.gte("created_at", range.start).lt("created_at", range.end);
+  }
+  if (actionPersonId) q = q.eq("performed_by", actionPersonId);
+
+  const { data } = await q;
+  return Array.from(new Set((data ?? []).map((r) => r.candidate_id as string)));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,7 +149,8 @@ function applyCandidateFilters(
   query: any,
   filters: CandidateFilterParams,
   stages: Record<string, CandidateStageSummary>,
-  categories: Record<string, CandidateCategorySummary>
+  categories: Record<string, CandidateCategorySummary>,
+  actionCandidateIds: string[] | null
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any | null {
   let q = query;
@@ -139,6 +167,10 @@ function applyCandidateFilters(
   if (filters.assignedTo) {
     q = q.eq("assigned_to", filters.assignedTo);
   }
+  if (actionCandidateIds !== null) {
+    if (actionCandidateIds.length === 0) return null;
+    q = q.in("id", actionCandidateIds);
+  }
   return q;
 }
 
@@ -150,7 +182,9 @@ export interface CandidatesPageParams extends CandidateFilterParams {
 export async function fetchCandidatesPage({ page = 1, pageSize = 10, ...filters }: CandidatesPageParams): Promise<CandidatesPageResult> {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
-  const [stages, categories] = await Promise.all([fetchStageSummaries(), fetchCategories()]);
+  const [stages, categories, actionCandidateIds] = await Promise.all([
+    fetchStageSummaries(), fetchCategories(), resolveActionFilterCandidateIds(filters.actionDate, filters.actionPersonId),
+  ]);
 
   const base = adminClient
     .from("candidates")
@@ -158,7 +192,7 @@ export async function fetchCandidatesPage({ page = 1, pageSize = 10, ...filters 
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  const query = applyCandidateFilters(base, filters, stages, categories);
+  const query = applyCandidateFilters(base, filters, stages, categories, actionCandidateIds);
   if (!query) return { candidates: [], total: 0 };
 
   const { data, count, error } = await query;
@@ -171,9 +205,11 @@ export async function fetchCandidatesPage({ page = 1, pageSize = 10, ...filters 
 
 /** All candidates, unpaginated — backs the board view. */
 export async function fetchAllCandidatesForBoard(filters: Omit<CandidateFilterParams, "stage"> = {}): Promise<Candidate[]> {
-  const [stages, categories] = await Promise.all([fetchStageSummaries(), fetchCategories()]);
+  const [stages, categories, actionCandidateIds] = await Promise.all([
+    fetchStageSummaries(), fetchCategories(), resolveActionFilterCandidateIds(filters.actionDate, filters.actionPersonId),
+  ]);
   const base = adminClient.from("candidates").select("*").order("created_at", { ascending: false });
-  const query = applyCandidateFilters(base, filters, stages, categories);
+  const query = applyCandidateFilters(base, filters, stages, categories, actionCandidateIds);
   if (!query) return [];
 
   const { data, error } = await query;

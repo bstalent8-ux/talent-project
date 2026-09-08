@@ -2,28 +2,29 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Columns3, History, List, Settings2 } from "lucide-react";
+import { Columns3, List, Settings2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import CandidateSettingsPanel from "./CandidateSettingsPanel";
 import CandidateMoveStageModal from "./CandidateMoveStageModal";
 import TodayDueButton from "../../leads/_components/TodayDueButton";
-import ActivityPanel from "../../leads/_components/ActivityPanel";
 import type { CandidateCategoryTerm, CandidateStage } from "@/features/candidates/types";
 import type { AdminSearchResult } from "@/features/admin-roles/types";
 
 const TX = {
   ar: {
-    title: "المرشحين", all: "الكل", manageStages: "إعدادات المرشحين", dropHint: "سيب المرشح هنا", table: "جدول", board: "المراحل", activity: "سجل النشاط",
+    title: "المرشحين", all: "الكل", manageStages: "إعدادات المرشحين", dropHint: "سيب المرشح هنا", table: "جدول", board: "المراحل",
     filterAssignee: "المسؤول: الكل", filterCategory: "الكاتيجوري: الكل",
+    filterActionPerson: "بواسطة: الكل", filterActionDate: "التاريخ",
   },
   en: {
-    title: "Candidates", all: "All", manageStages: "Candidate settings", dropHint: "Drop candidate here", table: "Table", board: "Stages", activity: "Activity",
+    title: "Candidates", all: "All", manageStages: "Candidate settings", dropHint: "Drop candidate here", table: "Table", board: "Stages",
     filterAssignee: "Assignee: All", filterCategory: "Category: All",
+    filterActionPerson: "Action by: All", filterActionDate: "Date",
   },
 };
 
-type CandidatesView = "table" | "board" | "activity";
+type CandidatesView = "table" | "board";
 
 interface Props {
   stage: string;
@@ -32,13 +33,15 @@ interface Props {
   categories: CandidateCategoryTerm[];
   category?: string;
   assignedTo?: string;
+  actionDate?: string;
+  actionPersonId?: string;
   children: React.ReactNode;
 }
 
 // Mirrors AdminLeadsShell exactly — sidebar/topbar stage tabs (table view
 // only), table/board toggle, filter selects, drag-and-drop-onto-a-pill
 // stage move. See that file's comments for the reasoning behind each part.
-export default function AdminCandidatesShell({ stage, view, stages, categories, category, assignedTo, children }: Props) {
+export default function AdminCandidatesShell({ stage, view, stages, categories, category, assignedTo, actionDate, actionPersonId, children }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -58,13 +61,15 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
       .catch(() => {});
   }, []);
 
-  function hrefFor(overrides: Partial<{ stage: string; view: CandidatesView; category: string; assignedTo: string }>) {
-    const next = { stage, view, category, assignedTo, ...overrides };
+  function hrefFor(overrides: Partial<{ stage: string; view: CandidatesView; category: string; assignedTo: string; actionDate: string; actionPersonId: string }>) {
+    const next = { stage, view, category, assignedTo, actionDate, actionPersonId, ...overrides };
     const params = new URLSearchParams();
     if (next.stage && next.stage !== "all") params.set("stage", next.stage);
     if (next.view && next.view !== "board") params.set("view", next.view);
     if (next.category) params.set("category", next.category);
     if (next.assignedTo) params.set("assignedTo", next.assignedTo);
+    if (next.actionDate) params.set("actionDate", next.actionDate);
+    if (next.actionPersonId) params.set("actionPersonId", next.actionPersonId);
     const qs = params.toString();
     return qs ? `/admin/candidates?${qs}` : "/admin/candidates";
   }
@@ -127,7 +132,7 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
               );
             })}
           </div>
-        ) : view === "board" ? <TodayDueButton module="candidate" /> : <div />}
+        ) : <TodayDueButton module="candidate" />}
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <div style={{ display: "flex", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
@@ -154,18 +159,6 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
             >
               <List size={15} />
             </Link>
-            <Link
-              href={hrefFor({ view: "activity" })}
-              title={t.activity}
-              style={{
-                padding: "7px 12px", display: "flex", alignItems: "center",
-                backgroundColor: view === "activity" ? "rgba(0,210,106,0.1)" : "transparent",
-                color: view === "activity" ? "#00D26A" : MUTED, textDecoration: "none",
-                borderInlineStart: `1px solid ${BORDER}`,
-              }}
-            >
-              <History size={15} />
-            </Link>
           </div>
           <button
             type="button"
@@ -181,7 +174,6 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
         </div>
       </div>
 
-      {view !== "activity" && (
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
         <select
           value={assignedTo ?? ""}
@@ -199,12 +191,28 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
           <option value="">{t.filterCategory}</option>
           {categories.map((c) => <option key={c.id} value={c.key}>{lang === "ar" ? c.labelAr : c.labelEn}</option>)}
         </select>
-      </div>
-      )}
 
-      {view === "activity" ? (
-        <ActivityPanel module="candidate" assigneesApiPath="/api/admin/candidates/assignees" recordBasePath="/admin/candidates" />
-      ) : children}
+        {/* Who logged an action + on what day — narrows the board/table to
+         *  candidates with a matching candidate_actions row. Separate from
+         *  the Assignee select above ("who owns the record"). */}
+        <select
+          value={actionPersonId ?? ""}
+          onChange={(e) => router.push(hrefFor({ actionPersonId: e.target.value || undefined }))}
+          style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: actionPersonId ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
+        >
+          <option value="">{t.filterActionPerson}</option>
+          {assignees.map((a) => <option key={a.id} value={a.id}>{a.fullName ?? a.handle}</option>)}
+        </select>
+        <input
+          type="date"
+          value={actionDate ?? ""}
+          onChange={(e) => router.push(hrefFor({ actionDate: e.target.value || undefined }))}
+          title={t.filterActionDate}
+          style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: actionDate ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
+        />
+      </div>
+
+      {children}
 
       {managingStages && (
         <CandidateSettingsPanel
