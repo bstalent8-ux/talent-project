@@ -2,6 +2,7 @@
 import { useSite } from "@/contexts/SiteContext";
 import { SkeletonBlock, SkeletonStyles } from "./Skeleton";
 import { AdminPaginationSkeleton } from "./AdminPagination";
+import { ADMIN_LIGHT } from "./adminLightTheme";
 
 export interface SkeletonColumn {
   label: string;
@@ -25,10 +26,10 @@ export default function AdminTableSkeleton({ columns, rows = 10, showResultsCoun
   const { dark, lang } = useSite();
   const ar = lang === "ar";
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const TH     = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#0D1623" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
+  const MUTED  = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
+  const TH     = dark ? "#0a121c" : ADMIN_LIGHT.tableHead;
 
   const cellStyle: React.CSSProperties = { padding: "12px 14px", borderBottom: `1px solid ${BORDER}` };
   const thStyle:   React.CSSProperties = { padding: "10px 14px", color: MUTED, fontSize: 12, fontWeight: 600, textAlign: ar ? "right" : "left", backgroundColor: TH, borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" };

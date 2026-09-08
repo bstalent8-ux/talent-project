@@ -1,6 +1,7 @@
 "use client";
 import { useSite } from "@/contexts/SiteContext";
 import { SkeletonBlock, SkeletonStyles } from "./Skeleton";
+import { ADMIN_LIGHT } from "./adminLightTheme";
 
 interface Props {
   count?:    number;
@@ -14,8 +15,8 @@ interface Props {
 // Admin stat-card grid already uses (see talent-demand, dashboard).
 export default function AdminStatCardsSkeleton({ count = 3, minWidth = 140, withIcon = false }: Props) {
   const { dark } = useSite();
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
+  const CARD   = dark ? "#0D1623" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
 
   return (
     <>

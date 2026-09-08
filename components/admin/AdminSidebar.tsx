@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import { useAdminIdentity } from "@/contexts/AdminIdentityContext";
 import type { AdminResourceKey, PermissionMap } from "@/lib/auth/admin-resources";
+import { ADMIN_LIGHT } from "./adminLightTheme";
 import {
   Activity,
   BarChart3,
@@ -242,6 +243,10 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
   const { name: adminName, avatarUrl: adminAvatar } = useAdminIdentity();
   const [isHovering, setIsHovering] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // Hovering the edge toggle button brings a white highlight up over the
+  // blue seam fade (light mode only) — a hover affordance on the boundary
+  // itself, not a permanent visual.
+  const [edgeHover, setEdgeHover] = useState(false);
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const portalMenuRef = useRef<HTMLDivElement>(null);
@@ -299,17 +304,18 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
 
   const visibleNavStructure = filterNavStructure(NAV_STRUCTURE, permissions);
 
-  // The sidebar shell is deliberately always dark navy, regardless of
-  // [data-theme] — a fixed nav rail, not a themed surface (same class of
-  // exception as auth's photo hero band). Only the accent/status colours
-  // below come from the canonical token palette.
-  const BG = dark ? "#060c18" : "#0f172a";
-  const ACTIVE = "var(--color-primary)";
-  const ACTIVE_TINT = "color-mix(in srgb, var(--color-primary) 15%, transparent)";
+  // Was a fixed dark-navy rail regardless of theme (a deliberate exception,
+  // not a themed surface — same class as auth's photo hero band). The
+  // 2026-09-08 redesign asked for light mode specifically to match a new
+  // blue/white reference design, dark mode untouched — so this is now a
+  // real theme fork instead of a fixed color.
+  const BG = dark ? "#060c18" : ADMIN_LIGHT.sidebarBg;
+  const ACTIVE = dark ? "var(--color-primary)" : ADMIN_LIGHT.sidebarActiveText;
+  const ACTIVE_TINT = dark ? "color-mix(in srgb, var(--color-primary) 15%, transparent)" : ADMIN_LIGHT.sidebarActiveBg;
   const DESTRUCTIVE = "color-mix(in srgb, var(--color-error) 80%, white)";
   const DESTRUCTIVE_HOVER = "color-mix(in srgb, var(--color-error) 8%, transparent)";
-  const MUTED = "rgba(255,255,255,0.55)";
-  const HOVER = "rgba(255,255,255,0.07)";
+  const MUTED = dark ? "rgba(255,255,255,0.55)" : ADMIN_LIGHT.sidebarText;
+  const HOVER = dark ? "rgba(255,255,255,0.07)" : ADMIN_LIGHT.sidebarHover;
 
   // Plain startsWith would make /admin/notifications-log also light up the
   // /admin/notifications composer (a real string-prefix collision, not a
@@ -343,18 +349,36 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           borderRadius: 10,
           color: active ? ACTIVE : MUTED,
           backgroundColor: active ? ACTIVE_TINT : "transparent",
+          border: active && !dark ? `1px solid ${ADMIN_LIGHT.sidebarActiveBorder}` : "1px solid transparent",
+          // Glass pill (light mode only) — dark mode's ACTIVE_TINT is
+          // already an opaque-ish flat tint over a flat navy bg, nothing to
+          // blur there.
+          backdropFilter: active && !dark ? "blur(10px)" : "none",
+          WebkitBackdropFilter: active && !dark ? "blur(10px)" : "none",
           textDecoration: "none",
           fontSize: 14,
-          fontWeight: active ? 700 : 400,
+          fontWeight: active ? 600 : 400,
           transition: "all 0.2s",
           whiteSpace: "nowrap",
           overflow: "hidden",
         }}
         onMouseEnter={(event) => {
-          if (!active) event.currentTarget.style.backgroundColor = HOVER;
+          if (!active) {
+            event.currentTarget.style.backgroundColor = HOVER;
+            if (!dark) {
+              event.currentTarget.style.backdropFilter = "blur(10px)";
+              event.currentTarget.style.setProperty("-webkit-backdrop-filter", "blur(10px)");
+            }
+          }
         }}
         onMouseLeave={(event) => {
-          if (!active) event.currentTarget.style.backgroundColor = "transparent";
+          if (!active) {
+            event.currentTarget.style.backgroundColor = "transparent";
+            if (!dark) {
+              event.currentTarget.style.backdropFilter = "none";
+              event.currentTarget.style.setProperty("-webkit-backdrop-filter", "none");
+            }
+          }
         }}
       >
         <Icon size={18} style={{ flexShrink: 0 }} />
@@ -394,7 +418,11 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
         style={{
           width,
           height: "100vh",
-          backgroundColor: BG,
+          // Light mode: a photo (the same /assets/auth-hero.avif used on the
+          // login page's brand panel) with a blue gradient overlay for text
+          // contrast — nav items sit on it as frosted-glass pills (see
+          // renderNavLink below). Dark mode: unchanged flat navy.
+          background: dark ? BG : ADMIN_LIGHT.sidebarPhotoBackground,
           display: "flex",
           flexDirection: "column",
           padding: "24px 0",
@@ -457,7 +485,11 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
                   width: 40,
                   height: 40,
                   borderRadius: "50%",
-                  backgroundColor: ACTIVE_TINT,
+                  // Own fallback colors, not ACTIVE_TINT/ACTIVE — those are
+                  // now a translucent glass pill + white text for nav items
+                  // in light mode, which would wash a white-on-white icon
+                  // out here. This wants a solid, opaque circle regardless.
+                  backgroundColor: dark ? ACTIVE_TINT : "rgba(255,255,255,0.9)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -465,7 +497,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
                   zIndex: 1,
                 }}
               >
-                <User size={18} color={ACTIVE} />
+                <User size={18} color={dark ? ACTIVE : ADMIN_LIGHT.sidebarBg} />
               </div>
             )}
           </div>
@@ -493,7 +525,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
               >
                 {adminName}
               </span>
-              <span style={{ color: ACTIVE, fontWeight: 500, fontSize: 11, marginTop: 1 }}>
+              <span style={{ color: dark ? ACTIVE : "rgba(255,255,255,0.75)", fontWeight: 500, fontSize: 11, marginTop: 1 }}>
                 {ar ? "مسؤول النظام" : "System Admin"}
               </span>
             </div>
@@ -544,8 +576,20 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
                         transition: "all 0.2s",
                         whiteSpace: "nowrap",
                       }}
-                      onMouseEnter={(event) => { event.currentTarget.style.backgroundColor = HOVER; }}
-                      onMouseLeave={(event) => { event.currentTarget.style.backgroundColor = "transparent"; }}
+                      onMouseEnter={(event) => {
+                        event.currentTarget.style.backgroundColor = HOVER;
+                        if (!dark) {
+                          event.currentTarget.style.backdropFilter = "blur(10px)";
+                          event.currentTarget.style.setProperty("-webkit-backdrop-filter", "blur(10px)");
+                        }
+                      }}
+                      onMouseLeave={(event) => {
+                        event.currentTarget.style.backgroundColor = "transparent";
+                        if (!dark) {
+                          event.currentTarget.style.backdropFilter = "none";
+                          event.currentTarget.style.setProperty("-webkit-backdrop-filter", "none");
+                        }
+                      }}
                     >
                       <GroupIcon size={18} style={{ flexShrink: 0 }} />
                       <span style={{ flex: 1, textAlign: "start" }}>{groupLabel}</span>
@@ -636,6 +680,90 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
         </div>
       </aside>
 
+      {/* Soft blue→page-background fade over the seam — light mode only
+          (dark mode's sidebar and page bg are both already dark, no hard
+          edge to soften there). Same `position: fixed` + sibling-of-<aside>
+          trick as the edge toggle below, for the same overflow-hidden-
+          clipping reason. `pointer-events: none` so it never blocks clicks
+          on the content or the toggle button sitting on top of it. */}
+      {!dark && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: width - 36,
+            width: 72,
+            height: "100vh",
+            background: `linear-gradient(90deg, ${ADMIN_LIGHT.sidebarBg} 0%, transparent 100%)`,
+            pointerEvents: "none",
+            zIndex: 20,
+            transition: "left 0.15s ease-out",
+          }}
+        />
+      )}
+
+      {/* White highlight — hidden until the edge toggle button is hovered,
+          then fades in ON TOP of the blue fade above (higher z-index),
+          light mode only. Purely decorative (pointer-events: none), driven
+          by the button's own onMouseEnter/Leave below. */}
+      {!dark && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: width - 36,
+            width: 72,
+            height: "100vh",
+            background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 55%, transparent 100%)",
+            opacity: edgeHover ? 1 : 0,
+            pointerEvents: "none",
+            zIndex: 22,
+            transition: "left 0.15s ease-out, opacity 0.25s ease",
+          }}
+        />
+      )}
+
+      {/* Floating edge toggle — sits ON the seam between the sidebar and the
+          content, not inside the topbar. `position: fixed` (not relative to
+          <aside>, whose own overflow-x:hidden would clip anything sticking
+          out past its edge) at `width - 14`, using the SAME `width`/
+          `collapsed` this component already computed for itself (correct
+          even in "hover" mode, where the true rendered width depends on
+          live mouse-hover state AdminShell has no way to know) — the
+          sidebar's own solid color renders unbroken right up to (and
+          behind) this button, no gap. Desktop only: mobile's off-canvas
+          drawer still opens via AdminTopbar's hamburger. */}
+      <button
+        type="button"
+        className="admin-edge-toggle"
+        onClick={() => onModeChange(mode === "collapsed" ? "expanded" : "collapsed")}
+        onMouseEnter={() => setEdgeHover(true)}
+        onMouseLeave={() => setEdgeHover(false)}
+        title={ar ? "طي/فتح الشريط الجانبي" : "Collapse/expand sidebar"}
+        style={{
+          position: "fixed",
+          top: 28,
+          left: width - 14,
+          zIndex: 45,
+          width: 28,
+          height: 28,
+          borderRadius: "50%",
+          border: `1px solid ${dark ? "rgba(255,255,255,0.15)" : ADMIN_LIGHT.border}`,
+          background: dark ? "#0d1420" : ADMIN_LIGHT.card,
+          color: dark ? "#fff" : ADMIN_LIGHT.sidebarBg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+          transition: "left 0.15s ease-out",
+        }}
+      >
+        {collapsed
+          ? (ar ? <ChevronLeft size={15} /> : <ChevronRight size={15} />)
+          : (ar ? <ChevronRight size={15} /> : <ChevronLeft size={15} />)}
+      </button>
+
       {/* Portaled to <body> — the sidebar's own overflow-x:hidden would
           otherwise clip this the moment it's wider than a collapsed 64px
           rail. Position is computed screen coordinates, not relative CSS,
@@ -648,8 +776,8 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
             bottom: menuPos.bottom,
             left: menuPos.left,
             minWidth: 200,
-            backgroundColor: dark ? "#0d1420" : "#1a2332",
-            border: "1px solid rgba(255,255,255,0.12)",
+            backgroundColor: dark ? "#0d1420" : ADMIN_LIGHT.card,
+            border: dark ? "1px solid rgba(255,255,255,0.12)" : `1px solid ${ADMIN_LIGHT.border}`,
             borderRadius: 10,
             padding: 4,
             boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
@@ -674,13 +802,13 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
                   background: active ? ACTIVE_TINT : "none",
                   border: "none",
                   cursor: "pointer",
-                  color: active ? ACTIVE : "#fff",
+                  color: active ? ACTIVE : (dark ? "#fff" : ADMIN_LIGHT.text),
                   fontSize: 13,
                   fontWeight: active ? 700 : 400,
                   whiteSpace: "nowrap",
                   textAlign: "start",
                 }}
-                onMouseEnter={(event) => { if (!active) event.currentTarget.style.backgroundColor = HOVER; }}
+                onMouseEnter={(event) => { if (!active) event.currentTarget.style.backgroundColor = dark ? HOVER : ADMIN_LIGHT.tableHead; }}
                 onMouseLeave={(event) => { if (!active) event.currentTarget.style.backgroundColor = "transparent"; }}
               >
                 {label}
@@ -707,6 +835,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           .admin-overlay { display: block !important; }
           .admin-close-btn { display: flex !important; }
           .admin-collapse-btn { display: none !important; }
+          .admin-edge-toggle { display: none !important; }
 
           [dir="rtl"] .admin-sidebar {
             left: auto; right: 0;

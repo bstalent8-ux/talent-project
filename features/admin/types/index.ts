@@ -20,6 +20,10 @@ export interface AdminTalent {
   blockReason:     string | null;
   isVerified:      boolean;
   balance:         number;
+  /** 0-100, same weighted score as the talent's own dashboard
+   *  (lib/profile-completion.ts's calculateCompletion) — computed
+   *  server-side per row in fetchAdminTalentsPage, not re-derived here. */
+  completionScore: number;
 }
 
 export interface AdminDashboardStats {

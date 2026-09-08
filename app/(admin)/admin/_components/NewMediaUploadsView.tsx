@@ -5,6 +5,7 @@ import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
 import type { AdminNewMediaUpload } from "@/features/admin/services/admin.service";
 import { CheckCircle, ChevronDown, ChevronUp, ImagePlus, X } from "lucide-react";
+import { ADMIN_LIGHT } from "@/components/admin/adminLightTheme";
 
 const COLLAPSE_STORAGE_KEY = "admin-dashboard-new-media-uploads-collapsed";
 
@@ -61,11 +62,12 @@ export default function NewMediaUploadsView({ uploads }: { uploads: AdminNewMedi
     });
   }
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const TH = dark ? "#0a121c" : "#f8fafc";
+  const CARD = dark ? "#0D1623" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
+  const TEXT = dark ? "#f1f5f9" : ADMIN_LIGHT.text;
+  const MUTED = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
+  const TH = dark ? "#0a121c" : ADMIN_LIGHT.tableHead;
+  const PRIMARY = dark ? "var(--color-primary)" : ADMIN_LIGHT.primary;
 
   async function approve(talentProfileId: string) {
     setApprovingId(talentProfileId);
@@ -149,7 +151,7 @@ export default function NewMediaUploadsView({ uploads }: { uploads: AdminNewMedi
                             onClick={() => approve(u.talentProfileId)}
                             style={{
                               display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
-                              border: "none", backgroundColor: "var(--color-primary)", color: "#fff",
+                              border: "none", backgroundColor: PRIMARY, color: "#fff",
                               fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: approvingId === u.talentProfileId ? 0.7 : 1,
                             }}
                           >
@@ -169,7 +171,7 @@ export default function NewMediaUploadsView({ uploads }: { uploads: AdminNewMedi
                             <div>
                               <div style={{ color: MUTED, fontSize: 11, marginBottom: 2 }}>{t.email}</div>
                               {u.email ? (
-                                <a href={`mailto:${u.email}`} style={{ color: "var(--color-primary)", fontWeight: 600, textDecoration: "none" }}>{u.email}</a>
+                                <a href={`mailto:${u.email}`} style={{ color: PRIMARY, fontWeight: 600, textDecoration: "none" }}>{u.email}</a>
                               ) : (
                                 <span style={{ color: MUTED }}>—</span>
                               )}

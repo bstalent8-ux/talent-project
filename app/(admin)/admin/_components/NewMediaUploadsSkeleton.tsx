@@ -1,11 +1,12 @@
 "use client";
 import { useSite } from "@/contexts/SiteContext";
+import { ADMIN_LIGHT } from "@/components/admin/adminLightTheme";
 
 export default function NewMediaUploadsSkeleton() {
   const { dark } = useSite();
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const PULSE = dark ? "#141b29" : "#F1F5F9";
+  const CARD = dark ? "#0D1623" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
+  const PULSE = dark ? "#141b29" : ADMIN_LIGHT.tableHead;
 
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", marginTop: 24 }}>

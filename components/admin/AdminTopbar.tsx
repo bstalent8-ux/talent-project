@@ -4,6 +4,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { Menu, Sun, Moon, Globe, Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import chromeStyles from "@/components/SiteChrome.module.css";
+import { ADMIN_LIGHT } from "./adminLightTheme";
 
 interface Props {
   title: string;
@@ -14,11 +15,16 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
   const { dark, toggleMode, lang, toggleLang } = useSite();
   const [search, setSearch] = useState("");
 
-  const BG     = "var(--bg-surface)";
-  const BORDER = "var(--border-subtle)";
-  const TEXT   = "var(--text-primary)";
-  const MUTED  = "var(--text-muted)";
-  const INPUT  = "var(--bg-card-muted)";
+  // Admin-only light palette (see adminLightTheme.ts) — was the global
+  // --bg-surface/--text-* tokens unconditionally, which are shared with the
+  // public marketing pages. Dark mode still uses those global tokens
+  // unchanged; only light mode is repointed at the new admin palette so this
+  // redesign can't leak into the public site.
+  const BG     = dark ? "var(--bg-surface)" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "var(--border-subtle)" : ADMIN_LIGHT.border;
+  const TEXT   = dark ? "var(--text-primary)" : ADMIN_LIGHT.text;
+  const MUTED  = dark ? "var(--text-muted)" : ADMIN_LIGHT.muted;
+  const INPUT  = dark ? "var(--bg-card-muted)" : ADMIN_LIGHT.inputBg;
   const ar     = lang === "ar";
 
   const iconBtn = (onClick: () => void, child: React.ReactNode, tip: string) => (
@@ -51,15 +57,19 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
         zIndex: 30,
       }}
     >
-      {/* ── Left: Menu toggle + language/theme (kept on the sidebar side, out
-          of the notification panel's way on the right) ── */}
+      {/* ── Left: mobile drawer opener + language/theme. Desktop's
+          collapse/expand toggle moved to a floating button on the sidebar's
+          own edge (AdminSidebar.tsx's "admin-edge-toggle") — this hamburger
+          is mobile-only now (see the media query below), since the off-
+          canvas drawer still needs a way to open from the closed state. ── */}
       <button
         onClick={onMenuClick}
         title={ar ? "القائمة" : "Menu"}
+        className="admin-mobile-menu-btn"
         style={{
           background: "none", border: `1px solid ${BORDER}`, borderRadius: 8,
           padding: 8, cursor: "pointer", color: MUTED,
-          display: "flex", alignItems: "center", justifyContent: "center",
+          alignItems: "center", justifyContent: "center",
           flexShrink: 0, transition: "color 0.15s",
         }}
       >
@@ -119,6 +129,10 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
       <style>{`
         @media (max-width: 600px) {
           .admin-search-wrap { display: none; }
+        }
+        .admin-mobile-menu-btn { display: none; }
+        @media (max-width: 900px) {
+          .admin-mobile-menu-btn { display: flex !important; }
         }
       `}</style>
     </header>

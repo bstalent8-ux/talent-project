@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
 import AdminSidebar, { type SidebarMode } from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
+import { ADMIN_LIGHT } from "./adminLightTheme";
 
 interface Props {
   title: string;
@@ -31,7 +32,7 @@ export default function AdminShell({ title, children }: Props) {
     localStorage.setItem(STORAGE_KEY, mode);
   }
 
-  const BG = dark ? "#050B12" : "#F1F5F9";
+  const BG = dark ? "#050B12" : ADMIN_LIGHT.pageBg;
 
   // Every admin page routes through this one shell, so a single `zoom` here
   // scales the whole panel at once — text, icons, spacing all together,

@@ -1,6 +1,7 @@
 import { adminClient } from "@/lib/supabase/admin";
 import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminReview } from "../types";
 import { clusterPageVisits, totalDurationByPage, type PageTotal, type EngagementSample } from "./page-duration-clustering";
+import { calculateCompletion } from "@/lib/profile-completion";
 
 export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   // { count: "exact", head: true } returns just the row count — no rows are
@@ -122,10 +123,11 @@ export async function fetchAdminTalentsPage({
   let query = adminClient
     .from("profiles")
     .select(`
-      id, handle, full_name, avatar_url, city, created_at,
+      id, handle, full_name, avatar_url, city, bio, created_at,
       is_approved, is_suspended, is_verified, balance,
       talent_profiles!inner (
-        id, category, avg_rating, total_reviews, status, approved_at, rejection_reason
+        id, category, avg_rating, total_reviews, status, approved_at, rejection_reason,
+        specialties, social_links, packages, availability, bio
       )
     `, { count: "exact" })
     .eq("role", "talent")
@@ -138,6 +140,19 @@ export async function fetchAdminTalentsPage({
 
   const { data, count, error } = await query;
   if (error) return { talents: [], total: 0 };
+
+  // Completion score (same weights as the talent's own dashboard, see
+  // lib/profile-completion.ts) only needs "has at least one portfolio item",
+  // not the items themselves — one batched existence query for the whole
+  // page instead of N calls, same join-in-JS pattern as everywhere else in
+  // this file.
+  const tpIds = (data ?? [])
+    .map((p) => (Array.isArray(p.talent_profiles) ? p.talent_profiles[0] : p.talent_profiles)?.id)
+    .filter((id): id is string => !!id);
+  const { data: portfolioRows } = tpIds.length
+    ? await adminClient.from("portfolio_items").select("talent_id").in("talent_id", tpIds)
+    : { data: [] };
+  const hasPortfolio = new Set((portfolioRows ?? []).map((r) => r.talent_id));
 
   const talents = (data ?? []).flatMap((p) => {
     const tp = Array.isArray(p.talent_profiles) ? p.talent_profiles[0] : p.talent_profiles;
@@ -166,6 +181,7 @@ export async function fetchAdminTalentsPage({
       blockReason:     null,
       isVerified:      (p as Record<string, unknown>).is_verified    as boolean ?? false,
       balance:         (p as Record<string, unknown>).balance        as number  ?? 0,
+      completionScore: calculateCompletion(p, tp, hasPortfolio.has(tp.id) ? [{}] : []).score,
     }];
   });
 

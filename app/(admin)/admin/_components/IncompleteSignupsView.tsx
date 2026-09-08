@@ -6,6 +6,7 @@ import EmptyState from "@/components/admin/EmptyState";
 import type { AdminIncompleteSignup } from "@/features/admin/services/admin.service";
 import { completeProfileReminderEmail } from "@/lib/email/templates/complete-profile-reminder";
 import { ChevronDown, ChevronUp, Mail, Send, UserPlus, X } from "lucide-react";
+import { ADMIN_LIGHT } from "@/components/admin/adminLightTheme";
 
 const COLLAPSE_STORAGE_KEY = "admin-dashboard-incomplete-signups-collapsed";
 
@@ -94,11 +95,12 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
     });
   }
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const TH = dark ? "#0a121c" : "#f8fafc";
+  const CARD = dark ? "#0D1623" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
+  const TEXT = dark ? "#f1f5f9" : ADMIN_LIGHT.text;
+  const MUTED = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
+  const TH = dark ? "#0a121c" : ADMIN_LIGHT.tableHead;
+  const PRIMARY = dark ? "var(--color-primary)" : ADMIN_LIGHT.primary;
 
   const notReminded = signups.filter((s) => !s.alreadyReminded && !sentIds.has(s.userId));
 
@@ -193,7 +195,7 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
               <button
                 type="button"
                 onClick={() => setShowPreview((s) => !s)}
-                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "var(--color-primary)", fontSize: 12.5, fontWeight: 600, padding: 0 }}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: PRIMARY, fontSize: 12.5, fontWeight: 600, padding: 0 }}
               >
                 {showPreview ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                 {showPreview ? t.hidePreview : t.preview}
@@ -205,7 +207,7 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
                   onClick={sendAll}
                   style={{
                     display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8,
-                    border: "none", backgroundColor: "var(--color-primary)", color: "#fff",
+                    border: "none", backgroundColor: PRIMARY, color: "#fff",
                     fontSize: 12.5, fontWeight: 700, cursor: "pointer", opacity: sendingAll ? 0.7 : 1,
                   }}
                 >
@@ -226,7 +228,7 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
       </div>
 
       {!collapsed && showPreview && signups.length > 0 && (
-        <div style={{ padding: 14, borderBottom: `1px solid ${BORDER}`, backgroundColor: dark ? "#0a121c" : "#f8fafc" }}>
+        <div style={{ padding: 14, borderBottom: `1px solid ${BORDER}`, backgroundColor: dark ? "#0a121c" : ADMIN_LIGHT.tableHead }}>
           <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: MUTED, display: "flex", alignItems: "center", gap: 5 }}>
             <Mail size={12} /> {t.subject}: <span style={{ color: TEXT, fontWeight: 600 }}>{sampleEmail.subject}</span>
           </p>
@@ -294,7 +296,7 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
                                 display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
                                 border: `1px solid ${failedInfo[s.userId] ? "#EF4444" : BORDER}`,
                                 backgroundColor: "transparent",
-                                color: failedInfo[s.userId] ? "#EF4444" : "var(--color-primary)",
+                                color: failedInfo[s.userId] ? "#EF4444" : PRIMARY,
                                 fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: sendingId === s.userId ? 0.7 : 1,
                               }}
                             >
@@ -315,7 +317,7 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
                             <div>
                               <div style={{ color: MUTED, fontSize: 11, marginBottom: 2 }}>{t.email}</div>
                               {s.email ? (
-                                <a href={`mailto:${s.email}`} style={{ color: "var(--color-primary)", fontWeight: 600, textDecoration: "none" }}>{s.email}</a>
+                                <a href={`mailto:${s.email}`} style={{ color: PRIMARY, fontWeight: 600, textDecoration: "none" }}>{s.email}</a>
                               ) : (
                                 <span style={{ color: MUTED }}>—</span>
                               )}

@@ -18,6 +18,7 @@ import { ChevronDown, ChevronUp, Eye, CheckCircle, XCircle, Mail, PauseCircle, T
 const TX = {
   ar: {
     name: "الاسم", username: "اسم المستخدم", category: "التصنيف", city: "المدينة",
+    completion: "اكتمال الملف",
     registered: "تاريخ التسجيل", status: "الحالة", actions: "الإجراءات",
     approve: "موافقة", reject: "رفض", suspend: "وقف", restore: "استعادة", delete: "حذف", view: "عرض",
     confirmApprove: "هل تريد الموافقة على هذه الموهبة؟",
@@ -37,6 +38,7 @@ const TX = {
   },
   en: {
     name: "Name", username: "Username", category: "Category", city: "City",
+    completion: "Profile Completion",
     registered: "Registered", status: "Status", actions: "Actions",
     approve: "Approve", reject: "Reject", suspend: "Suspend", restore: "Restore", delete: "Delete", view: "View",
     confirmApprove: "Approve this talent?",
@@ -183,6 +185,23 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
     backgroundColor: TH, borderBottom: `1px solid ${BORDER}`,
   };
 
+  // Category/city/completion/registered/status headers were start-aligned
+  // (same as the name column) while their cell content is short and
+  // visually centered under the browser's own default table-cell layout —
+  // reads as the header floating off to one side instead of sitting over
+  // its column. Centered for both header and cell so they land on the same
+  // spot. Name/username (long, left-reading text) and actions (an icon row)
+  // keep start alignment.
+  const thCenterStyle: React.CSSProperties = { ...thStyle, textAlign: "center" };
+  const cellCenterStyle: React.CSSProperties = { ...cellStyle, textAlign: "center" };
+
+  function completionBarColor(score: number): string {
+    if (score >= 80) return "#00D26A";
+    if (score >= 50) return "#00C9B1";
+    if (score >= 25) return "#FFB800";
+    return "#FF6B2B";
+  }
+
   const confirmConfig = modal ? {
     approve: { color: "#00D26A", msg: t.confirmApprove },
     reject:  { color: "#EF4444", msg: t.confirmReject  },
@@ -207,10 +226,11 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
                 <tr>
                   <th style={thStyle}>{t.name}</th>
                   <th style={thStyle}>{t.username}</th>
-                  <th style={thStyle}>{t.category}</th>
-                  <th style={thStyle}>{t.city}</th>
-                  <th style={thStyle}>{t.registered}</th>
-                  <th style={thStyle}>{t.status}</th>
+                  <th style={thCenterStyle}>{t.category}</th>
+                  <th style={thCenterStyle}>{t.city}</th>
+                  <th style={thCenterStyle}>{t.completion}</th>
+                  <th style={thCenterStyle}>{t.registered}</th>
+                  <th style={thCenterStyle}>{t.status}</th>
                   <th style={thStyle}>{t.actions}</th>
                 </tr>
               </thead>
@@ -245,12 +265,25 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
                     <td style={{ ...cellStyle, color: MUTED }}>
                       {talent.handle ? `@${talent.handle}` : "—"}
                     </td>
-                    <td style={cellStyle}>{talent.category ?? "—"}</td>
-                    <td style={cellStyle}>{talent.city ?? "—"}</td>
-                    <td style={{ ...cellStyle, color: MUTED }}>
+                    <td style={cellCenterStyle}>{talent.category ?? "—"}</td>
+                    <td style={cellCenterStyle}>{talent.city ?? "—"}</td>
+                    <td style={cellCenterStyle}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 70 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}>
+                          {talent.completionScore}%
+                        </span>
+                        <div style={{ width: 70, height: 6, borderRadius: 4, backgroundColor: BORDER, overflow: "hidden" }}>
+                          <div style={{
+                            width: `${talent.completionScore}%`, height: "100%", borderRadius: 4,
+                            backgroundColor: completionBarColor(talent.completionScore),
+                          }} />
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ ...cellCenterStyle, color: MUTED }}>
                       {new Date(talent.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}
                     </td>
-                    <td style={cellStyle}>
+                    <td style={cellCenterStyle}>
                       <StatusBadge status={talent.status} lang={lang} />
                     </td>
                     <td style={cellStyle} onClick={(e) => e.stopPropagation()}>
