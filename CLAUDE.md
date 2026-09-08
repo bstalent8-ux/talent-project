@@ -849,3 +849,53 @@ then, `logEvent`/`logTalentProfileView` swallow the resulting "table/function
 not found" error and `/admin/user-activity` shows an honest empty state,
 exactly as designed — confirmed live against the dev database before this
 hardening pass).
+
+---
+
+## Meta Ads Insights — 2026-09-08
+
+New admin page **`/admin/meta-ads`** (sidebar: Analytics group, next to User
+Activity) — read-only campaign dashboard backed by Meta's Marketing API
+`/insights` endpoint. No new DB table and no new dependency: `features/meta-
+ads/service.ts` calls `graph.facebook.com` directly with `fetch` (edge-safe),
+and the two charts (`_components/charts.tsx`) are hand-rolled inline SVG per
+CLAUDE.md §11 rule 7 (no charting library added).
+
+**Auth model — deliberately simpler than Lead Ads/Messenger sync.** This only
+needs a Business-Manager **System User token** with `ads_read` on the
+business's own ad account — no Meta App Review, since the business is
+reading its own account. Two server-only env vars gate it:
+`META_ADS_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID` (+ optional `META_API_VERSION`,
+default `v21.0`). Unset = `fetchMetaAdsInsights()` returns
+`{ configured: false }` and the page renders setup instructions instead of
+erroring — same posture as `NEXT_PUBLIC_META_PIXEL_ID` being unset for the
+Pixel.
+
+**What it shows:** spend, impressions, reach, clicks, CTR, a best-effort
+"results" count, cost-per-result, and `messaging_conversation_started` (Click-
+to-Messenger/WhatsApp conversation starts — Meta's own count, 0 for every
+other campaign objective, not an error) — as KPI cards, two trend lines
+(spend/results by day, `time_increment=1`), a top-campaigns-by-spend bar list,
+and a full campaign table. Date range is a preset selector
+(`features/meta-ads/types.ts`'s `META_DATE_PRESETS`) that navigates (server
+refetch), mirroring `/admin/user-activity`'s from/to filter pattern.
+
+**`features/meta-ads/parse.ts` is pure and unit-tested** (`parse.test.ts`) —
+it picks one "primary result" out of Meta's `actions` array (a list of
+`{action_type, value}` pairs, not a single number) via a fixed priority order
+(lead > conversation-started > purchase > landing-page-view > link-click).
+This is a judgment call, not a guarantee it matches what Ads Manager itself
+would highlight for a given objective — documented in the file.
+
+**RBAC:** new resource key `"metaAds"` in `lib/auth/admin-resources.ts`
+(`ADMIN_RESOURCE_KEYS`/`ADMIN_ROUTE_MAP`/`ADMIN_NAV_PRIORITY`) + a label in
+`RolesView.tsx`'s `RESOURCE_LABELS` — same lockstep-with-`AdminSidebar.tsx`
+pattern as every other tab. No RBAC migration needed: a restricted role
+simply has no row for the new key until a super-admin grants it via
+`/admin/roles`; a `NULL admin_role_id` (full-access) admin sees it immediately.
+
+**Not built (see the Meta-integration feasibility discussion this followed):**
+Lead Ads → CRM auto-create (needs Meta App Review, external/weeks-long,
+must be initiated by the business) and full Messenger/Instagram chat sync
+(needs `pages_messaging` + App Review + the 24-hour messaging window) are
+both out of scope for this page — it is insights-only, by design.
