@@ -31,6 +31,7 @@ import {
   ListTree,
   LogOut,
   Mail,
+  Newspaper,
   HeartPulse,
   Package as PackageIcon,
   Quote,
@@ -58,6 +59,7 @@ const TX = {
     bookings: "الحجوزات",
     reviews: "التقييمات",
     verifications: "طلبات التحقق",
+    blog: "المقالات",
     testimonials: "آراء الصفحة الرئيسية",
     brandMoments: "لحظات البراندات",
     support: "تذاكر الدعم",
@@ -93,6 +95,7 @@ const TX = {
     bookings: "Bookings",
     reviews: "Reviews",
     verifications: "Verifications",
+    blog: "Blog",
     testimonials: "Testimonials",
     brandMoments: "Brand Moments",
     support: "Support Tickets",
@@ -142,6 +145,7 @@ const NAV_ITEM = {
   notificationsLog: { key: "notificationsLog", href: "/admin/notifications-log",  icon: History },
   userActivity:     { key: "userActivity",     href: "/admin/user-activity",      icon: Activity },
   healthCheck:      { key: "healthCheck",      href: "/admin/health-check",       icon: HeartPulse },
+  blog:             { key: "blog",             href: "/admin/blog",               icon: Newspaper },
   testimonials:     { key: "testimonials",     href: "/admin/testimonials",       icon: Quote },
   brandMoments:     { key: "brandMoments",     href: "/admin/brand-moments",      icon: Camera },
   categories:       { key: "categories",       href: "/admin/categories",         icon: ListTree },
@@ -171,7 +175,7 @@ const NAV_STRUCTURE: NavEntry[] = [
   { type: "group", key: "analyticsGroup", labelKey: "groupAnalytics", icon: BarChart3,
     items: [NAV_ITEM.userActivity, NAV_ITEM.healthCheck] },
   { type: "group", key: "contentGroup", labelKey: "groupContent", icon: LayoutGrid,
-    items: [NAV_ITEM.testimonials, NAV_ITEM.brandMoments, NAV_ITEM.categories, NAV_ITEM.packages, NAV_ITEM.profileConfig] },
+    items: [NAV_ITEM.blog, NAV_ITEM.testimonials, NAV_ITEM.brandMoments, NAV_ITEM.categories, NAV_ITEM.packages, NAV_ITEM.profileConfig] },
   { type: "item", item: NAV_ITEM.roles },
   { type: "item", item: NAV_ITEM.settings },
 ];
@@ -688,6 +692,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           on the content or the toggle button sitting on top of it. */}
       {!dark && (
         <div
+          className="admin-seam-glow"
           style={{
             position: "fixed",
             top: 0,
@@ -708,6 +713,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           by the button's own onMouseEnter/Leave below. */}
       {!dark && (
         <div
+          className="admin-seam-glow"
           style={{
             position: "fixed",
             top: 0,
@@ -836,6 +842,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           .admin-close-btn { display: flex !important; }
           .admin-collapse-btn { display: none !important; }
           .admin-edge-toggle { display: none !important; }
+          .admin-seam-glow { display: none !important; }
 
           [dir="rtl"] .admin-sidebar {
             left: auto; right: 0;

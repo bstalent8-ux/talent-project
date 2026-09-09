@@ -30,36 +30,9 @@ const TX = {
   },
 };
 
-const SAMPLE_POSTS: BlogPost[] = [
-  {
-    slug:     "ugc-guide-arabic-brands",
-    title:    "دليل شامل لـ UGC للبراندات العربية",
-    excerpt:  "كيف تستفيد البراندات العربية من محتوى المستخدمين لزيادة المبيعات وبناء الثقة مع الجمهور؟",
-    category: "UGC",
-    date:     "2025-01-10",
-    readTime: "5 دقائق",
-  },
-  {
-    slug:     "how-to-become-ugc-creator",
-    title:    "كيف تصبح UGC Creator ناجح في 2025",
-    excerpt:  "خطوات عملية لبدء مسيرتك كمنشئ محتوى مع البراندات، من البداية حتى أول عقد.",
-    category: "Talent",
-    date:     "2025-01-05",
-    readTime: "7 min",
-  },
-  {
-    slug:     "brand-tips-influencer-marketing",
-    title:    "5 نصائح لاختيار الموهبة المناسبة لبراندك",
-    excerpt:  "اختيار الموهبة الخطأ يكلف وقتاً ومالاً. تعرف على كيفية اختيار المنشئ المناسب لحملتك.",
-    category: "Branding",
-    date:     "2024-12-28",
-    readTime: "4 min",
-  },
-];
-
 const CATEGORIES = ["All", "UGC", "Talent", "Branding", "Marketing", "Tips", "News"];
 
-export default function BlogClient() {
+export default function BlogClient({ posts }: { posts: BlogPost[] }) {
   const { lang, dark } = useSite();
   const t  = TX[lang];
   const ar = lang === "ar";
@@ -74,7 +47,7 @@ export default function BlogClient() {
   const INPUT  = dark ? "rgba(255,255,255,0.06)" : "#ffffff";
   const GREEN  = "#00D26A";
 
-  const filtered = SAMPLE_POSTS.filter(p => {
+  const filtered = posts.filter(p => {
     const matchesCat = activecat === "All" || p.category === activecat;
     const matchesSearch = !search || p.title.toLowerCase().includes(search.toLowerCase()) ||
       p.excerpt.toLowerCase().includes(search.toLowerCase());
@@ -184,7 +157,10 @@ export default function BlogClient() {
         )}
       </section>
 
-      {/* Coming soon banner */}
+      {/* "Coming soon" only makes sense while there's truly nothing
+          published yet — once real articles exist, showing it under them
+          would contradict what's right above it. */}
+      {posts.length === 0 && (
       <section style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px 80px" }}>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -210,6 +186,7 @@ export default function BlogClient() {
           </p>
         </motion.div>
       </section>
+      )}
     </div>
   );
 }

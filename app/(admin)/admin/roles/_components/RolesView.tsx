@@ -24,6 +24,7 @@ const RESOURCE_LABELS: Record<AdminResourceKey, { ar: string; en: string }> = {
   notificationsLog: { ar: "سجل الإشعارات", en: "Notification Log" },
   userActivity: { ar: "نشاط المستخدمين", en: "User Activity" },
   healthCheck: { ar: "الفحص الصحي", en: "Health Check" },
+  blog: { ar: "المقالات", en: "Blog" },
   testimonials: { ar: "آراء الصفحة الرئيسية", en: "Testimonials" },
   brandMoments: { ar: "لحظات البراندات", en: "Brand Moments" },
   categories: { ar: "التصنيفات", en: "Categories" },

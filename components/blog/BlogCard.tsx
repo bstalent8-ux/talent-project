@@ -30,7 +30,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function BlogCard({ post, index }: Props) {
-  const { dark } = useSite();
+  const { dark, lang } = useSite();
+  const ar = lang === "ar";
+  // `post.date` comes through as a raw ISO timestamp from the DB (published_
+  // at/created_at) — format it here rather than asking every caller to.
+  const formattedDate = (() => {
+    const d = new Date(post.date);
+    return Number.isNaN(d.getTime()) ? post.date : d.toLocaleDateString(ar ? "ar-EG" : "en-US", { month: "short", day: "numeric", year: "numeric" });
+  })();
 
   const CARD   = dark ? "rgba(255,255,255,0.04)" : "#ffffff";
   const BORDER = dark ? "rgba(255,255,255,0.08)" : "#e2e8f0";
@@ -139,7 +146,7 @@ export default function BlogCard({ post, index }: Props) {
               gap:        8,
             }}>
               <span style={{ color: MUTED, fontSize: 12, fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
-                {post.date}
+                {formattedDate}
               </span>
               <span style={{
                 color:      accent,

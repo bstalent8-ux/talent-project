@@ -28,6 +28,7 @@ export default defineConfig({
       "features/profiles/**/*.test.ts",
       "features/admin/**/*.test.ts",
       "features/health-check/**/*.test.ts",
+      "features/blog/**/*.test.ts",
       "components/profile/**/*.test.ts",
       "lib/**/*.test.ts",
       "app/api/profile/**/*.test.ts",

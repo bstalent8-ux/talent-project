@@ -2,6 +2,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminReview } from "../types";
 import { clusterPageVisits, totalDurationByPage, type PageTotal, type EngagementSample } from "./page-duration-clustering";
 import { calculateCompletion } from "@/lib/profile-completion";
+import { extractPhoneCandidates } from "./bio-phone-detection";
 
 export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   // { count: "exact", head: true } returns just the row count — no rows are
@@ -1648,4 +1649,62 @@ export async function fetchAdminNewMediaUploads(): Promise<AdminNewMediaUpload[]
   );
 
   return withEmail.sort((a, b) => (a.latestUploadAt < b.latestUploadAt ? 1 : -1));
+}
+
+// ─── Bio phone-number alert ─────────────────────────────────────────────────
+// Backs the Dashboard's "phone numbers in bio" card — a talent writing a
+// direct phone number into their bio lets a brand contact them outside the
+// platform's own chat/booking pipeline (CLAUDE.md §10.1), which is exactly
+// what the fee-earning flow depends on staying inside the app. Detection
+// itself is pure (bio-phone-detection.ts) — this only fetches the two bio
+// columns (profiles.bio is where the live edit UI writes today,
+// talent_profiles.bio is legacy but still checked, see CLAUDE.md's "two
+// JSONB grab-bags" section for the general pattern of this app carrying old
+// fields forward) and scans every active talent, same bounded-scan posture
+// as fetchAdminIncompleteSignups right above.
+
+export interface AdminBioPhoneAlert {
+  userId:          string;
+  talentProfileId: string | null;
+  fullName:        string | null;
+  handle:          string | null;
+  bio:             string;
+  detectedNumbers: string[];
+}
+
+const BIO_PHONE_SCAN_LIMIT = 300;
+
+export async function fetchAdminBioPhoneAlerts(): Promise<AdminBioPhoneAlert[]> {
+  const { data: profiles, error } = await adminClient
+    .from("profiles")
+    .select("id, full_name, handle, bio")
+    .eq("role", "talent")
+    .limit(BIO_PHONE_SCAN_LIMIT);
+  if (error || !profiles?.length) return [];
+
+  const userIds = profiles.map((p) => p.id);
+  const { data: tps } = await adminClient
+    .from("talent_profiles")
+    .select("id, user_id, bio")
+    .in("user_id", userIds);
+  const tpByUser = Object.fromEntries((tps ?? []).map((t) => [t.user_id, t]));
+
+  const alerts: AdminBioPhoneAlert[] = [];
+  for (const p of profiles) {
+    const tp = tpByUser[p.id];
+    const combinedBio = [p.bio, tp?.bio].filter((b): b is string => !!b).join("\n");
+    const matches = extractPhoneCandidates(combinedBio);
+    if (matches.length === 0) continue;
+
+    alerts.push({
+      userId: p.id,
+      talentProfileId: tp?.id ?? null,
+      fullName: p.full_name,
+      handle: p.handle,
+      bio: combinedBio,
+      detectedNumbers: matches.map((m) => m.raw),
+    });
+  }
+
+  return alerts;
 }

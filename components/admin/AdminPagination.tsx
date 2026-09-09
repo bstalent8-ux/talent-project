@@ -1,7 +1,10 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
+import { ChevronDown, Check } from "lucide-react";
+import { ADMIN_LIGHT } from "./adminLightTheme";
 
 interface Props {
   page:       number;
@@ -52,10 +55,31 @@ export default function AdminPagination({
   const showsRowCount = total != null && pageSize != null && !!buildPageSizeHref;
   const shownOnPage = showsRowCount ? Math.max(0, Math.min(pageSize!, total! - (page - 1) * pageSize!)) : 0;
 
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
+  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
+  const CARD   = dark ? "#0D1623" : ADMIN_LIGHT.card;
+  const TEXT   = dark ? "#f1f5f9" : ADMIN_LIGHT.text;
+  const MUTED  = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
   const GREEN  = "#00D26A";
+  const PRIMARY = dark ? "var(--color-primary)" : ADMIN_LIGHT.primary;
+
+  // Custom dropdown for the page-size picker — a native <select>'s open
+  // list is OS/browser-rendered and can't be given rounded corners or the
+  // admin palette's colors (the square, browser-default list the redesign
+  // was asked to move away from). Same click-outside-closes pattern as
+  // AdminSidebar's own "display mode" popup.
+  const [sizeOpen, setSizeOpen] = useState(false);
+  const sizeBtnRef = useRef<HTMLButtonElement>(null);
+  const sizeMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!sizeOpen) return;
+    function onClick(e: MouseEvent) {
+      const target = e.target as Node;
+      if (sizeBtnRef.current?.contains(target)) return;
+      if (sizeMenuRef.current && !sizeMenuRef.current.contains(target)) setSizeOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [sizeOpen]);
 
   // The old behaviour (no row-size picker wired in) still hides entirely on
   // a single page. Once a caller opts into the picker, the bar must stay
@@ -119,19 +143,56 @@ export default function AdminPagination({
       </span>
 
       {showsRowCount && (
-        <select
-          value={pageSize}
-          onChange={(e) => router.push(buildPageSizeHref!(Number(e.target.value)))}
-          style={{
-            marginRight: ar ? 8 : 0, marginLeft: ar ? 0 : 8,
-            padding: "5px 8px", borderRadius: 8, border: `1px solid ${BORDER}`,
-            backgroundColor: "transparent", color: TEXT, fontSize: 12.5, cursor: "pointer",
-          }}
-        >
-          {pageSizeOptions.map((size) => (
-            <option key={size} value={size}>{size} {t.perPage}</option>
-          ))}
-        </select>
+        <div style={{ position: "relative", marginRight: ar ? 8 : 0, marginLeft: ar ? 0 : 8 }}>
+          <button
+            ref={sizeBtnRef}
+            type="button"
+            onClick={() => setSizeOpen((o) => !o)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 12px", borderRadius: 20, border: `1px solid ${sizeOpen ? PRIMARY : BORDER}`,
+              backgroundColor: sizeOpen ? `color-mix(in srgb, ${PRIMARY} 10%, transparent)` : "transparent",
+              color: TEXT, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            {pageSize} {t.perPage}
+            <ChevronDown size={14} color={MUTED} style={{ transform: sizeOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+          </button>
+
+          {sizeOpen && (
+            <div
+              ref={sizeMenuRef}
+              style={{
+                position: "absolute", bottom: "calc(100% + 6px)", [ar ? "right" : "left"]: 0,
+                minWidth: 140, backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 14,
+                padding: 4, boxShadow: "0 8px 24px rgba(0,0,0,0.18)", zIndex: 50,
+              }}
+            >
+              {pageSizeOptions.map((size) => {
+                const active = size === pageSize;
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => { setSizeOpen(false); router.push(buildPageSizeHref!(size)); }}
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                      padding: "8px 12px", borderRadius: 10, border: "none",
+                      backgroundColor: active ? `color-mix(in srgb, ${PRIMARY} 12%, transparent)` : "transparent",
+                      color: active ? PRIMARY : TEXT, fontSize: 13, fontWeight: active ? 700 : 400,
+                      cursor: "pointer", textAlign: "start",
+                    }}
+                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.backgroundColor = dark ? "rgba(255,255,255,0.06)" : ADMIN_LIGHT.tableHead; }}
+                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.backgroundColor = "transparent"; }}
+                  >
+                    <span>{size} {t.perPage}</span>
+                    {active && <Check size={14} />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

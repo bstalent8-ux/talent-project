@@ -10,6 +10,8 @@ import IncompleteSignupsSection from "./_components/IncompleteSignupsSection";
 import IncompleteSignupsSkeleton from "./_components/IncompleteSignupsSkeleton";
 import NewMediaUploadsSection from "./_components/NewMediaUploadsSection";
 import NewMediaUploadsSkeleton from "./_components/NewMediaUploadsSkeleton";
+import BioPhoneAlertsSection from "./_components/BioPhoneAlertsSection";
+import BioPhoneAlertsSkeleton from "./_components/BioPhoneAlertsSkeleton";
 
 export default function AdminDashboardPage() {
   return (
@@ -22,6 +24,9 @@ export default function AdminDashboardPage() {
       </Suspense>
       <Suspense fallback={<NewMediaUploadsSkeleton />}>
         <NewMediaUploadsSection />
+      </Suspense>
+      <Suspense fallback={<BioPhoneAlertsSkeleton />}>
+        <BioPhoneAlertsSection />
       </Suspense>
     </AdminDashboardShell>
   );

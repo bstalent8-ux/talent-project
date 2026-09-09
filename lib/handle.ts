@@ -12,7 +12,9 @@
 // at signup (app/(auth)/register/page.tsx) — never retroactively rewrites
 // an existing handle, since /talent/<handle> links may already be shared.
 
-function slugify(input: string): string {
+// Exported too — reused by features/blog for article slugs (a URL slug is a
+// URL slug; no reason to duplicate this logic there).
+export function slugify(input: string): string {
   return input
     .trim()
     .toLowerCase()

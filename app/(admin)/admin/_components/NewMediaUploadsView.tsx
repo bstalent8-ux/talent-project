@@ -151,7 +151,7 @@ export default function NewMediaUploadsView({ uploads }: { uploads: AdminNewMedi
                             onClick={() => approve(u.talentProfileId)}
                             style={{
                               display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
-                              border: "none", backgroundColor: PRIMARY, color: "#fff",
+                              border: "none", backgroundColor: "#00D26A", color: "#fff",
                               fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: approvingId === u.talentProfileId ? 0.7 : 1,
                             }}
                           >

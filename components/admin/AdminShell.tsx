@@ -47,7 +47,11 @@ export default function AdminShell({ title, children }: Props) {
   // without touching every component. Same browser support caveat as `zoom`
   // (Chrome/Edge/Safari, not Firefox).
   return (
-    <div dir="ltr" style={{ display: "flex", height: `${100 / 1.15}vh`, overflow: "hidden", backgroundColor: BG, zoom: 1.15, WebkitTextStroke: "0.25px currentColor" }}>
+    <div
+      dir="ltr"
+      className="admin-zoom-shell"
+      style={{ display: "flex", height: `${100 / 1.15}vh`, overflow: "hidden", backgroundColor: BG, zoom: 1.15, WebkitTextStroke: "0.25px currentColor" }}
+    >
       <AdminSidebar
         open={sidebarOpen}
         mode={sidebarMode}
@@ -69,6 +73,21 @@ export default function AdminShell({ title, children }: Props) {
           {children}
         </main>
       </div>
+
+      {/* The 1.15 zoom is a deliberate desktop-only density boost (see the
+          comment above) — on a phone it works against readability instead of
+          for it, shrinking the *effective* viewport by the same 15% at the
+          exact width where every table/card is already tight. `!important`
+          in a stylesheet beats even an inline style, so this cleanly
+          overrides the zoom/height set above without touching the JS. */}
+      <style>{`
+        @media (max-width: 900px) {
+          .admin-zoom-shell {
+            zoom: 1 !important;
+            height: 100vh !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
