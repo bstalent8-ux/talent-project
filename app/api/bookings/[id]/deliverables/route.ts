@@ -137,10 +137,18 @@ export async function PATCH(
     }
     // Release payment to talent balance
     if (booking.talent_user_id && booking.amount) {
-      // Graceful fallback if RPC not defined
-      await adminClient.rpc("increment_balance", { user_id: booking.talent_user_id, amount: booking.amount })
-        .then(() => null, () => null);
+      // Graceful fallback if RPC not defined — logged, not silently lost.
+      const { error: balanceErr } = await adminClient.rpc("increment_balance", { user_id: booking.talent_user_id, amount: booking.amount });
+      if (balanceErr) console.error("[bookings/deliverables] increment_balance failed", balanceErr.message);
     }
+    // Release the held escrow row (see app/api/bookings/[id]/payment for how
+    // it gets to "held" in the first place). Tolerate a missing/legacy row —
+    // this must never block the approval itself.
+    const { error: releaseErr } = await adminClient
+      .from("payments").update({ status: "released", released_at: new Date().toISOString() })
+      .eq("booking_id", id).eq("status", "held");
+    if (releaseErr) console.error("[bookings/deliverables] payment release failed", releaseErr.message);
+
     const { error: bookingPaidError } = await adminClient.from("bookings").update({ status: "paid" }).eq("id", id);
     if (bookingPaidError) return NextResponse.json({ error: bookingPaidError.message }, { status: 500 });
     if (booking.talent_user_id) {

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyChatMessage } from "@/lib/notifications/events";
 import { canSendMessage } from "@/lib/permissions";
+import { findContactInfo } from "@/lib/chat-contact-filter";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -101,6 +102,20 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   if (!conv || (conv.brand_id !== user.id && conv.talent_id !== user.id)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  // Block outright rather than send-then-flag — the whole point is the
+  // contact info never reaches the other party, so the deal can't move off
+  // the platform (and its future payment fee, see CLAUDE.md's payment-proof
+  // section) after first contact. See lib/chat-contact-filter.ts for what's
+  // actually matched and why link detection is scoped to WhatsApp/Telegram
+  // deep links specifically, not every social-media mention.
+  const contactMatches = findContactInfo(content);
+  if (contactMatches.length > 0) {
+    return NextResponse.json(
+      { error: "contact_info_blocked", types: [...new Set(contactMatches.map((m) => m.type))] },
+      { status: 400 },
+    );
   }
 
   // Insert message

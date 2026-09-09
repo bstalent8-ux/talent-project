@@ -1,10 +1,31 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { requireAdmin, getAdminUser } from "@/lib/auth/require-admin";
 import { requirePermission } from "@/lib/auth/permissions";
+import { fetchAdminBookingDetail } from "@/features/admin/services/admin.service";
 import { revalidatePath } from "next/cache";
+
+// GET — full booking detail for /admin/bookings/[id]: brief, deliverables,
+// payment, review, the booking_history audit trail, and the chat transcript.
+// See features/admin/services/admin.service.ts's fetchAdminBookingDetail for
+// how each piece is resolved.
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const forbidden = await requireAdmin();
+  if (forbidden) return forbidden;
+  const denied = await requirePermission("bookings", "read");
+  if (denied) return denied;
+
+  const { id } = await params;
+  const booking = await fetchAdminBookingDetail(id);
+  if (!booking) return NextResponse.json({ error: "not found" }, { status: 404 });
+
+  return NextResponse.json({ booking });
+}
 
 const PIPELINE = [
   "pending",
@@ -30,21 +51,19 @@ function isValidTransition(from: string, to: string): boolean {
   return Math.abs(ti - fi) <= 2; // allow ±2 steps for flexibility
 }
 
-async function requireAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data } = await adminClient.from("profiles").select("role").eq("id", user.id).single();
-  return data?.role === "admin" ? user : null;
-}
-
+// PATCH — the generic status-stepper BookingsTable's prev/next/cancel
+// buttons use. Deliberately blunt (a plain status write) — it does NOT know
+// about the `payments` table, which is exactly why BookingsTable hides the
+// "next" stepper for a booking with a pending payment proof and routes that
+// one case through POST .../payment/confirm instead (see that route's
+// comment and CLAUDE.md's "Manual Payment Proof Flow" section).
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const denied = await requirePermission("bookings", "update");
   if (denied) return denied;
-  const admin = await requireAdmin();
+  const admin = await getAdminUser();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;

@@ -9,8 +9,8 @@ import { ChevronRight, ChevronLeft } from "lucide-react";
 import { PIPELINE, STATUS_COLOR, STATUS_LABEL, type PipelineStatus } from "./bookingStatus";
 
 const TX = {
-  ar: { brand: "الشركة", talent: "الموهبة", status: "الحالة", date: "التاريخ", amount: "المبلغ", actions: "الإجراءات", cancel: "إلغاء", noBookings: "لا توجد حجوزات", moveNext: "المرحلة التالية", movePrev: "المرحلة السابقة", results: "نتيجة" },
-  en: { brand: "Brand",   talent: "Talent",  status: "Status", date: "Date",    amount: "Amount", actions: "Actions",    cancel: "Cancel", noBookings: "No bookings", moveNext: "Next Stage", movePrev: "Prev Stage", results: "results" },
+  ar: { brand: "الشركة", talent: "الموهبة", status: "الحالة", date: "التاريخ", amount: "المبلغ", actions: "الإجراءات", cancel: "إلغاء", noBookings: "لا توجد حجوزات", moveNext: "المرحلة التالية", movePrev: "المرحلة السابقة", results: "نتيجة", reviewPayment: "مراجعة إثبات الدفع", confirmPayment: "تأكيد استلام الدفع", viewProof: "عرض الإثبات", close: "إغلاق" },
+  en: { brand: "Brand",   talent: "Talent",  status: "Status", date: "Date",    amount: "Amount", actions: "Actions",    cancel: "Cancel", noBookings: "No bookings", moveNext: "Next Stage", movePrev: "Prev Stage", results: "results", reviewPayment: "Review Payment Proof", confirmPayment: "Confirm Payment Received", viewProof: "View Proof", close: "Close" },
 };
 
 interface Props {
@@ -36,6 +36,18 @@ export default function BookingsTable({ bookings, total, page, pageSize, status 
   const ar = lang === "ar";
 
   const [loading, setLoading] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState<AdminBooking | null>(null);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
+
+  async function confirmPayment(booking: AdminBooking) {
+    setConfirmingPayment(true);
+    const res = await fetch(`/api/admin/bookings/${booking.id}/payment/confirm`, { method: "POST" });
+    setConfirmingPayment(false);
+    if (res.ok) {
+      setReviewing(null);
+      router.refresh();
+    }
+  }
 
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "#1e293b" : "#E2E8F0";
@@ -94,12 +106,21 @@ export default function BookingsTable({ bookings, total, page, pageSize, status 
                   const label  = STATUS_LABEL[b.status]?.[lang] ?? b.status;
                   const idx    = PIPELINE.indexOf(b.status as typeof PIPELINE[number]);
                   const isLoading = loading === b.id;
+                  const hasPendingPayment = b.status === "accepted" && b.payment?.status === "pending";
                   const canGoPrev = idx > 0;
-                  const canGoNext = idx < PIPELINE.length - 1;
+                  // A pending payment must go through the dedicated confirm
+                  // action below (updates the payments row too) — the blunt
+                  // status stepper would flip the booking to in_progress
+                  // while leaving the payment stuck "pending" forever.
+                  const canGoNext = idx < PIPELINE.length - 1 && !hasPendingPayment;
                   const canCancel = b.status !== "cancelled" && b.status !== "paid";
 
                   return (
-                    <tr key={b.id} style={{ opacity: isLoading ? 0.5 : 1, transition: "opacity 0.2s" }}>
+                    <tr
+                      key={b.id}
+                      onClick={() => router.push(`/admin/bookings/${b.id}`)}
+                      style={{ opacity: isLoading ? 0.5 : 1, transition: "opacity 0.2s", cursor: "pointer" }}
+                    >
                       <td style={cellStyle}>{brand?.full_name ?? "—"}</td>
                       <td style={cellStyle}>{talent?.full_name ?? "—"}</td>
                       <td style={{ ...cellStyle, color: b.amount ? TEXT : MUTED }}>
@@ -116,8 +137,17 @@ export default function BookingsTable({ bookings, total, page, pageSize, status 
                       <td style={{ ...cellStyle, color: MUTED }}>
                         {new Date(b.created_at).toLocaleDateString(ar ? "ar-EG" : "en-US")}
                       </td>
-                      <td style={cellStyle}>
+                      <td style={cellStyle} onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                          {hasPendingPayment && (
+                            <button
+                              onClick={() => setReviewing(b)}
+                              title={t.reviewPayment}
+                              style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(244,183,64,0.12)", border: "1px solid rgba(244,183,64,0.4)", borderRadius: 6, padding: "3px 9px", cursor: "pointer", color: "#F4B740", fontSize: 11, fontWeight: 700 }}
+                            >
+                              💳 {t.reviewPayment}
+                            </button>
+                          )}
                           {canGoPrev && (
                             <button
                               onClick={() => move(b, "prev")}
@@ -160,6 +190,39 @@ export default function BookingsTable({ bookings, total, page, pageSize, status 
       </div>
 
       <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
+
+      {reviewing && (
+        <div
+          onClick={() => setReviewing(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, maxWidth: 480, width: "100%" }}>
+            <h3 style={{ color: TEXT, fontSize: 15, fontWeight: 800, margin: "0 0 14px" }}>{t.reviewPayment}</h3>
+            {reviewing.payment?.proof_url ? (
+              <a href={reviewing.payment.proof_url} target="_blank" rel="noreferrer" style={{ display: "block", marginBottom: 16 }}>
+                <img src={reviewing.payment.proof_url} alt="" style={{ maxWidth: "100%", maxHeight: 400, borderRadius: 10, border: `1px solid ${BORDER}` }} />
+              </a>
+            ) : (
+              <p style={{ color: MUTED, fontSize: 13, margin: "0 0 16px" }}>—</p>
+            )}
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setReviewing(null)}
+                style={{ background: "none", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "9px 16px", cursor: "pointer", color: MUTED, fontSize: 13, fontWeight: 600 }}
+              >
+                {t.close}
+              </button>
+              <button
+                onClick={() => confirmPayment(reviewing)}
+                disabled={confirmingPayment}
+                style={{ background: confirmingPayment ? "rgba(0,210,106,0.5)" : "#00D26A", border: "none", borderRadius: 8, padding: "9px 18px", cursor: confirmingPayment ? "default" : "pointer", color: "#050B12", fontSize: 13, fontWeight: 800 }}
+              >
+                {t.confirmPayment}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

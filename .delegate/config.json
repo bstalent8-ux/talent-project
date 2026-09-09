@@ -1,0 +1,9 @@
+{
+  "version": "delegate-fleet.v1",
+  "lanes": {
+    "feature": {
+      "implementer": "opencode",
+      "model": "nvidia/qwen/qwen3-coder-480b-a35b-instruct"
+    }
+  }
+}

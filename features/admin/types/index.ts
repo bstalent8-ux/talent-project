@@ -48,6 +48,12 @@ export interface AdminDashboardStats {
 
 type ProfileRef = { full_name: string | null; handle: string | null } | { full_name: string | null; handle: string | null }[] | null;
 
+export interface AdminBookingPayment {
+  id:         string;
+  status:     string;
+  proof_url:  string | null;
+}
+
 export interface AdminBooking {
   id:           string;
   status:       string;
@@ -59,6 +65,53 @@ export interface AdminBooking {
   completed_at: string | null;
   brand:        ProfileRef;
   talent:       ProfileRef;
+  // Only ever a "pending" row in practice — see admin.service.ts's
+  // fetchAdminBookingsPage comment for why this is fetched per page rather
+  // than joined in SQL. Null for a booking that never got a payment-proof
+  // upload, or whose payment has already moved past pending (held/released).
+  payment:      AdminBookingPayment | null;
+}
+
+// ─── Admin booking detail (the /admin/bookings/[id] page) ──────────────────
+// A superset of AdminBooking: everything a moderator needs to see the full
+// story of one booking without leaving the admin — the brief, the full
+// payment row (not just the pending-proof summary above), deliverables,
+// review, a status-change audit trail, and the raw chat transcript.
+
+export interface AdminBookingHistoryEntry {
+  id:          string;
+  from_status: string;
+  to_status:   string;
+  note:        string | null;
+  created_at:  string;
+  changedBy:   ProfileRef | null;
+}
+
+export interface AdminBookingMessage {
+  id:         string;
+  content:    string;
+  created_at: string;
+  sender:     ProfileRef | null;
+}
+
+export interface AdminBookingFull {
+  id:              string;
+  status:          string;
+  amount:          number | null;
+  service_type:    string | null;
+  notes:           string | null;
+  created_at:      string;
+  paid_at:         string | null;
+  completed_at:    string | null;
+  brand:           ProfileRef;
+  talent:          ProfileRef | null;
+  job:             { id: string; title: string } | null;
+  brief:           Record<string, unknown> | null;
+  deliverables:    Record<string, unknown>[];
+  payment:         Record<string, unknown> | null;
+  review:          Record<string, unknown> | null;
+  history:         AdminBookingHistoryEntry[];
+  messages:        AdminBookingMessage[];
 }
 
 export interface AdminReview {

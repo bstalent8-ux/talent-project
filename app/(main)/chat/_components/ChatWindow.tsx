@@ -17,6 +17,7 @@ export default function ChatWindow({ conversationId, conversation, currentUserId
   const { lang, dark } = useSite();
   const ar = lang === "ar";
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chatError, setChatError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -133,12 +134,19 @@ export default function ChatWindow({ conversationId, conversation, currentUserId
     });
 
     if (res.ok) {
+      setChatError(null);
       const { message } = await res.json();
       // Replace optimistic with real message
       setMessages((prev) => prev.map((m) => m.id === optimistic.id ? message : m));
     } else {
       // Remove optimistic on failure
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+      const body = await res.json().catch(() => null);
+      setChatError(
+        body?.error === "contact_info_blocked"
+          ? (ar ? "مش مسموح تبعت رقم تليفون أو إيميل أو رابط واتساب/تليجرام في الشات." : "Phone numbers, emails, and WhatsApp/Telegram links aren't allowed in chat.")
+          : null
+      );
     }
   }
 
@@ -246,6 +254,11 @@ export default function ChatWindow({ conversationId, conversation, currentUserId
       </div>
 
       {/* Input */}
+      {chatError && (
+        <div style={{ padding: "8px 16px", backgroundColor: dark ? "rgba(239,68,68,0.1)" : "rgba(239,68,68,0.06)", borderTop: `1px solid ${BORDER}`, direction: ar ? "rtl" : "ltr" }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: "#EF4444" }}>❌ {chatError}</p>
+        </div>
+      )}
       <MessageInput onSend={handleSend} disabled={loading} />
     </div>
   );

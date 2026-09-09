@@ -1,0 +1,63 @@
+ROLE: You are a UI/UX reviewer in a structured debate with another reviewer (Claude). This is a
+READ-ONLY review. Do not edit any files. Your only output is your final message — a verdict on each
+point below (DEFEND-CLAUDE / CONCEDE-TO-CLAUDE / PARTIAL, with 1-3 sentences of reasoning each), plus
+an overall top-3 priority list at the end.
+
+CONTEXT: Next.js 15 App Router, Arabic-first RTL marketplace connecting talents (models/UGC creators)
+with brands. File under review: app/(main)/home/_components/landing/LandingPage.tsx (and its CSS
+module app/(main)/home/_components/landing/LandingPage.module.css, content in ./content.ts). This
+component intentionally departs from the rest of the codebase's inline-style convention — a prior
+pass moved its presentation into a CSS Module specifically "to avoid duplicated inline style
+objects" (see the file history / CLAUDE.md "Landing Visual Foundation Update" note if visible in
+repo docs). Read the actual file yourself before answering — don't take my paraphrase on faith.
+
+Bilingual (ar/en), dark/light themed via CSS custom properties. No test suite for this page; judge on
+UX/IA/accessibility/consistency grounds, not by running gates.
+
+CLAUDE'S POSITIONS (respond to each):
+
+1. SECTION ORDER: Talent500Section (a "join before launch, first 500 get perks" urgency/promo banner)
+   renders immediately after HeroSection, before CategoriesSection or FeaturedTalentsSection — i.e.
+   before the visitor has seen any real talent, portfolio evidence, or social proof. Claude's position:
+   this front-loads a sales/urgency pitch ahead of credibility-building content, which is backwards for
+   a cold visitor; it should move lower (e.g. after FeaturedTalentsSection or TestimonialsSection) once
+   trust signals have landed.
+
+2. HERO SEARCH REMOVED BUT MARKUP KEPT: `SHOW_HOME_SEARCH = false` disables the hero search bar
+   entirely (comment says "temporary kill switch") but the full form markup, state, and submit handler
+   remain dead in the component. Claude's position: (a) as UX, a marketplace hero without a search
+   entry point pushes all discovery onto two link buttons, which is a weaker affordance for someone
+   who already knows what they want; (b) as code hygiene, ~30 lines of live-but-unreachable form
+   markup/handlers sitting behind a hardcoded boolean is dead-weight that should either be restored or
+   deleted, not parked indefinitely.
+
+3. AUTO-SCROLLING CATEGORY CAROUSEL: CategoriesSection auto-scrolls an infinitely-looping category
+   rail (pauses on hover/focus, respects prefers-reduced-motion). Claude's position: ambient auto-moving
+   carousels are a well-known low-engagement pattern — content changes on its own schedule, not the
+   user's, and a moving target is harder to click precisely. A static grid (or manual-only rail) would
+   serve better despite the engineering effort invested in a seamless loop.
+
+4. GUEST PRICE BLUR: TalentCard blurs the price (CSS-blurred, not hidden) for guests, unless the
+   price is already "on request." Claude's position: this is a defensible growth lever (creates a
+   reason to sign up) but also a trust cost — visitors comparison-shopping can't see real numbers and
+   may read it as evasive, especially on a page whose own copy elsewhere emphasizes "no hidden fees."
+
+5. TALENT500 STYLING BREAKS LOCAL CONVENTION: Talent500Section is written entirely in raw inline
+   `style={{...}}` objects (including a `color-mix()` gradient) even though every sibling section in
+   this same file uses the CSS Module (`styles.xxx`). Claude's position: this is inconsistent with the
+   file's own established pattern (not the global codebase pattern, which does favor inline styles) —
+   it should be moved into LandingPage.module.css to match its neighbors.
+
+6. PAGE LENGTH / SCROLL DEPTH: the page stacks ten full sections (Hero, Talent500, Categories,
+   FeaturedTalents, Workflow, Campaign, Feature, Testimonials, FAQ, FinalCTA) before any secondary
+   page. Claude's position: this risks scroll fatigue and dilutes the primary conversion actions;
+   Feature and FAQ in particular could move to a dedicated page or be trimmed, keeping the homepage
+   focused on proof (talents, testimonials) plus one clear CTA path per audience (talent vs brand).
+
+7. CAMPAIGN SECTION MIXES TWO INTENTS: CampaignSection puts a gallery of approved brand-moment photos
+   next to an unrelated dark "post a job" CTA panel in the same two-column section. Claude's position:
+   combining social-proof gallery and brand-acquisition CTA in one section dilutes both messages; they
+   read as two different jobs-to-be-done bolted together for layout convenience.
+
+REPORT CONTRACT: For each of the 7 points, one line verdict tag + short reasoning. Close with your own
+top-3 priority fixes (can differ from Claude's ranking) if you were shipping one change this week.

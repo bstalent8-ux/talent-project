@@ -1,5 +1,5 @@
 import { adminClient } from "@/lib/supabase/admin";
-import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminReview } from "../types";
+import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminBookingFull, AdminReview } from "../types";
 import { clusterPageVisits, totalDurationByPage, type PageTotal, type EngagementSample } from "./page-duration-clustering";
 import { calculateCompletion } from "@/lib/profile-completion";
 import { extractPhoneCandidates } from "./bio-phone-detection";
@@ -247,12 +247,22 @@ export async function fetchAdminBookingsPage({
   const tpMap      = Object.fromEntries((tpRows         ?? []).map((tp: Record<string, unknown>) => [tp.id as string, tp.user_id as string]));
   const talentMap  = Object.fromEntries((talentProfiles ?? []).map(p => [p.id, p]));
 
+  // Payments the admin still needs to act on — a brand uploaded a proof
+  // screenshot and it hasn't been confirmed (-> held) yet. Bounded to this
+  // page's own booking ids, same pattern as everything else here.
+  const bookingIds = bookings.map((b) => b.id);
+  const { data: payments } = bookingIds.length
+    ? await adminClient.from("payments").select("id, booking_id, status, proof_url").in("booking_id", bookingIds).eq("status", "pending")
+    : { data: [] };
+  const paymentMap = Object.fromEntries((payments ?? []).map((p) => [p.booking_id, p]));
+
   const joined = bookings.map(b => {
     const userId = tpMap[b.talent_id];
     return {
       ...b,
-      brand:  brandMap[b.brand_id]  ?? null,
-      talent: userId ? talentMap[userId] : null,
+      brand:   brandMap[b.brand_id]  ?? null,
+      talent:  userId ? talentMap[userId] : null,
+      payment: paymentMap[b.id] ?? null,
     };
   }) as AdminBooking[];
 
@@ -1707,4 +1717,100 @@ export async function fetchAdminBioPhoneAlerts(): Promise<AdminBioPhoneAlert[]> 
   }
 
   return alerts;
+}
+
+// ─── Admin booking detail ───────────────────────────────────────────────────
+// Everything /admin/bookings/[id] shows: the booking core row, brief,
+// deliverables, payment, review, the booking_history audit trail, and the
+// raw chat transcript — each actor (brand/talent/admin) resolved to a
+// display name via the same bounded-scan + batch-join pattern as everything
+// else in this file (CLAUDE.md §11 rule 10).
+export async function fetchAdminBookingDetail(id: string): Promise<AdminBookingFull | null> {
+  const { data: booking, error } = await adminClient
+    .from("bookings")
+    .select("id, status, amount, service_type, notes, created_at, paid_at, completed_at, brand_id, talent_id, talent_user_id, job_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (error || !booking) return null;
+
+  const [
+    brandRes,
+    tpRes,
+    jobRes,
+    briefRes,
+    delivRes,
+    payRes,
+    reviewRes,
+    historyRes,
+    convRes,
+  ] = await Promise.all([
+    adminClient.from("profiles").select("full_name, handle").eq("id", booking.brand_id).maybeSingle(),
+    booking.talent_id
+      ? adminClient.from("talent_profiles").select("user_id").eq("id", booking.talent_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    booking.job_id
+      ? adminClient.from("jobs").select("id, title").eq("id", booking.job_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    adminClient.from("booking_briefs").select("*").eq("booking_id", id).maybeSingle(),
+    adminClient.from("deliverables").select("*").eq("booking_id", id).order("created_at", { ascending: false })
+      .then((res) => (res.error?.code === "PGRST205" ? { data: [] as Record<string, unknown>[] } : res)),
+    adminClient.from("payments").select("*").eq("booking_id", id).maybeSingle(),
+    adminClient.from("reviews").select("*").eq("booking_id", id).maybeSingle(),
+    adminClient.from("booking_history").select("*").eq("booking_id", id).order("created_at", { ascending: true }),
+    adminClient.from("conversations").select("id").eq("brand_id", booking.brand_id).eq("talent_id", booking.talent_user_id ?? "").maybeSingle(),
+  ]);
+
+  const talentUserId = tpRes.data?.user_id ?? booking.talent_user_id ?? null;
+  const talentRes = talentUserId
+    ? await adminClient.from("profiles").select("full_name, handle").eq("id", talentUserId).maybeSingle()
+    : { data: null };
+
+  const messagesRes = convRes.data
+    ? await adminClient.from("messages").select("id, content, created_at, sender_id").eq("conversation_id", convRes.data.id).order("created_at", { ascending: true })
+    : { data: [] as { id: string; content: string; created_at: string; sender_id: string }[] };
+
+  // One batch for every profile referenced across history + messages, so an
+  // admin who changed a status shows a name instead of a bare uuid.
+  const actorIds = [
+    ...new Set([
+      ...(historyRes.data ?? []).map((h) => h.changed_by).filter(Boolean),
+      ...(messagesRes.data ?? []).map((m) => m.sender_id).filter(Boolean),
+    ]),
+  ] as string[];
+  const { data: actorProfiles } = actorIds.length
+    ? await adminClient.from("profiles").select("id, full_name, handle").in("id", actorIds)
+    : { data: [] };
+  const actorMap = Object.fromEntries((actorProfiles ?? []).map((p) => [p.id, { full_name: p.full_name, handle: p.handle }]));
+
+  return {
+    id:           booking.id,
+    status:       booking.status,
+    amount:       booking.amount,
+    service_type: booking.service_type,
+    notes:        booking.notes,
+    created_at:   booking.created_at,
+    paid_at:      booking.paid_at,
+    completed_at: booking.completed_at,
+    brand:        brandRes.data ?? null,
+    talent:       talentRes.data ?? null,
+    job:          jobRes.data ?? null,
+    brief:        briefRes.data ?? null,
+    deliverables: delivRes.data ?? [],
+    payment:      payRes.data ?? null,
+    review:       reviewRes.data ?? null,
+    history: (historyRes.data ?? []).map((h) => ({
+      id:          h.id,
+      from_status: h.from_status,
+      to_status:   h.to_status,
+      note:        h.note,
+      created_at:  h.created_at,
+      changedBy:   h.changed_by ? actorMap[h.changed_by] ?? null : null,
+    })),
+    messages: (messagesRes.data ?? []).map((m) => ({
+      id:         m.id,
+      content:    m.content,
+      created_at: m.created_at,
+      sender:     m.sender_id ? actorMap[m.sender_id] ?? null : null,
+    })),
+  };
 }

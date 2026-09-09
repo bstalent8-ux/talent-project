@@ -909,3 +909,133 @@ run` is the only writer.
 `RolesView.tsx`'s `RESOURCE_LABELS`, same lockstep-with-`AdminSidebar.tsx`
 pattern as every other tab. The run route itself is gated on the `"create"`
 action (it writes a row), not `"read"`.
+
+---
+
+## Manual Payment Proof Flow — 2026-09-09
+
+**Correction to §7/§12/§14:** the `payments` table is **not** the plain
+`{amount, status, paid_at}` shape those sections describe, and this is **not
+aspirational** — it is the live production schema. At some point `payments`
+was migrated to a real escrow shape (`platform_fee` and `talent_payout` are
+DB-computed automatically from `amount`, plus `client_id`, `talent_id`,
+`currency`, `payment_method`, `external_ref`, `held_at`, `released_at`,
+`refunded_at`, `admin_note`) with a `status` CHECK constraint allowing only
+`pending | held | released | refunded | disputed` — **not** `paid` — and a
+separate `payment_method` CHECK constraint allowing only
+`offline | wallet | card | stripe | paymob` — **not** `instapay` or
+`bank_transfer`, despite that being the actual real-world method every brand
+uses today. `offline` (also the column's own DB default) is the right fit
+for "paid outside the platform, verified manually". No migration file for
+either constraint exists in this repo (§6: the database is the source of
+truth, not this folder).
+
+**This was a live, universal, silent bug**, found and fixed 2026-09-09:
+`POST /api/bookings/[id]/payment` (the brand's "Confirm Payment & Start
+Work" button) inserted `{status: "paid", paid_at: now}` — `paid_at` doesn't
+exist on this table and `"paid"` isn't a legal status, so the insert always
+threw `PGRST204`/`23514` and the route always 500'd. **Every booking on the
+platform had been permanently stuck at `accepted`** — the `payments` table
+had zero rows in production before this fix, for any booking, ever. Found by
+walking the real booking cycle end-to-end with two fresh test accounts (a
+brand and a UGC talent) rather than reading the code alone.
+
+**The fix is also a real business-flow decision, not just a schema-name
+correction.** The brand does not pay the talent directly — **the brand pays
+the platform** (bank transfer / InstaPay to the platform's own account), the
+platform holds it in escrow, and **the platform pays the talent out** after
+the delivered work is approved. This is why confirmation of the incoming
+payment is an **admin** action, not a talent action: the talent has no way
+to verify money that was never sent to them. (Still pre-payment-gateway;
+§14's "Payment gateway integration" remains the real fix.)
+
+1. **Brand uploads proof** — `POST /api/bookings/[id]/payment` now takes
+   multipart `file` (a bank-transfer/InstaPay screenshot), proxies it to
+   Cloudinary exactly like `app/api/profile/avatar/route.ts` (folder
+   `<CLOUDINARY_FOLDER>/payment-proofs`), and inserts/updates the `payments`
+   row: `status: "pending"`, `payment_method: "offline"`, the new
+   `proof_url` column (`supabase/migrations/20260909_payment_proof.sql`, not
+   auto-applied per §6), `client_id: booking.brand_id` and
+   `talent_id: booking.talent_id` (the `talent_profiles.id` one, **not**
+   `booking.talent_user_id` — `payments.talent_id` carries its own foreign
+   key to `talent_profiles`, discovered by trial insert, same ambiguity as
+   §12 item 3).
+   `bookings.status` stays `"accepted"` — the booking does not move yet. A
+   chat message tells both sides the proof was submitted, but neither gets a
+   personal notification — there's nothing for either of them to act on;
+   only an admin can confirm it.
+2. **Admin reviews and confirms** — new route `POST /api/admin/bookings/
+   [id]/payment/confirm` (`requirePermission("bookings", "update")` +
+   `getAdminUser()`, same guard pair as the existing generic
+   `/api/admin/bookings/[id]` status-mover route it sits next to). Only when
+   a `payments` row is `status: "pending"`. Flips it to `status: "held",
+   held_at: now` (escrow: money confirmed received but not yet paid out to
+   the talent) and moves `bookings.status` to `"in_progress"`, then notifies
+   *both* the brand (payment cleared) and the talent (work can start).
+   Surfaced in `/admin/bookings`'s `BookingsTable.tsx`: a booking with a
+   pending payment shows a 💳 "Review Payment Proof" action instead of the
+   generic next-stage stepper (stepping straight to `in_progress` there
+   would leave the `payments` row stuck at `"pending"` forever) — opens a
+   modal with the screenshot and a confirm button.
+3. **Release on final approval** — `PATCH /api/bookings/[id]/deliverables`'s
+   existing `approve` branch (brand approves the delivered work,
+   `bookings.status → "paid"`) now also flips the matching `held` payments
+   row to `status: "released", released_at: now` — this is the step that
+   actually represents the platform paying the talent out. This closes a
+   second, separate gap found at the same time: the escrow "release" half of
+   the lifecycle had never been implemented at all, so even a correctly-
+   inserted `held` row would have sat there forever. The existing
+   `increment_balance` RPC call right above it (credits the talent's
+   `profiles.balance` — the running total of what the platform owes them)
+   had its own silent-failure bug fixed alongside this: it discarded its
+   error with `.then(() => null, () => null)`; now logged via
+   `console.error` on failure, matching the swallow-but-log posture in
+   §10.4 — it must never block the approval itself, but a failure must
+   leave a trace. `profiles.balance` going up is still just a ledger number;
+   how the platform actually gets that money into the talent's hands (bank
+   transfer out, on what cadence, who triggers it) is not built and not
+   this change's problem to solve.
+
+**UI** — `app/(main)/bookings/[id]/_components/BookingDetail.tsx`'s
+`"accepted"`-state action panel now branches three ways instead of one
+button: brand-with-no-payment-row (file picker, copy explicit that the
+transfer goes to the platform), brand-with-pending-row (waiting on the
+platform team, link to view what was uploaded), and
+anyone-else-with-no-or-pending-row (a plain waiting message — the talent
+never sees the proof image or gets an action button here; only admin does,
+in `/admin/bookings`).
+
+**Still not built:** a reject/dispute path for a bad screenshot (an admin
+can currently only confirm, not push back on a pending proof) and any
+automated payment gateway. Both are open follow-ups, not silently dropped.
+
+**Two more pre-existing gaps found walking the full pipeline end-to-end**
+(brief → accept → pay → work → deliver → approve → review) with two fresh
+test accounts, both real and both still open:
+
+1. **The `payments`-table trigger that fires on any `status` change
+   (found causing the "paid" bug above) also blocks `status: "held"` and
+   `status: "released"`** with the identical `column "user_id" of relation
+   "notifications" does not exist` error — same root cause, two call sites.
+   Confirmed by direct write: updating any other column on `payments`
+   succeeds; touching `status` specifically always throws. Its definition
+   hasn't been shared yet (`pg_get_functiondef` on the trigger's function,
+   asked for but not yet returned) — until then, a payment can be uploaded
+   and reviewed but never actually reaches `held` or `released`.
+2. **`increment_balance(user_id, amount)` — called, never existed.** The
+   deliverables-approve branch has called this RPC to credit a talent's
+   `profiles.balance` since before this pass touched the file; the function
+   was never created, so every brand-approved booking on the platform has
+   left the talent's balance uncredited, silently, until this pass's
+   swallow-to-log fix surfaced it. Added in
+   `supabase/migrations/20260909_increment_balance.sql` (not auto-applied
+   per §6) — locked down the same way as `track_talent_profile_view()`/
+   `touch_last_active()` (SECURITY DEFINER, pinned `search_path`, EXECUTE
+   revoked from PUBLIC/anon/authenticated, granted to `service_role` only;
+   this touches money, it must never be a reachable public RPC endpoint).
+
+Neither gap blocks the booking pipeline itself — a booking still reaches
+`paid` and gets its review end-to-end (verified live) — they only mean the
+platform's own money bookkeeping (escrow state, talent balance) isn't
+actually moving yet. `payments.status` stays `pending` and
+`profiles.balance` stays unchanged for every booking until both are fixed.

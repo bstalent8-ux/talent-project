@@ -290,6 +290,11 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
       loadConvs();
     } else {
       setMessages((p) => p.filter((m) => m.id !== opt.id));
+      const body = await res.json().catch(() => null);
+      if (body?.error === "contact_info_blocked") {
+        setApiError(TX.blocked);
+        setText(trimmed); // give it back — don't make them retype it
+      }
     }
     setSending(false);
     inputRef.current?.focus();
@@ -305,8 +310,8 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
   const panelH = 520;
 
   const TX = {
-    ar: { title: "المحادثات", back: "رجوع", empty: "لا توجد محادثات", placeholder: "اكتب رسالة...", startNew: "ابدأ محادثة جديدة", noLogin: "سجّل دخولك أولاً" },
-    en: { title: "Messages",  back: "Back", empty: "No conversations yet", placeholder: "Type a message…", startNew: "Start new chat", noLogin: "Login to message" },
+    ar: { title: "المحادثات", back: "رجوع", empty: "لا توجد محادثات", placeholder: "اكتب رسالة...", startNew: "ابدأ محادثة جديدة", noLogin: "سجّل دخولك أولاً", blocked: "مش مسموح تبعت رقم تليفون أو إيميل أو رابط واتساب/تليجرام في الشات." },
+    en: { title: "Messages",  back: "Back", empty: "No conversations yet", placeholder: "Type a message…", startNew: "Start new chat", noLogin: "Login to message", blocked: "Phone numbers, emails, and WhatsApp/Telegram links aren't allowed in chat." },
   }[lang];
 
   return (
@@ -474,6 +479,11 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
               </div>
 
               {/* Input */}
+              {apiError && (
+                <div style={{ padding: "8px 12px", backgroundColor: "rgba(239,68,68,0.1)", borderTop: `1px solid ${BORDER}`, flexShrink: 0, direction: ar ? "rtl" : "ltr" }}>
+                  <p style={{ margin: 0, fontSize: 11.5, color: "#EF4444" }}>❌ {apiError}</p>
+                </div>
+              )}
               <div style={{ borderTop: `1px solid ${BORDER}`, padding: "10px 12px", display: "flex", alignItems: "flex-end", gap: 8, flexShrink: 0, backgroundColor: BG, direction: ar ? "rtl" : "ltr" }}>
                 <textarea
                   ref={inputRef}

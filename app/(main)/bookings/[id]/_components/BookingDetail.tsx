@@ -13,7 +13,7 @@ interface Profile { id: string; full_name: string | null; handle: string | null;
 interface Job     { id: string; title: string; description?: string | null; category?: string | null }
 interface Brief   { id: string; title: string; description: string | null; requirements: string | null; attachments: string[] | null; deadline: string | null; status: "pending"|"accepted"|"rejected"|"changes_requested"; reject_reason: string | null }
 interface Deliverable { id: string; files: string[] | null; links: string[] | null; notes: string | null; status: "submitted"|"approved"|"revision_requested"; feedback: string | null; created_at: string }
-interface Payment { id: string; amount: number; status: string; paid_at: string | null }
+interface Payment { id: string; amount: number; status: string; paid_at: string | null; proof_url?: string | null }
 interface Review  { id: string; rating: number; comment: string | null; status: string }
 
 interface BookingData {
@@ -84,9 +84,14 @@ const TX = {
     waitTalent:  "راجع الطلب واختر قبول أو رفض أو طلب تعديلات.",
     rejectedInfo:"تم رفض طلب الحجز.",
     proposal:    "آخر اقتراح من الموهبة",
-    confirmPay:  "تأكيد الدفع وبدء العمل",
-    waitPay:     "في انتظار تأكيد الدفع من البراند…",
-    paying:      "جاري معالجة الدفع…",
+    confirmPay:  "الدفع",
+    waitPay:     "في انتظار قيام البراند بالدفع…",
+    paying:      "جاري رفع الإثبات…",
+    payOutside:  "حوّل المبلغ للمنصة (تحويل بنكي أو انستا باي)، وبعدين ارفع صورة إثبات الدفع هنا. فريق المنصة هيراجعها ويأكّد بدء العمل، والمنصة هي اللي بتحوّل للموهبة بعد تسليم الشغل والموافقة عليه.",
+    uploadProof: "رفع إثبات الدفع",
+    proofPending:"تم رفع إثبات الدفع — في انتظار مراجعة فريق المنصة.",
+    viewProof:   "عرض إثبات الدفع",
+    waitTalentReview: "البراند دفع للمنصة ورفع إثبات الدفع — في انتظار مراجعة فريق المنصة قبل بدء العمل.",
     brief:       "ملخص المشروع",
     deliverables:"الأعمال المسلّمة",
     review:      "التقييم",
@@ -113,9 +118,14 @@ const TX = {
     waitTalent:  "Review the request and accept, reject, or request changes.",
     rejectedInfo:"This booking request was rejected.",
     proposal:    "Latest talent proposal",
-    confirmPay:  "Confirm Payment & Start Work",
-    waitPay:     "Waiting for brand to confirm payment…",
-    paying:      "Processing payment…",
+    confirmPay:  "Payment",
+    waitPay:     "Waiting for the brand to pay…",
+    paying:      "Uploading proof…",
+    payOutside:  "Transfer the amount to the platform (bank transfer or InstaPay), then upload a screenshot of the proof here. The platform team will review it and confirm before work starts, and pays the talent out once the delivered work is approved.",
+    uploadProof: "Upload Payment Proof",
+    proofPending:"Payment proof uploaded — waiting for the platform team to review it.",
+    viewProof:   "View Payment Proof",
+    waitTalentReview: "The brand paid the platform and uploaded proof — waiting for the platform team to review it before work starts.",
     brief:       "Project Brief",
     deliverables:"Deliverables",
     review:      "Review",
@@ -134,6 +144,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
   const [booking,     setBooking]     = useState(initialBooking);
   const [showBrief,   setShowBrief]   = useState(false);
   const [paying,      setPaying]      = useState(false);
+  const [payError,    setPayError]    = useState<string | null>(null);
   const [reviewDone,  setReviewDone]  = useState(!!booking.review);
 
   const BG     = dark ? "#090e1a" : "#f8fafc";
@@ -163,11 +174,19 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
     }
   }
 
-  async function handlePayment() {
+  async function handleUploadProof(file: File) {
     setPaying(true);
-    const res = await fetch(`/api/bookings/${booking.id}/payment`, { method: "POST" });
+    setPayError(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`/api/bookings/${booking.id}/payment`, { method: "POST", body: fd });
     setPaying(false);
-    if (res.ok) refresh();
+    if (res.ok) {
+      refresh();
+    } else {
+      const body = await res.json().catch(() => null);
+      setPayError(body?.error ?? (ar ? "حصل خطأ، حاول تاني" : "Something went wrong, try again"));
+    }
   }
 
   // Action panel logic
@@ -298,15 +317,41 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
           <p style={{ color: MUTED, fontSize: 13, margin: 0 }}>{t.waitBrief}</p>
         )}
 
-        {st === "accepted" && isBrand && section(t.confirmPay,
-          <button onClick={handlePayment} disabled={paying}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: paying ? "rgba(0,210,106,0.5)" : GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: paying ? "default" : "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
-            <CreditCard size={14} /> {paying ? t.paying : t.confirmPay}
-          </button>
+        {st === "accepted" && isBrand && !booking.payment && section(t.confirmPay,
+          <div>
+            <p style={{ color: MUTED, fontSize: 13, margin: "0 0 12px" }}>{t.payOutside}</p>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: paying ? "rgba(0,210,106,0.5)" : GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: paying ? "default" : "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+              <CreditCard size={14} /> {paying ? t.paying : t.uploadProof}
+              <input
+                type="file"
+                accept="image/*"
+                disabled={paying}
+                style={{ display: "none" }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadProof(f); e.target.value = ""; }}
+              />
+            </label>
+            {payError && <p style={{ color: "#ef4444", fontSize: 12.5, margin: "10px 0 0" }}>{payError}</p>}
+          </div>
         )}
 
-        {st === "accepted" && !isBrand && section(t.confirmPay,
+        {st === "accepted" && isBrand && booking.payment?.status === "pending" && section(t.confirmPay,
+          <div>
+            <p style={{ color: GOLD, fontSize: 13, fontWeight: 700, margin: "0 0 10px" }}>{t.proofPending}</p>
+            {booking.payment.proof_url && (
+              <a href={booking.payment.proof_url} target="_blank" rel="noreferrer"
+                style={{ color: GREEN, fontSize: 13, fontWeight: 700, textDecoration: "underline" }}>
+                {t.viewProof}
+              </a>
+            )}
+          </div>
+        )}
+
+        {st === "accepted" && !isBrand && !booking.payment && section(t.confirmPay,
           <p style={{ color: MUTED, fontSize: 13, margin: 0 }}>{t.waitPay}</p>
+        )}
+
+        {st === "accepted" && !isBrand && booking.payment?.status === "pending" && section(t.confirmPay,
+          <p style={{ color: GOLD, fontSize: 13, fontWeight: 700, margin: 0 }}>{t.waitTalentReview}</p>
         )}
 
         {/* Brief section */}
