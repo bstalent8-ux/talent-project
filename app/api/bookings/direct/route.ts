@@ -7,6 +7,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { notifyBookingRequest } from "@/lib/notifications/events";
 import { logBookingBriefSent } from "@/lib/events/events";
 import { canCreateBooking } from "@/lib/permissions";
+import { requireCompletion } from "@/lib/completion-gate";
 import { bookingSchema } from "./schema";
 
 const ACTIVE_BOOKING_STATUSES = [
@@ -83,6 +84,17 @@ export async function POST(req: NextRequest) {
     .from("talent_profiles").select("id, category, status").eq("user_id", talent_user_id).maybeSingle();
   if (!tp) return NextResponse.json({ error: "Talent profile not found" }, { status: 404 });
   if (tp.status && tp.status !== "approved") return NextResponse.json({ error: "Talent profile is not available" }, { status: 403 });
+
+  // COMPLETION_THRESHOLDS.receiveBriefs — a brief can only reach a talent whose
+  // profile is complete enough (CLAUDE.md §10.5). Off by default — see
+  // lib/completion-gate.ts — so this no-ops until ENFORCE_COMPLETION_BRIEFS=true.
+  const briefGate = await requireCompletion(talent_user_id, "receiveBriefs");
+  if (!briefGate.ok) {
+    return NextResponse.json(
+      { error: "talent_profile_incomplete", gate: "receiveBriefs", score: briefGate.score, needed: briefGate.needed },
+      { status: 403 },
+    );
+  }
 
   // Prevent duplicate active requests between this brand and talent.
   const { data: existingRows } = await adminClient

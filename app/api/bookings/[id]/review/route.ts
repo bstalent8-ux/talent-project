@@ -1,8 +1,14 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+
+const reviewSchema = z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().max(5000).nullish(),
+});
 
 // GET — check if review exists
 export async function GET(
@@ -34,9 +40,9 @@ export async function POST(
   if (booking.status !== "paid")
     return NextResponse.json({ error: "Booking must be completed (paid) to review" }, { status: 400 });
 
-  const { rating, comment } = await req.json();
-  if (!rating || rating < 1 || rating > 5)
-    return NextResponse.json({ error: "rating must be 1-5" }, { status: 400 });
+  const parsed = reviewSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "rating must be 1-5" }, { status: 400 });
+  const { rating, comment } = parsed.data;
 
   const { data: review, error: revErr } = await adminClient
     .from("reviews")
@@ -44,7 +50,7 @@ export async function POST(
       booking_id: id,
       talent_id:  booking.talent_id,
       brand_id:   user.id,
-      rating:     Number(rating),
+      rating,
       comment:    comment ?? null,
       status:     "approved",
     }, { onConflict: "booking_id" })

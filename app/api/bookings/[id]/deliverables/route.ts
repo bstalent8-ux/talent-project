@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import {
@@ -12,6 +13,18 @@ import {
 function isNoRows(error: { code?: string } | null): boolean {
   return error?.code === "PGRST116";
 }
+
+const urlList = z.array(z.string().trim().url().max(2048)).max(20);
+const submitSchema = z.object({
+  files: urlList.optional(),
+  links: urlList.optional(),
+  notes: z.string().max(5000).nullish(),
+});
+const decisionSchema = z.object({
+  deliverable_id: z.string().uuid().optional(),
+  action: z.enum(["approve", "revision"]),
+  feedback: z.string().max(5000).nullish(),
+});
 
 // GET — list deliverables for booking
 export async function GET(
@@ -61,7 +74,9 @@ export async function POST(
   if (booking.status !== "in_progress")
     return NextResponse.json({ error: "Booking must be in_progress" }, { status: 400 });
 
-  const { files, links, notes } = await req.json();
+  const parsed = submitSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Invalid input", issues: parsed.error.issues }, { status: 400 });
+  const { files, links, notes } = parsed.data;
   if ((!files || !files.length) && (!links || !links.length))
     return NextResponse.json({ error: "Provide at least one file or link" }, { status: 400 });
 
@@ -127,7 +142,9 @@ export async function PATCH(
   if (booking.status !== "completed")
     return NextResponse.json({ error: "Booking must be in completed state" }, { status: 400 });
 
-  const { deliverable_id, action, feedback } = await req.json();
+  const parsed = decisionSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Invalid input", issues: parsed.error.issues }, { status: 400 });
+  const { deliverable_id, action, feedback } = parsed.data;
 
   if (action === "approve") {
     // Mark deliverable approved

@@ -1,20 +1,23 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { verifyEmailOtp } from "@/lib/email-otp";
 import { rateLimit, tooManyRequests, clientIp } from "@/lib/rate-limit";
 
 // Public, pre-signup — no user exists yet.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const schema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  code: z.string().trim().min(1).max(12),
+});
 
 export async function POST(req: NextRequest) {
-  const { email, code } = await req.json().catch(() => ({}));
-  if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
-    return NextResponse.json({ error: "invalid email" }, { status: 400 });
+  const parsed = schema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) {
+    const bad = parsed.error.issues.some((i) => i.path[0] === "email");
+    return NextResponse.json({ error: bad ? "invalid email" : "code required" }, { status: 400 });
   }
-  if (typeof code !== "string" || !code.trim()) {
-    return NextResponse.json({ error: "code required" }, { status: 400 });
-  }
+  const { email, code } = parsed.data;
 
   const ip = clientIp(req);
   const [byIp, byAddr] = await Promise.all([

@@ -1,12 +1,21 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyAdminNewSupportTicket } from "@/lib/notifications/events";
 import { rateLimit, tooManyRequests, clientIp, isHoneypotTripped } from "@/lib/rate-limit";
 import { verifyTurnstile } from "@/lib/turnstile";
 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "hello@talents.com";
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  email: z.string().trim().email().max(320),
+  subject: z.string().trim().min(1).max(300),
+  message: z.string().trim().min(1).max(10000),
+  type: z.enum(["brand", "talent", "other"]).catch("other"),
+});
 
 // The contact form is public and unauthenticated — its values must never be
 // interpolated raw into the notification email's HTML body.
@@ -36,17 +45,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "captcha_failed" }, { status: 400 });
   }
 
-  const { name, email, type, subject, message } = body;
-
-  if (!name?.trim() || !email?.trim() || !subject?.trim() || !message?.trim()) {
-    return NextResponse.json({ error: "missing required fields" }, { status: 400 });
+  const parsed = contactSchema.safeParse(body);
+  if (!parsed.success) {
+    const badEmail = parsed.error.issues.some((i) => i.path[0] === "email");
+    return NextResponse.json({ error: badEmail ? "invalid email" : "missing required fields" }, { status: 400 });
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    return NextResponse.json({ error: "invalid email" }, { status: 400 });
-  }
-
-  const validTypes = ["brand", "talent", "other"];
-  const safeType = validTypes.includes(type) ? type : "other";
+  const { name, email, subject, message, type: safeType } = parsed.data;
 
   // Save to DB
   const { error: dbErr } = await adminClient.from("contact_messages").insert({

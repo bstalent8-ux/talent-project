@@ -6,8 +6,14 @@ const __impeccableLiveDev =
 
 const nextConfig: NextConfig = {
   images: {
+    // Every user-supplied image is proxied through our own upload routes to
+    // Cloudinary — nothing loads `next/image` straight from an arbitrary
+    // host. `images.unsplash.com` is only the hardcoded hero/placeholder
+    // art; `*.supabase.co` covers Supabase Storage. Was `hostname: "**"`.
     remotePatterns: [
-      { protocol: "https", hostname: "**" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
   // Trims per-route bundles for libraries imported all over the app (nearly
@@ -51,13 +57,22 @@ const nextConfig: NextConfig = {
               `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: https://connect.facebook.net https://challenges.cloudflare.com${__impeccableLiveDev}`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https:",
-              "media-src 'self' data: blob: https:",
+              // Cloudinary (all user media), Unsplash (hero art), Supabase
+              // Storage, and the Meta Pixel's tracking beacon. Was `https:`.
+              "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://*.supabase.co https://www.facebook.com",
+              "media-src 'self' data: blob: https://res.cloudinary.com https://*.supabase.co",
               "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://challenges.cloudflare.com",
-              `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.facebook.com https://graph.facebook.com${__impeccableLiveDev}`,
+              `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.cloudinary.com https://www.facebook.com https://graph.facebook.com https://challenges.cloudflare.com${__impeccableLiveDev}`,
               "frame-ancestors 'self'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "object-src 'none'",
             ].join("; "),
           },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
         ],
       },
       ...[

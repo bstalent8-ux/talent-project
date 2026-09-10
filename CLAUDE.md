@@ -1273,3 +1273,78 @@ Original migration notes (kept for reference):
 Verify after applying with `scripts/` or a probe: `payments.status` round-trips
 through `held`, `increment_balance` RPC resolves, `profiles.balance` moves on a
 brand approval.
+
+---
+
+## P1 hardening batch — 2026-09-10
+
+### Schema snapshot + `db:schema-audit` in CI
+
+`scripts/schema-audit.mjs` (`npm run db:schema-audit`) was rewritten: it now
+probes the live DB for **every column / table / RPC the code actually reads**
+(the escrow shape on `payments`, `deliverables`, `subscriptions.plan_id`,
+`leads.channel_id/category_id`, `blog_posts`, `user_events`, `rate_limits`,
+the `increment_balance` + `rl_hit` RPCs …) **and** re-runs the
+`payments.status`-writable regression check. Added as a hard step in
+`.github/workflows/deploy.yml` (needs `NEXT_PUBLIC_SUPABASE_URL` +
+`SUPABASE_SERVICE_ROLE_KEY`, already CI secrets).
+
+`supabase/migrations/20260910_schema_snapshot.sql` — a version-controlled,
+idempotent record of the drifted objects (payments escrow shape incl. the
+10/90 `platform_fee`/`talent_payout` split observed live, `increment_balance`,
+`rate_limits`+`rl_hit`, and the still-outstanding `lead_channels` /
+`lead_categories` / `leads.channel_id` from `20260907_leads_channel_category.sql`).
+Run it against production (no-ops) or a fresh project (bootstraps).
+
+**Outstanding when this was written:** `20260907_leads_channel_category.sql`
+was never pasted — `leads.channel_id`, `lead_channels`, `lead_categories` are
+missing, so the leads admin table's Channel/Category columns + filters are
+inert (they degrade gracefully, no crash). `db:schema-audit` flags all three
+until the snapshot migration (or that file) is applied.
+
+### Security headers
+
+`next.config.ts` `/(.*)` now also sends `X-Content-Type-Options: nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy:
+camera=(), microphone=(), geolocation=(), browsing-topics=()`,
+`X-Frame-Options: SAMEORIGIN`. CSP tightened: `img-src` / `media-src` off the
+blanket `https:` to `res.cloudinary.com` + `images.unsplash.com` +
+`*.supabase.co` (+ `www.facebook.com` for the Pixel beacon); added
+`base-uri 'self'`, `form-action 'self'`, `object-src 'none'`, and
+`connect-src https://api.cloudinary.com` (the client-side portfolio-video
+upload in `/profile/me` + `CompleteProfileShell` posts there directly — it
+was silently CSP-blocked before). `images.remotePatterns` narrowed from
+`hostname: "**"` to the same three hosts.
+
+### `/api/admin/promote-admin` removed
+
+The self-described temporary "promote any handle to admin" route + its
+`/admin/settings` card are gone (9 admin accounts exist — no need for the
+bootstrap). `requireSuperAdmin` stays (the `/admin/roles/*` routes use it).
+
+### `COMPLETION_THRESHOLDS` — partial enforcement
+
+`lib/completion-gate.ts` — `requireCompletion(userId, gate)` +
+`talentCompletionScore(userId)`.
+- **`applyToJobs` (50) — enforced ON.** `POST /api/jobs/[id]/apply` returns
+  `403 { error: "profile_incomplete", score, needed }` below the bar.
+  `ENFORCE_COMPLETION_APPLY="false"` disables it. (~32% of the current base is
+  under 50, but the bar is low and the message is actionable.)
+- **`receiveBriefs` (70) — wired, OFF.** `POST /api/bookings/direct` checks the
+  target talent; gated by `ENFORCE_COMPLETION_BRIEFS="true"` (default off —
+  ~47% under 70).
+- **`appearInSearch` (60) — deliberately NOT wired.** A search-visibility gate
+  was added and removed 2026-09-08 at the admin's explicit request ("I approved
+  40, only 39 show"). `public-talents.service.ts` still gates on approval only.
+
+### zod on request bodies (money + auth first)
+
+`zod` (installed, was unused) now validates the body on: `/api/auth/login`,
+`/api/auth/otp/{send,verify}`, `/api/auth/otp/email/{send,verify}`,
+`/api/bookings/[id]/deliverables` (POST + PATCH), `/api/bookings/[id]/review`,
+`/api/bookings/[id]/brief/respond`, `/api/contact` — joining the routes that
+already had it (`bookings/direct`, `jobs/[id]/apply`, `jobs`, `profile`,
+`subscriptions`, several `admin/*`). Pattern: a module-level `z.object({…})`,
+`schema.safeParse(await req.json().catch(() => null))`, 400 (or the route's
+existing generic error) on failure. Verified the escrow E2E still passes and
+that each new schema rejects malformed input.

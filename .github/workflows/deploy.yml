@@ -36,6 +36,16 @@ jobs:
       - name: Test
         run: npm test
 
+      # The DB is the source of truth, not supabase/migrations/ (CLAUDE.md §6).
+      # This probes the live schema for every column / table / RPC the code
+      # actually reads and for the payments.status trigger regression. If it
+      # fails, a hand-run migration is outstanding — see the FAIL lines.
+      - name: DB schema audit
+        run: npm run db:schema-audit
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
       - name: Build with next-on-pages (validation only, not deployed)
         run: npx @cloudflare/next-on-pages@1
         env:

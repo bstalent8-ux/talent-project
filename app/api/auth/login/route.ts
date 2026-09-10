@@ -1,9 +1,15 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { rateLimit, tooManyRequests, clientIp } from "@/lib/rate-limit";
+
+const loginSchema = z.object({
+  identifier: z.string().trim().min(1).max(320),
+  password: z.string().min(1).max(200),
+});
 
 // POST /api/auth/login
 // Body: { identifier: string (email OR @handle), password: string }
@@ -50,10 +56,9 @@ async function resolveEmail(identifier: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  const identifier = typeof body?.identifier === "string" ? body.identifier : "";
-  const password = typeof body?.password === "string" ? body.password : "";
-  if (!identifier.trim() || !password) return GENERIC();
+  const parsed = loginSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return GENERIC();
+  const { identifier, password } = parsed.data;
 
   // Brute-force cap — per IP and per identifier.
   const ip = clientIp(req);

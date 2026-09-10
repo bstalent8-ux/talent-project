@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import {
@@ -8,6 +9,12 @@ import {
   notifyBookingDeclined,
   notifyBookingUpdated,
 } from "@/lib/notifications/events";
+
+const respondSchema = z.object({
+  action: z.enum(["accept", "reject", "request_changes"]),
+  reject_reason: z.string().max(2000).nullish(),
+  message: z.string().max(2000).nullish(),
+});
 
 function isNoRows(error: { code?: string } | null): boolean {
   return error?.code === "PGRST116";
@@ -39,9 +46,10 @@ export async function PATCH(
   if (!["pending", "brief_sent", "changes_requested"].includes(booking.status))
     return NextResponse.json({ error: "no pending booking request" }, { status: 400 });
 
-  const { action, reject_reason, message } = await req.json();
-  if (!["accept", "reject", "request_changes"].includes(action))
+  const parsed = respondSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success)
     return NextResponse.json({ error: "action must be accept, reject, or request_changes" }, { status: 400 });
+  const { action, reject_reason, message } = parsed.data;
   if (action === "request_changes" && !message?.trim())
     return NextResponse.json({ error: "message required" }, { status: 400 });
 
@@ -52,7 +60,7 @@ export async function PATCH(
     responded_at: now,
   };
   if (action === "reject" && reject_reason) briefUpdate.reject_reason = reject_reason;
-  if (action === "request_changes") briefUpdate.reject_reason = message.trim();
+  if (action === "request_changes") briefUpdate.reject_reason = (message ?? "").trim();
 
   const { error: briefErr } = await adminClient
     .from("booking_briefs")

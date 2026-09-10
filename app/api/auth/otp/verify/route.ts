@@ -1,17 +1,22 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { checkOtp, twilioConfigured } from "@/lib/twilio";
 import { adminClient } from "@/lib/supabase/admin";
 import { rateLimit, tooManyRequests, clientIp } from "@/lib/rate-limit";
 
+const schema = z.object({
+  phone: z.string().regex(/^\+\d{8,15}$/),
+  code: z.string().trim().min(1).max(12),
+});
+
 export async function POST(req: NextRequest) {
   if (!twilioConfigured()) return NextResponse.json({ error: "otp not configured" }, { status: 500 });
 
-  const { phone, code } = await req.json().catch(() => ({}));
-  if (typeof phone !== "string" || typeof code !== "string" || !code.trim()) {
-    return NextResponse.json({ error: "phone and code required" }, { status: 400 });
-  }
+  const parsed = schema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "phone and code required" }, { status: 400 });
+  const { phone, code } = parsed.data;
 
   // Brute-force cap on code guessing.
   const ip = clientIp(req);

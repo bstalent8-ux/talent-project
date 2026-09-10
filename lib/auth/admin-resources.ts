@@ -42,9 +42,10 @@ export type PermissionMap = Partial<Record<AdminResourceKey, ResourcePermission>
 // "/admin/no-access", resolveResourceKeyForPath() returns null for it, so
 // middleware never blocks it and it's never in firstReadableRoute()'s
 // candidate list either. Every admin can always change their own name,
-// photo, and password no matter what role they're on — the promote-admin
-// card on that same page has its own separate super-admin-only check
-// (isSuperAdmin in the page itself), so this doesn't reopen that hole.
+// photo, and password no matter what role they're on. (The page used to
+// also carry a temporary super-admin-only "promote to admin" card + its
+// /api/admin/promote-admin route — both removed 2026-09-10 once enough
+// admin accounts existed.)
 export const ADMIN_ROUTE_MAP: Record<AdminResourceKey, string> = {
   dashboard: "/admin",
   leads: "/admin/leads",

@@ -3,16 +3,18 @@ export const runtime = 'edge';
 // Public, pre-signup — no user exists yet. Rate limiting/cooldown handled
 // by Twilio Verify itself (per-number send cooldown + daily cap).
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { sendOtp, twilioConfigured } from "@/lib/twilio";
 import { rateLimit, tooManyRequests, clientIp } from "@/lib/rate-limit";
+
+const schema = z.object({ phone: z.string().regex(/^\+\d{8,15}$/) });
 
 export async function POST(req: NextRequest) {
   if (!twilioConfigured()) return NextResponse.json({ error: "otp not configured" }, { status: 500 });
 
-  const { phone } = await req.json().catch(() => ({}));
-  if (typeof phone !== "string" || !/^\+\d{8,15}$/.test(phone)) {
-    return NextResponse.json({ error: "invalid phone" }, { status: 400 });
-  }
+  const parsed = schema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "invalid phone" }, { status: 400 });
+  const { phone } = parsed.data;
 
   // Cap SMS sends: per caller IP and per destination number. Twilio Verify
   // has its own cooldown, this stops the abuse (and the bill) before it.

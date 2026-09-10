@@ -7,6 +7,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { notifyJobApplicationReceived } from "@/lib/notifications/events";
 import { logJobApplication } from "@/lib/events/events";
 import { canApplyJob } from "@/lib/permissions";
+import { requireCompletion } from "@/lib/completion-gate";
 import { privateNoStoreHeaders } from "@/lib/cache";
 import { applySchema } from "./schema";
 
@@ -37,6 +38,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     talent_status: talentProfiles[0]?.status ?? null,
   });
   if (!permission.allowed) return NextResponse.json({ error: permission.reason === "role" ? "only talents can apply" : "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
+
+  // COMPLETION_THRESHOLDS.applyToJobs — enforced (CLAUDE.md §10.5).
+  const gate = await requireCompletion(user.id, "applyToJobs");
+  if (!gate.ok) {
+    return NextResponse.json(
+      { error: "profile_incomplete", gate: "applyToJobs", score: gate.score, needed: gate.needed },
+      { status: 403, headers: privateNoStoreHeaders() },
+    );
+  }
 
   const { data: job, error: jobError } = await adminClient
     .from("jobs").select("id, status, brand_id, title").eq("id", jobId).single();

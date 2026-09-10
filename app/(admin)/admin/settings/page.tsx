@@ -3,7 +3,6 @@ export const runtime = 'edge';
 import { useEffect, useRef, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import { useSite } from "@/contexts/SiteContext";
-import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import { createClient } from "@/lib/supabase/client";
 import { Camera, Save, User } from "lucide-react";
 
@@ -30,14 +29,6 @@ const TX = {
     passwordTooShort: "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
     passwordMismatch: "كلمتا المرور غير متطابقتين.",
     passwordSaved: "تم تغيير كلمة المرور ✓",
-    promoteTitle: "ترقية مستخدم لأدمن (مؤقت)",
-    promoteNote: "أداة مؤقتة لعمل أدمن احتياطي. هتتشال بعد ما تخلص منها.",
-    promoteHandle: "اسم المستخدم (handle)",
-    promoteBtn: "رقّي لأدمن",
-    promoteWorking: "جاري...",
-    promoteOk: (h: string) => `${h} بقى أدمن ✓`,
-    promoteAlready: (h: string) => `${h} أدمن أصلاً`,
-    promoteErr: "فشلت الترقية",
   },
   en: {
     title: "Settings",
@@ -61,14 +52,6 @@ const TX = {
     passwordTooShort: "Password must be at least 8 characters.",
     passwordMismatch: "Passwords do not match.",
     passwordSaved: "Password changed ✓",
-    promoteTitle: "Promote user to admin (temporary)",
-    promoteNote: "Temporary tool for a backup admin. Remove once you're done with it.",
-    promoteHandle: "Handle",
-    promoteBtn: "Make admin",
-    promoteWorking: "Working...",
-    promoteOk: (h: string) => `${h} is now an admin ✓`,
-    promoteAlready: (h: string) => `${h} is already an admin`,
-    promoteErr: "Promotion failed",
   },
 };
 
@@ -83,8 +66,6 @@ interface ProfileData {
 
 export default function AdminSettingsPage() {
   const { dark, lang } = useSite();
-  const permissions = useAdminPermissions();
-  const isSuperAdmin = permissions === null;
   const t = TX[lang];
   const ar = lang === "ar";
   const fileRef = useRef<HTMLInputElement>(null);
@@ -100,10 +81,6 @@ export default function AdminSettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [pwStatus, setPwStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pwMsg, setPwMsg] = useState("");
-
-  const [promoteHandle, setPromoteHandle] = useState("");
-  const [promoteStatus, setPromoteStatus] = useState<"idle" | "working" | "done" | "error">("idle");
-  const [promoteMsg, setPromoteMsg] = useState("");
 
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "#1e293b" : "#E2E8F0";
@@ -192,28 +169,6 @@ export default function AdminSettingsPage() {
     setPwStatus("saved");
     setPwMsg(t.passwordSaved);
     setNewPassword(""); setConfirmPassword("");
-  }
-
-  async function handlePromote() {
-    const handle = promoteHandle.trim().toLowerCase();
-    if (!handle) return;
-    setPromoteStatus("working");
-    setPromoteMsg("");
-    try {
-      const res = await fetch("/api/admin/promote-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ handle }),
-      });
-      const json = await res.json() as { data?: { handle: string; alreadyAdmin: boolean }; error?: string };
-      if (!res.ok || json.error) throw new Error(json.error ?? t.promoteErr);
-      setPromoteMsg(json.data!.alreadyAdmin ? t.promoteAlready(json.data!.handle) : t.promoteOk(json.data!.handle));
-      setPromoteStatus("done");
-      setPromoteHandle("");
-    } catch (err: unknown) {
-      setPromoteStatus("error");
-      setPromoteMsg(err instanceof Error ? err.message : t.promoteErr);
-    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -423,55 +378,6 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* Temporary — promote any user to admin. Remove this card + the
-            /api/admin/promote-admin route once you don't need it.
-            Super-admin only — the route itself now enforces this too
-            (requireSuperAdmin), this just keeps a restricted admin from
-            seeing a button that would 403 anyway. */}
-        {isSuperAdmin && (
-        <div style={{
-          marginTop: 20, backgroundColor: CARD, border: `1px solid ${BORDER}`,
-          borderRadius: 20, overflow: "hidden",
-        }}>
-          <div style={{
-            padding: "20px 28px", borderBottom: `1px solid ${BORDER}`,
-            fontWeight: 700, fontSize: 16, color: TEXT,
-          }}>
-            {t.promoteTitle}
-          </div>
-          <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
-            <p style={{ margin: 0, color: MUTED, fontSize: 13 }}>{t.promoteNote}</p>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <input
-                value={promoteHandle}
-                onChange={(e) => setPromoteHandle(e.target.value)}
-                placeholder={t.promoteHandle}
-                style={{ ...inputStyle, flex: "1 1 200px" }}
-                dir="ltr"
-              />
-              <button
-                onClick={handlePromote}
-                disabled={promoteStatus === "working" || !promoteHandle.trim()}
-                style={{
-                  padding: "10px 22px", borderRadius: 10, border: "none",
-                  backgroundColor: GREEN, color: "#fff", fontWeight: 700, fontSize: 14,
-                  cursor: promoteStatus === "working" ? "wait" : "pointer", fontFamily: "inherit",
-                }}
-              >
-                {promoteStatus === "working" ? t.promoteWorking : t.promoteBtn}
-              </button>
-            </div>
-            {promoteMsg && (
-              <div style={{
-                fontSize: 13,
-                color: promoteStatus === "error" ? "#EF4444" : GREEN,
-              }}>
-                {promoteMsg}
-              </div>
-            )}
-          </div>
-        </div>
-        )}
       </div>
     </AdminShell>
   );
