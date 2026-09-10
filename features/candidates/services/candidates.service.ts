@@ -338,26 +338,34 @@ export interface ImportSummary {
 }
 
 /** Bulk entry point for Excel/Sheet import — sequential so two rows sharing
- *  an email in the same file correctly merge into each other. */
+ *  an email in the same file correctly merge into each other.
+ *
+ *  `onProgress` fires once per processed row (after each `createCandidate`);
+ *  the import/route.ts streams these out as NDJSON so the admin UI can show
+ *  a real "X / total" progress bar instead of a spinner. */
 export async function importCandidates(
   rows: (CandidateIdentityInput & { jobTitle?: string | null; expectedSalary?: number | null })[],
   createdBy: string | null,
-  source: CandidateSource
+  source: CandidateSource,
+  onProgress?: (processed: number, total: number) => void
 ): Promise<ImportSummary> {
   const summary: ImportSummary = { total: rows.length, created: 0, merged: 0, flaggedDuplicate: 0, failed: 0 };
+  let processed = 0;
   for (const row of rows) {
     if (!row.fullName && !row.phone && !row.email && !row.socialHandle && Object.keys(row.extra ?? {}).length === 0) {
       summary.failed++;
-      continue;
+    } else {
+      try {
+        const result = await createCandidate(row, createdBy, source, { jobTitle: row.jobTitle, expectedSalary: row.expectedSalary });
+        if (result.merged) summary.merged++;
+        else summary.created++;
+        if (result.flaggedDuplicate) summary.flaggedDuplicate++;
+      } catch {
+        summary.failed++;
+      }
     }
-    try {
-      const result = await createCandidate(row, createdBy, source, { jobTitle: row.jobTitle, expectedSalary: row.expectedSalary });
-      if (result.merged) summary.merged++;
-      else summary.created++;
-      if (result.flaggedDuplicate) summary.flaggedDuplicate++;
-    } catch {
-      summary.failed++;
-    }
+    processed++;
+    onProgress?.(processed, rows.length);
   }
   return summary;
 }

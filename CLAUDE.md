@@ -1039,3 +1039,70 @@ Neither gap blocks the booking pipeline itself — a booking still reaches
 platform's own money bookkeeping (escrow state, talent balance) isn't
 actually moving yet. `payments.status` stays `pending` and
 `profiles.balance` stays unchanged for every booking until both are fixed.
+
+---
+
+## Candidate Import — Streaming Progress — 2026-09-10
+
+`POST /api/admin/candidates/import` now **streams NDJSON progress** instead of
+blocking until done. One import can be hundreds of rows, each its own
+dedup-lookup + insert (`importCandidates()` in
+`features/candidates/services/candidates.service.ts` loops sequentially so
+two rows sharing an email merge into each other), so a spinner was wrong.
+
+- `importCandidates(rows, createdBy, source, onProgress?)` — `onProgress`
+  fires once per processed row.
+- The route wraps the import in a `ReadableStream` emitting
+  `{"type":"progress","processed":N,"total":T}` per row, then
+  `{"type":"done","summary":{...}}`, then closes. Auth
+  (`requirePermission("candidates","create")` + `getAdminUser()`) still runs
+  *before* the stream is created.
+- `CandidateImportPanel.tsx`'s `readImportStream(res)` parses the lines and
+  drives a real bar (`processed / total`, `%`), then shows **"تم ✓" / "Done ✓"**
+  and the created/merged/flagged/failed breakdown.
+- **Auto-refresh without a manual reload:** on completion the panel fires a
+  `window` `CustomEvent("candidates:imported")` (the board view,
+  `CandidatesBoardView.tsx`, is client-fetched and listens for it) **and**
+  calls `router.refresh()` after a ~1.4 s delay (for the server-rendered
+  table view) — deferred so the "تم" summary is on screen first.
+
+**Google Sheet fetch made robust (`lib/leads/csv.ts`).** The old
+`toSheetCsvExportUrl()` returned `/export?format=csv`, which answers with a
+**307 to `googleusercontent.com`** — the edge runtime's `fetch` (in
+`next dev` especially) intermittently fails that cross-origin redirect,
+surfacing to the admin as a bare "something went wrong". New
+`sheetCsvUrlCandidates()` returns `[gviz/tq?tqx=out:csv, export?format=csv]`
+— the **gviz endpoint answers 200 directly, no redirect**. Both the
+candidate and lead import routes now loop those URLs in a try/catch so a
+network throw is caught the same as a non-200 and returns a real 400
+message. `toSheetCsvExportUrl()` kept as a thin wrapper (gviz URL) for any
+other caller.
+
+---
+
+## Admin Bulk Delete — 2026-09-10
+
+`POST /api/admin/bulk-delete` — one endpoint for "tick rows in an admin
+table, delete the batch". Body `{ resource, ids[] }`; `resource` is a key in
+the route's `DELETABLE` allow-list, each mapping to a table + an
+`AdminResourceKey` whose `"delete"` permission is checked
+(`requirePermission` + `getAdminUser`). Cap `MAX_BULK = 500`. Runs a single
+`adminClient.from(table).delete({ count: "exact" }).in("id", ids)`.
+
+**Allow-list is deliberately small** — list-management tables where a batch
+delete is routine cleanup (junk imports, spam) and child rows cascade:
+`candidates` (candidate_actions cascades), `leads` (lead_actions cascades),
+`blog` → `blog_posts` (standalone). **Not** bookings / talents / brands /
+reviews / verifications: deleting those loses payment history, public
+profiles, or a moderation trail — a footgun, not a convenience. Add a
+resource only after confirming its FKs cascade.
+
+**Shared UI:** `components/admin/BulkDeleteButton.tsx` — a red button +
+`ConfirmationModal`, bilingual, takes `{ resource, ids, onDone }`. Drop it
+next to whatever selection UI a table already has, gated on the caller's
+`canDelete`. Wired into `CandidatesTable.tsx` and `LeadsTable.tsx` (both
+already had `selectedIds` + a bulk-assign bar); their checkbox column and
+selection bar now render for `canAssign || canDelete` instead of just
+`canAssign`. `onDone` clears the selection and `router.refresh()` (the table
+views are server components). Blog is in the route allow-list but its admin
+table has no multi-select yet — trivial to wire when wanted.

@@ -8,6 +8,7 @@ import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import BulkDeleteButton from "@/components/admin/BulkDeleteButton";
 import { LeadCallButton, LeadWhatsAppButton } from "../../leads/_components/LeadContactActions";
 import LeadAssigneePicker from "../../leads/_components/LeadAssigneePicker";
 import type { Candidate } from "@/features/candidates/types";
@@ -173,13 +174,13 @@ export default function CandidatesTable({ candidates, total, page, pageSize, sta
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10, flexWrap: "wrap" }}>
-        {canAssign && selectedIds.size > 0 ? (
+        {(canAssign || canDelete) && selectedIds.size > 0 ? (
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span style={{ fontSize: 12.5, fontWeight: 700, color: TEXT }}>
               <Users size={13} style={{ verticalAlign: "middle", marginInlineEnd: 4 }} />
               {t.selectedCount(selectedIds.size)}
             </span>
-            {showBulkAssign ? (
+            {canAssign && (showBulkAssign ? (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div style={{ width: 220 }}>
                   <LeadAssigneePicker autoFocus apiPath="/api/admin/candidates/assignees" onPick={submitBulkAssign} />
@@ -195,6 +196,13 @@ export default function CandidatesTable({ candidates, total, page, pageSize, sta
                 style={{ padding: "6px 14px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
                 {t.assignSelected}
               </button>
+            ))}
+            {canDelete && (
+              <BulkDeleteButton
+                resource="candidates"
+                ids={Array.from(selectedIds)}
+                onDone={() => { setSelectedIds(new Set()); router.refresh(); }}
+              />
             )}
             <button type="button" onClick={() => setSelectedIds(new Set())}
               style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, fontSize: 12, textDecoration: "underline" }}>
@@ -213,7 +221,7 @@ export default function CandidatesTable({ candidates, total, page, pageSize, sta
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {canAssign && (
+                  {(canAssign || canDelete) && (
                     <th style={{ ...thStyle, width: 1 }}>
                       <input type="checkbox" checked={allOnPageSelected} onChange={toggleAllOnPage} style={{ cursor: "pointer" }} />
                     </th>
@@ -238,7 +246,7 @@ export default function CandidatesTable({ candidates, total, page, pageSize, sta
                     onDragEnd={() => setDraggingId(null)}
                     style={{ cursor: "grab", opacity: draggingId === candidate.id ? 0.5 : 1 }}
                   >
-                    {canAssign && (
+                    {(canAssign || canDelete) && (
                       <td style={cellStyle}>
                         <input type="checkbox" checked={selectedIds.has(candidate.id)} onChange={() => toggleOne(candidate.id)} style={{ cursor: "pointer" }} />
                       </td>

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/auth/require-admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { importLeads } from "@/features/leads/services/leads.service";
-import { csvRowsToRecords, mapRowToLeadIdentity, parseCsv, toSheetCsvExportUrl } from "@/lib/leads/csv";
+import { csvRowsToRecords, mapRowToLeadIdentity, parseCsv, sheetCsvUrlCandidates } from "@/lib/leads/csv";
 
 // Two shapes of body:
 //  - { source: "excel", rows: Record<string,string>[] } — the browser parsed
@@ -24,17 +24,25 @@ export async function POST(req: NextRequest) {
 
   if (body.source === "sheet") {
     if (!body.sheetUrl) return NextResponse.json({ error: "sheetUrl required" }, { status: 400 });
-    const csvUrl = toSheetCsvExportUrl(body.sheetUrl);
-    if (!csvUrl) return NextResponse.json({ error: "not a recognizable Google Sheet link" }, { status: 400 });
+    const urls = sheetCsvUrlCandidates(body.sheetUrl);
+    if (!urls) return NextResponse.json({ error: "not a recognizable Google Sheet link" }, { status: 400 });
 
-    const res = await fetch(csvUrl);
-    if (!res.ok) {
+    // gviz endpoint first, /export as fallback — see sheetCsvUrlCandidates.
+    let text: string | null = null;
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { redirect: "follow" });
+        if (res.ok) { text = await res.text(); break; }
+      } catch {
+        // try the next URL
+      }
+    }
+    if (text === null) {
       return NextResponse.json(
-        { error: "couldn't fetch the sheet — make sure it's shared as 'anyone with the link can view'" },
+        { error: "couldn't read the sheet — set its share access to 'Anyone with the link can view', then try again" },
         { status: 400 }
       );
     }
-    const text = await res.text();
     records = csvRowsToRecords(parseCsv(text));
   } else if (body.source === "excel") {
     if (!body.rows?.length) return NextResponse.json({ error: "rows required" }, { status: 400 });

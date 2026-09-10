@@ -97,14 +97,29 @@ export function mapRowToLeadIdentity(row: Record<string, string>): MappedLeadRow
 }
 
 /** Public Google Sheets "share" links come in a few shapes; this normalizes
- *  any of them to the CSV export endpoint. Returns null if the link doesn't
- *  look like a Google Sheet at all — callers surface that as a real error
- *  instead of silently fetching garbage. */
+ *  any of them to a CSV endpoint. Returns null if the link doesn't look like
+ *  a Google Sheet at all — callers surface that as a real error instead of
+ *  silently fetching garbage.
+ *
+ *  Prefers the `gviz/tq?tqx=out:csv` endpoint: it returns the CSV body
+ *  directly (HTTP 200, no redirect). The older `/export?format=csv` endpoint
+ *  answers with a 307 to `googleusercontent.com`, and the edge runtime's
+ *  `fetch` (both in `next dev` and, less often, on Workers) intermittently
+ *  fails to follow that cross-origin redirect — which surfaced to the admin
+ *  as a bare "something went wrong". `sheetCsvUrlCandidates()` returns both,
+ *  gviz first, so the route can fall back. */
 export function toSheetCsvExportUrl(input: string): string | null {
+  return sheetCsvUrlCandidates(input)?.[0] ?? null;
+}
+
+export function sheetCsvUrlCandidates(input: string): [string, string] | null {
   const m = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   if (!m) return null;
   const id = m[1];
   const gidMatch = input.match(/[?#&]gid=(\d+)/);
   const gid = gidMatch ? gidMatch[1] : "0";
-  return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+  return [
+    `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`,
+    `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
+  ];
 }

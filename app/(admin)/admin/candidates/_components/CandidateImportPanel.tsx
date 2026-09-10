@@ -18,6 +18,7 @@ const TX = {
     sheetUrlLabel: "رابط الشيت (لازم يكون Anyone with the link)", sheetUrlPlaceholder: "https://docs.google.com/spreadsheets/d/...",
     importSheet: "استيراد", importing: "بيستورد...",
     manualHint: "أي حقل ممكن يفضل فاضي — املا اللي متوفر بس",
+    progressLabel: "بيتسجّل", done: "تم ✓", refreshing: "بيحدّث القائمة...",
     resultCreated: (n: number) => `${n} مرشح جديد`,
     resultMerged: (n: number) => `${n} اندمج مع مرشح موجود`,
     resultFlagged: (n: number) => `${n} محتاج مراجعة (رقم مكرر)`,
@@ -35,6 +36,7 @@ const TX = {
     sheetUrlLabel: "Sheet link (must be 'Anyone with the link')", sheetUrlPlaceholder: "https://docs.google.com/spreadsheets/d/...",
     importSheet: "Import", importing: "Importing...",
     manualHint: "Any field can stay blank — fill in whatever you have",
+    progressLabel: "Importing", done: "Done ✓", refreshing: "Refreshing the list...",
     resultCreated: (n: number) => `${n} new candidate(s)`,
     resultMerged: (n: number) => `${n} merged into an existing candidate`,
     resultFlagged: (n: number) => `${n} need review (phone matched)`,
@@ -57,7 +59,49 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [progress, setProgress] = useState<{ processed: number; total: number } | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reads the NDJSON progress stream from /api/admin/candidates/import,
+  // updating the bar per line, and returns the final summary. Throws on a
+  // stream-level error so the caller shows t.error.
+  async function readImportStream(res: Response): Promise<ImportSummary> {
+    if (!res.ok || !res.body) throw new Error("failed");
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    let result: ImportSummary | null = null;
+
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const msg = JSON.parse(line) as
+          | { type: "progress"; processed: number; total: number }
+          | { type: "done"; summary: ImportSummary }
+          | { type: "error"; error: string };
+        if (msg.type === "progress") setProgress({ processed: msg.processed, total: msg.total });
+        else if (msg.type === "done") result = msg.summary;
+        else throw new Error(msg.error);
+      }
+    }
+    if (!result) throw new Error("no summary");
+    return result;
+  }
+
+  // The board view (client-fetched) updates instantly off this event; the
+  // table view (server component) needs router.refresh(), deferred a beat so
+  // the "تم ✓" summary is on screen before the tree re-renders under it.
+  function announceImported() {
+    if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("candidates:imported"));
+    setRefreshing(true);
+    setTimeout(() => { router.refresh(); setRefreshing(false); }, 1400);
+  }
 
   const [manual, setManual] = useState({ fullName: "", phone: "", email: "", socialHandle: "", note: "", jobTitle: "", expectedSalary: "", categoryId: "" });
   const [sheetUrl, setSheetUrl] = useState("");
@@ -102,7 +146,7 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
   }
 
   async function submitExcel(file: File) {
-    setBusy(true); setError(null); setSummary(null);
+    setBusy(true); setError(null); setSummary(null); setProgress(null);
     try {
       const ExcelJS = (await import("exceljs")).default;
       const buffer = await file.arrayBuffer();
@@ -144,10 +188,9 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source: "excel", rows }),
       });
-      if (!res.ok) throw new Error();
-      const data = await res.json() as { summary: ImportSummary };
-      setSummary(data.summary);
-      router.refresh();
+      const s = await readImportStream(res);
+      setSummary(s);
+      announceImported();
     } catch {
       setError(t.error);
     }
@@ -157,20 +200,26 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
 
   async function submitSheet(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true); setError(null); setSummary(null);
+    setBusy(true); setError(null); setSummary(null); setProgress(null);
     try {
       const res = await fetch("/api/admin/candidates/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source: "sheet", sheetUrl }),
       });
-      const data = await res.json() as { summary?: ImportSummary; error?: string };
-      if (!res.ok || !data.summary) throw new Error(data.error ?? "failed");
-      setSummary(data.summary);
+      // A pre-stream failure (bad URL, private sheet) still comes back as
+      // plain JSON with a 4xx — handle that before trying to read a stream.
+      if (!res.ok) {
+        const data = await res.json().catch(() => null) as { error?: string } | null;
+        throw new Error(data?.error || "failed");
+      }
+      const s = await readImportStream(res);
+      setSummary(s);
       setSheetUrl("");
-      router.refresh();
-    } catch {
-      setError(t.error);
+      announceImported();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      setError(msg && msg !== "failed" && msg !== "no summary" ? msg : t.error);
     }
     setBusy(false);
   }
@@ -318,12 +367,32 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
           )}
 
           {error && <p style={{ marginTop: 10, fontSize: 12.5, color: "#EF4444" }}>{error}</p>}
-          {summary && (
-            <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 10, fontSize: 12.5, color: MUTED }}>
-              {summary.created > 0 && <span style={{ color: "#00D26A" }}>{t.resultCreated(summary.created)}</span>}
-              {summary.merged > 0 && <span>{t.resultMerged(summary.merged)}</span>}
-              {summary.flaggedDuplicate > 0 && <span style={{ color: "#F59E0B" }}>{t.resultFlagged(summary.flaggedDuplicate)}</span>}
-              {summary.failed > 0 && <span style={{ color: "#EF4444" }}>{t.resultFailed(summary.failed)}</span>}
+
+          {busy && progress && progress.total > 0 && (() => {
+            const pct = Math.round((progress.processed / progress.total) * 100);
+            return (
+              <div style={{ marginTop: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: MUTED, marginBottom: 6 }}>
+                  <span>{t.progressLabel}… {progress.processed} / {progress.total}</span>
+                  <span style={{ fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}>{pct}%</span>
+                </div>
+                <div style={{ height: 8, borderRadius: 999, backgroundColor: BORDER, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${pct}%`, backgroundColor: "var(--color-primary)", borderRadius: 999, transition: "width 0.25s ease" }} />
+                </div>
+              </div>
+            );
+          })()}
+
+          {!busy && summary && (
+            <div style={{ marginTop: 12 }}>
+              <p style={{ margin: "0 0 6px", fontSize: 13.5, fontWeight: 800, color: "#00D26A" }}>{t.done}</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: 12.5, color: MUTED }}>
+                {summary.created > 0 && <span style={{ color: "#00D26A" }}>{t.resultCreated(summary.created)}</span>}
+                {summary.merged > 0 && <span>{t.resultMerged(summary.merged)}</span>}
+                {summary.flaggedDuplicate > 0 && <span style={{ color: "#F59E0B" }}>{t.resultFlagged(summary.flaggedDuplicate)}</span>}
+                {summary.failed > 0 && <span style={{ color: "#EF4444" }}>{t.resultFailed(summary.failed)}</span>}
+              </div>
+              {refreshing && <p style={{ margin: "6px 0 0", fontSize: 11.5, color: MUTED }}>{t.refreshing}</p>}
             </div>
           )}
         </div>

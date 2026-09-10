@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/auth/require-admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { importCandidates } from "@/features/candidates/services/candidates.service";
-import { csvRowsToRecords, mapRowToLeadIdentity, parseCsv, toSheetCsvExportUrl } from "@/lib/leads/csv";
+import { csvRowsToRecords, mapRowToLeadIdentity, parseCsv, sheetCsvUrlCandidates } from "@/lib/leads/csv";
 import type { MappedLeadRow } from "@/lib/leads/csv";
 
 const JOB_TITLE_HEADERS = ["job", "job title", "role", "position", "وظيفة", "الوظيفة", "وظيفه", "الوظيفه"];
@@ -49,17 +49,27 @@ export async function POST(req: NextRequest) {
 
   if (body.source === "sheet") {
     if (!body.sheetUrl) return NextResponse.json({ error: "sheetUrl required" }, { status: 400 });
-    const csvUrl = toSheetCsvExportUrl(body.sheetUrl);
-    if (!csvUrl) return NextResponse.json({ error: "not a recognizable Google Sheet link" }, { status: 400 });
+    const urls = sheetCsvUrlCandidates(body.sheetUrl);
+    if (!urls) return NextResponse.json({ error: "not a recognizable Google Sheet link" }, { status: 400 });
 
-    const res = await fetch(csvUrl);
-    if (!res.ok) {
+    // Try gviz first, fall back to /export — see sheetCsvUrlCandidates's
+    // comment. A network throw (edge-fetch failing a redirect) is caught the
+    // same as a non-200 so the admin gets a real message, not a bare 500.
+    let text: string | null = null;
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { redirect: "follow" });
+        if (res.ok) { text = await res.text(); break; }
+      } catch {
+        // try the next URL
+      }
+    }
+    if (text === null) {
       return NextResponse.json(
-        { error: "couldn't fetch the sheet — make sure it's shared as 'anyone with the link can view'" },
+        { error: "couldn't read the sheet — open it and set share access to 'Anyone with the link can view', then try again" },
         { status: 400 }
       );
     }
-    const text = await res.text();
     records = csvRowsToRecords(parseCsv(text));
   } else if (body.source === "excel") {
     if (!body.rows?.length) return NextResponse.json({ error: "rows required" }, { status: 400 });
@@ -77,6 +87,38 @@ export async function POST(req: NextRequest) {
     const { jobTitle, expectedSalary, extra } = extractCandidateFields(base);
     return { ...base, extra, jobTitle, expectedSalary };
   });
-  const summary = await importCandidates(mapped, admin.id, body.source);
-  return NextResponse.json({ summary });
+
+  // Stream progress as newline-delimited JSON so the admin UI shows a real
+  // "X / total" bar. One import can be hundreds of rows, each its own
+  // dedup-lookup + insert, so this genuinely takes seconds.
+  //   {"type":"progress","processed":N,"total":T}
+  //   {"type":"done","summary":{...}}
+  //   {"type":"error","error":"..."}
+  const encoder = new TextEncoder();
+  const adminId = admin.id;
+  const source = body.source;
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (obj: unknown) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+      try {
+        send({ type: "progress", processed: 0, total: mapped.length });
+        const summary = await importCandidates(mapped, adminId, source, (processed, total) => {
+          send({ type: "progress", processed, total });
+        });
+        send({ type: "done", summary });
+      } catch {
+        send({ type: "error", error: "import failed" });
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Accel-Buffering": "no",
+    },
+  });
 }

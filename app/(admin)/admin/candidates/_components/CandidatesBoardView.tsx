@@ -49,6 +49,14 @@ export default function CandidatesBoardView({ stages, category, assignedTo, acti
   }
   useEffect(() => { load(); }, [category, assignedTo, actionDate, actionPersonId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The import panel (CandidateImportPanel) fires this after a bulk import
+  // finishes — router.refresh() doesn't reach this client-fetched board.
+  useEffect(() => {
+    const reload = () => load();
+    window.addEventListener("candidates:imported", reload);
+    return () => window.removeEventListener("candidates:imported", reload);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function moveTo(candidateId: string, stage: CandidateStage) {
     if (stage.fields.length > 0) {
       setPendingMove({ candidateId, stage });
