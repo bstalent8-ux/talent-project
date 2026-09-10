@@ -1106,3 +1106,32 @@ selection bar now render for `canAssign || canDelete` instead of just
 `canAssign`. `onDone` clears the selection and `router.refresh()` (the table
 views are server components). Blog is in the route allow-list but its admin
 table has no multi-select yet — trivial to wire when wanted.
+
+---
+
+## Candidates Table — Sortable Columns — 2026-09-10
+
+`/admin/candidates` table view: every header is now a sort toggle. Click a
+header ⇒ sort ascending; click the same one again ⇒ descending; a new column
+starts ascending; always resets to page 1.
+
+- **Server-side** (`fetchCandidatesPage` in `candidates.service.ts`): new
+  `sort` + `dir` params. `sort` is validated against `CANDIDATE_SORT_KEYS`
+  (real `candidates` columns: `full_name, phone, email, job_title,
+  expected_salary, stage_id, category_id, assigned_to, created_at`), falls
+  back to `created_at`. `stage_id / category_id / assigned_to` sort by the
+  FK value (grouping), not by label — which is what "sort by stage/owner"
+  means in practice. A `.order("id")` secondary key keeps paging stable
+  within equal values. No explicit `sort` ⇒ the old default (newest first).
+- **URL**: `?sort=<col>&dir=asc|desc`, carried through the page's
+  searchParams and the `<Suspense key>` so the server component re-runs.
+- **Client** (`CandidatesTable.tsx`): `SortableTh` renders the label + a
+  `ChevronsUpDown` (idle) / `ChevronUp` / `ChevronDown` indicator. Its
+  onClick does `router.push(href)` **then `router.refresh()`** — Next 15's
+  router cache otherwise serves a stale RSC payload when only searchParams
+  change (asc → desc on the same column silently did nothing without it).
+  Pagination's `buildHref` / `buildPageSizeHref` now thread `sort`/`dir` so
+  paging keeps the sort.
+
+Not yet applied to the leads table (same `LeadsTable.tsx` shape — trivial to
+mirror when wanted) or the board view (no columns there).

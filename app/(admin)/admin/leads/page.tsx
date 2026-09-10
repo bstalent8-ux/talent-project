@@ -31,6 +31,8 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
   const assignedTo = typeof sp.assignedTo === "string" ? sp.assignedTo : undefined;
   const actionDate = typeof sp.actionDate === "string" ? sp.actionDate : undefined;
   const actionPersonId = typeof sp.actionPersonId === "string" ? sp.actionPersonId : undefined;
+  const sort = typeof sp.sort === "string" ? sp.sort : undefined;
+  const dir = sp.dir === "asc" || sp.dir === "desc" ? sp.dir : undefined;
 
   const [stages, channels, categories] = await Promise.all([
     fetchStages(),
@@ -48,8 +50,8 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
       {view === "board" ? (
         <LeadsBoardView stages={stages} channel={channel} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} />
       ) : (
-        <Suspense key={`${page}-${stage}-${pageSize}-${channel}-${category}-${assignedTo}-${actionDate}-${actionPersonId}`} fallback={<LeadsTableSkeleton />}>
-          <LeadsTableSection page={page} pageSize={pageSize} stage={stage} channel={channel} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} />
+        <Suspense key={`${page}-${stage}-${pageSize}-${channel}-${category}-${assignedTo}-${actionDate}-${actionPersonId}-${sort}-${dir}`} fallback={<LeadsTableSkeleton />}>
+          <LeadsTableSection page={page} pageSize={pageSize} stage={stage} channel={channel} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} sort={sort} dir={dir} />
         </Suspense>
       )}
     </AdminLeadsShell>

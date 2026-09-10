@@ -9,6 +9,7 @@ import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import BulkDeleteButton from "@/components/admin/BulkDeleteButton";
+import SortableTh from "@/components/admin/SortableTh";
 import { LeadCallButton, LeadWhatsAppButton } from "./LeadContactActions";
 import LeadAssigneePicker from "./LeadAssigneePicker";
 import type { Lead } from "@/features/leads/types";
@@ -50,9 +51,11 @@ interface Props {
   assignedTo?: string;
   actionDate?: string;
   actionPersonId?: string;
+  sort?: string;
+  dir?: "asc" | "desc";
 }
 
-function hrefFor(page: number, stage: string, pageSize: number, channel?: string, category?: string, assignedTo?: string, actionDate?: string, actionPersonId?: string) {
+function hrefFor(page: number, stage: string, pageSize: number, channel?: string, category?: string, assignedTo?: string, actionDate?: string, actionPersonId?: string, sort?: string, dir?: "asc" | "desc") {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (stage !== "all") params.set("stage", stage);
@@ -62,12 +65,19 @@ function hrefFor(page: number, stage: string, pageSize: number, channel?: string
   if (assignedTo) params.set("assignedTo", assignedTo);
   if (actionDate) params.set("actionDate", actionDate);
   if (actionPersonId) params.set("actionPersonId", actionPersonId);
+  if (sort) { params.set("sort", sort); params.set("dir", dir ?? "asc"); }
   params.set("view", "table");
   const qs = params.toString();
   return qs ? `/admin/leads?${qs}` : "/admin/leads";
 }
 
-export default function LeadsTable({ leads, total, page, pageSize, stage, channel, category, assignedTo, actionDate, actionPersonId }: Props) {
+const SORT_COL = {
+  name: "full_name", contact: "phone", stage: "stage_id", channel: "channel_id",
+  category: "category_id", assigned: "assigned_to", created: "created_at",
+} as const;
+type SortHeader = keyof typeof SORT_COL;
+
+export default function LeadsTable({ leads, total, page, pageSize, stage, channel, category, assignedTo, actionDate, actionPersonId, sort, dir }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.leads?.canDelete;
@@ -75,6 +85,11 @@ export default function LeadsTable({ leads, total, page, pageSize, stage, channe
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
+
+  function goSort(col: string, nextDir: "asc" | "desc") {
+    router.push(hrefFor(1, stage, pageSize, channel, category, assignedTo, actionDate, actionPersonId, col, nextDir));
+    router.refresh(); // Next 15 router cache serves a stale RSC on searchParams-only change
+  }
 
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "#1e293b" : "#E2E8F0";
@@ -226,13 +241,13 @@ export default function LeadsTable({ leads, total, page, pageSize, stage, channe
                       <input type="checkbox" checked={allOnPageSelected} onChange={toggleAllOnPage} style={{ cursor: "pointer" }} />
                     </th>
                   )}
-                  <th style={thStyle}>{t.name}</th>
-                  <th style={thStyle}>{t.contact}</th>
-                  <th style={thStyle}>{t.stageCol}</th>
-                  <th style={thStyle}>{t.channelCol}</th>
-                  <th style={thStyle}>{t.categoryCol}</th>
-                  <th style={thStyle}>{t.assigned}</th>
-                  <th style={thStyle}>{t.created}</th>
+                  <SortableTh label={t.name} col={SORT_COL.name} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.contact} col={SORT_COL.contact} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.stageCol} col={SORT_COL.stage} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.channelCol} col={SORT_COL.channel} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.categoryCol} col={SORT_COL.category} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.assigned} col={SORT_COL.assigned} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.created} col={SORT_COL.created} activeCol={sort} activeDir={dir} onSort={goSort} />
                   <th style={thStyle} />
                 </tr>
               </thead>
@@ -351,10 +366,10 @@ export default function LeadsTable({ leads, total, page, pageSize, stage, channe
       <AdminPagination
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => hrefFor(p, stage, pageSize, channel, category, assignedTo, actionDate, actionPersonId)}
+        buildHref={(p) => hrefFor(p, stage, pageSize, channel, category, assignedTo, actionDate, actionPersonId, sort, dir)}
         total={total}
         pageSize={pageSize}
-        buildPageSizeHref={(size) => hrefFor(1, stage, size, channel, category, assignedTo, actionDate, actionPersonId)}
+        buildPageSizeHref={(size) => hrefFor(1, stage, size, channel, category, assignedTo, actionDate, actionPersonId, sort, dir)}
       />
 
       <ConfirmationModal

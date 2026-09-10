@@ -28,6 +28,8 @@ export default async function AdminCandidatesPage({ searchParams }: Props) {
   const assignedTo = typeof sp.assignedTo === "string" ? sp.assignedTo : undefined;
   const actionDate = typeof sp.actionDate === "string" ? sp.actionDate : undefined;
   const actionPersonId = typeof sp.actionPersonId === "string" ? sp.actionPersonId : undefined;
+  const sort = typeof sp.sort === "string" ? sp.sort : undefined;
+  const dir = sp.dir === "asc" || sp.dir === "desc" ? sp.dir : undefined;
 
   const [stages, categories] = await Promise.all([fetchStages(), fetchCategories()]);
 
@@ -41,8 +43,8 @@ export default async function AdminCandidatesPage({ searchParams }: Props) {
       {view === "board" ? (
         <CandidatesBoardView stages={stages} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} />
       ) : (
-        <Suspense key={`${page}-${stage}-${pageSize}-${category}-${assignedTo}-${actionDate}-${actionPersonId}`} fallback={<CandidatesTableSkeleton />}>
-          <CandidatesTableSection page={page} pageSize={pageSize} stage={stage} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} />
+        <Suspense key={`${page}-${stage}-${pageSize}-${category}-${assignedTo}-${actionDate}-${actionPersonId}-${sort}-${dir}`} fallback={<CandidatesTableSkeleton />}>
+          <CandidatesTableSection page={page} pageSize={pageSize} stage={stage} category={category} assignedTo={assignedTo} actionDate={actionDate} actionPersonId={actionPersonId} sort={sort} dir={dir} />
         </Suspense>
       )}
     </AdminCandidatesShell>

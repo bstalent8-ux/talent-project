@@ -174,22 +174,40 @@ function applyCandidateFilters(
   return q;
 }
 
+// Real columns on `candidates` — every table header maps to one of these.
+// stage_id / category_id / assigned_to sort by grouping (the FK value), not
+// by label, which is what "sort by stage/category/owner" means in practice.
+export const CANDIDATE_SORT_KEYS = [
+  "full_name", "phone", "email", "job_title", "expected_salary",
+  "stage_id", "category_id", "assigned_to", "created_at",
+] as const;
+export type CandidateSortKey = (typeof CANDIDATE_SORT_KEYS)[number];
+const SORTABLE = new Set<string>(CANDIDATE_SORT_KEYS);
+
 export interface CandidatesPageParams extends CandidateFilterParams {
   page?: number;
   pageSize?: number;
+  sort?: string;
+  dir?: "asc" | "desc";
 }
 
-export async function fetchCandidatesPage({ page = 1, pageSize = 10, ...filters }: CandidatesPageParams): Promise<CandidatesPageResult> {
+export async function fetchCandidatesPage({ page = 1, pageSize = 10, sort, dir, ...filters }: CandidatesPageParams): Promise<CandidatesPageResult> {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
   const [stages, categories, actionCandidateIds] = await Promise.all([
     fetchStageSummaries(), fetchCategories(), resolveActionFilterCandidateIds(filters.actionDate, filters.actionPersonId),
   ]);
 
+  const sortCol = sort && SORTABLE.has(sort) ? sort : "created_at";
+  // No explicit sort ⇒ newest first (unchanged default). An explicit sort
+  // defaults to ascending unless dir says otherwise.
+  const ascending = sort ? dir !== "desc" : false;
+
   const base = adminClient
     .from("candidates")
     .select("*", { count: "exact" })
-    .order("created_at", { ascending: false })
+    .order(sortCol, { ascending, nullsFirst: false })
+    .order("id", { ascending: true }) // stable tiebreak within equal sort values
     .range(from, to);
 
   const query = applyCandidateFilters(base, filters, stages, categories, actionCandidateIds);

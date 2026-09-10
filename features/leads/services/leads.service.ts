@@ -204,22 +204,36 @@ function applyLeadFilters(
   return q;
 }
 
+// Real `leads` columns — see candidates.service.ts's CANDIDATE_SORT_KEYS
+// for the rationale (FK columns sort by grouping, not label).
+export const LEAD_SORT_KEYS = [
+  "full_name", "phone", "email", "social_handle", "stage_id", "channel_id",
+  "category_id", "assigned_to", "created_at",
+] as const;
+const LEAD_SORTABLE = new Set<string>(LEAD_SORT_KEYS);
+
 export interface LeadsPageParams extends LeadFilterParams {
   page?: number;
   pageSize?: number;
+  sort?: string;
+  dir?: "asc" | "desc";
 }
 
-export async function fetchLeadsPage({ page = 1, pageSize = 10, ...filters }: LeadsPageParams): Promise<LeadsPageResult> {
+export async function fetchLeadsPage({ page = 1, pageSize = 10, sort, dir, ...filters }: LeadsPageParams): Promise<LeadsPageResult> {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
   const [stages, taxonomies, actionLeadIds] = await Promise.all([
     fetchStageSummaries(), fetchTaxonomies(), resolveActionFilterLeadIds(filters.actionDate, filters.actionPersonId),
   ]);
 
+  const sortCol = sort && LEAD_SORTABLE.has(sort) ? sort : "created_at";
+  const ascending = sort ? dir !== "desc" : false;
+
   const base = adminClient
     .from("leads")
     .select("*", { count: "exact" })
-    .order("created_at", { ascending: false })
+    .order(sortCol, { ascending, nullsFirst: false })
+    .order("id", { ascending: true })
     .range(from, to);
 
   const query = applyLeadFilters(base, filters, stages, taxonomies, actionLeadIds);

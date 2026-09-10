@@ -9,6 +9,7 @@ import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import BulkDeleteButton from "@/components/admin/BulkDeleteButton";
+import SortableTh from "@/components/admin/SortableTh";
 import { LeadCallButton, LeadWhatsAppButton } from "../../leads/_components/LeadContactActions";
 import LeadAssigneePicker from "../../leads/_components/LeadAssigneePicker";
 import type { Candidate } from "@/features/candidates/types";
@@ -51,9 +52,11 @@ interface Props {
   assignedTo?: string;
   actionDate?: string;
   actionPersonId?: string;
+  sort?: string;
+  dir?: "asc" | "desc";
 }
 
-function hrefFor(page: number, stage: string, pageSize: number, category?: string, assignedTo?: string, actionDate?: string, actionPersonId?: string) {
+function hrefFor(page: number, stage: string, pageSize: number, category?: string, assignedTo?: string, actionDate?: string, actionPersonId?: string, sort?: string, dir?: "asc" | "desc") {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (stage !== "all") params.set("stage", stage);
@@ -62,12 +65,20 @@ function hrefFor(page: number, stage: string, pageSize: number, category?: strin
   if (assignedTo) params.set("assignedTo", assignedTo);
   if (actionDate) params.set("actionDate", actionDate);
   if (actionPersonId) params.set("actionPersonId", actionPersonId);
+  if (sort) { params.set("sort", sort); params.set("dir", dir ?? "asc"); }
   params.set("view", "table");
   const qs = params.toString();
   return qs ? `/admin/candidates?${qs}` : "/admin/candidates";
 }
 
-export default function CandidatesTable({ candidates, total, page, pageSize, stage, category, assignedTo, actionDate, actionPersonId }: Props) {
+// header label -> the DB column fetchCandidatesPage sorts on
+const SORT_COL = {
+  name: "full_name", contact: "phone", stage: "stage_id", category: "category_id",
+  job: "job_title", salary: "expected_salary", assigned: "assigned_to", created: "created_at",
+} as const;
+type SortHeader = keyof typeof SORT_COL;
+
+export default function CandidatesTable({ candidates, total, page, pageSize, stage, category, assignedTo, actionDate, actionPersonId, sort, dir }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.candidates?.canDelete;
@@ -84,6 +95,14 @@ export default function CandidatesTable({ candidates, total, page, pageSize, sta
 
   const cellStyle: React.CSSProperties = { padding: "12px 14px", color: TEXT, fontSize: 13, borderBottom: `1px solid ${BORDER}` };
   const thStyle: React.CSSProperties = { padding: "10px 14px", color: MUTED, fontSize: 12, fontWeight: 600, textAlign: ar ? "right" : "left", backgroundColor: TH, borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" };
+
+  // The server does the sorting (fetchCandidatesPage) — this just navigates,
+  // always back to page 1. router.refresh() because Next 15's router cache
+  // serves a stale RSC payload when only searchParams change (asc -> desc).
+  function goSort(col: string, nextDir: "asc" | "desc") {
+    router.push(hrefFor(1, stage, pageSize, category, assignedTo, actionDate, actionPersonId, col, nextDir));
+    router.refresh();
+  }
 
   const [deleteTarget, setDeleteTarget] = useState<Candidate | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -226,14 +245,14 @@ export default function CandidatesTable({ candidates, total, page, pageSize, sta
                       <input type="checkbox" checked={allOnPageSelected} onChange={toggleAllOnPage} style={{ cursor: "pointer" }} />
                     </th>
                   )}
-                  <th style={thStyle}>{t.name}</th>
-                  <th style={thStyle}>{t.contact}</th>
-                  <th style={thStyle}>{t.stageCol}</th>
-                  <th style={thStyle}>{t.categoryCol}</th>
-                  <th style={thStyle}>{t.jobCol}</th>
-                  <th style={thStyle}>{t.salaryCol}</th>
-                  <th style={thStyle}>{t.assigned}</th>
-                  <th style={thStyle}>{t.created}</th>
+                  <SortableTh label={t.name} col={SORT_COL.name} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.contact} col={SORT_COL.contact} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.stageCol} col={SORT_COL.stage} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.categoryCol} col={SORT_COL.category} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.jobCol} col={SORT_COL.job} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.salaryCol} col={SORT_COL.salary} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.assigned} col={SORT_COL.assigned} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.created} col={SORT_COL.created} activeCol={sort} activeDir={dir} onSort={goSort} />
                   <th style={thStyle} />
                 </tr>
               </thead>
@@ -347,10 +366,10 @@ export default function CandidatesTable({ candidates, total, page, pageSize, sta
       <AdminPagination
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => hrefFor(p, stage, pageSize, category, assignedTo, actionDate, actionPersonId)}
+        buildHref={(p) => hrefFor(p, stage, pageSize, category, assignedTo, actionDate, actionPersonId, sort, dir)}
         total={total}
         pageSize={pageSize}
-        buildPageSizeHref={(size) => hrefFor(1, stage, size, category, assignedTo, actionDate, actionPersonId)}
+        buildPageSizeHref={(size) => hrefFor(1, stage, size, category, assignedTo, actionDate, actionPersonId, sort, dir)}
       />
 
       <ConfirmationModal
