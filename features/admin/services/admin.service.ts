@@ -70,12 +70,17 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   };
 }
 
+export const TALENT_SORT_KEYS = ["full_name", "city", "balance", "created_at"] as const;
+const TALENT_SORTABLE = new Set<string>(TALENT_SORT_KEYS);
+
 export interface AdminTalentsPageParams {
   page?:     number;
   pageSize?: number;
   status?:   string;
   category?: string;
   city?:     string;
+  sort?:     string;
+  dir?:      "asc" | "desc";
 }
 
 /** Feeds the Category/City filter selects with only values that actually
@@ -117,9 +122,14 @@ export async function fetchAdminTalentsPage({
   status,
   category,
   city,
+  sort,
+  dir,
 }: AdminTalentsPageParams): Promise<AdminTalentsPageResult> {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
+
+  const sortCol   = sort && TALENT_SORTABLE.has(sort) ? sort : "created_at";
+  const ascending = sort ? dir !== "desc" : false;
 
   let query = adminClient
     .from("profiles")
@@ -132,7 +142,8 @@ export async function fetchAdminTalentsPage({
       )
     `, { count: "exact" })
     .eq("role", "talent")
-    .order("created_at", { ascending: false })
+    .order(sortCol, { ascending, nullsFirst: false })
+    .order("id", { ascending: true })
     .range(from, to);
 
   if (status && status !== "all") query = query.eq("talent_profiles.status", status);
@@ -189,10 +200,16 @@ export async function fetchAdminTalentsPage({
   return { talents, total: count ?? talents.length };
 }
 
+export const BOOKING_SORT_KEYS = ["status", "amount", "created_at", "paid_at", "completed_at"] as const;
+export type BookingSortKey = (typeof BOOKING_SORT_KEYS)[number];
+const BOOKING_SORTABLE = new Set<string>(BOOKING_SORT_KEYS);
+
 export interface AdminBookingsPageParams {
   page?:     number;
   pageSize?: number;
   status?:   string;
+  sort?:     string;
+  dir?:      "asc" | "desc";
 }
 
 export interface AdminBookingsPageResult {
@@ -208,14 +225,20 @@ export async function fetchAdminBookingsPage({
   page = 1,
   pageSize = 20,
   status,
+  sort,
+  dir,
 }: AdminBookingsPageParams): Promise<AdminBookingsPageResult> {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
 
+  const sortCol   = sort && BOOKING_SORTABLE.has(sort) ? sort : "created_at";
+  const ascending = sort ? dir !== "desc" : false;
+
   let query = adminClient
     .from("bookings")
     .select("id, status, created_at, amount, notes, brief_url, paid_at, completed_at, brand_id, talent_id", { count: "exact" })
-    .order("created_at", { ascending: false })
+    .order(sortCol, { ascending, nullsFirst: false })
+    .order("id", { ascending: true })
     .range(from, to);
 
   if (status && status !== "all") query = query.eq("status", status);
@@ -269,10 +292,15 @@ export async function fetchAdminBookingsPage({
   return { bookings: joined, total: count ?? joined.length };
 }
 
+export const REVIEW_SORT_KEYS = ["rating", "status", "created_at"] as const;
+const REVIEW_SORTABLE = new Set<string>(REVIEW_SORT_KEYS);
+
 export interface AdminReviewsPageParams {
   page?:     number;
   pageSize?: number;
   status?:   string;
+  sort?:     string;
+  dir?:      "asc" | "desc";
 }
 
 export interface AdminReviewsPageResult {
@@ -287,9 +315,16 @@ export async function fetchAdminReviewsPage({
   page = 1,
   pageSize = 10,
   status,
+  sort,
+  dir,
 }: AdminReviewsPageParams): Promise<AdminReviewsPageResult> {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
+
+  const sortCol   = sort && REVIEW_SORTABLE.has(sort) ? sort : "created_at";
+  const ascending = sort ? dir !== "desc" : false;
+  // The no-status-column fallback schema can't sort by "status".
+  const fallbackSortCol = sortCol === "status" ? "created_at" : sortCol;
 
   // Step 1: fetch reviews (try with new columns first)
   let reviews: Record<string, unknown>[] = [];
@@ -298,7 +333,8 @@ export async function fetchAdminReviewsPage({
   let query = adminClient
     .from("reviews")
     .select("id, rating, comment, status, proof_link, review_type, created_at, brand_id, talent_id", { count: "exact" })
-    .order("created_at", { ascending: false })
+    .order(sortCol, { ascending, nullsFirst: false })
+    .order("id", { ascending: true })
     .range(from, to);
   if (status && status !== "all") query = query.eq("status", status);
 
@@ -317,7 +353,8 @@ export async function fetchAdminReviewsPage({
     const { data: basic, count: basicCount } = await adminClient
       .from("reviews")
       .select("id, rating, comment, created_at, brand_id, talent_id", { count: "exact" })
-      .order("created_at", { ascending: false })
+      .order(fallbackSortCol, { ascending, nullsFirst: false })
+      .order("id", { ascending: true })
       .range(from, to);
     reviews = (basic ?? []).map(r => ({ ...r, status: "approved", proof_link: null, review_type: "brand" }));
     total = basicCount ?? reviews.length;
@@ -380,10 +417,15 @@ export interface AdminVerification {
   isVerified:      boolean;
 }
 
+export const VERIFICATION_SORT_KEYS = ["status", "submitted_at"] as const;
+const VERIFICATION_SORTABLE = new Set<string>(VERIFICATION_SORT_KEYS);
+
 export interface AdminVerificationsPageParams {
   page?:     number;
   pageSize?: number;
   status?:   string;
+  sort?:     string;
+  dir?:      "asc" | "desc";
 }
 
 export interface AdminVerificationsPageResult {
@@ -397,14 +439,20 @@ export async function fetchAdminVerificationsPage({
   page = 1,
   pageSize = 10,
   status,
+  sort,
+  dir,
 }: AdminVerificationsPageParams): Promise<AdminVerificationsPageResult> {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
 
+  const sortCol   = sort && VERIFICATION_SORTABLE.has(sort) ? sort : "submitted_at";
+  const ascending = sort ? dir !== "desc" : false;
+
   let query = adminClient
     .from("talent_verifications")
     .select("id, talent_id, status, submitted_at, id_document_url, selfie_url, social_proof, rejection_reason", { count: "exact" })
-    .order("submitted_at", { ascending: false })
+    .order(sortCol, { ascending, nullsFirst: false })
+    .order("id", { ascending: true })
     .range(from, to);
   if (status && status !== "all") query = query.eq("status", status);
 
@@ -456,10 +504,15 @@ export interface AdminBrand {
   blockReason:     string | null;
 }
 
+export const BRAND_SORT_KEYS = ["full_name", "city", "brand_status", "created_at"] as const;
+const BRAND_SORTABLE = new Set<string>(BRAND_SORT_KEYS);
+
 export interface AdminBrandsPageParams {
   page?:     number;
   pageSize?: number;
   status?:   string;
+  sort?:     string;
+  dir?:      "asc" | "desc";
 }
 
 export interface AdminBrandsPageResult {
@@ -473,9 +526,14 @@ export async function fetchAdminBrandsPage({
   page = 1,
   pageSize = 10,
   status,
+  sort,
+  dir,
 }: AdminBrandsPageParams): Promise<AdminBrandsPageResult> {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
+
+  const sortCol   = sort && BRAND_SORTABLE.has(sort) ? sort : "created_at";
+  const ascending = sort ? dir !== "desc" : false;
 
   let query = adminClient
     .from("profiles")
@@ -485,7 +543,8 @@ export async function fetchAdminBrandsPage({
       is_approved, is_suspended
     `, { count: "exact" })
     .eq("role", "brand")
-    .order("created_at", { ascending: false })
+    .order(sortCol, { ascending, nullsFirst: false })
+    .order("id", { ascending: true })
     .range(from, to);
 
   if (status && status !== "all") query = query.eq("brand_status", status);

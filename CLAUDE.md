@@ -1109,9 +1109,40 @@ table has no multi-select yet — trivial to wire when wanted.
 
 ---
 
-## Candidates Table — Sortable Columns — 2026-09-10
+## Admin Tables — Sortable Columns — 2026-09-10
 
-`/admin/candidates` table view: every header is now a sort toggle. Click a
+Every list table in `/admin` has sortable column headers. Click a header ⇒ sort
+ascending; click the same one again ⇒ descending; a new column starts ascending;
+always resets to page 1. `/admin/candidates` was first (below); the same pattern
+was then mirrored to **leads, bookings, talents, brands, reviews, verifications,
+blog**.
+
+- **Shared client component** `components/admin/SortableTh.tsx` — renders the
+  label + a `ChevronsUpDown` (idle) / `ChevronUp` / `ChevronDown` indicator,
+  `props { label, col, activeCol, activeDir, onSort, align }`. Also exports
+  `parseSortParam(sp, allowed)`.
+- **Each table** keeps a small `SORT_COL = { headerKey: dbColumn }` map and a
+  `goSort(col, dir)` that does `router.push(hrefFor(1, …, col, dir))` **then
+  `router.refresh()`** (Next 15 router-cache: a searchParams-only change
+  otherwise serves a stale RSC payload — asc→desc on the same column silently
+  did nothing without the refresh). `hrefFor` / pagination `buildHref` thread
+  `sort`/`dir` so paging keeps the sort.
+- **Each service** (`fetchAdminBookingsPage`, `fetchAdminTalentsPage`,
+  `fetchAdminBrandsPage`, `fetchAdminReviewsPage`, `fetchAdminVerificationsPage`,
+  `fetchAdminBlogPage`, `fetchLeadsPage`, `fetchCandidatesPage`) gained `sort` +
+  `dir` params, validated against a per-service `*_SORT_KEYS` allow-list, with a
+  `.order(col,{nullsFirst:false}).order("id")` secondary key for stable paging.
+  Unknown/absent `sort` ⇒ the old default (`created_at` / `submitted_at` desc).
+- Only **top-level table columns** are sortable. JS-joined values (brand/talent
+  names on bookings & reviews, category on talents, computed completion score)
+  and board views (no columns) are not. Reviews' no-`status`-column fallback
+  schema maps a `status` sort to `created_at`.
+- **URL**: `?sort=<col>&dir=asc|desc`, carried through each page's searchParams
+  and its `<Suspense key>` so the server component re-runs.
+
+### `/admin/candidates` (the original)
+
+`/admin/candidates` table view: every header is a sort toggle. Click a
 header ⇒ sort ascending; click the same one again ⇒ descending; a new column
 starts ascending; always resets to page 1.
 
@@ -1133,5 +1164,40 @@ starts ascending; always resets to page 1.
   Pagination's `buildHref` / `buildPageSizeHref` now thread `sort`/`dir` so
   paging keeps the sort.
 
-Not yet applied to the leads table (same `LeadsTable.tsx` shape — trivial to
-mirror when wanted) or the board view (no columns there).
+The log-style client-fetched views (emails, notifications-log, support,
+user-activity) are not wired — they fetch client-side and would need a
+client-side sort instead.
+
+---
+
+## Login — server-side, no email lookup — 2026-09-10
+
+**Removed `GET/POST /api/auth/lookup`.** It took an unauthenticated
+`{ identifier: "@handle" }` and returned that user's **real email address**
+(resolved via the Supabase Auth admin API). Every talent handle is public,
+so this let anyone harvest every talent's private email, unthrottled — found
+in the 2026-09-10 audit.
+
+**New `POST /api/auth/login`** (`runtime = 'edge'`) does the whole sign-in
+server-side:
+
+- Body `{ identifier, password }`. `identifier` is an email or an `@handle`.
+- `resolveEmail()` turns a handle into its account's email **server-side only**
+  (same `profiles` → `auth/v1/admin/users/:id` path as the old route) and
+  never returns it. An unresolvable handle becomes a syntactically-valid but
+  impossible address (`UNRESOLVABLE_EMAIL`) so the sign-in attempt — and its
+  timing — still happens instead of short-circuiting.
+- Calls `supabase.auth.signInWithPassword` with the **SSR** client from
+  `lib/supabase/server.ts`, so the auth cookies are set on the response.
+- Any failure (bad handle, bad password, missing field) returns the identical
+  `{ error: "invalid_credentials" }` / 401 — no enumeration oracle.
+- On success returns `{ role }` only; the role drives the post-login redirect.
+
+`app/(auth)/login/page.tsx` no longer imports the browser Supabase client at
+all — it POSTs to the route and then does a **full** `window.location.assign`
+(not `router.push`) so middleware and every server component re-read the
+fresh cookies. `next.config.ts` adds `/api/auth/:path*` to the
+`private, no-store` header list.
+
+No `/forgot-password` page exists yet (the login page links to it) — separate
+open item.

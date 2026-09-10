@@ -62,6 +62,7 @@ const nextConfig: NextConfig = {
       },
       ...[
         "/api/admin/:path*",
+        "/api/auth/:path*",
         "/api/me",
         "/api/me/:path*",
         "/api/bookings",

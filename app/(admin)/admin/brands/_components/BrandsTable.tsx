@@ -6,6 +6,7 @@ import { useSite } from "@/contexts/SiteContext";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
+import SortableTh from "@/components/admin/SortableTh";
 import type { AdminBrand } from "@/features/admin/services/admin.service";
 import { CheckCircle, XCircle, RotateCcw, ShieldBan, ShieldCheck, ExternalLink, Eye } from "lucide-react";
 
@@ -65,21 +66,31 @@ interface Props {
   page:     number;
   pageSize: number;
   status:   string;
+  sort?:    string;
+  dir?:     "asc" | "desc";
 }
 
-function hrefFor(page: number, status: string) {
+function hrefFor(page: number, status: string, sort?: string, dir?: "asc" | "desc") {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (status !== "all") params.set("status", status);
+  if (sort) { params.set("sort", sort); params.set("dir", dir ?? "asc"); }
   const qs = params.toString();
   return qs ? `/admin/brands?${qs}` : "/admin/brands";
 }
 
-export default function BrandsTable({ brands, total, page, pageSize, status }: Props) {
+const SORT_COL = { name: "full_name", city: "city", brandStatus: "brand_status", registered: "created_at" } as const;
+
+export default function BrandsTable({ brands, total, page, pageSize, status, sort, dir }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
+
+  function goSort(col: string, nextDir: "asc" | "desc") {
+    router.push(hrefFor(1, status, col, nextDir));
+    router.refresh();
+  }
 
   const [modal,   setModal]   = useState<ModalState | null>(null);
   const [reason,  setReason]  = useState("");
@@ -140,13 +151,13 @@ export default function BrandsTable({ brands, total, page, pageSize, status }: P
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  <th style={thStyle}>{t.name}</th>
+                  <SortableTh label={t.name} col={SORT_COL.name} activeCol={sort} activeDir={dir} onSort={goSort} />
                   <th style={thStyle}>{t.username}</th>
-                  <th style={thStyle}>{t.city}</th>
-                  <th style={thStyle}>{t.brandStatus}</th>
+                  <SortableTh label={t.city} col={SORT_COL.city} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.brandStatus} col={SORT_COL.brandStatus} activeCol={sort} activeDir={dir} onSort={goSort} />
                   <th style={thStyle}>{t.accountStatus}</th>
                   <th style={thStyle}>{t.taxDoc}</th>
-                  <th style={thStyle}>{t.registered}</th>
+                  <SortableTh label={t.registered} col={SORT_COL.registered} activeCol={sort} activeDir={dir} onSort={goSort} />
                   <th style={thStyle}>{t.actions}</th>
                 </tr>
               </thead>
@@ -230,7 +241,7 @@ export default function BrandsTable({ brands, total, page, pageSize, status }: P
         )}
       </div>
 
-      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
+      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status, sort, dir)} />
 
       {modal && confirmCfg && (
         <ConfirmationModal

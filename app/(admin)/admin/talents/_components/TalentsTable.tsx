@@ -9,6 +9,7 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
+import SortableTh from "@/components/admin/SortableTh";
 import type { AdminTalent, TalentStatus } from "@/features/admin/types";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import { profileApprovedNotificationContent } from "@/lib/notifications/content/profile-approved";
@@ -71,26 +72,36 @@ interface Props {
   status:   string;
   category?: string;
   city?:     string;
+  sort?:     string;
+  dir?:      "asc" | "desc";
 }
 
-function hrefFor(page: number, status: string, pageSize: number, category?: string, city?: string) {
+function hrefFor(page: number, status: string, pageSize: number, category?: string, city?: string, sort?: string, dir?: "asc" | "desc") {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (status !== "all") params.set("status", status);
   if (pageSize !== 10) params.set("pageSize", String(pageSize));
   if (category) params.set("category", category);
   if (city) params.set("city", city);
+  if (sort) { params.set("sort", sort); params.set("dir", dir ?? "asc"); }
   const qs = params.toString();
   return qs ? `/admin/talents?${qs}` : "/admin/talents";
 }
 
-export default function TalentsTable({ talents, total, page, pageSize, status, category, city }: Props) {
+const SORT_COL = { name: "full_name", city: "city", registered: "created_at" } as const;
+
+export default function TalentsTable({ talents, total, page, pageSize, status, category, city, sort, dir }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.talents?.canDelete;
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
+
+  function goSort(col: string, nextDir: "asc" | "desc") {
+    router.push(hrefFor(1, status, pageSize, category, city, col, nextDir));
+    router.refresh();
+  }
 
   const [modal,  setModal]    = useState<ModalState | null>(null);
   const [reason, setReason]   = useState("");
@@ -224,12 +235,12 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  <th style={thStyle}>{t.name}</th>
+                  <SortableTh label={t.name} col={SORT_COL.name} activeCol={sort} activeDir={dir} onSort={goSort} />
                   <th style={thStyle}>{t.username}</th>
                   <th style={thCenterStyle}>{t.category}</th>
-                  <th style={thCenterStyle}>{t.city}</th>
+                  <SortableTh label={t.city} col={SORT_COL.city} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
                   <th style={thCenterStyle}>{t.completion}</th>
-                  <th style={thCenterStyle}>{t.registered}</th>
+                  <SortableTh label={t.registered} col={SORT_COL.registered} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
                   <th style={thCenterStyle}>{t.status}</th>
                   <th style={thStyle}>{t.actions}</th>
                 </tr>
@@ -332,10 +343,10 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
       <AdminPagination
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => hrefFor(p, status, pageSize, category, city)}
+        buildHref={(p) => hrefFor(p, status, pageSize, category, city, sort, dir)}
         total={total}
         pageSize={pageSize}
-        buildPageSizeHref={(size) => hrefFor(1, status, size, category, city)}
+        buildPageSizeHref={(size) => hrefFor(1, status, size, category, city, sort, dir)}
       />
 
       {modal && confirmConfig && (

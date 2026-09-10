@@ -17,11 +17,13 @@ export default async function AdminBrandsPage({ searchParams }: Props) {
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
   const status = typeof sp.status === "string" ? sp.status : "all";
+  const sort = typeof sp.sort === "string" ? sp.sort : undefined;
+  const dir = sp.dir === "asc" || sp.dir === "desc" ? sp.dir : undefined;
 
   return (
     <AdminBrandsShell status={status}>
-      <Suspense key={`${page}-${status}`} fallback={<BrandsTableSkeleton />}>
-        <BrandsTableSection page={page} pageSize={PAGE_SIZE} status={status} />
+      <Suspense key={`${page}-${status}-${sort}-${dir}`} fallback={<BrandsTableSkeleton />}>
+        <BrandsTableSection page={page} pageSize={PAGE_SIZE} status={status} sort={sort} dir={dir} />
       </Suspense>
     </AdminBrandsShell>
   );

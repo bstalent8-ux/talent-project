@@ -44,10 +44,15 @@ async function attachAuthorNames(rows: Record<string, unknown>[]): Promise<BlogP
   return rows.map((r) => mapRow(r, r.author_id ? namesById[r.author_id as string] ?? null : null));
 }
 
+export const BLOG_SORT_KEYS = ["title", "category", "lang", "status", "view_count", "published_at", "created_at"] as const;
+const BLOG_SORTABLE = new Set<string>(BLOG_SORT_KEYS);
+
 export interface AdminBlogPageParams {
   page?:     number;
   pageSize?: number;
   status?:   string;
+  sort?:     string;
+  dir?:      "asc" | "desc";
 }
 
 export interface AdminBlogPageResult {
@@ -59,14 +64,20 @@ export async function fetchAdminBlogPage({
   page = 1,
   pageSize = 20,
   status,
+  sort,
+  dir,
 }: AdminBlogPageParams): Promise<AdminBlogPageResult> {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  const sortCol   = sort && BLOG_SORTABLE.has(sort) ? sort : "created_at";
+  const ascending = sort ? dir !== "desc" : false;
+
   let query = adminClient
     .from("blog_posts")
     .select(SELECT_COLUMNS, { count: "exact" })
-    .order("created_at", { ascending: false })
+    .order(sortCol, { ascending, nullsFirst: false })
+    .order("id", { ascending: true })
     .range(from, to);
 
   if (status && status !== "all") query = query.eq("status", status);

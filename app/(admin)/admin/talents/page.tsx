@@ -21,6 +21,8 @@ export default async function AdminTalentsPage({ searchParams }: Props) {
   const status = typeof sp.status === "string" ? sp.status : "all";
   const category = typeof sp.category === "string" ? sp.category : undefined;
   const city = typeof sp.city === "string" ? sp.city : undefined;
+  const sort = typeof sp.sort === "string" ? sp.sort : undefined;
+  const dir = sp.dir === "asc" || sp.dir === "desc" ? sp.dir : undefined;
   const requestedPageSize = Number(sp.pageSize);
   const pageSize = ALLOWED_PAGE_SIZES.includes(requestedPageSize) ? requestedPageSize : DEFAULT_PAGE_SIZE;
 
@@ -28,8 +30,8 @@ export default async function AdminTalentsPage({ searchParams }: Props) {
 
   return (
     <AdminTalentsShell status={status} category={category} city={city} filterOptions={filterOptions}>
-      <Suspense key={`${page}-${status}-${pageSize}-${category}-${city}`} fallback={<TalentsTableSkeleton />}>
-        <TalentsTableSection page={page} pageSize={pageSize} status={status} category={category} city={city} />
+      <Suspense key={`${page}-${status}-${pageSize}-${category}-${city}-${sort}-${dir}`} fallback={<TalentsTableSkeleton />}>
+        <TalentsTableSection page={page} pageSize={pageSize} status={status} category={category} city={city} sort={sort} dir={dir} />
       </Suspense>
     </AdminTalentsShell>
   );

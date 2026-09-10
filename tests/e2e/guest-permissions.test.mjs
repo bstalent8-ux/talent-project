@@ -72,10 +72,14 @@ for (const path of publicPaths) {
 }
 
 for (const path of protectedPaths) {
-  const res = await request(path);
-  assert.ok([301, 302, 303, 307, 308].includes(res.status), `${path} should redirect guests, got ${res.status}`);
-  const location = res.headers.get("location") || "";
-  assert.ok(location.includes("/login"), `${path} should redirect to /login, got ${location}`);
+  // Follow the whole chain — some paths bounce through a next.config
+  // redirect first (e.g. /profile -> /profile/me) before the middleware
+  // guard sends the guest to /login.
+  const res = await request(path, { redirect: "follow" });
+  assert.ok(
+    new URL(res.url).pathname === "/login",
+    `${path} should land a guest on /login, ended on ${res.url}`,
+  );
 }
 
 for (const api of protectedApis) {

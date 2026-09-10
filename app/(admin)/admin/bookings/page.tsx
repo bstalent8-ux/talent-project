@@ -19,14 +19,16 @@ export default async function AdminBookingsPage({ searchParams }: Props) {
   const page = Math.max(1, Number(sp.page) || 1);
   const pageSize = Math.min(PAGE_SIZE_MAX, Math.max(1, Number(sp.pageSize) || PAGE_SIZE_DEFAULT));
   const status = typeof sp.status === "string" ? sp.status : "all";
+  const sort = typeof sp.sort === "string" ? sp.sort : undefined;
+  const dir = sp.dir === "asc" || sp.dir === "desc" ? sp.dir : undefined;
 
   return (
     <AdminBookingsShell status={status}>
       {/* key forces a fresh Suspense boundary per page/filter combo, so the
           skeleton fallback shows again on every navigation rather than only
           the very first load. */}
-      <Suspense key={`${page}-${pageSize}-${status}`} fallback={<BookingsTableSkeleton />}>
-        <BookingsTableSection page={page} pageSize={pageSize} status={status} />
+      <Suspense key={`${page}-${pageSize}-${status}-${sort}-${dir}`} fallback={<BookingsTableSkeleton />}>
+        <BookingsTableSection page={page} pageSize={pageSize} status={status} sort={sort} dir={dir} />
       </Suspense>
     </AdminBookingsShell>
   );

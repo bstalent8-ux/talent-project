@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
+import SortableTh from "@/components/admin/SortableTh";
 import type { AdminBooking } from "@/features/admin/types";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { PIPELINE, STATUS_COLOR, STATUS_LABEL, type PipelineStatus } from "./bookingStatus";
@@ -19,21 +20,31 @@ interface Props {
   page:     number;
   pageSize: number;
   status:   string;
+  sort?:    string;
+  dir?:     "asc" | "desc";
 }
 
-function hrefFor(page: number, status: string) {
+function hrefFor(page: number, status: string, sort?: string, dir?: "asc" | "desc") {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (status !== "all") params.set("status", status);
+  if (sort) { params.set("sort", sort); params.set("dir", dir ?? "asc"); }
   const qs = params.toString();
   return qs ? `/admin/bookings?${qs}` : "/admin/bookings";
 }
 
-export default function BookingsTable({ bookings, total, page, pageSize, status }: Props) {
+const SORT_COL = { amount: "amount", status: "status", date: "created_at" } as const;
+
+export default function BookingsTable({ bookings, total, page, pageSize, status, sort, dir }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
+
+  function goSort(col: string, nextDir: "asc" | "desc") {
+    router.push(hrefFor(1, status, col, nextDir));
+    router.refresh();
+  }
 
   const [loading, setLoading] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<AdminBooking | null>(null);
@@ -92,9 +103,9 @@ export default function BookingsTable({ bookings, total, page, pageSize, status 
                 <tr>
                   <th style={thStyle}>{t.brand}</th>
                   <th style={thStyle}>{t.talent}</th>
-                  <th style={thStyle}>{t.amount}</th>
-                  <th style={thStyle}>{t.status}</th>
-                  <th style={thStyle}>{t.date}</th>
+                  <SortableTh label={t.amount} col={SORT_COL.amount} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.status} col={SORT_COL.status} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.date} col={SORT_COL.date} activeCol={sort} activeDir={dir} onSort={goSort} />
                   <th style={thStyle}>{t.actions}</th>
                 </tr>
               </thead>
@@ -189,7 +200,7 @@ export default function BookingsTable({ bookings, total, page, pageSize, status 
         )}
       </div>
 
-      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
+      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status, sort, dir)} />
 
       {reviewing && (
         <div

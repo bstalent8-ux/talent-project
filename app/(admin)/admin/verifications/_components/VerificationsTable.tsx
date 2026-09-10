@@ -6,6 +6,7 @@ import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import AdminPagination from "@/components/admin/AdminPagination";
+import SortableTh from "@/components/admin/SortableTh";
 import type { AdminVerification } from "@/features/admin/services/admin.service";
 import { verificationApprovedNotificationContent } from "@/lib/notifications/content/verification-approved";
 import { verificationApprovedEmail } from "@/lib/email/templates/verification-approved";
@@ -68,23 +69,33 @@ interface Props {
   page:          number;
   pageSize:      number;
   status:        string;
+  sort?:         string;
+  dir?:          "asc" | "desc";
 }
 
 // Always carries an explicit status param (even "all") — the page's default
 // status is "pending", not "all", so a bare /admin/verifications would
 // silently mean something different than the "All" tab that's currently active.
-function hrefFor(page: number, status: string) {
+function hrefFor(page: number, status: string, sort?: string, dir?: "asc" | "desc") {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   params.set("status", status);
+  if (sort) { params.set("sort", sort); params.set("dir", dir ?? "asc"); }
   return `/admin/verifications?${params.toString()}`;
 }
 
-export default function VerificationsTable({ verifications, total, page, pageSize, status }: Props) {
+const SORT_COL = { status: "status", submitted: "submitted_at" } as const;
+
+export default function VerificationsTable({ verifications, total, page, pageSize, status, sort, dir }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
+
+  function goSort(col: string, nextDir: "asc" | "desc") {
+    router.push(hrefFor(1, status, col, nextDir));
+    router.refresh();
+  }
 
   const [modal,   setModal]   = useState<ModalState | null>(null);
   const [reason,  setReason]  = useState("");
@@ -151,11 +162,11 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
                 <tr>
                   <th style={thStyle}>{t.name}</th>
                   <th style={thStyle}>{t.username}</th>
-                  <th style={thStyle}>{t.status}</th>
+                  <SortableTh label={t.status} col={SORT_COL.status} activeCol={sort} activeDir={dir} onSort={goSort} />
                   <th style={thStyle}>{t.idDoc}</th>
                   <th style={thStyle}>{t.selfie}</th>
                   <th style={thStyle}>{t.socialProof}</th>
-                  <th style={thStyle}>{t.submitted}</th>
+                  <SortableTh label={t.submitted} col={SORT_COL.submitted} activeCol={sort} activeDir={dir} onSort={goSort} />
                   <th style={thStyle}>{t.actions}</th>
                 </tr>
               </thead>
@@ -243,7 +254,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
         )}
       </div>
 
-      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
+      <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status, sort, dir)} />
 
       {modal && confirmCfg && (
         <ConfirmationModal

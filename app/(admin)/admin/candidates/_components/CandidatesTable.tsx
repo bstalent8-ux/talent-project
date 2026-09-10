@@ -76,7 +76,6 @@ const SORT_COL = {
   name: "full_name", contact: "phone", stage: "stage_id", category: "category_id",
   job: "job_title", salary: "expected_salary", assigned: "assigned_to", created: "created_at",
 } as const;
-type SortHeader = keyof typeof SORT_COL;
 
 export default function CandidatesTable({ candidates, total, page, pageSize, stage, category, assignedTo, actionDate, actionPersonId, sort, dir }: Props) {
   const { dark, lang } = useSite();

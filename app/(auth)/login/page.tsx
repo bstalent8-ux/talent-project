@@ -4,9 +4,7 @@ export const runtime = 'edge';
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Languages, Moon, Sun } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import { safeNextPath } from "@/lib/safe-next-path";
 import SupportTicketModal from "@/components/support/SupportTicketModal";
@@ -64,9 +62,6 @@ const tx = {
 };
 
 export default function LoginPage() {
-  const router   = useRouter();
-  const supabase = createClient();
-
   // Same provider the rest of the site uses — no local theme/lang state.
   const { lang, dark, toggleLang, toggleMode } = useSite();
 
@@ -82,30 +77,25 @@ export default function LoginPage() {
     if (!email || !password) { setError(t.error); return; }
     setLoading(true); setError("");
 
-    // Resolve username → email if needed
-    let resolvedEmail = email.trim();
-    if (!resolvedEmail.includes("@") || resolvedEmail.startsWith("@")) {
-      const handle = resolvedEmail.replace(/^@/, "").toLowerCase();
-      const res = await fetch("/api/auth/lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: handle }),
-      });
-      if (!res.ok) { setLoading(false); setError(t.error); return; }
-      const { email: found } = await res.json();
-      resolvedEmail = found;
-    }
+    // Sign in server-side. The route resolves an @handle to its account
+    // without ever returning the email, sets the auth cookies on the
+    // response, and answers the same way for a bad handle and a bad
+    // password. (Replaces the old /api/auth/lookup + browser signIn, which
+    // leaked any user's email to an unauthenticated caller.)
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: email.trim(), password }),
+    });
 
-    const { error: err } = await supabase.auth.signInWithPassword({ email: resolvedEmail, password });
-    setLoading(false);
-    if (err) { setError(t.error); return; }
-
-    const res = await fetch("/api/me/role");
+    if (!res.ok) { setLoading(false); setError(t.error); return; }
     const { role } = await res.json();
 
     trackEvent("login", { metadata: { role } });
 
-    router.push(role === "admin" ? "/admin" : safeNextPath() ?? "/explore");
+    // Full navigation, not router.push — guarantees every server component
+    // and the middleware re-read the freshly-set auth cookies.
+    window.location.assign(role === "admin" ? "/admin" : safeNextPath() ?? "/explore");
   }
 
   return (

@@ -60,11 +60,15 @@ const categories = new Set(
 );
 assert.ok(categories.size > 0, "approved talents should return categories");
 
+// Explore cards link to the category-canonical profile route
+// (/talent/, /ugc/ or /model/ — see canonicalTalentPath()).
+const PROFILE_LINK = /href="\/(talent|ugc|model)\//;
+
 const guestExplore = await request("/explore");
 assert.equal(guestExplore.status, 200, `/explore should render for guests, got ${guestExplore.status}`);
 const guestHtml = await guestExplore.text();
 assert.ok(
-  guestHtml.includes('href="/talent/'),
+  PROFILE_LINK.test(guestHtml),
   "/explore should render talent card links for guests",
 );
 
@@ -75,7 +79,7 @@ if (process.env.E2E_AUTH_COOKIE) {
   assert.equal(authedExplore.status, 200, `/explore should render for authenticated users, got ${authedExplore.status}`);
   const authedHtml = await authedExplore.text();
   assert.ok(
-    authedHtml.includes('href="/talent/'),
+    PROFILE_LINK.test(authedHtml),
     "authenticated /explore should render talent cards",
   );
 } else if (process.env.E2E_TALENT_EMAIL && process.env.E2E_TALENT_PASSWORD) {

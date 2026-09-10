@@ -6,6 +6,7 @@ import { useSite } from "@/contexts/SiteContext";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
+import SortableTh from "@/components/admin/SortableTh";
 import { ADMIN_LIGHT } from "@/components/admin/adminLightTheme";
 import type { BlogPostRow } from "@/features/blog/types";
 import { Pencil, Trash2, Eye, EyeOff, ExternalLink, FileText } from "lucide-react";
@@ -41,15 +42,24 @@ interface Props {
   page:     number;
   pageSize: number;
   status:   string;
+  sort?:    string;
+  dir?:     "asc" | "desc";
 }
 
 type ModalState = { type: "delete" | "publish" | "unpublish"; post: BlogPostRow };
 
-export default function BlogTable({ posts, total, page, pageSize, status }: Props) {
+const SORT_COL = { title: "title", category: "category", lang: "lang", status: "status", views: "view_count", published: "published_at" } as const;
+
+export default function BlogTable({ posts, total, page, pageSize, status, sort, dir }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
+
+  function goSort(col: string, nextDir: "asc" | "desc") {
+    router.push(hrefFor(1, col, nextDir));
+    router.refresh();
+  }
 
   const [modal, setModal] = useState<ModalState | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,10 +72,11 @@ export default function BlogTable({ posts, total, page, pageSize, status }: Prop
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  function hrefFor(p: number) {
+  function hrefFor(p: number, sortCol: string | undefined = sort, sortDir: "asc" | "desc" | undefined = dir) {
     const params = new URLSearchParams();
     if (p > 1) params.set("page", String(p));
     if (status !== "all") params.set("status", status);
+    if (sortCol) { params.set("sort", sortCol); params.set("dir", sortDir ?? "asc"); }
     const qs = params.toString();
     return qs ? `/admin/blog?${qs}` : "/admin/blog";
   }
@@ -120,12 +131,12 @@ export default function BlogTable({ posts, total, page, pageSize, status }: Prop
               <thead>
                 <tr>
                   <th style={thStyle}>{t.cover}</th>
-                  <th style={thStyle}>{t.title}</th>
-                  <th style={thCenterStyle}>{t.category}</th>
-                  <th style={thCenterStyle}>{t.lang}</th>
-                  <th style={thCenterStyle}>{t.status}</th>
-                  <th style={thCenterStyle}>{t.views}</th>
-                  <th style={thCenterStyle}>{t.published}</th>
+                  <SortableTh label={t.title} col={SORT_COL.title} activeCol={sort} activeDir={dir} onSort={goSort} />
+                  <SortableTh label={t.category} col={SORT_COL.category} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
+                  <SortableTh label={t.lang} col={SORT_COL.lang} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
+                  <SortableTh label={t.status} col={SORT_COL.status} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
+                  <SortableTh label={t.views} col={SORT_COL.views} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
+                  <SortableTh label={t.published} col={SORT_COL.published} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
                   <th style={thStyle}>{t.actions}</th>
                 </tr>
               </thead>
