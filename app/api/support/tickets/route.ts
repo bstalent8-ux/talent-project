@@ -14,6 +14,8 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyAdminNewSupportTicket } from "@/lib/notifications/events";
+import { rateLimit, tooManyRequests, clientIp, HONEYPOT_FIELD } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 const PAGE_SUBJECT: Record<string, string> = {
   register: "مشكلة أثناء إنشاء حساب",
@@ -27,6 +29,20 @@ export async function POST(req: NextRequest) {
     formData = await req.formData();
   } catch {
     return NextResponse.json({ error: "invalid form data" }, { status: 400 });
+  }
+
+  // Silent success for obvious bots.
+  if (String(formData.get(HONEYPOT_FIELD) ?? "").trim()) {
+    return NextResponse.json({ success: true });
+  }
+
+  const ip = clientIp(req);
+  const { ok } = await rateLimit(`support:${ip}`, { windowSeconds: 600, max: 5 });
+  if (!ok) return tooManyRequests();
+
+  const turnstileToken = String(formData.get("cf-turnstile-response") ?? "") || null;
+  if (!(await verifyTurnstile(turnstileToken, ip))) {
+    return NextResponse.json({ error: "captcha_failed" }, { status: 400 });
   }
 
   const email   = String(formData.get("email") ?? "").trim();

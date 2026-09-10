@@ -3,6 +3,8 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyAdminNewSupportTicket } from "@/lib/notifications/events";
+import { rateLimit, tooManyRequests, clientIp, isHoneypotTripped } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "hello@talents.com";
 
@@ -23,10 +25,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
+  // Silent success for obvious bots (hidden field a human never sees).
+  if (isHoneypotTripped(body)) return NextResponse.json({ success: true });
+
+  const ip = clientIp(req);
+  const { ok } = await rateLimit(`contact:${ip}`, { windowSeconds: 600, max: 5 });
+  if (!ok) return tooManyRequests();
+
+  if (!(await verifyTurnstile(body["cf-turnstile-response"] ?? body.turnstileToken, ip))) {
+    return NextResponse.json({ error: "captcha_failed" }, { status: 400 });
+  }
+
   const { name, email, type, subject, message } = body;
 
   if (!name?.trim() || !email?.trim() || !subject?.trim() || !message?.trim()) {
     return NextResponse.json({ error: "missing required fields" }, { status: 400 });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    return NextResponse.json({ error: "invalid email" }, { status: 400 });
   }
 
   const validTypes = ["brand", "talent", "other"];

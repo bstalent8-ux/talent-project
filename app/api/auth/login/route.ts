@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { rateLimit, tooManyRequests, clientIp } from "@/lib/rate-limit";
 
 // POST /api/auth/login
 // Body: { identifier: string (email OR @handle), password: string }
@@ -53,6 +54,14 @@ export async function POST(req: NextRequest) {
   const identifier = typeof body?.identifier === "string" ? body.identifier : "";
   const password = typeof body?.password === "string" ? body.password : "";
   if (!identifier.trim() || !password) return GENERIC();
+
+  // Brute-force cap — per IP and per identifier.
+  const ip = clientIp(req);
+  const [byIp, byId] = await Promise.all([
+    rateLimit(`login:${ip}`, { windowSeconds: 600, max: 20 }),
+    rateLimit(`login:${identifier.trim().toLowerCase()}`, { windowSeconds: 600, max: 10 }),
+  ]);
+  if (!byIp.ok || !byId.ok) return tooManyRequests();
 
   const email = await resolveEmail(identifier);
 

@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { checkOtp, twilioConfigured } from "@/lib/twilio";
 import { adminClient } from "@/lib/supabase/admin";
+import { rateLimit, tooManyRequests, clientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   if (!twilioConfigured()) return NextResponse.json({ error: "otp not configured" }, { status: 500 });
@@ -11,6 +12,14 @@ export async function POST(req: NextRequest) {
   if (typeof phone !== "string" || typeof code !== "string" || !code.trim()) {
     return NextResponse.json({ error: "phone and code required" }, { status: 400 });
   }
+
+  // Brute-force cap on code guessing.
+  const ip = clientIp(req);
+  const [byIp, byPhone] = await Promise.all([
+    rateLimit(`otp-verify:${ip}`, { windowSeconds: 600, max: 10 }),
+    rateLimit(`otp-verify-phone:${phone}`, { windowSeconds: 600, max: 6 }),
+  ]);
+  if (!byIp.ok || !byPhone.ok) return tooManyRequests();
 
   const result = await checkOtp(phone, code.trim());
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });

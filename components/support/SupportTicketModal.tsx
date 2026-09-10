@@ -11,6 +11,8 @@
 import { useRef, useState } from "react";
 import { Image as ImageIcon, X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import Honeypot from "@/components/forms/Honeypot";
+import TurnstileWidget from "@/components/forms/TurnstileWidget";
 import styles from "./SupportTicketModal.module.css";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -85,10 +87,13 @@ export default function SupportTicketModal({ page, pageError }: Props) {
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [hp, setHp] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   function reset() {
     setOpen(false);
     setEmail(""); setPhone(""); setMessage(""); setError(""); setSent(false);
+    setHp(""); setTurnstileToken("");
     clearFile();
   }
 
@@ -120,6 +125,8 @@ export default function SupportTicketModal({ page, pageError }: Props) {
       body.append("phone", phone.trim());
       body.append("message", message.trim());
       body.append("page", page);
+      body.append("_hp", hp);
+      if (turnstileToken) body.append("cf-turnstile-response", turnstileToken);
       if (pageError) body.append("pageError", pageError);
       if (file) body.append("file", file);
 
@@ -216,6 +223,9 @@ export default function SupportTicketModal({ page, pageError }: Props) {
                     </button>
                   )}
                 </div>
+
+                <Honeypot value={hp} onChange={setHp} />
+                <TurnstileWidget onToken={setTurnstileToken} />
 
                 {error && <p className={styles.errorText} role="alert">{error}</p>}
 

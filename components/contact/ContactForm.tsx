@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useSite } from "@/contexts/SiteContext";
+import Honeypot from "@/components/forms/Honeypot";
+import TurnstileWidget from "@/components/forms/TurnstileWidget";
 
 const TX = {
   ar: {
@@ -47,6 +49,8 @@ export default function ContactForm() {
   const [form, setForm]     = useState({ name: "", email: "", type: "other", subject: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hp, setHp]         = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   const BORDER = dark ? "rgba(255,255,255,0.1)" : "#e2e8f0";
   const CARD   = dark ? "rgba(255,255,255,0.04)" : "#ffffff";
@@ -73,7 +77,7 @@ export default function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, _hp: hp, turnstileToken }),
       });
       if (!res.ok) throw new Error("failed");
       setStatus("success");
@@ -214,6 +218,9 @@ export default function ContactForm() {
         />
         {errors.message && <p style={{ color: "#ef4444", fontSize: 11, margin: "4px 0 0", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>{errors.message}</p>}
       </div>
+
+      <Honeypot value={hp} onChange={setHp} />
+      <TurnstileWidget onToken={setTurnstileToken} theme={dark ? "dark" : "light"} />
 
       {status === "error" && (
         <p style={{ color: "#ef4444", fontSize: 13, fontFamily: "'IBM Plex Sans Arabic', sans-serif", margin: 0 }}>{t.error}</p>

@@ -1201,3 +1201,75 @@ fresh cookies. `next.config.ts` adds `/api/auth/:path*` to the
 
 No `/forgot-password` page exists yet (the login page links to it) — separate
 open item.
+
+---
+
+## P0 hardening pass — 2026-09-10
+
+Follow-up to the 2026-09-10 audit. Four P0 items; #1 (the `/api/auth/lookup`
+email leak) is the section above. The rest:
+
+### Rate limiting + honeypot + Turnstile-ready — public write endpoints
+
+`lib/rate-limit.ts` — `rateLimit(bucket, { windowSeconds, max })` calls the
+`rl_hit(text, integer, integer)` RPC (fixed-window counter in
+`public.rate_limits`, `supabase/migrations/20260910_rate_limits.sql`).
+**Fails open** — if the RPC errors or isn't applied yet, the request is
+allowed and the failure logged, so nothing breaks before the migration lands.
+Also exports `clientIp(req)` (cf-connecting-ip → x-forwarded-for → x-real-ip),
+`tooManyRequests()` (429 `{error:"too_many_requests"}`), and the honeypot
+helpers (`HONEYPOT_FIELD = "_hp"`, `isHoneypotTripped`).
+
+Wired into: `/api/contact`, `/api/support/tickets` (per-IP 5/10min + honeypot +
+Turnstile), `/api/auth/otp/send` + `/otp/email/send` (per-IP 5/hr + per-target
+3/hr), `/api/auth/otp/verify` + `/otp/email/verify` (per-IP 10/10min + per-target
+6/10min brute-force cap), `/api/auth/login` (per-IP 20/10min + per-identifier
+10/10min). `/api/contact` also gained real email-format validation (it had none).
+
+`lib/turnstile.ts` — `verifyTurnstile(token, ip)`. **No-op returns `true` when
+`TURNSTILE_SECRET_KEY` is unset** (same posture as MetaPixel); fails closed on a
+network error when it IS configured. `components/forms/TurnstileWidget.tsx`
+renders nothing without `NEXT_PUBLIC_TURNSTILE_SITE_KEY`. `components/forms/
+Honeypot.tsx` is a shared off-screen `_hp` input (not `display:none` — bots skip
+those). Both wired into `ContactForm.tsx` and `SupportTicketModal.tsx`.
+`next.config.ts` CSP now allows `challenges.cloudflare.com` (script-src +
+frame-src). New optional env: `NEXT_PUBLIC_TURNSTILE_SITE_KEY` +
+`TURNSTILE_SECRET_KEY` (both in `.env.example`).
+
+### DB migration — APPLIED & VERIFIED 2026-09-10
+
+Both migrations were pasted into the Supabase SQL editor and verified live:
+- `rl_hit` RPC + `rate_limits` table exist; the fixed-window cap enforces
+  (probed: 6 hits against a max of 3 → 3 allowed).
+- `payments.status` now walks the full lifecycle
+  (held/released/refunded/disputed/pending) without the trigger throwing.
+- `increment_balance(uuid, numeric)` exists.
+- **Full escrow flow E2E** (QA accounts, real API routes, against the live DB):
+  admin confirm → `pending→held` + booking `in_progress`; talent deliverables;
+  brand approve → `held→released` + booking `paid` + **talent `profiles.balance`
+  0 → 3000** via `increment_balance`. All state restored after.
+- Live rate-limit enforcement confirmed on `/api/contact` (5 then 429) and
+  `/api/auth/login` per-identifier (10 wrong then 429).
+
+Original migration notes (kept for reference):
+
+- **`20260910_rate_limits.sql`** — `rate_limits` table + `rl_hit()` RPC
+  (SECURITY DEFINER, pinned search_path, EXECUTE → service_role only). Until
+  this runs the rate limiter is inert (fail-open).
+- **`20260910_p0_payments_unblock.sql`** — the money-flow fix:
+  1. Dumps every trigger on `public.payments` (`RAISE NOTICE` + `pg_get_functiondef`).
+  2. Drops any payments trigger whose function writes to `notifications` — the
+     broken one throws `column "user_id" of relation "notifications" does not
+     exist` (confirmed by direct write: a non-status update succeeds, any status
+     change to held/released/refunded/disputed throws). The app already sends
+     both payment notifications itself (`/api/admin/bookings/[id]/payment/confirm`
+     and the deliverables-approve release), so the DB trigger is redundant.
+  3. Verifies `payments.status` is writable afterwards.
+  4. Creates `increment_balance(uuid, numeric)` — was called by the
+     deliverables-approve branch, never existed (`20260909_increment_balance.sql`
+     was written but never pasted).
+  5. `proof_url` belt-and-braces `ADD COLUMN IF NOT EXISTS`.
+
+Verify after applying with `scripts/` or a probe: `payments.status` round-trips
+through `held`, `increment_balance` RPC resolves, `profiles.balance` moves on a
+brand approval.
