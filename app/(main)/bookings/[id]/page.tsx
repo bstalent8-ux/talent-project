@@ -14,10 +14,19 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
 
   const { data: booking, error } = await adminClient
     .from("bookings")
-    // bookings has no budget_type/budget_amount/start_date/duration/deadline/
+    // bookings has no budget_type/start_date/duration/deadline/
     // negotiation_message/negotiation_requested_at/updated_at columns — see
-    // app/api/bookings/route.ts.
-    .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, talent_id, job_id, job_application_id, paid_at, completed_at, notes")
+    // app/api/bookings/route.ts. package_*/scheduled_*/budget_min/budget_max/
+    // proposed_amount/proposed_by/*_price_ack added by
+    // supabase/migrations/20260914_booking_negotiation.sql — keep this
+    // select in sync with app/api/bookings/[id]/route.ts's (the client-side
+    // refresh() endpoint reads the same columns).
+    .select(`
+      id, status, amount, created_at, service_type, brand_id, talent_user_id, talent_id,
+      job_id, job_application_id, paid_at, completed_at, notes,
+      package_id, package_name, scheduled_date, scheduled_start, scheduled_end,
+      budget_min, budget_max, proposed_amount, proposed_by, brand_price_ack, talent_price_ack
+    `)
     .eq("id", id)
     .single();
 

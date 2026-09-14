@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { CalendarDays, CheckCircle2, Clock, FileText, WalletCards, X } from "lucide-react";
 import { cdnImage } from "@/lib/images";
@@ -35,20 +35,24 @@ const TX = {
     hours: "عدد الساعات",
     days: "عدد الأيام",
     deadline: "الموعد النهائي",
-    budget: "الميزانية",
+    budget: "الميزانية المقترحة",
+    budgetFrom: "من",
+    budgetTo: "لحد",
+    budgetMin: "الحد الأدنى 500 جنيه",
     hourlyRate: "سعر الساعة",
     dailyRate: "سعر اليوم",
     projectBudget: "ميزانية المشروع",
     brief: "البريف",
     briefPlaceholder: "Describe your project, goals, deliverables and expectations.",
-    send: "إرسال طلب الحجز",
+    send: "إرسال البريف",
     sending: "جاري الإرسال...",
     cancel: "إلغاء",
-    successTitle: "تم إرسال طلب الحجز",
-    successText: "سيصل إشعار للموهبة ويمكنها قبول الطلب أو رفضه أو طلب تعديلات.",
+    successTitle: "تم إرسال البريف",
+    successText: "الموهبة هتقترح سعر جوه الرينج، وهتقدروا توافقوا أو تتفاصلوا لحد ما تتفقوا.",
     close: "إغلاق",
     details: "عرض التفاصيل",
-    budgetRequired: "الميزانية يجب أن تكون أكبر من صفر.",
+    budgetRequired: "الحد الأدنى للميزانية 500 جنيه.",
+    budgetRangeInvalid: "الحد الأقصى لازم يكون أكبر من أو يساوي الحد الأدنى.",
     briefRequired: "البريف مطلوب.",
     dateRequired: "اختر تاريخ بدء صحيح.",
     durationRequired: "أدخل مدة صحيحة.",
@@ -70,20 +74,24 @@ const TX = {
     hours: "Hours",
     days: "Number of days",
     deadline: "Deadline",
-    budget: "Budget",
+    budget: "Proposed Budget",
+    budgetFrom: "From",
+    budgetTo: "To",
+    budgetMin: "Minimum 500 EGP",
     hourlyRate: "Hourly rate",
     dailyRate: "Daily rate",
     projectBudget: "Project budget",
     brief: "Brief",
     briefPlaceholder: "Describe your project, goals, deliverables and expectations.",
-    send: "Send Booking Request",
+    send: "Send Brief",
     sending: "Sending...",
     cancel: "Cancel",
-    successTitle: "Booking request sent",
-    successText: "The talent has been notified and can accept, reject, or request changes.",
+    successTitle: "Brief sent",
+    successText: "The talent will propose a price within your range, and you can each accept or counter until you agree.",
     close: "Close",
     details: "View details",
-    budgetRequired: "Budget must be greater than zero.",
+    budgetRequired: "Minimum budget is 500 EGP.",
+    budgetRangeInvalid: "Maximum must be greater than or equal to minimum.",
     briefRequired: "Brief is required.",
     dateRequired: "Choose a valid start date.",
     durationRequired: "Enter a valid duration.",
@@ -118,26 +126,26 @@ export default function DirectBriefModal({
   const t = TX[lang];
   const { user, requestAuth } = useGuestGuard();
 
+  const MIN_BUDGET = 500;
+
   const [serviceType, setServiceType] = useState<ServiceType>("fixed_project");
   const [startDate, setStartDate] = useState(todayValue());
   const [duration, setDuration] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [budget, setBudget] = useState("");
+  const [budgetMin, setBudgetMin] = useState("");
+  const [budgetMax, setBudgetMax] = useState("");
   const [brief, setBrief] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successBookingId, setSuccessBookingId] = useState<string | null>(null);
 
-  const budgetLabel = useMemo(() => {
-    if (serviceType === "hourly") return t.hourlyRate;
-    if (serviceType === "daily") return t.dailyRate;
-    return t.projectBudget;
-  }, [serviceType, t]);
-
   function validate() {
-    const budgetValue = Number(budget);
+    const min = Number(budgetMin);
+    const max = Number(budgetMax);
     if (!startDate) return t.dateRequired;
-    if (!Number.isFinite(budgetValue) || budgetValue <= 0) return t.budgetRequired;
+    if (!Number.isFinite(min) || min < MIN_BUDGET) return t.budgetRequired;
+    if (!Number.isFinite(max) || max < MIN_BUDGET) return t.budgetRequired;
+    if (max < min) return t.budgetRangeInvalid;
     if (!brief.trim()) return t.briefRequired;
     if ((serviceType === "hourly" || serviceType === "daily") && (!Number.isInteger(Number(duration)) || Number(duration) <= 0)) {
       return t.durationRequired;
@@ -174,7 +182,8 @@ export default function DirectBriefModal({
           start_date: startDate,
           duration: serviceType === "fixed_project" ? null : Number(duration),
           deadline: serviceType === "fixed_project" ? deadline : null,
-          budget_amount: Number(budget),
+          budget_min: Number(budgetMin),
+          budget_max: Number(budgetMax),
           brief: brief.trim(),
         }),
       });
@@ -275,14 +284,28 @@ export default function DirectBriefModal({
               )}
             </div>
 
-            <label className={styles.field}>
-              <span>{budgetLabel}</span>
-              <div className={styles.moneyInput}>
-                <WalletCards size={16} />
-                <input inputMode="decimal" min={1} step="0.01" type="number" value={budget} onChange={(e) => setBudget(e.target.value)} required />
-                <b>EGP</b>
+            <fieldset className={styles.fieldset}>
+              <legend>{t.budget}</legend>
+              <div className={styles.grid}>
+                <label className={styles.field}>
+                  <span>{t.budgetFrom}</span>
+                  <div className={styles.moneyInput}>
+                    <WalletCards size={16} />
+                    <input inputMode="decimal" min={MIN_BUDGET} step="1" type="number" value={budgetMin} onChange={(e) => setBudgetMin(e.target.value)} required />
+                    <b>EGP</b>
+                  </div>
+                </label>
+                <label className={styles.field}>
+                  <span>{t.budgetTo}</span>
+                  <div className={styles.moneyInput}>
+                    <WalletCards size={16} />
+                    <input inputMode="decimal" min={MIN_BUDGET} step="1" type="number" value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} required />
+                    <b>EGP</b>
+                  </div>
+                </label>
               </div>
-            </label>
+              <p className={styles.subtitle} style={{ margin: "6px 0 0", fontSize: 12 }}>{t.budgetMin}</p>
+            </fieldset>
 
             <label className={styles.field}>
               <span>{t.brief}</span>

@@ -24,7 +24,12 @@ export async function GET(
   // deadline comes from the joined booking_briefs row below instead.
   const { data: booking, error } = await adminClient
     .from("bookings")
-    .select("id, status, amount, created_at, service_type, brand_id, talent_user_id, talent_id, job_id, job_application_id, paid_at, completed_at, notes")
+    .select(`
+      id, status, amount, created_at, service_type, brand_id, talent_user_id, talent_id,
+      job_id, job_application_id, paid_at, completed_at, notes,
+      package_id, package_name, scheduled_date, scheduled_start, scheduled_end,
+      budget_min, budget_max, proposed_amount, proposed_by, brand_price_ack, talent_price_ack
+    `)
     .eq("id", id)
     .single();
 

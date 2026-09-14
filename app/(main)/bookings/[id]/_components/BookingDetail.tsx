@@ -5,6 +5,7 @@ import { useSite } from "@/contexts/SiteContext";
 import BookingTimeline from "./BookingTimeline";
 import BriefForm from "./BriefForm";
 import BriefView from "./BriefView";
+import PackageRequestView from "./PackageRequestView";
 import DeliverablesForm from "./DeliverablesForm";
 import ReviewForm from "./ReviewForm";
 import { MessageSquare, ArrowLeft, CreditCard, Send } from "lucide-react";
@@ -30,6 +31,20 @@ interface BookingData {
   deadline?: string | null;
   negotiation_message?: string | null;
   negotiation_requested_at?: string | null;
+  // Flow 1 ("package") — see PackageBookingModal.tsx. Absent/null on a
+  // Flow 2 ("custom") booking, which has a real `brief` instead.
+  package_id?: string | null;
+  package_name?: string | null;
+  scheduled_date?: string | null;
+  scheduled_start?: string | null;
+  scheduled_end?: string | null;
+  // Flow 2 price negotiation — see supabase/migrations/20260914_booking_negotiation.sql.
+  budget_min?: number | null;
+  budget_max?: number | null;
+  proposed_amount?: number | null;
+  proposed_by?: "brand" | "talent" | null;
+  brand_price_ack?: boolean;
+  talent_price_ack?: boolean;
   created_at: string;
   updated_at?: string | null;
   service_type: string | null;
@@ -354,13 +369,39 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
           <p style={{ color: GOLD, fontSize: 13, fontWeight: 700, margin: 0 }}>{t.waitTalentReview}</p>
         )}
 
-        {/* Brief section */}
+        {/* Brief section — Flow 2 (custom, has a real brief) */}
         {booking.brief && (
           <div style={{ marginBottom: 16 }}>
             <BriefView
               brief={booking.brief}
               bookingId={booking.id}
               bookingStatus={booking.status}
+              myRole={myRole}
+              dark={dark}
+              lang={lang}
+              onRespond={refresh}
+              budgetMin={booking.budget_min ?? null}
+              budgetMax={booking.budget_max ?? null}
+              proposedAmount={booking.proposed_amount ?? null}
+              proposedBy={booking.proposed_by ?? null}
+              brandPriceAck={Boolean(booking.brand_price_ack)}
+              talentPriceAck={Boolean(booking.talent_price_ack)}
+              amount={booking.amount}
+            />
+          </div>
+        )}
+
+        {/* Package request section — Flow 1 (fixed price, no brief) */}
+        {!booking.brief && booking.package_name && (
+          <div style={{ marginBottom: 16 }}>
+            <PackageRequestView
+              bookingId={booking.id}
+              bookingStatus={booking.status}
+              packageName={booking.package_name}
+              scheduledDate={booking.scheduled_date ?? null}
+              scheduledStart={booking.scheduled_start ?? null}
+              scheduledEnd={booking.scheduled_end ?? null}
+              amount={booking.amount}
               myRole={myRole}
               dark={dark}
               lang={lang}

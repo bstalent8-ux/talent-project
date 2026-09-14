@@ -1,14 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { bookingSchema } from "./schema";
 
-// Mirrors the real body components/DirectBriefModal.tsx sends.
+// Mirrors the real body components/DirectBriefModal.tsx sends — a budget
+// RANGE (Flow 2: custom brief, price negotiated after sending), not a fixed
+// amount. See app/api/bookings/package/route.ts for Flow 1 (fixed package
+// price, separate endpoint/schema).
 const validBody = {
   talent_user_id: "11111111-1111-4111-8111-111111111111",
   service_type: "hourly",
   start_date: "2026-09-01",
   duration: 3,
   deadline: null,
-  budget_amount: 1500,
+  budget_min: 1000,
+  budget_max: 1500,
   brief: "Need a 30-second product demo.",
 };
 
@@ -19,6 +23,11 @@ describe("bookingSchema", () => {
 
   it("accepts a fixed_project payload (duration null, deadline set)", () => {
     const body = { ...validBody, service_type: "fixed_project", duration: null, deadline: "2026-09-20" };
+    expect(bookingSchema.parse(body)).toEqual(body);
+  });
+
+  it("accepts an equal budget_min and budget_max (a fixed number expressed as a range)", () => {
+    const body = { ...validBody, budget_min: 1200, budget_max: 1200 };
     expect(bookingSchema.parse(body)).toEqual(body);
   });
 
@@ -42,12 +51,20 @@ describe("bookingSchema", () => {
     expect(() => bookingSchema.parse({ ...validBody, brief: "a".repeat(5001) })).toThrow();
   });
 
-  it("rejects a non-positive budget_amount", () => {
-    expect(() => bookingSchema.parse({ ...validBody, budget_amount: 0 })).toThrow();
+  it("rejects a budget_min below the 500 EGP floor", () => {
+    expect(() => bookingSchema.parse({ ...validBody, budget_min: 499 })).toThrow();
   });
 
-  it("rejects a budget_amount above the ceiling", () => {
-    expect(() => bookingSchema.parse({ ...validBody, budget_amount: 50_000_000 })).toThrow();
+  it("rejects a budget_max below the 500 EGP floor", () => {
+    expect(() => bookingSchema.parse({ ...validBody, budget_max: 100 })).toThrow();
+  });
+
+  it("rejects a budget_max above the ceiling", () => {
+    expect(() => bookingSchema.parse({ ...validBody, budget_max: 50_000_000 })).toThrow();
+  });
+
+  it("rejects budget_max below budget_min", () => {
+    expect(() => bookingSchema.parse({ ...validBody, budget_min: 2000, budget_max: 1000 })).toThrow();
   });
 
   it("rejects more than 10 attachments", () => {

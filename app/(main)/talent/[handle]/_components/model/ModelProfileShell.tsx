@@ -40,6 +40,7 @@ import { useGuestGuard } from "@/contexts/GuestGuard";
 import { useFavoriteTalent } from "@/hooks/useFavoriteTalent";
 import type { PermissionAction } from "@/lib/permissions";
 import DirectBriefModal from "@/components/DirectBriefModal";
+import PackageBookingModal from "@/components/PackageBookingModal";
 import ProfileViewTracker from "@/components/analytics/ProfileViewTracker";
 import {
   toTalentData,
@@ -232,7 +233,24 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
         onNavigate={setGalleryIndex}
       />
 
-      {showBrief && (
+      {showBrief && selectedPackage && (
+        <PackageBookingModal
+          talentUserId={talent.id}
+          talentName={talent.name ?? ""}
+          talentAvatar={talent.avatarUrl ?? null}
+          talentCategory={talent.category ?? null}
+          dark={dark}
+          lang={lang}
+          selectedPackage={selectedPackage}
+          addons={addons}
+          checkedAddons={checkedAddons}
+          availabilitySchedule={talent.availabilitySchedule}
+          onClose={() => setShowBrief(false)}
+          onSuccess={() => setShowBrief(false)}
+        />
+      )}
+
+      {showBrief && !selectedPackage && (
         <DirectBriefModal
           talentUserId={talent.id}
           talentName={talent.name ?? ""}

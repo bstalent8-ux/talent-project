@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
     talent_user_id,
     service_type: serviceType,
     duration: numericDuration,
-    budget_amount: numericBudget,
+    budget_min: budgetMin,
+    budget_max: budgetMax,
     brief: briefText,
     attachments,
   } = parsed;
@@ -117,21 +118,22 @@ export async function POST(req: NextRequest) {
       ? "Daily booking request"
       : "Fixed project booking request";
 
-  // bookings has no budget_type/budget_amount/start_date/duration/deadline/
-  // updated_at columns (confirmed against the live schema — CLAUDE.md §7
-  // lists id/talent_id/brand_id/status/service_type/amount/notes/brief_url/
-  // paid_at/completed_at, nothing else). Writing those non-existent columns
-  // made every real submit 500 with "Could not find the 'budget_amount'
-  // column of 'bookings' in the schema cache" — this was broken for every
-  // brand on every talent profile, not a UGC-specific or auth-continuation
-  // bug. `amount` is the one real budget column; deadline is already
-  // captured correctly below in booking_briefs.deadline (a real column).
-  // status "pending" also violates bookings_status_check — the live check
-  // constraint only allows CLAUDE.md §10.1's documented flow (contacting →
-  // brief_sent → accepted → payment_pending → in_progress → completed →
-  // paid, plus cancelled). "brief_sent" is that flow's documented starting
-  // status for a fresh direct brief, confirmed against real rows in the
-  // table (no row anywhere has status "pending").
+  // bookings has no budget_type/start_date/duration/deadline/updated_at
+  // columns (confirmed against the live schema — CLAUDE.md §7 lists
+  // id/talent_id/brand_id/status/service_type/amount/notes/brief_url/
+  // paid_at/completed_at, plus budget_min/budget_max/proposed_amount/
+  // proposed_by/brand_price_ack/talent_price_ack/package_* added by
+  // supabase/migrations/20260914_booking_negotiation.sql). `amount` is
+  // deliberately left null here — this is a custom-range brief with no
+  // agreed price yet; see /api/bookings/[id]/brief/respond's propose_price/
+  // accept_price actions for how it gets filled in once both sides agree.
+  // deadline is already captured correctly below in booking_briefs.deadline
+  // (a real column). status "pending" also violates bookings_status_check —
+  // the live check constraint only allows CLAUDE.md §10.1's documented flow
+  // (contacting → brief_sent → accepted → payment_pending → in_progress →
+  // completed → paid, plus cancelled, plus rejected/changes_requested added
+  // by the same 2026-09-14 migration). "brief_sent" is that flow's
+  // documented starting status for a fresh direct brief.
   // start_date/duration have no live column to hold them and are dropped
   // rather than invented a home for.
   const { data: booking, error: bookErr } = await adminClient
@@ -142,7 +144,9 @@ export async function POST(req: NextRequest) {
       talent_user_id: talent_user_id,
       status:         "brief_sent",
       service_type:   serviceType,
-      amount:         numericBudget,
+      amount:         null,
+      budget_min:     budgetMin,
+      budget_max:     budgetMax,
       notes:          briefText.trim(),
     })
     .select("id")
@@ -179,7 +183,17 @@ export async function POST(req: NextRequest) {
     }, { onConflict: "booking_id" })
     .select("*").single();
 
-  if (briefErr) return NextResponse.json({ error: briefErr.message }, { status: 500 });
+  if (briefErr) {
+    // Don't leave an orphaned booking behind: with no brief row, this
+    // booking can never show a brief to the talent, yet its "brief_sent"
+    // status still counts as an active request and would block the brand
+    // from ever retrying (see ACTIVE_BOOKING_STATUSES above) — a stuck
+    // booking discovered live via the division-by-zero bug below. Best
+    // effort: if the delete itself fails, the original error still wins.
+    await adminClient.from("bookings").delete().eq("id", bookingId);
+    console.error("[bookings/direct] booking_briefs insert failed, rolled back booking", bookingId, briefErr);
+    return NextResponse.json({ error: briefErr.message }, { status: 500 });
+  }
 
   // Send system message
   const { data: conv } = await adminClient
