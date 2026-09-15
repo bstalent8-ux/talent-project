@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import { adminClient } from "@/lib/supabase/admin";
+import { fetchTalentActions } from "@/features/admin/services/admin.service";
 import TalentEditorClient from "./_components/TalentEditorClient";
 
 export default async function AdminTalentEditorPage({
@@ -19,7 +20,7 @@ export default async function AdminTalentEditorPage({
   let { data, error } = await adminClient
     .from("profiles")
     .select(`
-      id, full_name, handle, city, phone_number, created_at,
+      id, full_name, handle, city, phone_number, created_at, avatar_url,
       talent_profiles!inner (
         id, category, bio, specialties, availability, packages, social_links, model_metrics
       )
@@ -31,7 +32,7 @@ export default async function AdminTalentEditorPage({
     ({ data, error } = await adminClient
       .from("profiles")
       .select(`
-        id, full_name, handle, city, phone_number, created_at,
+        id, full_name, handle, city, phone_number, created_at, avatar_url,
         talent_profiles!inner (
           id, category, bio, specialties, availability, packages, social_links
         )
@@ -44,7 +45,10 @@ export default async function AdminTalentEditorPage({
 
   // Email lives in auth.users, not profiles — a separate lookup, admin-only,
   // never exposed on any public/self-serve route.
-  const { data: authUser } = await adminClient.auth.admin.getUserById(data.id);
+  const [{ data: authUser }, initialActions] = await Promise.all([
+    adminClient.auth.admin.getUserById(data.id),
+    fetchTalentActions(id),
+  ]);
 
   const tp = Array.isArray(data.talent_profiles)
     ? data.talent_profiles[0]
@@ -63,15 +67,22 @@ export default async function AdminTalentEditorPage({
         bio:          tp?.bio ?? "",
         specialties:  (tp?.specialties ?? []).join(", "),
         availability: tp?.availability ?? "available",
-        packages:     JSON.stringify(tp?.packages ?? [], null, 2),
-        social_links: JSON.stringify(tp?.social_links ?? {}, null, 2),
+        packages:     (tp?.packages ?? []) as unknown[],
+        social_links: (tp?.social_links ?? {}) as Record<string, unknown>,
         model_metrics: (tpRecord.model_metrics ?? {}) as Record<string, unknown>,
+      }}
+      identity={{
+        avatarUrl: data.avatar_url ?? null,
+        fullName:  data.full_name ?? null,
+        phone:     data.phone_number ?? null,
+        category:  tp?.category ?? null,
       }}
       registration={{
         email:     authUser?.user?.email ?? null,
         phone:     data.phone_number ?? null,
         createdAt: data.created_at ?? null,
       }}
+      initialActions={initialActions}
     />
   );
 }

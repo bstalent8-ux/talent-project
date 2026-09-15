@@ -1,16 +1,20 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
+import TalentActionsPanel from "./TalentActionsPanel";
+import type { TalentAction } from "@/features/admin/types";
+import { TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 
 const TX = {
   ar: {
     title: "تعديل بيانات الموهبة",
     fullName: "الاسم الكامل", handle: "اسم المستخدم", city: "المدينة",
     category: "التصنيف", bio: "نبذة", specialties: "التخصصات (مفصولة بفاصلة)",
-    availability: "التوفر", packages: "الباقات (JSON)", socialLinks: "البيانات الإضافية (JSON)",
+    availability: "التوفر",
     save: "حفظ التغييرات", saving: "جاري الحفظ...", back: "رجوع",
     registrationTitle: "بيانات التسجيل", email: "البريد الإلكتروني", phone: "رقم الهاتف",
     registeredAt: "تاريخ التسجيل", notProvided: "غير متوفر",
@@ -25,12 +29,22 @@ const TX = {
     avgProjectValue: "متوسط قيمة المشروع (EGP)",
     noShowRate: "نسبة عدم الحضور (%)",
     tier: "الفئة/الشارة (فارغ = بدون شارة)",
+    noAvatar: "بدون صورة",
+    packagesTitle: "الباقات", addPackage: "إضافة باقة", removePackage: "حذف الباقة",
+    packageName: "اسم الباقة", packagePrice: "السعر (EGP)", packagePopular: "الأكثر طلباً",
+    packageFeatures: "المميزات (سطر لكل ميزة)", noPackages: "لا توجد باقات بعد.",
+    socialTitle: "روابط التواصل", website: "الموقع الإلكتروني", other: "أخرى",
+    addonsTitle: "إضافات الاستخدام (Usage Add-ons)", addAddon: "إضافة",
+    addonLabel: "الاسم", addonPrice: "السعر (EGP)", noAddons: "لا توجد إضافات — سيتم عرض القائمة الافتراضية للعميل.",
+    advancedTitle: "بيانات متقدمة أخرى (JSON)",
+    advancedHint: "حقول نادرة الاستخدام (المقاسات، الخبرات، إحصائيات الحملات...) تُحرَّر هنا كـ JSON خام.",
+    invalidJson: "صيغة JSON غير صحيحة",
   },
   en: {
     title: "Edit Talent Profile",
     fullName: "Full Name", handle: "Username", city: "City",
     category: "Category", bio: "Bio", specialties: "Specialties (comma-separated)",
-    availability: "Availability", packages: "Packages (JSON)", socialLinks: "Social Links (JSON)",
+    availability: "Availability",
     save: "Save Changes", saving: "Saving...", back: "Back",
     registrationTitle: "Registration Info", email: "Email", phone: "Phone Number",
     registeredAt: "Registered On", notProvided: "Not provided",
@@ -45,7 +59,28 @@ const TX = {
     avgProjectValue: "Avg. project value (EGP)",
     noShowRate: "No-show rate (%)",
     tier: "Tier / badge (blank = no badge)",
+    noAvatar: "No photo",
+    packagesTitle: "Packages", addPackage: "Add package", removePackage: "Remove package",
+    packageName: "Package name", packagePrice: "Price (EGP)", packagePopular: "Popular",
+    packageFeatures: "Features (one per line)", noPackages: "No packages yet.",
+    socialTitle: "Social Links", website: "Website", other: "Other",
+    addonsTitle: "Usage Add-ons", addAddon: "Add",
+    addonLabel: "Label", addonPrice: "Price (EGP)", noAddons: "No add-ons set — the default list will be shown to brands.",
+    advancedTitle: "Advanced / Other Data (JSON)",
+    advancedHint: "Rarely-edited fields (physical attributes, experience, campaign stats...) live here as raw JSON.",
+    invalidJson: "Invalid JSON",
   },
+};
+
+const SOCIAL_LABEL: Record<string, { ar: string; en: string }> = {
+  instagram: { ar: "انستجرام", en: "Instagram" },
+  tiktok:    { ar: "تيك توك", en: "TikTok" },
+  facebook:  { ar: "فيسبوك", en: "Facebook" },
+  youtube:   { ar: "يوتيوب", en: "YouTube" },
+  linkedin:  { ar: "لينكدإن", en: "LinkedIn" },
+  telegram:  { ar: "تيليجرام", en: "Telegram" },
+  website:   { ar: "الموقع الإلكتروني", en: "Website" },
+  other:     { ar: "أخرى", en: "Other" },
 };
 
 interface ModelMetricsForm {
@@ -58,10 +93,26 @@ interface ModelMetricsForm {
   tier: string;
 }
 
+interface PackageForm {
+  id: string;
+  name: string;
+  price: string;
+  popular: boolean;
+  featuresText: string;
+}
+
+interface AddonForm {
+  key: string;
+  label: string;
+  price: string;
+}
+
 interface InitialData {
   full_name: string; handle: string; city: string;
   category: string; bio: string; specialties: string;
-  availability: string; packages: string; social_links: string;
+  availability: string;
+  packages: unknown[];
+  social_links: Record<string, unknown>;
   model_metrics: Record<string, unknown>;
 }
 
@@ -71,20 +122,91 @@ interface RegistrationInfo {
   createdAt: string | null;
 }
 
+interface IdentityInfo {
+  avatarUrl: string | null;
+  fullName: string | null;
+  phone: string | null;
+  category: string | null;
+}
+
 interface Props {
   talentProfileId: string;
   profileUserId: string;
   initialData: InitialData;
+  identity: IdentityInfo;
   registration: RegistrationInfo;
+  initialActions: TalentAction[];
 }
 
-export default function TalentEditorClient({ talentProfileId, profileUserId, initialData, registration }: Props) {
+function newId() {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function normalizePackages(raw: unknown[]): PackageForm[] {
+  return raw.map((item) => {
+    const row = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
+    return {
+      id: typeof row.id === "string" ? row.id : newId(),
+      name: row.name != null ? String(row.name) : "",
+      price: row.price != null ? String(row.price) : "",
+      popular: Boolean(row.popular),
+      featuresText: Array.isArray(row.features) ? row.features.map(String).join("\n") : "",
+    };
+  });
+}
+
+function normalizeAddons(socialLinks: Record<string, unknown>): AddonForm[] {
+  const raw = socialLinks["usage_addons"];
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item) => item && typeof item === "object")
+    .map((item) => {
+      const row = item as Record<string, unknown>;
+      return {
+        key: row.key != null ? String(row.key) : newId(),
+        label: row.label != null ? String(row.label) : "",
+        price: row.price != null ? String(row.price) : "",
+      };
+    });
+}
+
+function extractSocialFields(socialLinks: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of TALENT_SOCIAL_KEYS) {
+    const v = socialLinks[key];
+    out[key] = v != null ? String(v) : "";
+  }
+  return out;
+}
+
+function extractAdvanced(socialLinks: Record<string, unknown>): Record<string, unknown> {
+  const rest = { ...socialLinks };
+  for (const key of TALENT_SOCIAL_KEYS) delete rest[key];
+  delete rest["usage_addons"];
+  return rest;
+}
+
+export default function TalentEditorClient({ talentProfileId, profileUserId, initialData, identity, registration, initialActions }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const [form, setForm]       = useState(initialData);
+  const [form, setForm] = useState({
+    full_name: initialData.full_name,
+    handle: initialData.handle,
+    city: initialData.city,
+    category: initialData.category,
+    bio: initialData.bio,
+    specialties: initialData.specialties,
+    availability: initialData.availability,
+  });
+  const [packages, setPackages] = useState<PackageForm[]>(() => normalizePackages(initialData.packages));
+  const [socialFields, setSocialFields] = useState<Record<string, string>>(() => extractSocialFields(initialData.social_links));
+  const [addons, setAddons] = useState<AddonForm[]>(() => normalizeAddons(initialData.social_links));
+  const [advancedJson, setAdvancedJson] = useState(() => JSON.stringify(extractAdvanced(initialData.social_links), null, 2));
   const [status, setStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [jsonErr, setJsonErr] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<ModelMetricsForm>(() => {
@@ -108,6 +230,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
   const TEXT   = dark ? "#f1f5f9" : "#0f172a";
   const MUTED  = dark ? "#94a3b8" : "#64748b";
   const INPUT  = dark ? "#0a121c" : "#f8fafc";
+  const GREEN  = "#00D26A";
 
   const inp: React.CSSProperties = {
     width: "100%", padding: "10px 12px", borderRadius: 8,
@@ -116,10 +239,9 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
     fontFamily: "'IBM Plex Sans Arabic', sans-serif", boxSizing: "border-box",
   };
 
-  function set(k: keyof InitialData, v: string) {
+  function set(k: keyof typeof form, v: string) {
     setForm(f => ({ ...f, [k]: v }));
     setStatus("idle");
-    setJsonErr(null);
   }
 
   function setMetric(k: keyof ModelMetricsForm, v: string) {
@@ -127,15 +249,69 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
     setStatus("idle");
   }
 
+  function updatePackage(id: string, patch: Partial<PackageForm>) {
+    setPackages(list => list.map(p => (p.id === id ? { ...p, ...patch } : p)));
+    setStatus("idle");
+  }
+
+  function addPackage() {
+    setPackages(list => [...list, { id: newId(), name: "", price: "", popular: false, featuresText: "" }]);
+  }
+
+  function removePackage(id: string) {
+    setPackages(list => list.filter(p => p.id !== id));
+    setStatus("idle");
+  }
+
+  function updateAddon(key: string, patch: Partial<AddonForm>) {
+    setAddons(list => list.map(a => (a.key === key ? { ...a, ...patch } : a)));
+    setStatus("idle");
+  }
+
+  function addAddon() {
+    setAddons(list => [...list, { key: newId(), label: "", price: "" }]);
+  }
+
+  function removeAddon(key: string) {
+    setAddons(list => list.filter(a => a.key !== key));
+    setStatus("idle");
+  }
+
   async function handleSave() {
-    // Validate JSON fields
-    let parsedPackages: unknown, parsedSocialLinks: unknown;
-    try { parsedPackages = JSON.parse(form.packages); } catch { setJsonErr("packages"); return; }
-    try { parsedSocialLinks = JSON.parse(form.social_links); } catch { setJsonErr("social_links"); return; }
+    let parsedAdvanced: Record<string, unknown>;
+    try {
+      const p = JSON.parse(advancedJson);
+      parsedAdvanced = (p && typeof p === "object" && !Array.isArray(p)) ? p : {};
+    } catch {
+      setJsonErr("advanced");
+      return;
+    }
+    setJsonErr(null);
 
     // Blank field → null, never a fabricated 0/"" reaching the public page.
     const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
     const strOrNull = (v: string) => (v.trim() === "" ? null : v.trim());
+
+    const cleanPackages = packages
+      .filter(p => p.name.trim() !== "" || p.price.trim() !== "")
+      .map(p => ({
+        id: p.id,
+        name: p.name.trim(),
+        price: p.price.trim(),
+        popular: p.popular,
+        features: p.featuresText.split("\n").map(s => s.trim()).filter(Boolean),
+      }));
+
+    const cleanAddons = addons
+      .filter(a => a.label.trim() !== "")
+      .map(a => ({ key: a.key, label: a.label.trim(), price: Number(a.price) || 0 }));
+
+    const socialLinks: Record<string, unknown> = { ...parsedAdvanced };
+    for (const key of TALENT_SOCIAL_KEYS) {
+      const v = socialFields[key]?.trim();
+      if (v) socialLinks[key] = v;
+    }
+    if (cleanAddons.length > 0) socialLinks["usage_addons"] = cleanAddons;
 
     setStatus("saving");
     const res = await fetch(`/api/admin/talents/${talentProfileId}/profile`, {
@@ -152,8 +328,8 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
         bio:          form.bio,
         specialties:  form.specialties.split(",").map(s => s.trim()).filter(Boolean),
         availability: form.availability,
-        packages:     parsedPackages,
-        social_links: parsedSocialLinks,
+        packages:     cleanPackages,
+        social_links: socialLinks,
         // Admin-only Model/Fashion trust metrics — omitted entirely unless
         // this talent is currently a Model/Fashion profile.
         ...(isModel ? {
@@ -183,14 +359,25 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
     </label>
   );
 
-  const section = (title: string, children: React.ReactNode) => (
+  const section = (title: string, children: React.ReactNode, extra?: React.ReactNode) => (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, marginBottom: 16 }}>
-      <h3 style={{ color: TEXT, fontSize: 15, fontWeight: 800, margin: "0 0 20px" }}>{title}</h3>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <h3 style={{ color: TEXT, fontSize: 15, fontWeight: 800, margin: 0 }}>{title}</h3>
+        {extra}
+      </div>
       {children}
     </div>
   );
 
   const grid2 = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 } as React.CSSProperties;
+
+  const iconBtn = (danger?: boolean): React.CSSProperties => ({
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+    background: "none", border: `1px solid ${danger ? "#EF4444" : BORDER}`,
+    color: danger ? "#EF4444" : TEXT, borderRadius: 8, padding: "6px 12px",
+    fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+  });
 
   return (
     <AdminShell title={t.title}>
@@ -202,21 +389,62 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
         <ArrowLeft size={16} />{t.back}
       </button>
 
+      {/* Identity header — who this talent is, at a glance, before any data
+          entry field. Photo + name + phone + category so an admin never
+          edits a profile without knowing whose it is. */}
+      <div style={{
+        backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16,
+        padding: 24, marginBottom: 16, display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap",
+      }}>
+        <div style={{
+          width: 72, height: 72, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+          backgroundColor: INPUT, border: `1px solid ${BORDER}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          {identity.avatarUrl ? (
+            <Image src={identity.avatarUrl} alt="" width={72} height={72} style={{ objectFit: "cover" }} />
+          ) : (
+            <span style={{ color: MUTED, fontSize: 24, fontWeight: 700 }}>
+              {(identity.fullName ?? "?")[0]?.toUpperCase() ?? "?"}
+            </span>
+          )}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 200 }}>
+          <span style={{ color: TEXT, fontSize: 19, fontWeight: 800 }}>
+            {identity.fullName || t.notProvided}
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            {identity.category && (
+              <span style={{
+                backgroundColor: dark ? "rgba(0,210,106,0.12)" : "rgba(0,210,106,0.1)",
+                color: GREEN, fontSize: 12.5, fontWeight: 700, padding: "4px 10px", borderRadius: 999,
+              }}>
+                {identity.category}
+              </span>
+            )}
+            <span style={{ color: MUTED, fontSize: 14, direction: "ltr" }}>
+              {identity.phone || t.notProvided}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Talent CRM — log calls/messages/notes with an optional follow-up
+          reminder. Self-contained: fetches/posts its own data and calls
+          router.refresh() after a change, independent of this form's own
+          save flow. Placed right under identity so "who is this + what's
+          been done" reads as one block. */}
+      <TalentActionsPanel talentProfileId={talentProfileId} initialActions={initialActions} />
+
       {/* Registration info — read-only, from auth.users (email) and profiles
-          (phone, created_at). Never editable here: email/phone changes go
-          through the talent's own account settings, not admin override. */}
+          (created_at). Never editable here: email/phone changes go through
+          the talent's own account settings, not admin override. */}
       {section(t.registrationTitle, (
         <div style={grid2}>
           <div>
             {label(t.email)}
             <p style={{ color: TEXT, fontSize: 14, margin: 0, direction: "ltr", textAlign: ar ? "right" : "left" }}>
               {registration.email ?? t.notProvided}
-            </p>
-          </div>
-          <div>
-            {label(t.phone)}
-            <p style={{ color: TEXT, fontSize: 14, margin: 0, direction: "ltr", textAlign: ar ? "right" : "left" }}>
-              {registration.phone ?? t.notProvided}
             </p>
           </div>
           <div>
@@ -314,34 +542,105 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
         </div>
       ))}
 
-      {/* Packages JSON */}
-      {section(ar ? "الباقات (JSON)" : "Packages (JSON)", (
-        <div>
-          {label(t.packages, jsonErr === "packages")}
-          <textarea
-            style={{ ...inp, resize: "vertical", fontFamily: "monospace", fontSize: 12, lineHeight: 1.6, border: jsonErr === "packages" ? "1px solid #EF4444" : `1px solid ${BORDER}` }}
-            rows={10}
-            value={form.packages}
-            onChange={e => set("packages", e.target.value)}
-          />
-          {jsonErr === "packages" && (
-            <p style={{ color: "#EF4444", fontSize: 12, marginTop: 4 }}>Invalid JSON</p>
-          )}
+      {/* Packages — structured repeatable list, no JSON editing */}
+      {section(t.packagesTitle, (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {packages.length === 0 && <p style={{ margin: 0, fontSize: 13, color: MUTED }}>{t.noPackages}</p>}
+          {packages.map((pkg) => (
+            <div key={pkg.id} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={grid2}>
+                <div>
+                  {label(t.packageName)}
+                  <input style={inp} value={pkg.name} onChange={e => updatePackage(pkg.id, { name: e.target.value })} />
+                </div>
+                <div>
+                  {label(t.packagePrice)}
+                  <input type="number" min={0} style={inp} value={pkg.price} onChange={e => updatePackage(pkg.id, { price: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                {label(t.packageFeatures)}
+                <textarea
+                  style={{ ...inp, resize: "vertical" }}
+                  rows={3}
+                  value={pkg.featuresText}
+                  onChange={e => updatePackage(pkg.id, { featuresText: e.target.value })}
+                />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, color: TEXT, fontSize: 13, cursor: "pointer" }}>
+                  <input type="checkbox" checked={pkg.popular} onChange={e => updatePackage(pkg.id, { popular: e.target.checked })} />
+                  {t.packagePopular}
+                </label>
+                <button type="button" onClick={() => removePackage(pkg.id)} style={iconBtn(true)}>
+                  <Trash2 size={13} />{t.removePackage}
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={addPackage} style={{ ...iconBtn(), alignSelf: "flex-start" }}>
+            <Plus size={13} />{t.addPackage}
+          </button>
         </div>
       ))}
 
-      {/* Social links JSON */}
-      {section(ar ? "البيانات الإضافية (JSON)" : "Social & Extra Data (JSON)", (
+      {/* Social links — known keys as plain URL inputs */}
+      {section(t.socialTitle, (
+        <div style={grid2}>
+          {TALENT_SOCIAL_KEYS.map((key) => (
+            <div key={key}>
+              {label(SOCIAL_LABEL[key]?.[lang] ?? key)}
+              <input
+                style={{ ...inp, direction: "ltr" }}
+                value={socialFields[key] ?? ""}
+                onChange={e => { setSocialFields(f => ({ ...f, [key]: e.target.value })); setStatus("idle"); }}
+              />
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {/* Usage add-ons — structured repeatable list (key/label/price), the
+          same shape lib/booking/addons.ts reads for server-side price checks. */}
+      {section(t.addonsTitle, (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {addons.length === 0 && <p style={{ margin: 0, fontSize: 13, color: MUTED }}>{t.noAddons}</p>}
+          {addons.map((addon) => (
+            <div key={addon.key} style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
+              <div style={{ flex: 2, minWidth: 160 }}>
+                {label(t.addonLabel)}
+                <input style={inp} value={addon.label} onChange={e => updateAddon(addon.key, { label: e.target.value })} />
+              </div>
+              <div style={{ flex: 1, minWidth: 100 }}>
+                {label(t.addonPrice)}
+                <input type="number" min={0} style={inp} value={addon.price} onChange={e => updateAddon(addon.key, { price: e.target.value })} />
+              </div>
+              <button type="button" onClick={() => removeAddon(addon.key)} style={{ ...iconBtn(true), marginBottom: 2 }}>
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={addAddon} style={{ ...iconBtn(), alignSelf: "flex-start" }}>
+            <Plus size={13} />{t.addAddon}
+          </button>
+        </div>
+      ))}
+
+      {/* Advanced/other — everything in social_links that isn't a known
+          social key or usage_addons (physical attributes, experience,
+          campaign stats, legacy brands, etc.). Rare to touch; stays JSON. */}
+      {section(t.advancedTitle, (
         <div>
-          {label(t.socialLinks, jsonErr === "social_links")}
+          <p style={{ color: MUTED, fontSize: 12.5, lineHeight: 1.6, margin: "-4px 0 10px" }}>{t.advancedHint}</p>
+          {label("", jsonErr === "advanced")}
           <textarea
-            style={{ ...inp, resize: "vertical", fontFamily: "monospace", fontSize: 12, lineHeight: 1.6, border: jsonErr === "social_links" ? "1px solid #EF4444" : `1px solid ${BORDER}` }}
-            rows={14}
-            value={form.social_links}
-            onChange={e => set("social_links", e.target.value)}
+            style={{ ...inp, resize: "vertical", fontFamily: "monospace", fontSize: 12, lineHeight: 1.6, border: jsonErr === "advanced" ? "1px solid #EF4444" : `1px solid ${BORDER}` }}
+            rows={8}
+            value={advancedJson}
+            onChange={e => { setAdvancedJson(e.target.value); setStatus("idle"); setJsonErr(null); }}
           />
-          {jsonErr === "social_links" && (
-            <p style={{ color: "#EF4444", fontSize: 12, marginTop: 4 }}>Invalid JSON</p>
+          {jsonErr === "advanced" && (
+            <p style={{ color: "#EF4444", fontSize: 12, marginTop: 4 }}>{t.invalidJson}</p>
           )}
         </div>
       ))}

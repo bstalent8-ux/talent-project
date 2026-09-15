@@ -28,6 +28,7 @@ export const NOTIFICATION_TYPES = [
   "BRAND_MOMENT_SUBMITTED",
   "SUPPORT_TICKET_SUBMITTED",
   "LEAD_FOLLOW_UP_DUE",
+  "TALENT_FOLLOW_UP_DUE",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

@@ -1,5 +1,5 @@
 import { adminClient } from "@/lib/supabase/admin";
-import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminBookingFull, AdminReview } from "../types";
+import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminBookingFull, AdminReview, TalentAction, AddTalentActionInput } from "../types";
 import { clusterPageVisits, totalDurationByPage, type PageTotal, type EngagementSample } from "./page-duration-clustering";
 import { calculateCompletion } from "@/lib/profile-completion";
 import { extractPhoneCandidates } from "./bio-phone-detection";
@@ -134,7 +134,7 @@ export async function fetchAdminTalentsPage({
   let query = adminClient
     .from("profiles")
     .select(`
-      id, handle, full_name, avatar_url, city, bio, created_at,
+      id, handle, full_name, avatar_url, city, bio, created_at, phone_number,
       is_approved, is_suspended, is_verified, balance,
       talent_profiles!inner (
         id, category, avg_rating, total_reviews, status, approved_at, rejection_reason,
@@ -166,6 +166,20 @@ export async function fetchAdminTalentsPage({
     : { data: [] };
   const hasPortfolio = new Set((portfolioRows ?? []).map((r) => r.talent_id));
 
+  // Email lives in auth.users, not public.profiles — there is no bulk
+  // "get by ids" call in the Admin API, so this is one getUserById per row.
+  // Bounded to the current page only (pageSize rows, not the whole table),
+  // same cost class as the other per-page Promise.all batches in this file.
+  // A failed lookup degrades to null rather than failing the whole page.
+  const profileIds = (data ?? []).map((p) => p.id);
+  const emailResults = await Promise.all(
+    profileIds.map((id) => adminClient.auth.admin.getUserById(id).then(
+      (res) => res.data.user?.email ?? null,
+      () => null,
+    )),
+  );
+  const emailMap = Object.fromEntries(profileIds.map((id, i) => [id, emailResults[i]]));
+
   const talents = (data ?? []).flatMap((p) => {
     const tp = Array.isArray(p.talent_profiles) ? p.talent_profiles[0] : p.talent_profiles;
     if (!tp) return [];
@@ -180,6 +194,8 @@ export async function fetchAdminTalentsPage({
       talentProfileId: tp.id,
       fullName:        p.full_name,
       handle:          p.handle,
+      email:           emailMap[p.id] ?? null,
+      phoneNumber:     (p as Record<string, unknown>).phone_number as string | null ?? null,
       avatarUrl:       p.avatar_url,
       category:        tp.category,
       city:            p.city,
@@ -1872,4 +1888,131 @@ export async function fetchAdminBookingDetail(id: string): Promise<AdminBookingF
       sender:     m.sender_id ? actorMap[m.sender_id] ?? null : null,
     })),
   };
+}
+
+// ─── Talent Actions CRM ──────────────────────────────────────────────────────
+// Contact log for an already-onboarded talent (any category) — who on the
+// team called/messaged them, what happened, and an optional follow-up date
+// that triggers a reminder notification once due. Mirrors the leads CRM's
+// lead_actions (features/leads/services/leads.service.ts) but without the
+// stage/assignee machinery, which doesn't apply here.
+
+interface TalentActionRow {
+  id: string;
+  talent_id: string;
+  action_type: string;
+  note: string | null;
+  performed_by: string | null;
+  follow_up_at: string | null;
+  notified_at: string | null;
+  created_at: string;
+}
+
+async function talentActionNamesFor(userIds: (string | null)[]): Promise<Record<string, string | null>> {
+  const ids = Array.from(new Set(userIds.filter((id): id is string => !!id)));
+  if (ids.length === 0) return {};
+  const { data } = await adminClient.from("profiles").select("id, full_name").in("id", ids);
+  return Object.fromEntries((data ?? []).map((p) => [p.id, p.full_name]));
+}
+
+function toTalentAction(row: TalentActionRow, names: Record<string, string | null>): TalentAction {
+  return {
+    id:              row.id,
+    talentId:        row.talent_id,
+    actionType:      row.action_type,
+    note:            row.note,
+    performedBy:     row.performed_by,
+    performedByName: row.performed_by ? names[row.performed_by] ?? null : null,
+    followUpAt:      row.follow_up_at,
+    notifiedAt:      row.notified_at,
+    createdAt:       row.created_at,
+  };
+}
+
+export async function fetchTalentActions(talentProfileId: string): Promise<TalentAction[]> {
+  const { data, error } = await adminClient
+    .from("talent_actions")
+    .select("*")
+    .eq("talent_id", talentProfileId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  const names = await talentActionNamesFor((data as TalentActionRow[]).map((r) => r.performed_by));
+  return (data as TalentActionRow[]).map((row) => toTalentAction(row, names));
+}
+
+export async function addTalentAction(talentProfileId: string, input: AddTalentActionInput): Promise<TalentAction | null> {
+  const { data, error } = await adminClient
+    .from("talent_actions")
+    .insert({
+      talent_id:    talentProfileId,
+      action_type:  input.actionType,
+      note:         input.note ?? null,
+      performed_by: input.performedBy,
+      follow_up_at: input.followUpAt ?? null,
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    console.error("[admin] addTalentAction failed:", error?.message);
+    return null;
+  }
+
+  const names = await talentActionNamesFor([data.performed_by]);
+  return toTalentAction(data as TalentActionRow, names);
+}
+
+/** Editable by any admin, not just the action's author — a shared team
+ *  schedule, same posture as the leads CRM's updateActionFollowUp. */
+export async function updateTalentActionFollowUp(actionId: string, followUpAt: string | null): Promise<boolean> {
+  const { error } = await adminClient
+    .from("talent_actions")
+    .update({ follow_up_at: followUpAt, notified_at: null })
+    .eq("id", actionId);
+  return !error;
+}
+
+export interface DueTalentFollowUp {
+  actionId:    string;
+  talentId:    string;
+  talentName:  string | null;
+  performedBy: string | null;
+}
+
+export async function fetchDueTalentFollowUps(): Promise<DueTalentFollowUp[]> {
+  const nowIso = new Date().toISOString();
+  const { data: actions } = await adminClient
+    .from("talent_actions")
+    .select("id, talent_id, performed_by, follow_up_at")
+    .lte("follow_up_at", nowIso)
+    .is("notified_at", null);
+
+  if (!actions?.length) return [];
+
+  const talentIds = Array.from(new Set(actions.map((a) => a.talent_id)));
+  const { data: talentRows } = await adminClient
+    .from("talent_profiles").select("id, user_id").in("id", talentIds);
+  const userIdByTalentId = Object.fromEntries((talentRows ?? []).map((r) => [r.id, r.user_id]));
+
+  const userIds = Object.values(userIdByTalentId).filter((id): id is string => !!id);
+  const { data: profileRows } = userIds.length
+    ? await adminClient.from("profiles").select("id, full_name").in("id", userIds)
+    : { data: [] };
+  const nameByUserId = Object.fromEntries((profileRows ?? []).map((p) => [p.id, p.full_name]));
+
+  return actions.map((a) => {
+    const userId = userIdByTalentId[a.talent_id];
+    return {
+      actionId:    a.id,
+      talentId:    a.talent_id,
+      talentName:  userId ? nameByUserId[userId] ?? null : null,
+      performedBy: a.performed_by,
+    };
+  });
+}
+
+export async function markTalentActionsNotified(actionIds: string[]): Promise<void> {
+  if (actionIds.length === 0) return;
+  await adminClient.from("talent_actions").update({ notified_at: new Date().toISOString() }).in("id", actionIds);
 }

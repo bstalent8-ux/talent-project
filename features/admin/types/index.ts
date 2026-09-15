@@ -7,6 +7,9 @@ export interface AdminTalent {
   talentProfileId: string;
   fullName:        string | null;
   handle:          string | null;
+  /** From auth.users — one Admin API lookup per row, current page only. */
+  email:           string | null;
+  phoneNumber:     string | null;
   avatarUrl:       string | null;
   category:        string | null;
   city:            string | null;
@@ -24,6 +27,32 @@ export interface AdminTalent {
    *  (lib/profile-completion.ts's calculateCompletion) — computed
    *  server-side per row in fetchAdminTalentsPage, not re-derived here. */
   completionScore: number;
+}
+
+// ─── Talent Actions CRM ──────────────────────────────────────────────────────
+// Same shape as the leads CRM's LeadAction (features/leads/types.ts), minus
+// the stage/assignee concepts that don't apply to an already-onboarded
+// talent — this is a plain contact log with an optional follow-up reminder.
+export const TALENT_ACTION_TYPES = ["call", "message", "email", "meeting", "note"] as const;
+export type TalentActionType = (typeof TALENT_ACTION_TYPES)[number];
+
+export interface TalentAction {
+  id:              string;
+  talentId:        string;
+  actionType:      string;
+  note:            string | null;
+  performedBy:     string | null;
+  performedByName: string | null;
+  followUpAt:      string | null;
+  notifiedAt:      string | null;
+  createdAt:       string;
+}
+
+export interface AddTalentActionInput {
+  actionType:  string;
+  note?:       string | null;
+  performedBy: string | null;
+  followUpAt?: string | null;
 }
 
 export interface AdminDashboardStats {
