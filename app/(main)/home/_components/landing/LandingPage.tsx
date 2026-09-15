@@ -29,6 +29,8 @@ import { useGuestGuard } from "@/contexts/GuestGuard";
 import { cdnImage } from "@/lib/images";
 import TestimonialSubmitPanel from "./TestimonialSubmitPanel";
 import BrandMomentSubmitPanel from "./BrandMomentSubmitPanel";
+import ScrollReveal from "@/components/motion/ScrollReveal";
+import ScrollProgressPath from "@/components/motion/ScrollProgressPath";
 import styles from "./LandingPage.module.css";
 import {
   brandSteps,
@@ -1139,16 +1141,17 @@ export default function LandingPage({
 
   return (
     <div className={styles.page} dir={lang === "ar" ? "rtl" : "ltr"}>
+      <ScrollProgressPath />
       <HeroSection lang={lang} totalTalents={totalTalents} completedProjects={completedProjects} avgRating={avgRating} media={designMedia} />
-      <Talent500Section lang={lang} />
-      <CategoriesSection lang={lang} categoryCounts={categoryCounts} />
-      <FeaturedTalentsSection lang={lang} talents={displayedTalents} />
-      <WorkflowSection lang={lang} />
-      <CampaignSection lang={lang} moments={brandMoments} />
-      <FeatureSection lang={lang} />
-      <TestimonialsSection lang={lang} items={testimonials} />
-      <FAQSection lang={lang} />
-      <FinalCTA lang={lang} />
+      <ScrollReveal><Talent500Section lang={lang} /></ScrollReveal>
+      <ScrollReveal><CategoriesSection lang={lang} categoryCounts={categoryCounts} /></ScrollReveal>
+      <ScrollReveal><FeaturedTalentsSection lang={lang} talents={displayedTalents} /></ScrollReveal>
+      <ScrollReveal><WorkflowSection lang={lang} /></ScrollReveal>
+      <ScrollReveal><CampaignSection lang={lang} moments={brandMoments} /></ScrollReveal>
+      <ScrollReveal><FeatureSection lang={lang} /></ScrollReveal>
+      <ScrollReveal><TestimonialsSection lang={lang} items={testimonials} /></ScrollReveal>
+      <ScrollReveal><FAQSection lang={lang} /></ScrollReveal>
+      <ScrollReveal><FinalCTA lang={lang} /></ScrollReveal>
     </div>
   );
 }
