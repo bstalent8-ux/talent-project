@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import { adminClient } from "@/lib/supabase/admin";
-import { fetchTalentActions } from "@/features/admin/services/admin.service";
+import { fetchTalentActions, fetchTalentBrands } from "@/features/admin/services/admin.service";
 import TalentEditorClient from "./_components/TalentEditorClient";
 
 export default async function AdminTalentEditorPage({
@@ -45,9 +45,10 @@ export default async function AdminTalentEditorPage({
 
   // Email lives in auth.users, not profiles — a separate lookup, admin-only,
   // never exposed on any public/self-serve route.
-  const [{ data: authUser }, initialActions] = await Promise.all([
+  const [{ data: authUser }, initialActions, initialBrands] = await Promise.all([
     adminClient.auth.admin.getUserById(data.id),
     fetchTalentActions(id),
+    fetchTalentBrands(id),
   ]);
 
   const tp = Array.isArray(data.talent_profiles)
@@ -83,6 +84,7 @@ export default async function AdminTalentEditorPage({
         createdAt: data.created_at ?? null,
       }}
       initialActions={initialActions}
+      initialBrands={initialBrands}
     />
   );
 }

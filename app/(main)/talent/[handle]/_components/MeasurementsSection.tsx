@@ -1,15 +1,15 @@
 "use client";
 
 // ─── Measurements (Model public profile only) ──────────────────────────────
-// Renders exactly the 5 approved Model fields — height_cm, weight_kg,
-// shoe_size_eu, hair_color, eye_color. No other measurement exists in the
-// data model; none is invented here. section-content.ts's `physical` rule
-// already restricts this section to category === "model", so `measurements`
-// is never non-null for any other category — see talent.context.ts's
-// toMeasurements().
+// Renders the approved Model fields — height_cm, weight_kg, shoe_size_eu,
+// hair_color, eye_color, plus the optional chest/waist/hip body measurements.
+// No other measurement exists in the data model; none is invented here.
+// section-content.ts's `physical` rule already restricts this section to
+// category === "model", so `measurements` is never non-null for any other
+// category — see talent.context.ts's toMeasurements().
 //
 // Lives in the sidebar (talent-layout.ts puts "physical" there for model,
-// never in main), so the layout is a compact row list — a 5-column grid
+// never in main), so the layout is a compact row list — a multi-column grid
 // would be cramped in a ~280px rail.
 
 import { useSite } from "@/contexts/SiteContext";
@@ -20,10 +20,10 @@ interface Props {
   languages?: string | null;
 }
 
-// Exported so ProfileHero's Model branch (which now renders these same 5
+// Exported so ProfileHero's Model branch (which now renders these same
 // fields inline) uses the identical labels/units/order — one source of
 // truth, never two copies that could drift.
-export const FIELD_ORDER = ["height", "weight", "shoe_size", "hair_color", "eye_color"];
+export const FIELD_ORDER = ["height", "weight", "shoe_size", "hair_color", "eye_color", "chest", "waist", "hip"];
 
 export const FIELD_LABELS: Record<string, { ar: string; en: string; unit?: string }> = {
   height:     { ar: "الطول",       en: "Height",    unit: "cm" },
@@ -31,6 +31,9 @@ export const FIELD_LABELS: Record<string, { ar: string; en: string; unit?: strin
   shoe_size:  { ar: "مقاس الحذاء", en: "Shoe Size", unit: "EU" },
   hair_color: { ar: "لون الشعر",   en: "Hair Color" },
   eye_color:  { ar: "لون العين",   en: "Eye Color" },
+  chest:      { ar: "محيط الصدر",  en: "Chest",     unit: "cm" },
+  waist:      { ar: "محيط الخصر",  en: "Waist",     unit: "cm" },
+  hip:        { ar: "محيط الأرداف", en: "Hip",      unit: "cm" },
 };
 
 export default function MeasurementsSection({ measurements, languages }: Props) {
@@ -43,8 +46,16 @@ export default function MeasurementsSection({ measurements, languages }: Props) 
   const MUTED  = dark ? "#A8B3C2" : "#64748B";
   const GOLD   = "#F4B740";
 
-  const entries = FIELD_ORDER.filter((key) => measurements[key]);
-  if (!entries.length && !languages) return null;
+  // Chest/waist/hip render as one combined "90/60/90" line when all three
+  // are filled — the individual fields still exist and still count toward
+  // completion, but a talent who filled all three almost always means it to
+  // read as one measurement, not three separate rows.
+  const hasFullBodyMeasurements = Boolean(measurements.chest && measurements.waist && measurements.hip);
+  const entries = FIELD_ORDER.filter((key) => {
+    if (hasFullBodyMeasurements && (key === "chest" || key === "waist" || key === "hip")) return false;
+    return Boolean(measurements[key]);
+  });
+  if (!entries.length && !hasFullBodyMeasurements && !languages) return null;
 
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20 }}>
@@ -76,6 +87,17 @@ export default function MeasurementsSection({ measurements, languages }: Props) 
             </div>
           );
         })}
+        {hasFullBodyMeasurements && (
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0",
+            borderTop: (entries.length > 0 || languages) ? `1px solid ${BORDER}` : undefined,
+          }}>
+            <span style={{ color: MUTED, fontSize: 12.5 }}>{ar ? "المقاسات" : "Measurements"}</span>
+            <span style={{ color: GOLD, fontSize: 13, fontWeight: 800 }} dir="ltr">
+              {measurements.chest}/{measurements.waist}/{measurements.hip}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

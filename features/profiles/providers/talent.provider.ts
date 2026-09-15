@@ -84,6 +84,7 @@ function toPackages(raw: unknown): PackageItemDTO[] {
       price:    String(r.price),
       popular:  Boolean(r.popular),
       features: Array.isArray(r.features) ? r.features.map(String) : [],
+      icon:     typeof r.icon === "string" && r.icon.trim() ? r.icon.trim() : undefined,
     });
   }
   return out;
@@ -97,6 +98,7 @@ function toPortfolio(rows: RawPortfolioRow[]): PortfolioItemDTO[] {
     caption:    r.caption,
     sortOrder:  r.sort_order,
     isApproved: r.is_approved,
+    createdAt:  r.created_at,
   }));
 }
 

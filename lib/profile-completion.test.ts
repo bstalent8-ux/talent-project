@@ -44,10 +44,10 @@ describe("calculateCompletion — social section picks up the new Professional P
 });
 
 describe("calculateSectionProgress — ratios grow over the wider key lists", () => {
-  it("physical progress reflects 1 of 8 keys, not 1 of 7", () => {
+  it("physical progress reflects 1 of 11 keys (height/weight/hair_color/shoe_size/age/languages/dialect/eye_color/chest/waist/hip)", () => {
     const talentProfile = { social_links: { eye_color: "بني" } };
     const progress = calculateSectionProgress(baseProfile, talentProfile, basePortfolio);
-    expect(progress.physical).toBeCloseTo(1 / 8);
+    expect(progress.physical).toBeCloseTo(1 / 11);
   });
 
   it("social progress reflects 1 of 8 platforms, not 1 of 4", () => {

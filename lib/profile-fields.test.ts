@@ -2,14 +2,15 @@ import { describe, it, expect } from "vitest";
 import { MODEL_PHYSICAL_FIELDS, TALENT_PHYSICAL_KEYS, TALENT_SOCIAL_KEYS } from "./profile-fields";
 
 describe("profile-fields canonical key lists", () => {
-  it("TALENT_PHYSICAL_KEYS includes eye_color alongside the pre-existing keys", () => {
+  it("TALENT_PHYSICAL_KEYS includes eye_color and the chest/waist/hip measurements alongside the pre-existing keys", () => {
     expect(TALENT_PHYSICAL_KEYS).toEqual([
       "height", "weight", "hair_color", "shoe_size", "age", "languages", "dialect", "eye_color",
+      "chest", "waist", "hip",
     ]);
   });
 
   it("MODEL_PHYSICAL_FIELDS is exactly the approved Model minimum — no invented fields", () => {
-    expect(MODEL_PHYSICAL_FIELDS).toEqual(["height", "weight", "shoe_size", "hair_color", "eye_color"]);
+    expect(MODEL_PHYSICAL_FIELDS).toEqual(["height", "weight", "shoe_size", "hair_color", "eye_color", "chest", "waist", "hip"]);
   });
 
   it("every MODEL_PHYSICAL_FIELDS entry is a subset of TALENT_PHYSICAL_KEYS", () => {

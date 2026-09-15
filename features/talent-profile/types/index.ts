@@ -101,6 +101,10 @@ export interface PackageItem {
   price: string;
   popular: boolean;
   features: string[];
+  /** Admin-set, optional. One of PackagesSection.tsx's PACKAGE_ICON_MAP keys
+   * ("sun"|"diamond"|"gem"|"crown"|"rocket") — an unrecognized or missing
+   * value falls back to the default star, never a broken render. */
+  icon?: string;
 }
 
 export interface AddonItem {
@@ -115,6 +119,7 @@ export interface PortfolioItem {
   media_type: string;
   caption: string | null;
   sort_order: number;
+  created_at?: string;
 }
 
 export interface TalentData {
@@ -125,6 +130,9 @@ export interface TalentData {
   title: string;
   location: string;
   memberSince: string;
+  /** Full ISO timestamp behind `memberSince` — same source (identity.createdAt),
+   * kept as a real date for Career Timeline instead of re-parsing the display string. */
+  registeredAt?: string | null;
   rating: number;
   reviewCount: number;
   views: string;

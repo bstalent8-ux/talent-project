@@ -172,6 +172,7 @@ export interface RawPortfolioRow {
   caption:     string | null;
   sort_order:  number;
   is_approved: boolean;
+  created_at:  string;
 }
 
 export interface RawReviewRow {

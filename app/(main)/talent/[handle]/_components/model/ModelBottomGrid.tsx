@@ -8,7 +8,8 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
-import type { BookingStats, ModelMetrics, Review } from "@/features/talent-profile/types";
+import type { BookingStats, BrandItem, ModelMetrics, Review } from "@/features/talent-profile/types";
+import ModelCareerTimeline from "./ModelCareerTimeline";
 
 const GOLD = "#d89b37";
 
@@ -17,9 +18,11 @@ interface Props {
   reviewCount: number;
   bookingStats: BookingStats;
   modelMetrics?: ModelMetrics;
+  registeredAt: string | null;
+  brands: BrandItem[];
 }
 
-export default function ModelBottomGrid({ reviews, reviewCount, bookingStats, modelMetrics }: Props) {
+export default function ModelBottomGrid({ reviews, reviewCount, bookingStats, modelMetrics, registeredAt, brands }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const CARD = dark ? "var(--bg-card)" : "#FFFFFF";
@@ -60,8 +63,8 @@ export default function ModelBottomGrid({ reviews, reviewCount, bookingStats, mo
     : (ar ? "\u0639\u0631\u0636 \u0643\u0644 \u0627\u0644\u062a\u0642\u064a\u064a\u0645\u0627\u062a" : "View All Reviews");
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16 }}>
-      <style>{`@media (max-width:700px){.model-bottom-grid{grid-template-columns:1fr !important}}`}</style>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+      <style>{`@media (max-width:900px){.model-bottom-grid{grid-template-columns:1fr 1fr !important}}@media (max-width:700px){.model-bottom-grid{grid-template-columns:1fr !important}}`}</style>
       <div className="model-bottom-grid" style={{ display: "contents" }}>
 
         {/* Reviews */}
@@ -123,6 +126,8 @@ export default function ModelBottomGrid({ reviews, reviewCount, bookingStats, mo
             <p style={{ color: MUTED, fontSize: 12 }}>{ar ? "\u0644\u0627 \u062a\u0648\u062c\u062f \u062a\u0642\u064a\u064a\u0645\u0627\u062a \u0628\u0639\u062f" : "No reviews yet"}</p>
           )}
         </div>
+
+        <ModelCareerTimeline registeredAt={registeredAt} brands={brands} />
 
         {/* Performance - real cancellation rate + admin-managed metrics */}
         <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 18 }}>

@@ -1,5 +1,5 @@
 import { adminClient } from "@/lib/supabase/admin";
-import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminBookingFull, AdminReview, TalentAction, AddTalentActionInput } from "../types";
+import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminBookingFull, AdminReview, TalentAction, AddTalentActionInput, AdminTalentBrand } from "../types";
 import { clusterPageVisits, totalDurationByPage, type PageTotal, type EngagementSample } from "./page-duration-clustering";
 import { calculateCompletion } from "@/lib/profile-completion";
 import { extractPhoneCandidates } from "./bio-phone-detection";
@@ -2015,4 +2015,85 @@ export async function fetchDueTalentFollowUps(): Promise<DueTalentFollowUp[]> {
 export async function markTalentActionsNotified(actionIds: string[]): Promise<void> {
   if (actionIds.length === 0) return;
   await adminClient.from("talent_actions").update({ notified_at: new Date().toISOString() }).in("id", actionIds);
+}
+
+// ─── Talent Brand Collaborations (admin-managed) ─────────────────────────────
+// talent_brands is populated with brand_name from the talent's own "Collaborated
+// Brands" editor (see lib/talent-brands-sync.ts) but logo_url and verified are
+// admin-only — a talent can type any company name, so only an admin marking a
+// row verified (and optionally uploading its real logo) makes it trustworthy
+// enough to show a logo badge on the public profile.
+
+interface TalentBrandRow {
+  id: string;
+  talent_profile_id: string;
+  brand_name: string;
+  logo_url: string | null;
+  year_collaborated: string | null;
+  sort_order: number;
+  verified: boolean | null;
+  created_at: string;
+}
+
+function toAdminTalentBrand(row: TalentBrandRow): AdminTalentBrand {
+  return {
+    id: row.id,
+    brandName: row.brand_name,
+    logoUrl: row.logo_url,
+    yearCollaborated: row.year_collaborated,
+    sortOrder: row.sort_order,
+    verified: Boolean(row.verified),
+  };
+}
+
+export async function fetchTalentBrands(talentProfileId: string): Promise<AdminTalentBrand[]> {
+  const { data, error } = await adminClient
+    .from("talent_brands")
+    .select("*")
+    .eq("talent_profile_id", talentProfileId)
+    .order("sort_order", { ascending: true });
+  if (error || !data) return [];
+  return (data as TalentBrandRow[]).map(toAdminTalentBrand);
+}
+
+export async function addTalentBrand(talentProfileId: string, brandName: string): Promise<AdminTalentBrand | null> {
+  const { data: existing } = await adminClient
+    .from("talent_brands")
+    .select("sort_order")
+    .eq("talent_profile_id", talentProfileId)
+    .order("sort_order", { ascending: false })
+    .limit(1);
+  const nextSort = (existing?.[0]?.sort_order ?? -1) + 1;
+
+  const { data, error } = await adminClient
+    .from("talent_brands")
+    .insert({ talent_profile_id: talentProfileId, brand_name: brandName, sort_order: nextSort })
+    .select("*")
+    .single();
+  if (error || !data) return null;
+  return toAdminTalentBrand(data as TalentBrandRow);
+}
+
+export interface UpdateTalentBrandInput {
+  brandName?: string;
+  logoUrl?: string | null;
+  yearCollaborated?: string | null;
+  verified?: boolean;
+}
+
+export async function updateTalentBrand(brandId: string, input: UpdateTalentBrandInput): Promise<boolean> {
+  const patch: Record<string, unknown> = {};
+  if (input.brandName !== undefined) patch.brand_name = input.brandName;
+  if (input.logoUrl !== undefined) patch.logo_url = input.logoUrl;
+  if (input.yearCollaborated !== undefined) patch.year_collaborated = input.yearCollaborated;
+  if (input.verified !== undefined) patch.verified = input.verified;
+  if (Object.keys(patch).length === 0) return true;
+
+  const { error } = await adminClient.from("talent_brands").update(patch).eq("id", brandId);
+  return !error;
+}
+
+export async function deleteTalentBrand(brandId: string): Promise<boolean> {
+  const { error } = await adminClient.from("talent_brands").delete().eq("id", brandId);
+  return !error;
 }

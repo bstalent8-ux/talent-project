@@ -55,7 +55,7 @@ const TX = {
       youtube: "يوتيوب", linkedin: "لينكد إن", telegram: "تيليجرام",
       website: "الموقع الإلكتروني", other: "أخرى",
       available: "متاح", unavailable: "غير متاح", availability: "حالة الإتاحة",
-      eyeColor: "لون العين",
+      eyeColor: "لون العين", chest: "محيط الصدر (سم)", waist: "محيط الخصر (سم)", hip: "محيط الأرداف (سم)",
     },
     steps: {
       basic:        { title: "المعلومات الأساسية", desc: "صورتك واسمك ومدينتك ونبذة مختصرة عنك." },
@@ -133,7 +133,7 @@ const TX = {
       youtube: "YouTube", linkedin: "LinkedIn", telegram: "Telegram",
       website: "Website", other: "Other",
       available: "Available", unavailable: "Unavailable", availability: "Availability status",
-      eyeColor: "Eye Color",
+      eyeColor: "Eye Color", chest: "Chest (cm)", waist: "Waist (cm)", hip: "Hip (cm)",
     },
     steps: {
       basic:        { title: "Basic Information", desc: "Your photo, name, city and a short bio." },
@@ -744,8 +744,11 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                     : k === "weight" ? (lang === "ar" ? "الوزن (كجم)" : "Weight (kg)")
                     : k === "shoe_size" ? (lang === "ar" ? "مقاس الحذاء (EU)" : "Shoe Size (EU)")
                     : k === "hair_color" ? (lang === "ar" ? "لون الشعر" : "Hair Color")
+                    : k === "chest" ? t.labels.chest
+                    : k === "waist" ? t.labels.waist
+                    : k === "hip" ? t.labels.hip
                     : t.labels.eyeColor;
-                  const isLtr = k === "height" || k === "weight" || k === "shoe_size";
+                  const isLtr = k === "height" || k === "weight" || k === "shoe_size" || k === "chest" || k === "waist" || k === "hip";
                   return (
                     <div key={k}>
                       <label style={label}>{l}</label>

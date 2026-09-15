@@ -37,6 +37,7 @@ function transformTalentData(profile: RawProfile, tp: RawTalentProfile | null, s
     title: (sl.title as string) ?? tp?.category ?? "",
     location: profile.city ? `${profile.city}، مصر` : "القاهرة، مصر",
     memberSince: (sl.member_since as string) ?? profile.created_at?.slice(0, 4) ?? "2022",
+    registeredAt: profile.created_at ?? null,
     rating: tp?.avg_rating ?? 0,
     reviewCount: tp?.total_reviews ?? 0,
     views: (sl.views_display as string) ?? formatViews(tp?.profile_views ?? 0),
@@ -85,6 +86,7 @@ function transformPackages(raw: unknown): PackageItem[] | null {
       price: String(r.price),
       popular: Boolean(r.popular),
       features: Array.isArray(r.features) ? r.features.map(String) : [],
+      icon: typeof r.icon === "string" && r.icon.trim() ? r.icon.trim() : undefined,
     });
   }
   return parsed.length > 0 ? parsed : null;

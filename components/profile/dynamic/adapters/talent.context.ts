@@ -43,6 +43,7 @@ export function toTalentData(dto: PublicProfileDTO): TalentData {
     // Matches transformTalentData: city + fixed country, with the same default.
     location:    identity.city ? `${identity.city}، مصر` : "القاهرة، مصر",
     memberSince: (social.member_since as string) ?? identity.createdAt?.slice(0, 4) ?? "2022",
+    registeredAt: identity.createdAt ?? null,
     rating:       core.rating ?? 0,
     reviewCount:  core.reviewCount ?? 0,
     // `core.views` is already formatted by the provider (TalentPublicCore.views).
@@ -115,6 +116,7 @@ export function toPortfolioItems(dto: PublicProfileDTO): PortfolioItem[] {
     media_type: item.mediaType,
     caption:    item.caption,
     sort_order: item.sortOrder,
+    created_at: item.createdAt,
   }));
 }
 

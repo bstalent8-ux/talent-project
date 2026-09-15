@@ -6,7 +6,8 @@ import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import TalentActionsPanel from "./TalentActionsPanel";
-import type { TalentAction } from "@/features/admin/types";
+import TalentBrandsPanel from "./TalentBrandsPanel";
+import type { TalentAction, AdminTalentBrand } from "@/features/admin/types";
 import { TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 
 const TX = {
@@ -33,6 +34,8 @@ const TX = {
     packagesTitle: "الباقات", addPackage: "إضافة باقة", removePackage: "حذف الباقة",
     packageName: "اسم الباقة", packagePrice: "السعر (EGP)", packagePopular: "الأكثر طلباً",
     packageFeatures: "المميزات (سطر لكل ميزة)", noPackages: "لا توجد باقات بعد.",
+    packageIcon: "أيقونة الباقة",
+    packageIconLabels: { "": "بدون (نجمة افتراضية)", sun: "☀️ شمس", diamond: "💎 ألماظة", gem: "💠 جوهرة", crown: "👑 تاج", rocket: "🚀 صاروخ" } as Record<string, string>,
     socialTitle: "روابط التواصل", website: "الموقع الإلكتروني", other: "أخرى",
     addonsTitle: "إضافات الاستخدام (Usage Add-ons)", addAddon: "إضافة",
     addonLabel: "الاسم", addonPrice: "السعر (EGP)", noAddons: "لا توجد إضافات — سيتم عرض القائمة الافتراضية للعميل.",
@@ -63,6 +66,8 @@ const TX = {
     packagesTitle: "Packages", addPackage: "Add package", removePackage: "Remove package",
     packageName: "Package name", packagePrice: "Price (EGP)", packagePopular: "Popular",
     packageFeatures: "Features (one per line)", noPackages: "No packages yet.",
+    packageIcon: "Package icon",
+    packageIconLabels: { "": "None (default star)", sun: "☀️ Sun", diamond: "💎 Diamond", gem: "💠 Gem", crown: "👑 Crown", rocket: "🚀 Rocket" } as Record<string, string>,
     socialTitle: "Social Links", website: "Website", other: "Other",
     addonsTitle: "Usage Add-ons", addAddon: "Add",
     addonLabel: "Label", addonPrice: "Price (EGP)", noAddons: "No add-ons set — the default list will be shown to brands.",
@@ -99,7 +104,13 @@ interface PackageForm {
   price: string;
   popular: boolean;
   featuresText: string;
+  icon: string;
 }
+
+// Matches PackagesSection.tsx's model-variant PACKAGE_ICON_MAP keys — "" means
+// no icon (falls back to Star, the pre-existing look for every package before
+// this feature).
+const PACKAGE_ICON_OPTIONS = ["", "sun", "diamond", "gem", "crown", "rocket"] as const;
 
 interface AddonForm {
   key: string;
@@ -136,6 +147,7 @@ interface Props {
   identity: IdentityInfo;
   registration: RegistrationInfo;
   initialActions: TalentAction[];
+  initialBrands: AdminTalentBrand[];
 }
 
 function newId() {
@@ -153,6 +165,7 @@ function normalizePackages(raw: unknown[]): PackageForm[] {
       price: row.price != null ? String(row.price) : "",
       popular: Boolean(row.popular),
       featuresText: Array.isArray(row.features) ? row.features.map(String).join("\n") : "",
+      icon: row.icon != null ? String(row.icon) : "",
     };
   });
 }
@@ -188,7 +201,7 @@ function extractAdvanced(socialLinks: Record<string, unknown>): Record<string, u
   return rest;
 }
 
-export default function TalentEditorClient({ talentProfileId, profileUserId, initialData, identity, registration, initialActions }: Props) {
+export default function TalentEditorClient({ talentProfileId, profileUserId, initialData, identity, registration, initialActions, initialBrands }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -255,7 +268,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
   }
 
   function addPackage() {
-    setPackages(list => [...list, { id: newId(), name: "", price: "", popular: false, featuresText: "" }]);
+    setPackages(list => [...list, { id: newId(), name: "", price: "", popular: false, featuresText: "", icon: "" }]);
   }
 
   function removePackage(id: string) {
@@ -300,6 +313,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
         price: p.price.trim(),
         popular: p.popular,
         features: p.featuresText.split("\n").map(s => s.trim()).filter(Boolean),
+        icon: p.icon || undefined,
       }));
 
     const cleanAddons = addons
@@ -435,6 +449,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
           save flow. Placed right under identity so "who is this + what's
           been done" reads as one block. */}
       <TalentActionsPanel talentProfileId={talentProfileId} initialActions={initialActions} />
+      <TalentBrandsPanel talentProfileId={talentProfileId} initialBrands={initialBrands} />
 
       {/* Registration info — read-only, from auth.users (email) and profiles
           (created_at). Never editable here: email/phone changes go through
@@ -557,6 +572,14 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
                   {label(t.packagePrice)}
                   <input type="number" min={0} style={inp} value={pkg.price} onChange={e => updatePackage(pkg.id, { price: e.target.value })} />
                 </div>
+              </div>
+              <div>
+                {label(t.packageIcon)}
+                <select style={inp} value={pkg.icon} onChange={e => updatePackage(pkg.id, { icon: e.target.value })}>
+                  {PACKAGE_ICON_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>{t.packageIconLabels[opt]}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 {label(t.packageFeatures)}

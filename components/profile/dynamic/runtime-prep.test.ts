@@ -68,7 +68,7 @@ const dto: PublicProfileDTO = {
     views: "12K",
     isFeatured: false,
     portfolio: [
-      { id: "m1", url: "https://res.cloudinary.com/demo/b.jpg", mediaType: "image", caption: "cap", sortOrder: 0, isApproved: true },
+      { id: "m1", url: "https://res.cloudinary.com/demo/b.jpg", mediaType: "image", caption: "cap", sortOrder: 0, isApproved: true, createdAt: "2026-02-01T00:00:00.000Z" },
     ],
     reviews: [
       { id: "r1", author: "Acme Co", rating: 5, text: "Great", createdAt: "2026-02-01T00:00:00.000Z" },
@@ -197,7 +197,7 @@ describe("buildTalentContextFromDTO", () => {
 
   it("converts portfolio DTO keys back to the component's snake_case shape", () => {
     expect(toPortfolioItems(dto)).toEqual([
-      { id: "m1", url: "https://res.cloudinary.com/demo/b.jpg", media_type: "image", caption: "cap", sort_order: 0 },
+      { id: "m1", url: "https://res.cloudinary.com/demo/b.jpg", media_type: "image", caption: "cap", sort_order: 0, created_at: "2026-02-01T00:00:00.000Z" },
     ]);
   });
 

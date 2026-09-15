@@ -8,13 +8,14 @@
 
 export const TALENT_PHYSICAL_KEYS = [
   "height", "weight", "hair_color", "shoe_size", "age", "languages", "dialect", "eye_color",
+  "chest", "waist", "hip",
 ] as const;
 
 // The My Profile guided flow's Model-only physical step shows exactly these —
 // the rest of TALENT_PHYSICAL_KEYS stay readable/writable (nothing deleted),
 // just not part of the approved Model minimum surfaced by the wizard.
 export const MODEL_PHYSICAL_FIELDS = [
-  "height", "weight", "shoe_size", "hair_color", "eye_color",
+  "height", "weight", "shoe_size", "hair_color", "eye_color", "chest", "waist", "hip",
 ] as const;
 
 export const TALENT_SOCIAL_KEYS = [

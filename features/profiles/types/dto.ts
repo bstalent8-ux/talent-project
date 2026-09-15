@@ -155,6 +155,7 @@ export interface PackageItemDTO {
   price:    string;
   popular:  boolean;
   features: string[];
+  icon?:    string;
 }
 
 export interface PortfolioItemDTO {
@@ -164,6 +165,7 @@ export interface PortfolioItemDTO {
   caption:    string | null;
   sortOrder:  number;
   isApproved: boolean;
+  createdAt:  string;
 }
 
 export interface ReviewItemDTO {

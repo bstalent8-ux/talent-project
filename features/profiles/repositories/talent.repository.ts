@@ -131,7 +131,7 @@ export const talentRepository = {
   async findPortfolio(talentProfileId: string, approvedOnly: boolean): Promise<RawPortfolioRow[]> {
     let query = adminClient
       .from("portfolio_items")
-      .select("id, url, media_type, caption, sort_order, is_approved")
+      .select("id, url, media_type, caption, sort_order, is_approved, created_at")
       .eq("talent_id", talentProfileId);
 
     if (approvedOnly) query = query.eq("is_approved", true);

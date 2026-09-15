@@ -2,12 +2,21 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Sun, Gem, Diamond, Crown, Rocket, Star } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { PackageItem } from "@/features/talent-profile/types";
 
 type Package = PackageItem;
+
+// Admin-set per-package icon (TalentEditorClient.tsx's PACKAGE_ICON_OPTIONS)
+// — an unrecognized or missing key falls back to Star, never a broken render.
+const PACKAGE_ICON_MAP: Record<string, typeof Star> = {
+  sun: Sun, diamond: Diamond, gem: Gem, crown: Crown, rocket: Rocket,
+};
+function packageIcon(icon: string | undefined) {
+  return (icon && PACKAGE_ICON_MAP[icon]) || Star;
+}
 
 interface Props {
   onSelect: (pkg: Package) => void;
@@ -81,16 +90,24 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                   borderRadius: 14, padding: 20, cursor: "pointer",
                 }}
               >
-                {pkg.popular && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <span style={{
-                    alignSelf: "flex-start",
-                    backgroundColor: "color-mix(in srgb, var(--color-secondary) 15%, transparent)",
-                    color: GOLD, border: `1px solid ${GOLD}`,
-                    borderRadius: 20, padding: "2px 10px", fontSize: 10.5, fontWeight: 800,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                    backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, transparent)",
                   }}>
-                    {ar ? "الأكثر طلباً" : "Most Popular"}
+                    {(() => { const Icon = packageIcon(pkg.icon); return <Icon size={16} color={TEAL} />; })()}
                   </span>
-                )}
+                  {pkg.popular && (
+                    <span style={{
+                      backgroundColor: "color-mix(in srgb, var(--color-secondary) 15%, transparent)",
+                      color: GOLD, border: `1px solid ${GOLD}`,
+                      borderRadius: 20, padding: "2px 10px", fontSize: 10.5, fontWeight: 800,
+                    }}>
+                      {ar ? "الأكثر طلباً" : "Most Popular"}
+                    </span>
+                  )}
+                </div>
 
                 <div>
                   <p style={{ color: MMUTED, fontSize: 12.5, fontWeight: 700, margin: "0 0 6px" }}>{pkg.name}</p>

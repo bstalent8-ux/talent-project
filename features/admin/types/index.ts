@@ -55,6 +55,15 @@ export interface AddTalentActionInput {
   followUpAt?: string | null;
 }
 
+export interface AdminTalentBrand {
+  id: string;
+  brandName: string;
+  logoUrl: string | null;
+  yearCollaborated: string | null;
+  sortOrder: number;
+  verified: boolean;
+}
+
 export interface AdminDashboardStats {
   pending:          number;
   approved:         number;

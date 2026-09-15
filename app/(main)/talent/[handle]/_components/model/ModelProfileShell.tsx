@@ -199,11 +199,11 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
             />
 
             <div id="model-performance">
-              <ModelBottomGrid reviews={reviews} reviewCount={talent.reviewCount} bookingStats={bookingStats} modelMetrics={talent.modelMetrics} />
+              <ModelBottomGrid reviews={reviews} reviewCount={talent.reviewCount} bookingStats={bookingStats} modelMetrics={talent.modelMetrics} registeredAt={talent.registeredAt ?? null} brands={brands} />
             </div>
           </div>
 
-          <ModelSidebar talent={talent} brands={brands} />
+          <ModelSidebar talent={talent} brands={brands} portfolioItems={portfolioItems} />
         </div>
       </div>
 
