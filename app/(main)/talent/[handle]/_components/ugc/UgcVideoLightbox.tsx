@@ -8,6 +8,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
 interface Props {
@@ -35,7 +36,7 @@ export default function UgcVideoLightbox({ item, onClose }: Props) {
             {item.media_type === "video" ? (
               <video src={item.url ?? undefined} controls autoPlay playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
-              <img src={item.url ?? undefined} alt={item.caption ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={item.url ? cdnImage(item.url, 640) : undefined} alt={item.caption ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             )}
             {item.caption && (
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "24px 14px 14px", background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent)" }}>

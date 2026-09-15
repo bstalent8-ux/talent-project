@@ -7,6 +7,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
 interface Props {
@@ -63,7 +64,7 @@ export default function ModelGalleryLightbox({ items, index, onClose, onNavigate
                 style={{ width: "100%", maxHeight: "85vh", objectFit: "contain", display: "block", backgroundColor: "#000" }}
               />
             ) : (
-              <img src={item.url ?? undefined} alt={item.caption ?? ""} style={{ width: "100%", maxHeight: "85vh", objectFit: "contain", display: "block" }} />
+              <img src={item.url ? cdnImage(item.url, 1200, "limit") : undefined} alt={item.caption ?? ""} style={{ width: "100%", maxHeight: "85vh", objectFit: "contain", display: "block" }} />
             )}
 
             {item.caption && (

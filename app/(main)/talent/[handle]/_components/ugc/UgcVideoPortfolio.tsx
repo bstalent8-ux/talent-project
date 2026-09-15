@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { Play, ImageIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
+import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
 const VIOLET = "#16a3a3"; // site --color-accent, was violet
@@ -55,7 +56,7 @@ export default function UgcVideoPortfolio({ portfolioItems, onSelectVideo }: Pro
             style={{
               position: "relative", aspectRatio: "9 / 16", borderRadius: 14, overflow: "hidden",
               cursor: "pointer", border: `1px solid ${BORDER}`, backgroundColor: "#0B0F19",
-              backgroundImage: item.media_type !== "video" && item.url ? `url(${item.url})` : undefined,
+              backgroundImage: item.media_type !== "video" && item.url ? `url(${cdnImage(item.url, 280)})` : undefined,
               backgroundSize: "cover", backgroundPosition: "center",
             }}
           >

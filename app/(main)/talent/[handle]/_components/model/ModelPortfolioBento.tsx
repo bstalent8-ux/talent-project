@@ -1,14 +1,19 @@
 "use client";
 
-// Port of model/components/PortfolioSection.tsx's bento grid (1 tall +
-// 2 medium + up to 4 small). Handles real portfolioItems, including videos,
-// without fabricating media metadata.
+// Bento layout: 1 tall hero on the left, spanning the combined height of two
+// stacked rows on the right — row 1 has 2 tiles, row 2 has 4 tiles. Anything
+// past the first 7 stays hidden until "View All". Handles real
+// portfolioItems, including videos, without fabricating media metadata.
 
+import { useState } from "react";
 import { Star, Play } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
 const GOLD = "#d89b37";
+const ROW1_COUNT = 2;
+const ROW2_COUNT = 4;
 
 interface Props {
   portfolioItems: PortfolioItem[];
@@ -39,21 +44,28 @@ function cloudinaryVideoPoster(url: string | null): string | undefined {
 }
 
 export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: Props) {
-  const { dark } = useSite();
+  const { dark, lang } = useSite();
+  const ar = lang !== "en";
   const CARD = dark ? "var(--bg-surface)" : "#FFFFFF";
   const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
   const TEXT = dark ? "var(--text-primary)" : "#0F172A";
   const TILE_BG = dark ? "var(--bg-page-subtle)" : "#F1F5F9";
+  const [expanded, setExpanded] = useState(false);
 
   if (portfolioItems.length === 0) return null;
 
-  const [hero, med1, med2, ...rest] = portfolioItems;
+  const [hero, ...rest] = portfolioItems;
+  const row1 = rest.slice(0, ROW1_COUNT);
+  const row2 = rest.slice(ROW1_COUNT, ROW1_COUNT + ROW2_COUNT);
+  const moreItems = rest.slice(ROW1_COUNT + ROW2_COUNT);
+  const visibleMore = expanded ? moreItems : [];
 
-  const tile = (item: PortfolioItem, index: number, aspect: string) => {
+  const tile = (item: PortfolioItem, index: number, aspect: string, renderWidth: number, extraClassName?: string) => {
     const video = isVideoItem(item);
     return (
       <div
         key={item.id ?? index}
+        className={extraClassName}
         onClick={() => onOpenGallery(index)}
         role="button"
         tabIndex={0}
@@ -66,7 +78,7 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
         style={{
           position: "relative", borderRadius: 12, overflow: "hidden", cursor: "pointer",
           backgroundColor: TILE_BG, border: `1px solid ${BORDER}`, aspectRatio: aspect,
-          backgroundImage: !video && item.url ? `url(${item.url})` : undefined,
+          backgroundImage: !video && item.url ? `url(${cdnImage(item.url, renderWidth)})` : undefined,
           backgroundSize: "cover", backgroundPosition: "center",
         }}
       >
@@ -107,35 +119,55 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
           <h2 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: 0 }}>Portfolio</h2>
           <span style={{ backgroundColor: dark ? "var(--bg-card-muted)" : "#F1F5F9", color: GOLD, border: `1px solid ${GOLD}4d`, fontSize: 12, fontWeight: 700, padding: "2px 8px", borderRadius: 6 }}>{portfolioItems.length}</span>
         </div>
+        {moreItems.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            style={{ background: "none", border: "none", color: GOLD, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
+          >
+            {expanded ? (ar ? "عرض أقل" : "Show Less") : (ar ? "عرض الكل ›" : "View All ›")}
+          </button>
+        )}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 12 }}>
-        <div style={{ gridColumn: "span 12 / span 12" }} className="model-bento-hero">
-          {hero && tile(hero, 0, "3 / 4")}
-        </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }} className="model-bento-top">
+        {hero && (
+          <div className="model-bento-hero-wrap">
+            {tile(hero, 0, "3 / 4", 560, "model-bento-hero-tile")}
+          </div>
+        )}
 
-        {(med1 || med2 || rest.length > 0) && (
-          <div style={{ gridColumn: "span 12 / span 12", display: "flex", flexDirection: "column", gap: 12 }} className="model-bento-right">
-            {(med1 || med2) && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {med1 && tile(med1, 1, "4 / 3")}
-                {med2 && tile(med2, 2, "4 / 3")}
+        {(row1.length > 0 || row2.length > 0) && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }} className="model-bento-right">
+            {row1.length > 0 && (
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${row1.length}, 1fr)`, gap: 12 }}>
+                {row1.map((item, i) => tile(item, i + 1, "4 / 3", 380))}
               </div>
             )}
-
-            {rest.length > 0 && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 12 }}>
-                {rest.map((item, i) => tile(item, i + 3, "1 / 1"))}
+            {row2.length > 0 && (
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${row2.length}, 1fr)`, gap: 12 }}>
+                {row2.map((item, i) => tile(item, i + 1 + ROW1_COUNT, "1 / 1", 220))}
               </div>
             )}
           </div>
         )}
       </div>
 
+      {visibleMore.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 12, marginTop: 12 }}>
+          {visibleMore.map((item, i) => tile(item, i + 1 + ROW1_COUNT + ROW2_COUNT, "1 / 1", 260))}
+        </div>
+      )}
+
       <style>{`
         @media (min-width: 768px) {
-          .model-bento-hero { grid-column: span 4 / span 4 !important; }
-          .model-bento-right { grid-column: span 8 / span 8 !important; }
+          .model-bento-top {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .model-bento-hero-wrap { grid-column: 1 / span 1; }
+          .model-bento-hero-tile { aspect-ratio: auto !important; height: 100% !important; }
+          .model-bento-right { grid-column: 2 / span 1; }
         }
       `}</style>
     </div>

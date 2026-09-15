@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Play, Image } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
+import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
 const COLORS = [
@@ -52,7 +53,7 @@ export default function PortfolioSection({ portfolioItems, variant = "default" }
         overflow: "hidden",
         cursor: "pointer",
         background: item.url
-          ? `url(${item.url}) center/cover`
+          ? `url(${cdnImage(item.url, isModel ? Math.round(heightPx * 0.75) : heightPx)}) center/cover`
           : `linear-gradient(160deg, ${COLORS[i % COLORS.length][0]}, ${COLORS[i % COLORS.length][1]})`,
         border: `1px solid ${BORDER}`,
       }}

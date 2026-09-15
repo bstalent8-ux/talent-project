@@ -276,7 +276,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
                   style={{
                     position: "relative", borderRadius: 10, overflow: "hidden", cursor: "pointer",
                     border: "1px solid #1E293B", backgroundColor: "#0F172A",
-                    backgroundImage: item.media_type !== "video" && item.url ? `url(${item.url})` : undefined,
+                    backgroundImage: item.media_type !== "video" && item.url ? `url(${cdnImage(item.url, 220)})` : undefined,
                     backgroundSize: "cover", backgroundPosition: "center",
                   }}
                 >
