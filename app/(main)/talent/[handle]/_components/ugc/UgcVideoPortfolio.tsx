@@ -7,8 +7,9 @@
 // The play-overlay click opens a real lightbox (item.url / item.media_type
 // / item.caption only) instead of the source's fake-metric video modal.
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Play, ImageIcon } from "lucide-react";
+import { Play, ImageIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
@@ -29,8 +30,15 @@ export default function UgcVideoPortfolio({ portfolioItems, onSelectVideo }: Pro
   const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
   const TEXT = dark ? "#fff" : "#0F172A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
+  const [expanded, setExpanded] = useState(false);
 
   if (portfolioItems.length === 0) return null;
+
+  // One row visible by default (5 desktop / 2 mobile), tiles taller to fill
+  // the height two rows used to take — everything else behind Show More.
+  const initialCount = isMobile ? 2 : 5;
+  const visibleItems = expanded ? portfolioItems : portfolioItems.slice(0, initialCount);
+  const hiddenCount = portfolioItems.length - visibleItems.length;
 
   return (
     <section id="ugc-portfolio" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
@@ -45,7 +53,7 @@ export default function UgcVideoPortfolio({ portfolioItems, onSelectVideo }: Pro
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(5,1fr)", gap: 12 }}>
-        {portfolioItems.map((item, i) => (
+        {visibleItems.map((item, i) => (
           <motion.div
             key={item.id ?? i}
             whileHover={{ scale: 1.03 }}
@@ -76,6 +84,26 @@ export default function UgcVideoPortfolio({ portfolioItems, onSelectVideo }: Pro
           </motion.div>
         ))}
       </div>
+
+      {portfolioItems.length > initialCount && (
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            width: "100%", marginTop: 14, padding: "10px 0", borderRadius: 10,
+            border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: MUTED,
+            fontSize: 13, fontWeight: 700, cursor: "pointer",
+            fontFamily: "'IBM Plex Sans Arabic',sans-serif",
+          }}
+        >
+          {expanded ? (
+            <>{ar ? "عرض أقل" : "Show Less"}<ChevronUp size={15} /></>
+          ) : (
+            <>{ar ? `عرض المزيد (${hiddenCount}+)` : `Show More (${hiddenCount}+)`}<ChevronDown size={15} /></>
+          )}
+        </button>
+      )}
     </section>
   );
 }
