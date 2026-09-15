@@ -9,8 +9,28 @@ import MetaPixel from "@/components/analytics/MetaPixel";
 import type { Lang, Mode } from "@/contexts/SiteContext";
 
 export const metadata: Metadata = {
+  // Without these, a link shared to WhatsApp/Facebook/iMessage has no
+  // og:title/og:image for the crawler to read, so the preview falls back to
+  // a bare title-only text link (or the raw URL) instead of a real card —
+  // confirmed live by sharing https://talent-s.com/home to WhatsApp.
+  metadataBase: new URL("https://talent-s.com"),
   title: "Talents - منصة المواهب العربية",
   description: "ربط البراندات بأفضل المواهب والمؤثرين في العالم العربي",
+  openGraph: {
+    title: "Talents - منصة المواهب العربية",
+    description: "ربط البراندات بأفضل المواهب والمؤثرين في العالم العربي",
+    url: "https://talent-s.com",
+    siteName: "Talents",
+    images: [{ url: "/site-icon.png", width: 544, height: 544 }],
+    locale: "ar_EG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Talents - منصة المواهب العربية",
+    description: "ربط البراندات بأفضل المواهب والمؤثرين في العالم العربي",
+    images: ["/site-icon.png"],
+  },
   // The app/icon.png metadata-route convention doesn't survive
   // @cloudflare/next-on-pages — the <link rel="icon"> tag it's supposed to
   // auto-inject was simply missing from the production HTML (confirmed live
