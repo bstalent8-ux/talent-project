@@ -144,11 +144,16 @@ export default function PackageBookingModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // package_id + addon_keys only — the server looks up the real
+          // price itself (see app/api/bookings/package/route.ts). `total`
+          // below is display-only, never sent: the request can't carry a
+          // price to trust in the first place.
           talent_user_id: talentUserId,
           package_id: selectedPackage.id,
-          package_name: selectedPackage.name,
-          amount: total,
-          addons: chosenAddons.map((a) => ({ key: a.key, label: a.label, price: a.price })),
+          addon_keys: chosenAddons.map((a) => a.key),
+          // Fallback-addon label language only (display/notes) — never
+          // consulted for price. See lib/booking/addons.ts.
+          lang,
           scheduled_date: date,
           scheduled_start: slot?.start ?? null,
           scheduled_end: slot?.end ?? null,

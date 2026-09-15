@@ -59,24 +59,11 @@ import UgcInsightsActivity from "./UgcInsightsActivity";
 import UgcSafetyTrust from "./UgcSafetyTrust";
 import UsageRightsSection from "../UsageRightsSection";
 import ModelStickyBar from "../model/ModelStickyBar";
+import { FALLBACK_ADDONS_AR, FALLBACK_ADDONS_EN } from "@/lib/booking/addons";
 
 /** The three actions this shell can resume after an auth round-trip —
  * anything else in `?resume=` is ignored rather than trusted blindly. */
 const RESUMABLE_ACTIONS: readonly PermissionAction[] = ["create_booking", "start_conversation", "favorite_talent"];
-
-// HARD-CODED fallback for UsageRightsSection — same content as
-// model/ModelProfileShell.tsx's, shown only when the talent has no real
-// talent_profiles.social_links.usage_addons entries.
-const FALLBACK_ADDONS_AR = [
-  { key: "raw-material", label: "تسليم المواد الخام (Raw Footage)", price: 800 },
-  { key: "extra-hour", label: "ساعة تصوير إضافية", price: 500 },
-  { key: "extra-transition", label: "لوكيشن / انتقال إضافي", price: 600 },
-];
-const FALLBACK_ADDONS_EN = [
-  { key: "raw-material", label: "Raw footage delivery", price: 800 },
-  { key: "extra-hour", label: "Extra shooting hour", price: 500 },
-  { key: "extra-transition", label: "Extra location / transition", price: 600 },
-];
 
 export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO }) {
   const { dark, lang } = useSite();

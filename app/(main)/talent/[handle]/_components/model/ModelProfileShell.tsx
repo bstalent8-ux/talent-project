@@ -59,6 +59,7 @@ import type { PackageItem } from "@/features/talent-profile/types";
 import PackagesSection from "../PackagesSection";
 import ExperienceSection from "../ExperienceSection";
 import UsageRightsSection from "../UsageRightsSection";
+import { FALLBACK_ADDONS_AR, FALLBACK_ADDONS_EN } from "@/lib/booking/addons";
 
 import ModelHero from "./ModelHero";
 import ModelKeyStats from "./ModelKeyStats";
@@ -73,19 +74,6 @@ import ModelTabs, { type ModelTab } from "./ModelTabs";
 
 const RESUMABLE_ACTIONS: readonly PermissionAction[] = ["create_booking", "start_conversation", "favorite_talent"];
 
-// HARD-CODED fallback for UsageRightsSection — shown only when the talent
-// has no real talent_profiles.social_links.usage_addons entries, so the
-// section isn't empty. Swap out once addons are actually seeded/editable.
-const FALLBACK_ADDONS_AR = [
-  { key: "raw-material", label: "تسليم المواد الخام (Raw Footage)", price: 800 },
-  { key: "extra-hour", label: "ساعة تصوير إضافية", price: 500 },
-  { key: "extra-transition", label: "لوكيشن / انتقال إضافي", price: 600 },
-];
-const FALLBACK_ADDONS_EN = [
-  { key: "raw-material", label: "Raw footage delivery", price: 800 },
-  { key: "extra-hour", label: "Extra shooting hour", price: 500 },
-  { key: "extra-transition", label: "Extra location / transition", price: 600 },
-];
 
 export default function ModelProfileShell({ profile }: { profile: PublicProfileDTO }) {
   const { dark, lang } = useSite();
