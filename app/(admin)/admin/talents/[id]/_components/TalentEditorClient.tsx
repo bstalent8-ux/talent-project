@@ -7,6 +7,7 @@ import AdminShell from "@/components/admin/AdminShell";
 import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import TalentActionsPanel from "./TalentActionsPanel";
 import TalentBrandsPanel from "./TalentBrandsPanel";
+import { LeadWhatsAppButton } from "@/app/(admin)/admin/leads/_components/LeadContactActions";
 import type { TalentAction, AdminTalentBrand } from "@/features/admin/types";
 import { TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 
@@ -436,8 +437,9 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
                 {identity.category}
               </span>
             )}
-            <span style={{ color: MUTED, fontSize: 14, direction: "ltr" }}>
-              {identity.phone || t.notProvided}
+            <span style={{ display: "flex", alignItems: "center", gap: 8, direction: "ltr" }}>
+              <span style={{ color: MUTED, fontSize: 14 }}>{identity.phone || t.notProvided}</span>
+              {identity.phone && <LeadWhatsAppButton phone={identity.phone} size={20} />}
             </span>
           </div>
         </div>
