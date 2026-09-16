@@ -14,12 +14,13 @@ import type { AdminTalent, TalentStatus } from "@/features/admin/types";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import { profileApprovedNotificationContent } from "@/lib/notifications/content/profile-approved";
 import { profileApprovedEmail } from "@/lib/email/templates/profile-approved";
-import { ChevronDown, ChevronUp, Eye, EyeOff, CheckCircle, XCircle, Mail, PauseCircle, Trash2, RotateCcw, Pencil, ShieldCheck } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, CheckCircle, XCircle, Mail, PauseCircle, Trash2, RotateCcw, Pencil, ShieldCheck } from "lucide-react";
+import { LeadWhatsAppButton } from "@/app/(admin)/admin/leads/_components/LeadContactActions";
 
 const TX = {
   ar: {
     name: "الاسم", email: "البريد الإلكتروني", phone: "رقم الهاتف", category: "التصنيف", city: "المدينة",
-    noPhone: "لا يوجد", showPhone: "إظهار الرقم", hidePhone: "إخفاء الرقم",
+    noPhone: "لا يوجد",
     completion: "اكتمال الملف",
     registered: "تاريخ التسجيل", status: "الحالة", actions: "الإجراءات",
     approve: "موافقة", reject: "رفض", suspend: "وقف", restore: "استعادة", delete: "حذف", view: "عرض",
@@ -40,7 +41,7 @@ const TX = {
   },
   en: {
     name: "Name", email: "Email", phone: "Phone", category: "Category", city: "City",
-    noPhone: "None", showPhone: "Show number", hidePhone: "Hide number",
+    noPhone: "None",
     completion: "Profile Completion",
     registered: "Registered", status: "Status", actions: "Actions",
     approve: "Approve", reject: "Reject", suspend: "Suspend", restore: "Restore", delete: "Delete", view: "View",
@@ -113,17 +114,6 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
   const [sendNotification, setSendNotification] = useState(true);
   const [sendEmail, setSendEmail] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
-  // Phone numbers are masked by default (screen-share / shoulder-surfing
-  // safety) — revealed per row on demand, not persisted anywhere.
-  const [revealedPhones, setRevealedPhones] = useState<Set<string>>(new Set());
-
-  function togglePhone(id: string) {
-    setRevealedPhones((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
 
   const CARD   = dark ? "#0D1623" : "#FFFFFF";
   const BORDER = dark ? "#1e293b" : "#E2E8F0";
@@ -222,14 +212,6 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
   // Keeps the first 3 and last 2 digits, masks the rest — enough to
   // recognize a number at a glance without exposing the full digits on a
   // shared screen by default.
-  function maskPhone(phone: string): string {
-    const digits = phone.replace(/\s+/g, "");
-    if (digits.length <= 5) return digits;
-    const head = digits.slice(0, 3);
-    const tail = digits.slice(-2);
-    return `${head}${"•".repeat(digits.length - 5)}${tail}`;
-  }
-
   function completionBarColor(score: number): string {
     if (score >= 80) return "#00D26A";
     if (score >= 50) return "#00C9B1";
@@ -255,7 +237,7 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
         {talents.length === 0 ? (
           <EmptyState message={t.noTalents} />
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <div style={{ overflowX: "auto", zoom: 0.85 }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
@@ -303,18 +285,13 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
                     </td>
                     <td style={{ ...cellStyle, color: MUTED }} onClick={(e) => e.stopPropagation()}>
                       {talent.phoneNumber ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                            {revealedPhones.has(talent.talentProfileId) ? talent.phoneNumber : maskPhone(talent.phoneNumber)}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => togglePhone(talent.talentProfileId)}
-                            title={revealedPhones.has(talent.talentProfileId) ? t.hidePhone : t.showPhone}
-                            style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex" }}
-                          >
-                            {revealedPhones.has(talent.talentProfileId) ? <EyeOff size={14} /> : <Eye size={14} />}
-                          </button>
+                        // direction + a fixed-width number column pin the
+                        // WhatsApp icon at the same x-position on every row —
+                        // without them it drifted left/right depending on
+                        // how many digits happened to render.
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, direction: "ltr" }}>
+                          <span style={{ fontVariantNumeric: "tabular-nums", minWidth: 108, display: "inline-block" }}>{talent.phoneNumber}</span>
+                          <LeadWhatsAppButton phone={talent.phoneNumber} />
                         </div>
                       ) : t.noPhone}
                     </td>

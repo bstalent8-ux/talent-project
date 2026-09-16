@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { MessageCircle, Phone, X } from "lucide-react";
+import { Phone, X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { toDisplayPhone, toTelLink, toWhatsAppLink } from "@/lib/leads/phone-links";
@@ -12,7 +12,7 @@ const TX = {
 
 // Opens wa.me in a new tab — same as any other outbound link, no special
 // handling needed either on mobile or desktop.
-export function LeadWhatsAppButton({ phone, size = 15 }: { phone: string; size?: number }) {
+export function LeadWhatsAppButton({ phone, size = 18 }: { phone: string; size?: number }) {
   const { lang } = useSite();
   const t = TX[lang];
   return (
@@ -22,9 +22,19 @@ export function LeadWhatsAppButton({ phone, size = 15 }: { phone: string; size?:
       rel="noopener noreferrer"
       title={t.whatsapp}
       onClick={(e) => e.stopPropagation()}
-      style={{ display: "flex", color: "#25D366" }}
+      style={{ display: "flex", flexShrink: 0 }}
     >
-      <MessageCircle size={size} />
+      {/* Explicit CSS width/height (not just the HTML attributes) so the
+          rendered size is pinned regardless of the image's decode timing or
+          any ancestor flex/grid stretching it — was inconsistent row-to-row
+          in the talents table without this. */}
+      <img
+        src="/assets/whatsapp-icon.png"
+        alt={t.whatsapp}
+        width={size}
+        height={size}
+        style={{ display: "block", width: size, height: size, flexShrink: 0 }}
+      />
     </a>
   );
 }

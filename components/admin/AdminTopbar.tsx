@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
-import { Menu, Sun, Moon, Globe, Search } from "lucide-react";
+import { Menu, Sun, Moon, Globe, Search, Home } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import chromeStyles from "@/components/SiteChrome.module.css";
 import { ADMIN_LIGHT } from "./adminLightTheme";
@@ -78,6 +78,23 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
 
       {iconBtn(toggleLang, <Globe size={17} />, ar ? "English" : "عربي")}
       {iconBtn(toggleMode, dark ? <Sun size={17} /> : <Moon size={17} />, ar ? "تبديل المظهر" : "Toggle theme")}
+
+      {/* Jump out of the admin panel to browse the live public site — opens
+          in a new tab so the admin session/current page stays put underneath. */}
+      <a
+        href="/home"
+        target="_blank"
+        rel="noopener noreferrer"
+        title={ar ? "عرض الموقع" : "View site"}
+        style={{
+          background: "none", border: `1px solid ${BORDER}`, borderRadius: 8,
+          padding: 8, cursor: "pointer", color: MUTED,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0, textDecoration: "none",
+        }}
+      >
+        <Home size={17} />
+      </a>
 
       {/* ── Center: Title (flex: 1 pushes right group to edge) ── */}
       <h1 style={{
