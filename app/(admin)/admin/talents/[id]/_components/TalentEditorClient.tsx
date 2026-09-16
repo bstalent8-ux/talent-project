@@ -8,6 +8,7 @@ import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import TalentActionsPanel from "./TalentActionsPanel";
 import TalentBrandsPanel from "./TalentBrandsPanel";
 import { LeadWhatsAppButton } from "@/app/(admin)/admin/leads/_components/LeadContactActions";
+import TalentComplaintButton from "../../_components/TalentComplaintButton";
 import type { TalentAction, AdminTalentBrand } from "@/features/admin/types";
 import { TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 
@@ -442,6 +443,15 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
               {identity.phone && <LeadWhatsAppButton phone={identity.phone} size={20} />}
             </span>
           </div>
+        </div>
+        <div style={{ marginInlineStart: "auto" }}>
+          <TalentComplaintButton
+            talentProfileId={talentProfileId}
+            fullName={identity.fullName}
+            phone={identity.phone}
+            email={registration.email}
+            size={20}
+          />
         </div>
       </div>
 

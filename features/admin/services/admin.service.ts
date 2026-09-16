@@ -877,11 +877,18 @@ export interface AdminSupportTicket {
   type:        string;
   subject:     string;
   message:     string;
-  status:      "new" | "in_progress" | "resolved";
+  status:      "new" | "seen" | "process" | "done";
   adminReply:  string | null;
   repliedAt:   string | null;
   context:     { page?: string | null; pageError?: string | null } | null;
-  attachmentUrl: string | null;
+  attachmentUrl:  string | null;
+  attachmentType: "image" | "video" | null;
+  /** Free-text claim tag an admin writes on a ticket (e.g. "admin-1") —
+   *  not a profiles FK, see the migration's own comment. */
+  assignedAdmin: string | null;
+  /** Internal-only note, never shown to the ticket submitter — distinct
+   *  from adminReply, which is user-facing. */
+  adminNote:     string | null;
   createdAt:   string;
 }
 
@@ -908,7 +915,7 @@ export async function fetchAdminSupportTicketsPage({
 
   let query = adminClient
     .from("contact_messages")
-    .select("id, name, email, phone, type, subject, message, status, admin_reply, replied_at, context, attachment_url, created_at", { count: "exact" })
+    .select("id, name, email, phone, type, subject, message, status, admin_reply, replied_at, context, attachment_url, attachment_type, assigned_admin, admin_note, created_at", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -925,11 +932,14 @@ export async function fetchAdminSupportTicketsPage({
     type:       r.type,
     subject:    r.subject,
     message:    r.message,
-    status:     (r.status ?? "new") as "new" | "in_progress" | "resolved",
+    status:     (r.status ?? "new") as "new" | "seen" | "process" | "done",
     adminReply: r.admin_reply,
     repliedAt:  r.replied_at,
     context:    r.context,
-    attachmentUrl: r.attachment_url,
+    attachmentUrl:  r.attachment_url,
+    attachmentType: (r as Record<string, unknown>).attachment_type as "image" | "video" | null ?? null,
+    assignedAdmin:  (r as Record<string, unknown>).assigned_admin as string | null ?? null,
+    adminNote:      (r as Record<string, unknown>).admin_note as string | null ?? null,
     createdAt:  r.created_at,
   }));
 

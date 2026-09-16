@@ -3,15 +3,15 @@ import Link from "next/link";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 
-const STATUS_FILTERS = ["all", "new", "in_progress", "resolved"] as const;
+const STATUS_FILTERS = ["all", "new", "seen", "process", "done"] as const;
 
 const STATUS_COLOR: Record<string, string> = {
-  all: "#60a5fa", new: "#EF4444", in_progress: "#F4B740", resolved: "#00D26A",
+  all: "#60a5fa", new: "#EF4444", seen: "#a78bfa", process: "#F4B740", done: "#00D26A",
 };
 
 const TX = {
-  ar: { title: "تذاكر الدعم", all: "الكل", new: "جديدة", in_progress: "قيد المعالجة", resolved: "تم الحل" },
-  en: { title: "Support Tickets", all: "All", new: "New", in_progress: "In progress", resolved: "Resolved" },
+  ar: { title: "تذاكر الدعم", all: "الكل", new: "جديدة", seen: "تمت المشاهدة", process: "قيد المعالجة", done: "تم الحل" },
+  en: { title: "Support Tickets", all: "All", new: "New", seen: "Seen", process: "Process", done: "Done" },
 };
 
 // Sidebar + topbar + status filter tabs — rendered immediately, never

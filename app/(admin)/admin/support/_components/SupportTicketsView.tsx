@@ -7,12 +7,13 @@ import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import type { AdminSupportTicket } from "@/features/admin/services/admin.service";
-import { Copy, Image as ImageIcon, Mail, Phone, Trash2, X } from "lucide-react";
+import { Copy, Image as ImageIcon, Mail, Phone, Trash2, User, Video, X } from "lucide-react";
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  new:         { bg: "rgba(239,68,68,0.15)",  text: "#EF4444" },
-  in_progress: { bg: "rgba(244,183,64,0.15)", text: "#F4B740" },
-  resolved:    { bg: "rgba(0,210,106,0.15)",  text: "#00D26A" },
+  new:     { bg: "rgba(239,68,68,0.15)",  text: "#EF4444" },
+  seen:    { bg: "rgba(167,139,250,0.15)", text: "#a78bfa" },
+  process: { bg: "rgba(244,183,64,0.15)", text: "#F4B740" },
+  done:    { bg: "rgba(0,210,106,0.15)",  text: "#00D26A" },
 };
 
 const PAGE_LABEL: Record<string, { ar: string; en: string }> = {
@@ -23,31 +24,37 @@ const PAGE_LABEL: Record<string, { ar: string; en: string }> = {
 const TX = {
   ar: {
     from: "من", subject: "الموضوع", status: "الحالة",
-    submitted: "التاريخ", new: "جديدة", in_progress: "قيد المعالجة", resolved: "تم الحل",
+    submitted: "التاريخ", new: "جديدة", seen: "تمت المشاهدة", process: "قيد المعالجة", done: "تم الحل",
     noRequests: "لا توجد تذاكر بعد", message: "الرسالة",
-    attachment: "صورة المشكلة",
-    source: "المصدر", errorSeen: "الخطأ الظاهر وقت الإرسال", reply: "الرد",
+    attachment: "صورة المشكلة", attachmentVideo: "فيديو المشكلة",
+    source: "المصدر", errorSeen: "الخطأ الظاهر وقت الإرسال", reply: "الرد للمستخدم",
     replyPH: "اكتب ردك هنا...",
-    send: "إرسال الرد", markInProgress: "قيد المعالجة", markResolved: "تم الحل",
+    send: "إرسال الرد", markSeen: "تمت المشاهدة", markProcess: "قيد المعالجة", markDone: "تم الحل",
     previousReply: "آخر رد", repliedAt: "بتاريخ",
     emailAuto: "هيتبعت للمستخدم تلقائي على إيميله.",
     emailManual: "الإيميل مش مربوط بالمنصة — الرد بيتحفظ هنا بس، لازم تتواصل مع المستخدم يدوي.",
     copyEmail: "نسخ الإيميل", copied: "اتنسخ ✓", tickets: "تذكرة",
     delete: "حذف", deleteTitle: "حذف التذكرة؟", deleteDesc: "الإجراء ده نهائي ومش هينفع يتراجع.",
+    assignedAdmin: "المسؤول عن التذكرة", assignedAdminPH: "مثال: admin-1", save: "حفظ",
+    adminNote: "ملاحظة داخلية (تظهر للأدمن بس)", adminNotePH: "اكتب ملاحظتك هنا...",
+    assignedTable: "المسؤول",
   },
   en: {
     from: "From", subject: "Subject", status: "Status",
-    submitted: "Date", new: "New", in_progress: "In progress", resolved: "Resolved",
+    submitted: "Date", new: "New", seen: "Seen", process: "Process", done: "Done",
     noRequests: "No tickets yet", message: "Message",
-    attachment: "Problem screenshot",
-    source: "Source", errorSeen: "Error shown at submit time", reply: "Reply",
+    attachment: "Problem screenshot", attachmentVideo: "Problem video",
+    source: "Source", errorSeen: "Error shown at submit time", reply: "Reply to user",
     replyPH: "Write your reply...",
-    send: "Send reply", markInProgress: "In progress", markResolved: "Resolved",
+    send: "Send reply", markSeen: "Seen", markProcess: "Process", markDone: "Done",
     previousReply: "Last reply", repliedAt: "on",
     emailAuto: "This will be emailed to the user automatically.",
     emailManual: "No email provider is connected — this reply is saved here only, you'll need to contact the user manually.",
     copyEmail: "Copy email", copied: "Copied ✓", tickets: "tickets",
     delete: "Delete", deleteTitle: "Delete this ticket?", deleteDesc: "This is permanent and can't be undone.",
+    assignedAdmin: "Assigned to", assignedAdminPH: "e.g. admin-1", save: "Save",
+    adminNote: "Internal note (admin-only)", adminNotePH: "Write your note here...",
+    assignedTable: "Assigned",
   },
 };
 
@@ -80,6 +87,9 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
 
   const [selected, setSelected] = useState<AdminSupportTicket | null>(null);
   const [reply, setReply] = useState("");
+  const [assignedDraft, setAssignedDraft] = useState("");
+  const [noteDraft, setNoteDraft] = useState("");
+  const [savingTriage, setSavingTriage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<AdminSupportTicket | null>(null);
@@ -105,12 +115,32 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
     // A reply with no explicit status auto-resolves server-side — switch the
     // visible tab to match, so the ticket lands in front of the admin
     // instead of just vanishing from whichever filter they were on.
-    const landedStatus = body.status ?? (body.reply ? "resolved" : null);
+    const landedStatus = body.status ?? (body.reply ? "done" : null);
     if (landedStatus && landedStatus !== status) {
       router.push(hrefFor(1, landedStatus));
     } else {
       router.refresh();
     }
+  }
+
+  // Saving the assignee/note doesn't close the modal or move the ticket to
+  // a different status tab — an admin claiming a ticket or jotting a note
+  // is a much lighter action than replying/resolving, and shouldn't yank
+  // them back to the list.
+  async function saveTriage(id: string, body: { assignedAdmin?: string; adminNote?: string }) {
+    setSavingTriage(true);
+    await fetch(`/api/admin/support/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    setSavingTriage(false);
+    setSelected((s) => s ? {
+      ...s,
+      assignedAdmin: body.assignedAdmin !== undefined ? (body.assignedAdmin.trim() || null) : s.assignedAdmin,
+      adminNote:     body.adminNote     !== undefined ? (body.adminNote.trim()     || null) : s.adminNote,
+    } : s);
+    router.refresh();
   }
 
   async function confirmDelete() {
@@ -146,6 +176,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                   <th style={thStyle}>{t.from}</th>
                   <th style={thStyle}>{t.subject}</th>
                   <th style={thStyle}>{t.status}</th>
+                  <th style={thStyle}>{t.assignedTable}</th>
                   <th style={thStyle}>{t.submitted}</th>
                   <th style={thStyle} />
                 </tr>
@@ -156,17 +187,18 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                   return (
                     <tr
                       key={v.id}
-                      onClick={() => { setSelected(v); setReply(v.adminReply ?? ""); }}
+                      onClick={() => { setSelected(v); setReply(v.adminReply ?? ""); setAssignedDraft(v.assignedAdmin ?? ""); setNoteDraft(v.adminNote ?? ""); }}
                       style={{ cursor: "pointer" }}
                     >
                       <td style={cellStyle}>
-                        <div style={{ fontWeight: 600 }}>{v.email}</div>
+                        <div style={{ fontWeight: 600 }}>{v.name || v.email}</div>
+                        <div style={{ color: MUTED, fontSize: 11 }}>{v.email}</div>
                         {v.phone && <div style={{ color: MUTED, fontSize: 11 }}>{v.phone}</div>}
                       </td>
                       <td style={cellStyle}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           {v.subject}
-                          {v.attachmentUrl && <ImageIcon size={12} color={MUTED} />}
+                          {v.attachmentUrl && (v.attachmentType === "video" ? <Video size={12} color={MUTED} /> : <ImageIcon size={12} color={MUTED} />)}
                         </div>
                         {v.context?.page && (
                           <div style={{ color: MUTED, fontSize: 11 }}>
@@ -178,6 +210,9 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                         <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: col.bg, color: col.text }}>
                           {t[v.status as keyof typeof t] as string ?? v.status}
                         </span>
+                      </td>
+                      <td style={{ ...cellStyle, color: v.assignedAdmin ? TEXT : MUTED }}>
+                        {v.assignedAdmin || "—"}
                       </td>
                       <td style={{ ...cellStyle, color: MUTED, whiteSpace: "nowrap" }}>
                         {new Date(v.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}
@@ -227,6 +262,12 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14, fontSize: 13, color: TEXT }}>
+              {selected.name && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
+                  <User size={13} color={MUTED} />
+                  {selected.name}
+                </div>
+              )}
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Mail size={13} color={MUTED} />
                 {selected.email}
@@ -245,6 +286,9 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                   {t.source}: {(PAGE_LABEL[selected.context.page]?.[lang]) ?? selected.context.page}
                 </div>
               )}
+              <div style={{ color: MUTED, fontSize: 12 }}>
+                {t.submitted}: {new Date(selected.createdAt).toLocaleString(ar ? "ar-EG" : "en-US")}
+              </div>
             </div>
 
             <div style={{ marginBottom: 14 }}>
@@ -254,15 +298,25 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
 
             {selected.attachmentUrl && (
               <div style={{ marginBottom: 14 }}>
-                <p style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>{t.attachment}</p>
-                <a href={selected.attachmentUrl} target="_blank" rel="noopener noreferrer">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                <p style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>
+                  {selected.attachmentType === "video" ? t.attachmentVideo : t.attachment}
+                </p>
+                {selected.attachmentType === "video" ? (
+                  <video
                     src={selected.attachmentUrl}
-                    alt=""
-                    style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 8, border: `1px solid ${BORDER}`, display: "block" }}
+                    controls
+                    style={{ maxWidth: "100%", maxHeight: 260, borderRadius: 8, border: `1px solid ${BORDER}`, display: "block" }}
                   />
-                </a>
+                ) : (
+                  <a href={selected.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={selected.attachmentUrl}
+                      alt=""
+                      style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 8, border: `1px solid ${BORDER}`, display: "block" }}
+                    />
+                  </a>
+                )}
               </div>
             )}
 
@@ -281,6 +335,66 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                 <p style={{ color: TEXT, fontSize: 13, margin: 0, whiteSpace: "pre-wrap" }}>{selected.adminReply}</p>
               </div>
             )}
+
+            {/* Admin-only triage: who's on it + an internal note. Neither is
+                ever shown to the ticket submitter — distinct from the reply
+                box below, which is. Saving either doesn't close the modal
+                (see saveTriage's own comment). */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 160px" }}>
+                <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 6 }}>{t.assignedAdmin}</label>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input
+                    value={assignedDraft}
+                    onChange={(e) => setAssignedDraft(e.target.value)}
+                    placeholder={t.assignedAdminPH}
+                    style={{
+                      flex: 1, minWidth: 0, borderRadius: 8, border: `1px solid ${BORDER}`,
+                      backgroundColor: dark ? "#0a121c" : "#f8fafc",
+                      color: TEXT, padding: "8px 10px", fontSize: 13, outline: "none", boxSizing: "border-box",
+                    }}
+                  />
+                  <button
+                    disabled={savingTriage || assignedDraft === (selected.assignedAdmin ?? "")}
+                    onClick={() => saveTriage(selected.id, { assignedAdmin: assignedDraft })}
+                    style={{
+                      padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent",
+                      color: TEXT, fontSize: 12.5, cursor: "pointer",
+                      opacity: savingTriage || assignedDraft === (selected.assignedAdmin ?? "") ? 0.5 : 1,
+                    }}
+                  >
+                    {t.save}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 6 }}>{t.adminNote}</label>
+              <textarea
+                value={noteDraft}
+                onChange={(e) => setNoteDraft(e.target.value)}
+                rows={2}
+                placeholder={t.adminNotePH}
+                style={{
+                  width: "100%", borderRadius: 8, border: `1px solid ${BORDER}`,
+                  backgroundColor: dark ? "#0a121c" : "#f8fafc",
+                  color: TEXT, padding: 10, fontSize: 13, resize: "vertical",
+                  outline: "none", boxSizing: "border-box", fontFamily: "inherit",
+                }}
+              />
+              <button
+                disabled={savingTriage || noteDraft === (selected.adminNote ?? "")}
+                onClick={() => saveTriage(selected.id, { adminNote: noteDraft })}
+                style={{
+                  marginTop: 6, padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent",
+                  color: TEXT, fontSize: 12, cursor: "pointer",
+                  opacity: savingTriage || noteDraft === (selected.adminNote ?? "") ? 0.5 : 1,
+                }}
+              >
+                {t.save}
+              </button>
+            </div>
 
             <div style={{ marginBottom: 14 }}>
               <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 6 }}>{t.reply}</label>
@@ -305,22 +419,31 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
             </div>
 
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {selected.status !== "in_progress" && (
+              {selected.status !== "seen" && (
                 <button
                   disabled={saving}
-                  onClick={() => patch(selected.id, { status: "in_progress" })}
-                  style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 12.5, cursor: "pointer" }}
+                  onClick={() => patch(selected.id, { status: "seen" })}
+                  style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #a78bfa", backgroundColor: "rgba(167,139,250,0.1)", color: "#a78bfa", fontSize: 12.5, cursor: "pointer" }}
                 >
-                  {t.markInProgress}
+                  {t.markSeen}
                 </button>
               )}
-              {selected.status !== "resolved" && (
+              {selected.status !== "process" && (
                 <button
                   disabled={saving}
-                  onClick={() => patch(selected.id, { status: "resolved" })}
+                  onClick={() => patch(selected.id, { status: "process" })}
+                  style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 12.5, cursor: "pointer" }}
+                >
+                  {t.markProcess}
+                </button>
+              )}
+              {selected.status !== "done" && (
+                <button
+                  disabled={saving}
+                  onClick={() => patch(selected.id, { status: "done" })}
                   style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #00D26A", backgroundColor: "rgba(0,210,106,0.1)", color: "#00D26A", fontSize: 12.5, cursor: "pointer" }}
                 >
-                  {t.markResolved}
+                  {t.markDone}
                 </button>
               )}
               <button

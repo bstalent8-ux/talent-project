@@ -24,11 +24,11 @@ export async function PATCH(
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
-  const body = await req.json() as { status?: string; reply?: string };
+  const body = await req.json() as { status?: string; reply?: string; assignedAdmin?: string; adminNote?: string };
 
   const patch: Record<string, unknown> = {};
   if (body.status) {
-    if (!["new", "in_progress", "resolved"].includes(body.status)) {
+    if (!["new", "seen", "process", "done"].includes(body.status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
     patch.status = body.status;
@@ -36,7 +36,15 @@ export async function PATCH(
   if (typeof body.reply === "string" && body.reply.trim()) {
     patch.admin_reply = body.reply.trim();
     patch.replied_at = new Date().toISOString();
-    if (!body.status) patch.status = "resolved";
+    if (!body.status) patch.status = "done";
+  }
+  // assignedAdmin/adminNote are admin-only triage fields, not user-facing —
+  // an empty string explicitly clears the field rather than being ignored.
+  if (typeof body.assignedAdmin === "string") {
+    patch.assigned_admin = body.assignedAdmin.trim() || null;
+  }
+  if (typeof body.adminNote === "string") {
+    patch.admin_note = body.adminNote.trim() || null;
   }
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });

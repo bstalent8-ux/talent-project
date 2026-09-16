@@ -12,6 +12,7 @@ export const runtime = 'edge';
 // the same pattern on an authenticated route).
 
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyAdminNewSupportTicket } from "@/lib/notifications/events";
 import { rateLimit, tooManyRequests, clientIp, HONEYPOT_FIELD } from "@/lib/rate-limit";
@@ -60,10 +61,12 @@ export async function POST(req: NextRequest) {
   }
 
   let attachmentUrl: string | null = null;
+  let attachmentType: "image" | "video" | null = null;
   if (file && file.size > 0) {
     const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
     const folder       = process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER ?? "talents";
+    const isVideo      = file.type.startsWith("video/");
 
     if (cloudName && uploadPreset) {
       const cloudForm = new FormData();
@@ -72,27 +75,42 @@ export async function POST(req: NextRequest) {
       cloudForm.append("folder", `${folder}/support-tickets`);
 
       try {
-        const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: cloudForm });
+        const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? "video" : "image"}/upload`, { method: "POST", body: cloudForm });
         const cloudData = await cloudRes.json();
-        if (cloudData.secure_url) attachmentUrl = cloudData.secure_url;
+        if (cloudData.secure_url) { attachmentUrl = cloudData.secure_url; attachmentType = isVideo ? "video" : "image"; }
         else console.error("[support/tickets] cloudinary upload failed:", cloudData.error?.message);
       } catch (e) {
-        // Non-fatal — the ticket still gets saved without the screenshot.
+        // Non-fatal — the ticket still gets saved without the attachment.
         console.error("[support/tickets] cloudinary error:", e);
       }
     }
   }
 
+  // A signed-in submitter (e.g. from /settings) gets their real name + auth
+  // email recorded automatically instead of a name guessed from the email
+  // they happened to type — the identity behind a complaint should be
+  // trustworthy, not self-reported.
+  let submitterName = email.split("@")[0];
+  let submitterEmail = email;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await adminClient.from("profiles").select("full_name").eq("id", user.id).single();
+    if (profile?.full_name) submitterName = profile.full_name;
+    if (user.email) submitterEmail = user.email;
+  }
+
   const { error: dbErr } = await adminClient.from("contact_messages").insert({
-    name:    email.split("@")[0],
-    email,
+    name:    submitterName,
+    email:   submitterEmail,
     phone:   phone || null,
     type:    "support",
     subject: (page && PAGE_SUBJECT[page]) || "طلب مساعدة",
     message,
     status:  "new",
     context: { page, pageError, submittedAt: new Date().toISOString() },
-    attachment_url: attachmentUrl,
+    attachment_url:  attachmentUrl,
+    attachment_type: attachmentType,
   });
 
   if (dbErr) {
@@ -100,7 +118,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "failed to save ticket" }, { status: 500 });
   }
 
-  await notifyAdminNewSupportTicket({ email, page });
+  await notifyAdminNewSupportTicket({ email: submitterEmail, page });
 
   return NextResponse.json({ success: true });
 }

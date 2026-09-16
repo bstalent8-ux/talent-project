@@ -15,7 +15,8 @@ import Honeypot from "@/components/forms/Honeypot";
 import TurnstileWidget from "@/components/forms/TurnstileWidget";
 import styles from "./SupportTicketModal.module.css";
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
 
 const TX = {
   ar: {
@@ -28,15 +29,15 @@ const TX = {
     phonePH:  "+20 1xx xxx xxxx",
     message:  "المشكلة",
     messagePH: "قولنا اللي حصل بالظبط...",
-    attachment: "صورة للمشكلة (اختياري)",
-    attachBtn:  "إرفاق صورة",
+    attachment: "صورة أو فيديو للمشكلة (اختياري)",
+    attachBtn:  "إرفاق صورة أو فيديو",
     removeAttach: "إزالة",
     submit:   "إرسال",
     sending:  "جاري الإرسال...",
     errRequired: "الإيميل والرسالة مطلوبين.",
     errEmail:    "أدخل بريد إلكتروني صحيح.",
-    errFileType: "الملف لازم يكون صورة.",
-    errFileSize: "الصورة أكبر من 5MB.",
+    errFileType: "الملف لازم يكون صورة أو فيديو.",
+    errFileSize: "الملف أكبر من الحجم المسموح.",
     errServer:   "حصل خطأ، حاول تاني.",
     successTitle: "تم الإرسال ✓",
     successSub:   "هنتواصل معاك على الإيميل قريب.",
@@ -52,15 +53,15 @@ const TX = {
     phonePH:  "+20 1xx xxx xxxx",
     message:  "What happened",
     messagePH: "Tell us exactly what happened...",
-    attachment: "Screenshot of the problem (optional)",
-    attachBtn:  "Attach a screenshot",
+    attachment: "Photo or video of the problem (optional)",
+    attachBtn:  "Attach a photo or video",
     removeAttach: "Remove",
     submit:   "Send",
     sending:  "Sending...",
     errRequired: "Email and message are required.",
     errEmail:    "Enter a valid email address.",
-    errFileType: "The file must be an image.",
-    errFileSize: "The image is larger than 5MB.",
+    errFileType: "The file must be an image or video.",
+    errFileSize: "The file is larger than the allowed size.",
     errServer:   "Something went wrong, try again.",
     successTitle: "Sent ✓",
     successSub:   "We'll reach out to your email soon.",
@@ -106,8 +107,10 @@ export default function SupportTicketModal({ page, pageError }: Props) {
 
   function pickFile(f: File | undefined) {
     if (!f) return;
-    if (!f.type.startsWith("image/")) { setError(t.errFileType); return; }
-    if (f.size > MAX_FILE_BYTES) { setError(t.errFileSize); return; }
+    const isVideo = f.type.startsWith("video/");
+    const isImage = f.type.startsWith("image/");
+    if (!isVideo && !isImage) { setError(t.errFileType); return; }
+    if (f.size > (isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES)) { setError(t.errFileSize); return; }
     setError("");
     setFile(f);
     if (preview) URL.revokeObjectURL(preview);
@@ -204,14 +207,18 @@ export default function SupportTicketModal({ page, pageError }: Props) {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     style={{ display: "none" }}
                     onChange={(e) => pickFile(e.target.files?.[0])}
                   />
                   {preview ? (
                     <div className={styles.attachPreviewRow}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={preview} alt="" className={styles.attachPreview} />
+                      {file?.type.startsWith("video/") ? (
+                        <video src={preview} className={styles.attachPreview} muted />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={preview} alt="" className={styles.attachPreview} />
+                      )}
                       <button type="button" className={styles.attachRemove} onClick={clearFile}>
                         {t.removeAttach}
                       </button>

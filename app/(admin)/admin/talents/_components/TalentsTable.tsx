@@ -17,6 +17,7 @@ import { profileApprovedNotificationContent } from "@/lib/notifications/content/
 import { profileApprovedEmail } from "@/lib/email/templates/profile-approved";
 import { ChevronDown, ChevronUp, Eye, CheckCircle, XCircle, Mail, PauseCircle, Trash2, RotateCcw, Pencil, ShieldCheck, Copy, Crown } from "lucide-react";
 import { LeadWhatsAppButton } from "@/app/(admin)/admin/leads/_components/LeadContactActions";
+import TalentComplaintButton from "./TalentComplaintButton";
 
 const TX = {
   ar: {
@@ -393,6 +394,12 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                             {actionIcon(<Eye size={16} />, t.view)}
                           </Link>
                         )}
+                        <TalentComplaintButton
+                          talentProfileId={talent.talentProfileId}
+                          fullName={talent.fullName}
+                          phone={talent.phoneNumber}
+                          email={talent.email}
+                        />
                         {talent.status !== "approved" && (
                           actionBtn(() => setModal({ type: "approve", talent }), <CheckCircle size={16} />, t.approve, "#00D26A")
                         )}

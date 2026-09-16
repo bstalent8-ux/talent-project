@@ -687,5 +687,28 @@ export async function notifyAdminNewSupportTicket(input: {
   });
 }
 
+// An admin (not the talent) filing a complaint about a talent from the
+// talents table / edit-profile page — distinct from the self-reported
+// ticket above so the notification names the talent, not the submitter.
+export async function notifyAdminTalentSupportTicket(input: {
+  talentName: string | null;
+}): Promise<number> {
+  const name = input.talentName ?? "—";
+  return notifyRole(["admin"], {
+    type:      "SUPPORT_TICKET_SUBMITTED",
+    actionUrl: "/admin/support",
+    ...withI18n({
+      title: {
+        ar: "شكوى جديدة على موهبة",
+        en: "New complaint on a talent",
+      },
+      message: {
+        ar: `تم رفع شكوى بخصوص ${name}.`,
+        en: `A complaint was filed about ${name}.`,
+      },
+    }),
+  });
+}
+
 // Re-exported so feature code never needs two imports.
 export { createBulkNotifications, createNotification, notifyEveryone, notifyRole } from "./service";
