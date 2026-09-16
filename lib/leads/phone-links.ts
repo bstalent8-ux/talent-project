@@ -7,8 +7,10 @@
 
 const DEFAULT_COUNTRY_CODE = "20";
 
-/** Digits only, country-code-prefixed, no leading "+" — what wa.me expects. */
-function toIntlDigits(phone: string): string {
+/** Digits only, country-code-prefixed, no leading "+" — what wa.me expects.
+ *  Exported so callers that need to compare phone numbers for equality
+ *  (e.g. the talents duplicate-detection scan) normalize the same way. */
+export function toIntlDigits(phone: string): string {
   let digits = phone.replace(/[^\d+]/g, "");
   if (digits.startsWith("+")) {
     digits = digits.slice(1);

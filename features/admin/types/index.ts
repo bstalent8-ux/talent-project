@@ -27,6 +27,14 @@ export interface AdminTalent {
    *  (lib/profile-completion.ts's calculateCompletion) — computed
    *  server-side per row in fetchAdminTalentsPage, not re-derived here. */
   completionScore: number;
+  /** Shares a normalized full name or phone number with at least one other
+   *  talent row — see computeTalentDuplicateInfo() in admin.service.ts. */
+  isDuplicate: boolean;
+  /** Within its duplicate cluster, this row has the highest completionScore
+   *  — the one an admin would keep. False for every non-duplicate row. */
+  isDuplicateBest: boolean;
+  /** What matched: "name", "phone", or both. Empty when not a duplicate. */
+  duplicateMatchedBy: ("name" | "phone")[];
 }
 
 // ─── Talent Actions CRM ──────────────────────────────────────────────────────

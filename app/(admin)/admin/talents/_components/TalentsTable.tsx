@@ -11,10 +11,11 @@ import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import SortableTh from "@/components/admin/SortableTh";
 import type { AdminTalent, TalentStatus } from "@/features/admin/types";
+import type { TalentDuplicateFilter } from "@/features/admin/services/admin.service";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import { profileApprovedNotificationContent } from "@/lib/notifications/content/profile-approved";
 import { profileApprovedEmail } from "@/lib/email/templates/profile-approved";
-import { ChevronDown, ChevronUp, Eye, CheckCircle, XCircle, Mail, PauseCircle, Trash2, RotateCcw, Pencil, ShieldCheck } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, CheckCircle, XCircle, Mail, PauseCircle, Trash2, RotateCcw, Pencil, ShieldCheck, Copy, Crown } from "lucide-react";
 import { LeadWhatsAppButton } from "@/app/(admin)/admin/leads/_components/LeadContactActions";
 
 const TX = {
@@ -38,6 +39,10 @@ const TX = {
     notificationPreview: "الإشعار",
     emailPreview: "الإيميل",
     subject: "الموضوع",
+    duplicateName: "تكرار بالاسم", duplicatePhone: "تكرار برقم الهاتف", duplicateBoth: "تكرار بالاسم والرقم",
+    duplicateBest: "أعلى بروفايل سكور في المجموعة",
+    duplicateSummary: (n: number) => `${n} حساب عنده بروفايل مكرر — اعرضهم وتواصل معاهم`,
+    duplicateSummaryNone: "مفيش بروفايلات مكررة",
   },
   en: {
     name: "Name", email: "Email", phone: "Phone", category: "Category", city: "City",
@@ -59,6 +64,10 @@ const TX = {
     notificationPreview: "Notification",
     emailPreview: "Email",
     subject: "Subject",
+    duplicateName: "Duplicate name", duplicatePhone: "Duplicate phone", duplicateBoth: "Duplicate name & phone",
+    duplicateBest: "Highest profile score in this group",
+    duplicateSummary: (n: number) => `${n} account${n === 1 ? "" : "s"} with a duplicated profile — view & contact`,
+    duplicateSummaryNone: "No duplicated profiles",
   },
 };
 
@@ -70,6 +79,7 @@ interface ModalState {
 interface Props {
   talents:  AdminTalent[];
   total:    number;
+  duplicateTotal: number;
   page:     number;
   pageSize: number;
   status:   string;
@@ -77,9 +87,10 @@ interface Props {
   city?:     string;
   sort?:     string;
   dir?:      "asc" | "desc";
+  duplicate?: TalentDuplicateFilter;
 }
 
-function hrefFor(page: number, status: string, pageSize: number, category?: string, city?: string, sort?: string, dir?: "asc" | "desc") {
+function hrefFor(page: number, status: string, pageSize: number, category?: string, city?: string, sort?: string, dir?: "asc" | "desc", duplicate?: TalentDuplicateFilter) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (status !== "all") params.set("status", status);
@@ -87,13 +98,14 @@ function hrefFor(page: number, status: string, pageSize: number, category?: stri
   if (category) params.set("category", category);
   if (city) params.set("city", city);
   if (sort) { params.set("sort", sort); params.set("dir", dir ?? "asc"); }
+  if (duplicate && duplicate !== "all") params.set("duplicate", duplicate);
   const qs = params.toString();
   return qs ? `/admin/talents?${qs}` : "/admin/talents";
 }
 
 const SORT_COL = { name: "full_name", city: "city", registered: "created_at" } as const;
 
-export default function TalentsTable({ talents, total, page, pageSize, status, category, city, sort, dir }: Props) {
+export default function TalentsTable({ talents, total, duplicateTotal, page, pageSize, status, category, city, sort, dir, duplicate }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.talents?.canDelete;
@@ -101,8 +113,11 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
   const t = TX[lang];
   const ar = lang === "ar";
 
+  // Grouped duplicate order (clusters back-to-back) isn't a real column, so
+  // a plain sort click can't compose with it — ignored while that view is on.
   function goSort(col: string, nextDir: "asc" | "desc") {
-    router.push(hrefFor(1, status, pageSize, category, city, col, nextDir));
+    if (duplicate === "with") return;
+    router.push(hrefFor(1, status, pageSize, category, city, col, nextDir, duplicate));
     router.refresh();
   }
 
@@ -229,7 +244,24 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+        {duplicateTotal > 0 ? (
+          <Link
+            href={hrefFor(1, status, pageSize, category, city, sort, dir, "with")}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 12px", borderRadius: 20,
+              border: `1px solid ${duplicate === "with" ? "#F4B740" : "rgba(244,183,64,0.4)"}`,
+              backgroundColor: "rgba(244,183,64,0.1)", color: "#F4B740",
+              fontSize: 12.5, fontWeight: 700, textDecoration: "none",
+            }}
+          >
+            <Copy size={13} />
+            {t.duplicateSummary(duplicateTotal)}
+          </Link>
+        ) : (
+          <span style={{ color: MUTED, fontSize: 12.5 }}>{t.duplicateSummaryNone}</span>
+        )}
         <span style={{ color: MUTED, fontSize: 13 }}>{total} {t.results}</span>
       </div>
 
@@ -277,6 +309,29 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
                         <span style={{ fontWeight: 600 }}>{talent.fullName ?? "—"}</span>
                         {talent.isVerified && (
                           <ShieldCheck size={13} color="#00D26A" aria-label={ar ? "موثق" : "Verified"} />
+                        )}
+                        {talent.isDuplicate && (
+                          <span
+                            title={
+                              talent.duplicateMatchedBy.length > 1 ? t.duplicateBoth
+                              : talent.duplicateMatchedBy[0] === "phone" ? t.duplicatePhone
+                              : t.duplicateName
+                            }
+                            style={{
+                              display: "flex", alignItems: "center", gap: 3,
+                              padding: "2px 6px", borderRadius: 20,
+                              backgroundColor: "rgba(244,183,64,0.12)", color: "#F4B740",
+                              fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap",
+                            }}
+                          >
+                            <Copy size={11} />
+                            {ar ? "تكرار" : "Duplicate"}
+                          </span>
+                        )}
+                        {talent.isDuplicateBest && (
+                          <span title={t.duplicateBest} style={{ display: "flex" }}>
+                            <Crown size={13} color="#00D26A" aria-label={t.duplicateBest} />
+                          </span>
                         )}
                       </div>
                     </td>
@@ -362,10 +417,10 @@ export default function TalentsTable({ talents, total, page, pageSize, status, c
       <AdminPagination
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => hrefFor(p, status, pageSize, category, city, sort, dir)}
+        buildHref={(p) => hrefFor(p, status, pageSize, category, city, sort, dir, duplicate)}
         total={total}
         pageSize={pageSize}
-        buildPageSizeHref={(size) => hrefFor(1, status, size, category, city, sort, dir)}
+        buildPageSizeHref={(size) => hrefFor(1, status, size, category, city, sort, dir, duplicate)}
       />
 
       {modal && confirmConfig && (

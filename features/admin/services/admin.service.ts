@@ -3,6 +3,7 @@ import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminBookingFull, 
 import { clusterPageVisits, totalDurationByPage, type PageTotal, type EngagementSample } from "./page-duration-clustering";
 import { calculateCompletion } from "@/lib/profile-completion";
 import { extractPhoneCandidates } from "./bio-phone-detection";
+import { toIntlDigits } from "@/lib/leads/phone-links";
 
 export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   // { count: "exact", head: true } returns just the row count — no rows are
@@ -74,13 +75,14 @@ export const TALENT_SORT_KEYS = ["full_name", "city", "balance", "created_at"] a
 const TALENT_SORTABLE = new Set<string>(TALENT_SORT_KEYS);
 
 export interface AdminTalentsPageParams {
-  page?:     number;
-  pageSize?: number;
-  status?:   string;
-  category?: string;
-  city?:     string;
-  sort?:     string;
-  dir?:      "asc" | "desc";
+  page?:      number;
+  pageSize?:  number;
+  status?:    string;
+  category?:  string;
+  city?:      string;
+  sort?:      string;
+  dir?:       "asc" | "desc";
+  duplicate?: TalentDuplicateFilter;
 }
 
 /** Feeds the Category/City filter selects with only values that actually
@@ -107,6 +109,186 @@ export async function fetchAdminTalentFilterOptions(): Promise<AdminTalentFilter
 export interface AdminTalentsPageResult {
   talents: AdminTalent[];
   total:   number;
+  /** Whole-table count of talents flagged isDuplicate, regardless of the
+   *  current status/category/city/duplicate filters — always accurate so
+   *  the admin can see "X duplicated" without switching the filter first. */
+  duplicateTotal: number;
+}
+
+export type TalentDuplicateFilter = "all" | "with" | "without";
+
+interface DuplicateInfoEntry {
+  isDuplicate: boolean;
+  isBest: boolean;
+  matchedBy: ("name" | "phone")[];
+  /** Union-find root shared by every member of this talent's duplicate
+   *  cluster — stable only within one computeTalentDuplicateInfo() call,
+   *  which is all the "with duplication" grouped view needs it for. */
+  clusterId: string;
+}
+
+/** Full-table scan (talent pool is dozens, not thousands — same posture as
+ *  fetchAdminDashboardStats's countsByCategory) that finds talents sharing a
+ *  normalized full name or phone number with another talent, clusters them
+ *  with union-find (so a name-match and a phone-match chain into one group
+ *  even across three-plus accounts), and flags the highest-completionScore
+ *  member of each cluster as the one an admin would likely keep. Always
+ *  computed (not just when the duplicate filter is active) so the table can
+ *  show the DUPLICATE badge even on the unfiltered "all" view. */
+async function computeTalentDuplicateInfo(): Promise<Map<string, DuplicateInfoEntry>> {
+  const { data } = await adminClient
+    .from("profiles")
+    .select(`
+      id, full_name, phone_number, avatar_url, city,
+      talent_profiles!inner (id, category, social_links, packages, specialties, availability, bio)
+    `)
+    .eq("role", "talent");
+
+  const rows = data ?? [];
+  const tpOf = (r: (typeof rows)[number]) => (Array.isArray(r.talent_profiles) ? r.talent_profiles[0] : r.talent_profiles);
+
+  const tpIds = rows.map((r) => tpOf(r)?.id).filter((id): id is string => !!id);
+  const { data: portfolioRows } = tpIds.length
+    ? await adminClient.from("portfolio_items").select("talent_id").in("talent_id", tpIds)
+    : { data: [] };
+  const hasPortfolio = new Set((portfolioRows ?? []).map((r) => r.talent_id));
+
+  const normalizeName = (n: string | null) => (n ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  const normalizePhone = (p: string | null) => (p ? toIntlDigits(p) : "");
+
+  const parent = new Map<string, string>();
+  const find = (x: string): string => {
+    if (!parent.has(x)) parent.set(x, x);
+    let root = x;
+    while (parent.get(root) !== root) root = parent.get(root) as string;
+    parent.set(x, root);
+    return root;
+  };
+  const union = (a: string, b: string) => {
+    const ra = find(a), rb = find(b);
+    if (ra !== rb) parent.set(ra, rb);
+  };
+
+  for (const r of rows) find(r.id);
+
+  const byName = new Map<string, string[]>();
+  const byPhone = new Map<string, string[]>();
+  for (const r of rows) {
+    const nameKey = normalizeName(r.full_name);
+    if (nameKey) (byName.get(nameKey) ?? (byName.set(nameKey, []), byName.get(nameKey)!)).push(r.id);
+    const phoneKey = normalizePhone((r as Record<string, unknown>).phone_number as string | null);
+    if (phoneKey) (byPhone.get(phoneKey) ?? (byPhone.set(phoneKey, []), byPhone.get(phoneKey)!)).push(r.id);
+  }
+
+  const matchedBy = new Map<string, Set<"name" | "phone">>();
+  const markMatch = (ids: string[], kind: "name" | "phone") => {
+    if (ids.length < 2) return;
+    for (const id of ids) (matchedBy.get(id) ?? (matchedBy.set(id, new Set()), matchedBy.get(id)!)).add(kind);
+    for (let i = 1; i < ids.length; i++) union(ids[0], ids[i]);
+  };
+  for (const ids of byName.values())  markMatch(ids, "name");
+  for (const ids of byPhone.values()) markMatch(ids, "phone");
+
+  const clusters = new Map<string, string[]>();
+  for (const r of rows) {
+    const root = find(r.id);
+    (clusters.get(root) ?? (clusters.set(root, []), clusters.get(root)!)).push(r.id);
+  }
+
+  const scoreById = new Map<string, number>();
+  for (const r of rows) {
+    const tp = tpOf(r);
+    if (!tp) continue;
+    scoreById.set(r.id, calculateCompletion(r, tp, hasPortfolio.has(tp.id) ? [{}] : []).score);
+  }
+
+  const result = new Map<string, DuplicateInfoEntry>();
+  for (const [root, members] of clusters.entries()) {
+    const isDup = members.length > 1;
+    let bestId: string | null = null;
+    let bestScore = -1;
+    if (isDup) {
+      for (const id of members) {
+        const s = scoreById.get(id) ?? 0;
+        if (s > bestScore) { bestScore = s; bestId = id; }
+      }
+    }
+    for (const id of members) {
+      result.set(id, {
+        isDuplicate: isDup,
+        isBest: isDup && id === bestId,
+        matchedBy: Array.from(matchedBy.get(id) ?? []),
+        clusterId: root,
+      });
+    }
+  }
+  return result;
+}
+
+/** Shared row-shape -> AdminTalent[] builder used by both the plain
+ *  (DB-paginated) path and the "with duplication" grouped path below —
+ *  email lookup + completion-score are bounded to whatever page of rows is
+ *  passed in, same per-page cost class either way. */
+async function buildAdminTalents(
+  rows: Record<string, unknown>[],
+  duplicateInfo: Map<string, DuplicateInfoEntry>,
+): Promise<AdminTalent[]> {
+  const tpOf = (r: Record<string, unknown>) => {
+    const tp = r.talent_profiles;
+    return (Array.isArray(tp) ? tp[0] : tp) as Record<string, unknown> | null | undefined;
+  };
+
+  const tpIds = rows.map((r) => tpOf(r)?.id).filter((id): id is string => !!id);
+  const { data: portfolioRows } = tpIds.length
+    ? await adminClient.from("portfolio_items").select("talent_id").in("talent_id", tpIds)
+    : { data: [] };
+  const hasPortfolio = new Set((portfolioRows ?? []).map((r) => r.talent_id));
+
+  const profileIds = rows.map((r) => r.id as string);
+  const emailResults = await Promise.all(
+    profileIds.map((id) => adminClient.auth.admin.getUserById(id).then(
+      (res) => res.data.user?.email ?? null,
+      () => null,
+    )),
+  );
+  const emailMap = Object.fromEntries(profileIds.map((id, i) => [id, emailResults[i]]));
+
+  return rows.flatMap((p) => {
+    const tp = tpOf(p);
+    if (!tp) return [];
+
+    const isApproved   = p.is_approved   as boolean ?? true;
+    const isSuspended   = p.is_suspended as boolean ?? false;
+    const accountStatus = isSuspended ? "suspended" : isApproved ? "active" : "pending";
+    const talentStatus: AdminTalent["status"] = (tp.status as AdminTalent["status"]) ?? "pending";
+    const id = p.id as string;
+
+    return [{
+      profileId:       id,
+      talentProfileId: tp.id as string,
+      fullName:        p.full_name as string | null,
+      handle:          p.handle as string | null,
+      email:           emailMap[id] ?? null,
+      phoneNumber:     p.phone_number as string | null ?? null,
+      avatarUrl:       p.avatar_url as string | null,
+      category:        tp.category as string | null,
+      city:            p.city as string | null,
+      createdAt:       p.created_at as string,
+      status:          talentStatus,
+      approvedAt:      tp.approved_at      as string | null ?? null,
+      rejectionReason: tp.rejection_reason as string | null ?? null,
+      avgRating:       tp.avg_rating    as number | null ?? null,
+      totalReviews:    tp.total_reviews as number | null ?? null,
+      accountStatus,
+      blockReason:     null,
+      isVerified:      p.is_verified as boolean ?? false,
+      balance:         p.balance     as number  ?? 0,
+      completionScore: calculateCompletion(p, tp, hasPortfolio.has(tp.id as string) ? [{}] : []).score,
+      isDuplicate:        duplicateInfo.get(id)?.isDuplicate ?? false,
+      isDuplicateBest:    duplicateInfo.get(id)?.isBest ?? false,
+      duplicateMatchedBy: duplicateInfo.get(id)?.matchedBy ?? [],
+    }];
+  });
 }
 
 // Server-side pagination + server-side status filter (was: fetch every
@@ -124,6 +306,7 @@ export async function fetchAdminTalentsPage({
   city,
   sort,
   dir,
+  duplicate = "all",
 }: AdminTalentsPageParams): Promise<AdminTalentsPageResult> {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
@@ -131,16 +314,73 @@ export async function fetchAdminTalentsPage({
   const sortCol   = sort && TALENT_SORTABLE.has(sort) ? sort : "created_at";
   const ascending = sort ? dir !== "desc" : false;
 
+  // Always computed (cheap full-table scan, see its own comment) so every
+  // row can carry a DUPLICATE badge even on the unfiltered view, and so the
+  // with/without toggle below has a ready-made id list to restrict to.
+  const duplicateInfo = await computeTalentDuplicateInfo();
+  const duplicateTotal = Array.from(duplicateInfo.values()).filter((v) => v.isDuplicate).length;
+
+  const SELECT = `
+    id, handle, full_name, avatar_url, city, bio, created_at, phone_number,
+    is_approved, is_suspended, is_verified, balance,
+    talent_profiles!inner (
+      id, category, avg_rating, total_reviews, status, approved_at, rejection_reason,
+      specialties, social_links, packages, availability, bio
+    )
+  `;
+
+  // "With duplication" ignores the normal column sort and groups instead —
+  // every cluster's members sit back-to-back (best-completionScore member
+  // first in each group), which a plain created_at/name sort can't do since
+  // grouping isn't a real column. duplicateTotal is small (dozens, not
+  // thousands — same posture as computeTalentDuplicateInfo's own scan), so
+  // this fetches every matching row unpaginated and paginates in JS after
+  // grouping, instead of the DB range() used below.
+  if (duplicate === "with") {
+    const dupIds = Array.from(duplicateInfo.entries()).filter(([, v]) => v.isDuplicate).map(([id]) => id);
+    if (dupIds.length === 0) return { talents: [], total: 0, duplicateTotal };
+
+    let groupedQuery = adminClient.from("profiles").select(SELECT).eq("role", "talent").in("id", dupIds);
+    if (status && status !== "all") groupedQuery = groupedQuery.eq("talent_profiles.status", status);
+    if (category) groupedQuery = groupedQuery.eq("talent_profiles.category", category);
+    if (city) groupedQuery = groupedQuery.eq("city", city);
+
+    const { data: groupedData, error: groupedError } = await groupedQuery;
+    if (groupedError) return { talents: [], total: 0, duplicateTotal };
+    const rows = (groupedData ?? []) as unknown as Record<string, unknown>[];
+
+    const clusterOrder: string[] = [];
+    const clusters = new Map<string, Record<string, unknown>[]>();
+    for (const r of rows) {
+      const cid = duplicateInfo.get(r.id as string)?.clusterId ?? (r.id as string);
+      if (!clusters.has(cid)) { clusters.set(cid, []); clusterOrder.push(cid); }
+      clusters.get(cid)!.push(r);
+    }
+    for (const cid of clusterOrder) {
+      clusters.get(cid)!.sort((a, b) => {
+        const aBest = duplicateInfo.get(a.id as string)?.isBest ? 1 : 0;
+        const bBest = duplicateInfo.get(b.id as string)?.isBest ? 1 : 0;
+        return bBest - aBest;
+      });
+    }
+    // Groups themselves ordered by name so the list reads predictably
+    // (not e.g. shuffled by fetch order) — the grouping is the point, not
+    // which group comes first.
+    clusterOrder.sort((a, b) => {
+      const an = (clusters.get(a)![0].full_name as string | null) ?? "";
+      const bn = (clusters.get(b)![0].full_name as string | null) ?? "";
+      return an.localeCompare(bn);
+    });
+
+    const sorted = clusterOrder.flatMap((cid) => clusters.get(cid)!);
+    const pageRows = sorted.slice(from, from + pageSize);
+    const talents = await buildAdminTalents(pageRows, duplicateInfo);
+    return { talents, total: sorted.length, duplicateTotal };
+  }
+
   let query = adminClient
     .from("profiles")
-    .select(`
-      id, handle, full_name, avatar_url, city, bio, created_at, phone_number,
-      is_approved, is_suspended, is_verified, balance,
-      talent_profiles!inner (
-        id, category, avg_rating, total_reviews, status, approved_at, rejection_reason,
-        specialties, social_links, packages, availability, bio
-      )
-    `, { count: "exact" })
+    .select(SELECT, { count: "exact" })
     .eq("role", "talent")
     .order(sortCol, { ascending, nullsFirst: false })
     .order("id", { ascending: true })
@@ -150,70 +390,17 @@ export async function fetchAdminTalentsPage({
   if (category) query = query.eq("talent_profiles.category", category);
   if (city) query = query.eq("city", city);
 
+  if (duplicate === "without") {
+    const ids = Array.from(duplicateInfo.entries()).filter(([, v]) => !v.isDuplicate).map(([id]) => id);
+    if (ids.length === 0) return { talents: [], total: 0, duplicateTotal };
+    query = query.in("id", ids);
+  }
+
   const { data, count, error } = await query;
-  if (error) return { talents: [], total: 0 };
+  if (error) return { talents: [], total: 0, duplicateTotal };
 
-  // Completion score (same weights as the talent's own dashboard, see
-  // lib/profile-completion.ts) only needs "has at least one portfolio item",
-  // not the items themselves — one batched existence query for the whole
-  // page instead of N calls, same join-in-JS pattern as everywhere else in
-  // this file.
-  const tpIds = (data ?? [])
-    .map((p) => (Array.isArray(p.talent_profiles) ? p.talent_profiles[0] : p.talent_profiles)?.id)
-    .filter((id): id is string => !!id);
-  const { data: portfolioRows } = tpIds.length
-    ? await adminClient.from("portfolio_items").select("talent_id").in("talent_id", tpIds)
-    : { data: [] };
-  const hasPortfolio = new Set((portfolioRows ?? []).map((r) => r.talent_id));
-
-  // Email lives in auth.users, not public.profiles — there is no bulk
-  // "get by ids" call in the Admin API, so this is one getUserById per row.
-  // Bounded to the current page only (pageSize rows, not the whole table),
-  // same cost class as the other per-page Promise.all batches in this file.
-  // A failed lookup degrades to null rather than failing the whole page.
-  const profileIds = (data ?? []).map((p) => p.id);
-  const emailResults = await Promise.all(
-    profileIds.map((id) => adminClient.auth.admin.getUserById(id).then(
-      (res) => res.data.user?.email ?? null,
-      () => null,
-    )),
-  );
-  const emailMap = Object.fromEntries(profileIds.map((id, i) => [id, emailResults[i]]));
-
-  const talents = (data ?? []).flatMap((p) => {
-    const tp = Array.isArray(p.talent_profiles) ? p.talent_profiles[0] : p.talent_profiles;
-    if (!tp) return [];
-
-    const isApproved   = (p as Record<string, unknown>).is_approved   as boolean ?? true;
-    const isSuspended  = (p as Record<string, unknown>).is_suspended  as boolean ?? false;
-    const accountStatus = isSuspended ? "suspended" : isApproved ? "active" : "pending";
-    const talentStatus: AdminTalent["status"] = (tp.status as AdminTalent["status"]) ?? "pending";
-
-    return [{
-      profileId:       p.id,
-      talentProfileId: tp.id,
-      fullName:        p.full_name,
-      handle:          p.handle,
-      email:           emailMap[p.id] ?? null,
-      phoneNumber:     (p as Record<string, unknown>).phone_number as string | null ?? null,
-      avatarUrl:       p.avatar_url,
-      category:        tp.category,
-      city:            p.city,
-      createdAt:       p.created_at,
-      status:          talentStatus,
-      approvedAt:      tp.approved_at      ?? null,
-      rejectionReason: tp.rejection_reason ?? null,
-      avgRating:       tp.avg_rating    ?? null,
-      totalReviews:    tp.total_reviews ?? null,
-      accountStatus,
-      blockReason:     null,
-      isVerified:      (p as Record<string, unknown>).is_verified    as boolean ?? false,
-      balance:         (p as Record<string, unknown>).balance        as number  ?? 0,
-      completionScore: calculateCompletion(p, tp, hasPortfolio.has(tp.id) ? [{}] : []).score,
-    }];
-  });
-
-  return { talents, total: count ?? talents.length };
+  const talents = await buildAdminTalents((data ?? []) as unknown as Record<string, unknown>[], duplicateInfo);
+  return { talents, total: count ?? talents.length, duplicateTotal };
 }
 
 export const BOOKING_SORT_KEYS = ["status", "amount", "created_at", "paid_at", "completed_at"] as const;
