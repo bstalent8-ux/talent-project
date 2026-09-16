@@ -350,6 +350,18 @@ export default function DashboardPage() {
     setUploading(false);
   };
 
+  // Lets one file-picker selection carry several photos/videos instead of
+  // forcing a repeat click per file — the native <input multiple> picker
+  // already supports multi-select on both desktop and mobile browsers.
+  // Uploaded sequentially (not Promise.all) so Cloudinary sees one request
+  // at a time and media's prepend order matches selection order.
+  const handleMediaFilesUpload = async (files: FileList | null, type: "photo"|"video") => {
+    if (!files || files.length === 0) return;
+    for (const file of Array.from(files)) {
+      await handleMediaUpload(file, type);
+    }
+  };
+
   const handleMediaUpload = async (file: File, type: "photo"|"video") => {
     setMediaUploading(true);
     try {
@@ -786,11 +798,11 @@ export default function DashboardPage() {
                 {edit && (
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <input value={caption} onChange={e => setCaption(e.target.value)} placeholder={t.captionPlaceholder} style={{ padding: "6px 10px", backgroundColor: INP, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 12, outline: "none", width: 140, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }} />
-                    <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { handleMediaUpload(f,"photo"); e.target.value=""; }}} />
+                    <input ref={photoRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => { handleMediaFilesUpload(e.target.files,"photo"); e.target.value=""; }} />
                     <button onClick={() => photoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(0,210,106,0.1)", border: "1px solid rgba(0,210,106,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Upload size={12} />{t.addPhoto}
                     </button>
-                    <input ref={videoRef} type="file" accept="video/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { handleMediaUpload(f,"video"); e.target.value=""; }}} />
+                    <input ref={videoRef} type="file" accept="video/*" multiple style={{ display: "none" }} onChange={e => { handleMediaFilesUpload(e.target.files,"video"); e.target.value=""; }} />
                     <button onClick={() => videoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 8, color: "#a78bfa", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Play size={12} />{t.addVideo}
                     </button>

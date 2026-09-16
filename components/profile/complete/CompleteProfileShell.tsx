@@ -481,6 +481,18 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
     setPortfolioUploading(false);
   };
 
+  // Lets one file-picker selection carry several photos/videos instead of
+  // forcing a repeat click per file — the native <input multiple> picker
+  // already supports multi-select on both desktop and mobile browsers.
+  // Uploaded sequentially (not Promise.all) so Cloudinary sees one request
+  // at a time and portfolioMedia's prepend order matches selection order.
+  const handlePortfolioFiles = async (files: FileList | null, type: "photo" | "video") => {
+    if (!files || files.length === 0) return;
+    for (const file of Array.from(files)) {
+      await handlePortfolioFile(file, type);
+    }
+  };
+
   const handleDeletePortfolio = async (id: string) => {
     await fetch("/api/portfolio", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
     setPortfolioMedia(prev => prev.filter(m => m.id !== id));
@@ -871,8 +883,8 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                     <ImageIcon size={22} color={TEAL} />
                     <span style={{ color: TEAL, fontSize: 13, fontWeight: 800 }}>{portfolioUploading ? t.uploading : t.addPhoto}</span>
                   </label>
-                  <input id="cp-portfolio-photo" type="file" accept="image/*" style={{ display: "none" }} disabled={portfolioUploading}
-                    onChange={e => { const f = e.target.files?.[0]; if (f) handlePortfolioFile(f, "photo"); e.target.value = ""; }} />
+                  <input id="cp-portfolio-photo" type="file" accept="image/*" multiple style={{ display: "none" }} disabled={portfolioUploading}
+                    onChange={e => { const files = e.target.files; handlePortfolioFiles(files, "photo"); e.target.value = ""; }} />
 
                   <label htmlFor="cp-portfolio-video" style={{
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
@@ -883,8 +895,8 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                     <Play size={22} color={GOLD} />
                     <span style={{ color: GOLD, fontSize: 13, fontWeight: 800 }}>{portfolioUploading ? t.uploading : t.addVideo}</span>
                   </label>
-                  <input id="cp-portfolio-video" type="file" accept="video/*" style={{ display: "none" }} disabled={portfolioUploading}
-                    onChange={e => { const f = e.target.files?.[0]; if (f) handlePortfolioFile(f, "video"); e.target.value = ""; }} />
+                  <input id="cp-portfolio-video" type="file" accept="video/*" multiple style={{ display: "none" }} disabled={portfolioUploading}
+                    onChange={e => { const files = e.target.files; handlePortfolioFiles(files, "video"); e.target.value = ""; }} />
                 </div>
               </div>
             )}
