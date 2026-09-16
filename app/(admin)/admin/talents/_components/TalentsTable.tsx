@@ -88,9 +88,10 @@ interface Props {
   sort?:     string;
   dir?:      "asc" | "desc";
   duplicate?: TalentDuplicateFilter;
+  q?: string;
 }
 
-function hrefFor(page: number, status: string, pageSize: number, category?: string, city?: string, sort?: string, dir?: "asc" | "desc", duplicate?: TalentDuplicateFilter) {
+function hrefFor(page: number, status: string, pageSize: number, category?: string, city?: string, sort?: string, dir?: "asc" | "desc", duplicate?: TalentDuplicateFilter, q?: string) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (status !== "all") params.set("status", status);
@@ -99,13 +100,14 @@ function hrefFor(page: number, status: string, pageSize: number, category?: stri
   if (city) params.set("city", city);
   if (sort) { params.set("sort", sort); params.set("dir", dir ?? "asc"); }
   if (duplicate && duplicate !== "all") params.set("duplicate", duplicate);
+  if (q) params.set("q", q);
   const qs = params.toString();
   return qs ? `/admin/talents?${qs}` : "/admin/talents";
 }
 
 const SORT_COL = { name: "full_name", city: "city", registered: "created_at" } as const;
 
-export default function TalentsTable({ talents, total, duplicateTotal, page, pageSize, status, category, city, sort, dir, duplicate }: Props) {
+export default function TalentsTable({ talents, total, duplicateTotal, page, pageSize, status, category, city, sort, dir, duplicate, q }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.talents?.canDelete;
@@ -117,7 +119,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
   // a plain sort click can't compose with it — ignored while that view is on.
   function goSort(col: string, nextDir: "asc" | "desc") {
     if (duplicate === "with") return;
-    router.push(hrefFor(1, status, pageSize, category, city, col, nextDir, duplicate));
+    router.push(hrefFor(1, status, pageSize, category, city, col, nextDir, duplicate, q));
     router.refresh();
   }
 
@@ -247,7 +249,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
         {duplicateTotal > 0 ? (
           <Link
-            href={hrefFor(1, status, pageSize, category, city, sort, dir, "with")}
+            href={hrefFor(1, status, pageSize, category, city, sort, dir, "with", q)}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "6px 12px", borderRadius: 20,
@@ -417,10 +419,10 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
       <AdminPagination
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => hrefFor(p, status, pageSize, category, city, sort, dir, duplicate)}
+        buildHref={(p) => hrefFor(p, status, pageSize, category, city, sort, dir, duplicate, q)}
         total={total}
         pageSize={pageSize}
-        buildPageSizeHref={(size) => hrefFor(1, status, size, category, city, sort, dir, duplicate)}
+        buildPageSizeHref={(size) => hrefFor(1, status, size, category, city, sort, dir, duplicate, q)}
       />
 
       {modal && confirmConfig && (

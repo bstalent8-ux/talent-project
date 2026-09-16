@@ -83,6 +83,21 @@ export interface AdminTalentsPageParams {
   sort?:      string;
   dir?:       "asc" | "desc";
   duplicate?: TalentDuplicateFilter;
+  /** Free-text search against full_name and phone_number (ilike, ANDed
+   *  with every other filter). Same box the admin types a name or a phone
+   *  digit string into — see applyTalentSearch() below. */
+  q?: string;
+}
+
+/** `.or("full_name.ilike.%x%,phone_number.ilike.%x%")` — PostgREST's filter
+ *  string treats "," and "()" as syntax, and "%"/"_" as ilike wildcards, so
+ *  a search term containing any of those needs escaping/stripping before it
+ *  reaches the query string, not just before display. */
+function applyTalentSearch<T extends { or: (s: string) => T }>(query: T, q: string | undefined): T {
+  const term = (q ?? "").trim().replace(/[,()]/g, "");
+  if (!term) return query;
+  const escaped = term.replace(/[%_]/g, (c) => `\\${c}`);
+  return query.or(`full_name.ilike.%${escaped}%,phone_number.ilike.%${escaped}%`);
 }
 
 /** Feeds the Category/City filter selects with only values that actually
@@ -307,6 +322,7 @@ export async function fetchAdminTalentsPage({
   sort,
   dir,
   duplicate = "all",
+  q,
 }: AdminTalentsPageParams): Promise<AdminTalentsPageResult> {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
@@ -344,6 +360,7 @@ export async function fetchAdminTalentsPage({
     if (status && status !== "all") groupedQuery = groupedQuery.eq("talent_profiles.status", status);
     if (category) groupedQuery = groupedQuery.eq("talent_profiles.category", category);
     if (city) groupedQuery = groupedQuery.eq("city", city);
+    groupedQuery = applyTalentSearch(groupedQuery, q);
 
     const { data: groupedData, error: groupedError } = await groupedQuery;
     if (groupedError) return { talents: [], total: 0, duplicateTotal };
@@ -389,6 +406,7 @@ export async function fetchAdminTalentsPage({
   if (status && status !== "all") query = query.eq("talent_profiles.status", status);
   if (category) query = query.eq("talent_profiles.category", category);
   if (city) query = query.eq("city", city);
+  query = applyTalentSearch(query, q);
 
   if (duplicate === "without") {
     const ids = Array.from(duplicateInfo.entries()).filter(([, v]) => !v.isDuplicate).map(([id]) => id);

@@ -9,11 +9,19 @@ import { ADMIN_LIGHT } from "./adminLightTheme";
 interface Props {
   title: string;
   onMenuClick: () => void;
+  /** When the current page wires these up (see AdminShell's own props),
+   *  this box becomes that page's real search box instead of the decorative
+   *  no-op it is everywhere else — same input, same position, just live. */
+  search?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
 }
 
-export default function AdminTopbar({ title, onMenuClick }: Props) {
+export default function AdminTopbar({ title, onMenuClick, search: controlledSearch, onSearchChange, searchPlaceholder }: Props) {
   const { dark, toggleMode, lang, toggleLang } = useSite();
-  const [search, setSearch] = useState("");
+  const [localSearch, setLocalSearch] = useState("");
+  const search = onSearchChange ? (controlledSearch ?? "") : localSearch;
+  const setSearch = onSearchChange ?? setLocalSearch;
 
   // Admin-only light palette (see adminLightTheme.ts) — was the global
   // --bg-surface/--text-* tokens unconditionally, which are shared with the
@@ -130,7 +138,7 @@ export default function AdminTopbar({ title, onMenuClick }: Props) {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={ar ? "بحث..." : "Search..."}
+            placeholder={searchPlaceholder ?? (ar ? "بحث..." : "Search...")}
             style={{
               backgroundColor: INPUT,
               border: `1px solid ${BORDER}`,

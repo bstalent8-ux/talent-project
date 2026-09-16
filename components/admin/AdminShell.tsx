@@ -8,11 +8,16 @@ import { ADMIN_LIGHT } from "./adminLightTheme";
 interface Props {
   title: string;
   children: React.ReactNode;
+  /** Wires the topbar's search box to the current page instead of leaving
+   *  it decorative — see AdminTopbar's own comment on these three. */
+  search?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
 }
 
 const STORAGE_KEY = "admin-sidebar-mode";
 
-export default function AdminShell({ title, children }: Props) {
+export default function AdminShell({ title, children, search, onSearchChange, searchPlaceholder }: Props) {
   const { dark } = useSite();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>("expanded");
@@ -61,6 +66,9 @@ export default function AdminShell({ title, children }: Props) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
         <AdminTopbar
           title={title}
+          search={search}
+          onSearchChange={onSearchChange}
+          searchPlaceholder={searchPlaceholder}
           onMenuClick={() => {
             if (typeof window !== "undefined" && window.innerWidth <= 900) {
               setSidebarOpen(true);

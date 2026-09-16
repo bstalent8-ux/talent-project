@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
@@ -13,11 +14,13 @@ const TX = {
     title: "المواهب", all: "الكل", pending: "قيد الانتظار", approved: "معتمد", rejected: "مرفوض", suspended: "موقوف",
     filterCategory: "التصنيف: الكل", filterCity: "المدينة: الكل",
     duplicateAll: "التكرار: الكل", duplicateWith: "فيه تكرار", duplicateWithout: "بدون تكرار",
+    searchPlaceholder: "بحث بالاسم أو رقم الهاتف...",
   },
   en: {
     title: "Talents", all: "All", pending: "Pending", approved: "Approved", rejected: "Rejected", suspended: "Suspended",
     filterCategory: "Category: All", filterCity: "City: All",
     duplicateAll: "Duplication: All", duplicateWith: "With duplication", duplicateWithout: "Without duplication",
+    searchPlaceholder: "Search by name or phone...",
   },
 };
 
@@ -26,6 +29,7 @@ interface Props {
   category?: string;
   city?: string;
   duplicate?: "all" | "with" | "without";
+  q?: string;
   filterOptions: AdminTalentFilterOptions;
   children: React.ReactNode;
 }
@@ -34,7 +38,7 @@ interface Props {
 // rendered immediately, never suspended. Only the table (passed as
 // `children`, wrapped in <Suspense> by page.tsx) shows a skeleton while its
 // page/filter combo loads.
-export default function AdminTalentsShell({ status, category, city, duplicate = "all", filterOptions, children }: Props) {
+export default function AdminTalentsShell({ status, category, city, duplicate = "all", q, filterOptions, children }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -43,19 +47,36 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const TEXT = dark ? "#f1f5f9" : "#0f172a";
 
-  function hrefFor(overrides: Partial<{ status: string; category: string; city: string; duplicate: string }>) {
-    const next = { status, category, city, duplicate, ...overrides };
+  function hrefFor(overrides: Partial<{ status: string; category: string; city: string; duplicate: string; q: string }>) {
+    const next = { status, category, city, duplicate, q, ...overrides };
     const params = new URLSearchParams();
     if (next.status && next.status !== "all") params.set("status", next.status);
     if (next.category) params.set("category", next.category);
     if (next.city) params.set("city", next.city);
     if (next.duplicate && next.duplicate !== "all") params.set("duplicate", next.duplicate);
+    if (next.q) params.set("q", next.q);
     const qs = params.toString();
     return qs ? `/admin/talents?${qs}` : "/admin/talents";
   }
 
+  // Local draft so typing doesn't lag behind a router.push per keystroke;
+  // committed to the URL (and the server refetch it drives) 350ms after the
+  // user stops typing. `q` prop stays the source of truth on navigation
+  // (back/forward, another filter changing) via the sync effect below.
+  const [draft, setDraft] = useState(q ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { setDraft(q ?? ""); }, [q]);
+
+  function onSearchChange(value: string) {
+    setDraft(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      router.push(hrefFor({ q: value || undefined }));
+    }, 350);
+  }
+
   return (
-    <AdminShell title={t.title}>
+    <AdminShell title={t.title} search={draft} onSearchChange={onSearchChange} searchPlaceholder={t.searchPlaceholder}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {STATUS_FILTERS.map((s) => {
