@@ -64,6 +64,15 @@ export interface AdminTalentBrand {
   verified: boolean;
 }
 
+export interface TalentActionAuditEntry {
+  id: string;
+  action: "created" | "updated" | "deleted";
+  changedByName: string | null;
+  oldValue: Record<string, unknown> | null;
+  newValue: Record<string, unknown> | null;
+  createdAt: string;
+}
+
 export interface AdminDashboardStats {
   pending:          number;
   approved:         number;

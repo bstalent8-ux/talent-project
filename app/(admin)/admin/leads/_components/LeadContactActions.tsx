@@ -11,13 +11,18 @@ const TX = {
 };
 
 // Opens wa.me in a new tab — same as any other outbound link, no special
-// handling needed either on mobile or desktop.
-export function LeadWhatsAppButton({ phone, size = 18 }: { phone: string; size?: number }) {
+// handling needed either on mobile or desktop. `name` (when given) fills a
+// default greeting into WhatsApp's own message box — the admin can still
+// edit or clear it before sending, wa.me only pre-fills, never auto-sends.
+export function LeadWhatsAppButton({ phone, size = 18, name }: { phone: string; size?: number; name?: string | null }) {
   const { lang } = useSite();
   const t = TX[lang];
+  const greeting = name
+    ? (lang === "ar" ? `مرحباً ${name}،` : `Hi ${name},`)
+    : undefined;
   return (
     <a
-      href={toWhatsAppLink(phone)}
+      href={toWhatsAppLink(phone, greeting)}
       target="_blank"
       rel="noopener noreferrer"
       title={t.whatsapp}

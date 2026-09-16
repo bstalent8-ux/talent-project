@@ -1,5 +1,5 @@
 import { adminClient } from "@/lib/supabase/admin";
-import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminBookingFull, AdminReview, TalentAction, AddTalentActionInput, AdminTalentBrand } from "../types";
+import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminBookingFull, AdminReview, TalentAction, AddTalentActionInput, AdminTalentBrand, TalentActionAuditEntry } from "../types";
 import { clusterPageVisits, totalDurationByPage, type PageTotal, type EngagementSample } from "./page-duration-clustering";
 import { calculateCompletion } from "@/lib/profile-completion";
 import { extractPhoneCandidates } from "./bio-phone-detection";
@@ -1959,6 +1959,11 @@ export async function addTalentAction(talentProfileId: string, input: AddTalentA
     return null;
   }
 
+  await adminClient.from("talent_action_audit_log").insert({
+    talent_action_id: data.id, talent_id: talentProfileId, changed_by: input.performedBy,
+    action: "created", new_value: data,
+  });
+
   const names = await talentActionNamesFor([data.performed_by]);
   return toTalentAction(data as TalentActionRow, names);
 }
@@ -1971,6 +1976,77 @@ export async function updateTalentActionFollowUp(actionId: string, followUpAt: s
     .update({ follow_up_at: followUpAt, notified_at: null })
     .eq("id", actionId);
   return !error;
+}
+
+export interface UpdateTalentActionInput {
+  actionType?: string;
+  note?: string | null;
+  followUpAt?: string | null;
+}
+
+/** Full edit (type/note/follow-up), same "any admin can edit" posture as
+ *  updateTalentActionFollowUp above. Changing follow_up_at also clears
+ *  notified_at — a re-dated reminder should fire again, not stay silenced
+ *  by a stale notification from the old date. `changedBy` is only for the
+ *  audit trail — this table has no per-admin ownership check. */
+export async function updateTalentAction(actionId: string, input: UpdateTalentActionInput, changedBy: string | null): Promise<boolean> {
+  const patch: Record<string, unknown> = {};
+  if (input.actionType !== undefined) patch.action_type = input.actionType;
+  if (input.note !== undefined) patch.note = input.note;
+  if (input.followUpAt !== undefined) {
+    patch.follow_up_at = input.followUpAt;
+    patch.notified_at = null;
+  }
+  if (Object.keys(patch).length === 0) return true;
+
+  const { data: before } = await adminClient.from("talent_actions").select("*").eq("id", actionId).single();
+  const { data: after, error } = await adminClient.from("talent_actions").update(patch).eq("id", actionId).select("*").single();
+  if (error) return false;
+
+  if (before) {
+    await adminClient.from("talent_action_audit_log").insert({
+      talent_action_id: actionId, talent_id: before.talent_id, changed_by: changedBy,
+      action: "updated", old_value: before, new_value: after,
+    });
+  }
+  return true;
+}
+
+export async function deleteTalentAction(actionId: string, changedBy: string | null): Promise<boolean> {
+  const { data: before } = await adminClient.from("talent_actions").select("*").eq("id", actionId).single();
+  const { error } = await adminClient.from("talent_actions").delete().eq("id", actionId);
+  if (error) return false;
+
+  if (before) {
+    await adminClient.from("talent_action_audit_log").insert({
+      talent_action_id: null, talent_id: before.talent_id, changed_by: changedBy,
+      action: "deleted", old_value: before,
+    });
+  }
+  return true;
+}
+
+/** Full change history for one talent's CRM actions — edits and deletes,
+ *  newest first. A deleted action's full snapshot lives in oldValue even
+ *  though the row itself is gone (talent_action_id → NULL via ON DELETE
+ *  SET NULL, the log entry survives independently). */
+export async function fetchTalentActionAuditLog(talentProfileId: string): Promise<TalentActionAuditEntry[]> {
+  const { data, error } = await adminClient
+    .from("talent_action_audit_log")
+    .select("*")
+    .eq("talent_id", talentProfileId)
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+
+  const names = await talentActionNamesFor(data.map((r) => r.changed_by));
+  return data.map((r) => ({
+    id: r.id,
+    action: r.action,
+    changedByName: r.changed_by ? names[r.changed_by] ?? null : null,
+    oldValue: r.old_value,
+    newValue: r.new_value,
+    createdAt: r.created_at,
+  }));
 }
 
 export interface DueTalentFollowUp {

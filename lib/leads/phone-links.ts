@@ -18,8 +18,9 @@ function toIntlDigits(phone: string): string {
   return digits;
 }
 
-export function toWhatsAppLink(phone: string): string {
-  return `https://wa.me/${toIntlDigits(phone)}`;
+export function toWhatsAppLink(phone: string, message?: string): string {
+  const base = `https://wa.me/${toIntlDigits(phone)}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
 
 /** For a `tel:` href — dialers want the "+" back. */

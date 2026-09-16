@@ -83,9 +83,11 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
       <div style={{ position: "absolute", top: 0, insetInlineEnd: 0, width: 320, height: 320, borderRadius: "50%", background: `radial-gradient(circle, ${GOLD_SOFT}, transparent 70%)`, pointerEvents: "none" }} />
 
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 24, position: "relative" }}>
-        {/* Main photo card */}
-        <div style={{ width: isMobile ? "100%" : 300, flexShrink: 0 }}>
-          <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: `1px solid ${BORDER}`, backgroundColor: SURFACE, aspectRatio: "4 / 5" }}>
+        {/* Main photo — circular avatar. "View All Photos" moved below it
+            (was an absolute overlay bar inside the card, which a circular
+            clip would chop into an arc instead of a straight edge). */}
+        <div style={{ width: isMobile ? 220 : 240, flexShrink: 0, margin: isMobile ? "0 auto" : undefined }}>
+          <div style={{ position: "relative", borderRadius: "50%", overflow: "hidden", border: `1px solid ${BORDER}`, backgroundColor: SURFACE, aspectRatio: "1 / 1" }}>
             {talent.avatarUrl ? (
               <img src={cdnImage(talent.avatarUrl, 480)} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
@@ -93,22 +95,21 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
                 {displayName.charAt(0).toUpperCase()}
               </div>
             )}
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent 40%, rgba(0,0,0,0.15))", pointerEvents: "none" }} />
-            {firstPortfolioItem && (
-              <button
-                onClick={onOpenGallery}
-                style={{
-                  position: "absolute", bottom: 12, insetInline: 12, zIndex: 2,
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  backgroundColor: "rgba(10,13,20,0.85)", color: "#e2e8f0", border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: 10, padding: "9px 12px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-                  fontFamily: "'IBM Plex Sans Arabic',sans-serif", backdropFilter: "blur(6px)", width: "calc(100% - 24px)",
-                }}
-              >
-                <Maximize2 size={14} color={GOLD} />{ar ? "عرض جميع الصور" : "View All Photos"}
-              </button>
-            )}
           </div>
+          {firstPortfolioItem && (
+            <button
+              onClick={onOpenGallery}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                marginTop: 12, backgroundColor: "rgba(10,13,20,0.85)", color: "#e2e8f0",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: 10, padding: "9px 12px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                fontFamily: "'IBM Plex Sans Arabic',sans-serif", backdropFilter: "blur(6px)", width: "100%",
+              }}
+            >
+              <Maximize2 size={14} color={GOLD} />{ar ? "عرض جميع الصور" : "View All Photos"}
+            </button>
+          )}
         </div>
 
         {/* Identity */}

@@ -245,7 +245,7 @@
   height: 40px;
   padding: 0;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 50%;
   color: var(--color-secondary);
 }
 
