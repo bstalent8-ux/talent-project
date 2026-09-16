@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     subject: (page && PAGE_SUBJECT[page]) || "طلب مساعدة",
     message,
     status:  "new",
-    context: { page, pageError, submittedAt: new Date().toISOString() },
+    context: { page, pageError, submittedAt: new Date().toISOString(), submittedBy: { type: "user", name: user ? submitterName : null } },
     attachment_url:  attachmentUrl,
     attachment_type: attachmentType,
   });

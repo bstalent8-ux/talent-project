@@ -880,7 +880,7 @@ export interface AdminSupportTicket {
   status:      "new" | "seen" | "process" | "done";
   adminReply:  string | null;
   repliedAt:   string | null;
-  context:     { page?: string | null; pageError?: string | null } | null;
+  context:     { page?: string | null; pageError?: string | null; submittedBy?: { type: "user" | "admin"; name: string | null } } | null;
   attachmentUrl:  string | null;
   attachmentType: "image" | "video" | null;
   /** Free-text claim tag an admin writes on a ticket (e.g. "admin-1") —

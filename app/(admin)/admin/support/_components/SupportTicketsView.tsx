@@ -37,7 +37,8 @@ const TX = {
     delete: "حذف", deleteTitle: "حذف التذكرة؟", deleteDesc: "الإجراء ده نهائي ومش هينفع يتراجع.",
     assignedAdmin: "المسؤول عن التذكرة", assignedAdminPH: "مثال: admin-1", save: "حفظ",
     adminNote: "ملاحظة داخلية (تظهر للأدمن بس)", adminNotePH: "اكتب ملاحظتك هنا...",
-    assignedTable: "المسؤول",
+    assignedTable: "المسؤول", unassigned: "لسه مش معينلها حد",
+    submittedByUser: "المستخدم بنفسه", submittedByAdmin: "رفعها الأدمن",
   },
   en: {
     from: "From", subject: "Subject", status: "Status",
@@ -54,9 +55,19 @@ const TX = {
     delete: "Delete", deleteTitle: "Delete this ticket?", deleteDesc: "This is permanent and can't be undone.",
     assignedAdmin: "Assigned to", assignedAdminPH: "e.g. admin-1", save: "Save",
     adminNote: "Internal note (admin-only)", adminNotePH: "Write your note here...",
-    assignedTable: "Assigned",
+    assignedTable: "Assigned", unassigned: "Unassigned",
+    submittedByUser: "Filed by the user", submittedByAdmin: "Filed by admin",
   },
 };
+
+/** "the user" / "admin Neveen Khaled" — resolved from context.submittedBy,
+ *  falling back to the pre-this-feature legacy shape (no submittedBy at
+ *  all = an old ticket, always self-reported). */
+function submittedByLabel(v: AdminSupportTicket, t: typeof TX["ar"]): string {
+  const by = v.context?.submittedBy;
+  if (!by || by.type === "user") return t.submittedByUser;
+  return by.name ? `${t.submittedByAdmin}: ${by.name}` : t.submittedByAdmin;
+}
 
 interface Props {
   tickets:         AdminSupportTicket[];
@@ -194,6 +205,9 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                         <div style={{ fontWeight: 600 }}>{v.name || v.email}</div>
                         <div style={{ color: MUTED, fontSize: 11 }}>{v.email}</div>
                         {v.phone && <div style={{ color: MUTED, fontSize: 11 }}>{v.phone}</div>}
+                        <div style={{ color: v.context?.submittedBy?.type === "admin" ? "#F4B740" : MUTED, fontSize: 10.5, fontWeight: v.context?.submittedBy?.type === "admin" ? 700 : 400, marginTop: 2 }}>
+                          {submittedByLabel(v, t)}
+                        </div>
                       </td>
                       <td style={cellStyle}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -211,8 +225,14 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                           {t[v.status as keyof typeof t] as string ?? v.status}
                         </span>
                       </td>
-                      <td style={{ ...cellStyle, color: v.assignedAdmin ? TEXT : MUTED }}>
-                        {v.assignedAdmin || "—"}
+                      <td style={cellStyle}>
+                        {v.assignedAdmin ? (
+                          <span style={{ color: TEXT, fontWeight: 600 }}>{v.assignedAdmin}</span>
+                        ) : (
+                          <span style={{ padding: "3px 8px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, backgroundColor: "rgba(239,68,68,0.1)", color: "#EF4444" }}>
+                            {t.unassigned}
+                          </span>
+                        )}
                       </td>
                       <td style={{ ...cellStyle, color: MUTED, whiteSpace: "nowrap" }}>
                         {new Date(v.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}
@@ -252,9 +272,18 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
               <div>
                 <h2 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{selected.subject}</h2>
-                <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: (STATUS_COLOR[selected.status] ?? STATUS_COLOR.new).bg, color: (STATUS_COLOR[selected.status] ?? STATUS_COLOR.new).text, display: "inline-block", marginTop: 6 }}>
-                  {t[selected.status as keyof typeof t] as string}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                  <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: (STATUS_COLOR[selected.status] ?? STATUS_COLOR.new).bg, color: (STATUS_COLOR[selected.status] ?? STATUS_COLOR.new).text, display: "inline-block" }}>
+                    {t[selected.status as keyof typeof t] as string}
+                  </span>
+                  <span style={{
+                    padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, display: "inline-block",
+                    backgroundColor: selected.context?.submittedBy?.type === "admin" ? "rgba(244,183,64,0.15)" : "rgba(96,165,250,0.15)",
+                    color: selected.context?.submittedBy?.type === "admin" ? "#F4B740" : "#60A5FA",
+                  }}>
+                    {submittedByLabel(selected, t)}
+                  </span>
+                </div>
               </div>
               <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}>
                 <X size={18} />
@@ -342,7 +371,14 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                 (see saveTriage's own comment). */}
             <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
               <div style={{ flex: "1 1 160px" }}>
-                <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 6 }}>{t.assignedAdmin}</label>
+                <label style={{ color: MUTED, fontSize: 12, display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  {t.assignedAdmin}
+                  {!selected.assignedAdmin && (
+                    <span style={{ padding: "2px 7px", borderRadius: 20, fontSize: 10, fontWeight: 700, backgroundColor: "rgba(239,68,68,0.1)", color: "#EF4444" }}>
+                      {t.unassigned}
+                    </span>
+                  )}
+                </label>
                 <div style={{ display: "flex", gap: 6 }}>
                   <input
                     value={assignedDraft}

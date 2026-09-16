@@ -11,12 +11,20 @@ export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission } from "@/lib/auth/permissions";
+import { getAdminUser } from "@/lib/auth/require-admin";
 import { adminClient } from "@/lib/supabase/admin";
 import { notifyAdminTalentSupportTicket } from "@/lib/notifications/events";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const denied = await requirePermission("support", "create");
   if (denied) return denied;
+
+  const admin = await getAdminUser();
+  let adminName: string | null = null;
+  if (admin) {
+    const { data: adminProfile } = await adminClient.from("profiles").select("full_name").eq("id", admin.id).single();
+    adminName = adminProfile?.full_name ?? null;
+  }
 
   const { id: talentProfileId } = await params;
 
@@ -71,7 +79,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     message,
     status:  "new",
     talent_id: talentProfileId,
-    context: { source: "admin_talent_flag" },
+    context: { source: "admin_talent_flag", submittedBy: { type: "admin", name: adminName } },
     attachment_url:  attachmentUrl,
     attachment_type: attachmentType,
   });
