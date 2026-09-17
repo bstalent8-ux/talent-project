@@ -3,11 +3,10 @@ export const runtime = 'edge';
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Pencil, Save, X, Lock, Shield, Star, Eye,
-  MapPin, Crown, Zap, Calendar, Heart, Share2,
-  MessageCircle, CheckCircle, Plus, Camera, Play,
+  Save, Lock, Shield, Star, Eye,
+  MapPin, Crown, Zap, Calendar,
+  CheckCircle, Plus, Camera, Play,
   Upload, Trash2,
 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
@@ -102,10 +101,6 @@ const TX = {
     verified:       "موثّق",
     fastResponse:   "رد سريع",
     premium:        "بريميوم",
-    message:        "رسالة",
-    bookNow:        "احجز الآن",
-    favorite:       "المفضلة",
-    share:          "مشاركة",
     escrowTitle:    "خطوات الحجز",
     escrowSteps:    ["إرسال البريف","قبول الموهبة","تأكيد الدفع","تسليم العمل"],
     viewPublic:     "عرض الملف العام",
@@ -172,10 +167,6 @@ const TX = {
     verified:       "Verified",
     fastResponse:   "Fast Response",
     premium:        "Premium",
-    message:        "Message",
-    bookNow:        "Book Now",
-    favorite:       "Favorite",
-    share:          "Share",
     escrowTitle:    "Booking Steps",
     escrowSteps:    ["Brief Sent","Talent Accepts","Payment Confirmed","Work Delivered"],
     viewPublic:     "View Public Profile",
@@ -219,7 +210,12 @@ export default function DashboardPage() {
   const INP     = dark ? "#0d1527" : "#f8fafc";
 
   const [status,        setStatus]        = useState<"loading"|"ready"|"none">("loading");
-  const [edit,          setEdit]          = useState(false);
+  // Always true now — profile/me is directly editable the moment you land
+  // on it, no separate "Edit Profile" mode to switch into first. Kept as a
+  // variable (not deleted) only because dozens of `edit ? inputVersion :
+  // displayVersion` branches below key off it; every one of them now always
+  // takes the input side.
+  const [edit,          setEdit]          = useState(true);
   const [saving,        setSaving]        = useState(false);
   const [saveMsg,       setSaveMsg]       = useState("");
   const [saveErr,       setSaveErr]       = useState("");
@@ -460,7 +456,7 @@ export default function DashboardPage() {
     setBrands(brands);
     setSaving(false);
     setSaveMsg(t.saved);
-    setTimeout(() => { setSaveMsg(""); setEdit(false); }, 1500);
+    setTimeout(() => setSaveMsg(""), 1500);
   };
 
   const setF = (k: string, v: string) => setForm((f: any) => ({ ...f, [k]: v }));
@@ -583,32 +579,45 @@ export default function DashboardPage() {
   return (
     <main dir={lang === "ar" ? "rtl" : "ltr"} style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif", backgroundColor: BG, minHeight: "100vh", paddingBottom: 110 }}>
 
-      {/* ─── Save bar (edit mode) ─── */}
-      <AnimatePresence>
-        {edit && (
-          <motion.div
-            initial={{ y: -60 }} animate={{ y: 0 }} exit={{ y: -60 }}
-            style={{
-              position: "sticky", top: 60, zIndex: 50,
-              backgroundColor: dark ? "#0A121C" : "#fff",
-              borderBottom: `1px solid ${BORDER}`,
-              padding: "10px 24px",
-              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-            }}
-          >
-            <span style={{ color: TEXT, fontSize: 14, fontWeight: 700 }}>{t.editProfile}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              {saveErr && <span style={{ color: "#ef4444", fontSize: 12, fontWeight: 600 }}>{saveErr}</span>}
-              <button onClick={() => { setEdit(false); setSaveErr(""); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: "transparent", border: `1px solid ${BORDER}`, borderRadius: 8, color: MUTED, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
-                <X size={14} />{t.cancel}
-              </button>
-              <button onClick={handleSave} disabled={saving} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", backgroundColor: saveErr ? "#ef4444" : GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: saving ? "wait" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
-                <Save size={14} />{saveMsg || (saving ? t.saving : t.saveChanges)}
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ─── Save bar ─── */}
+      {/* Every field on this page is directly editable — no separate "Edit
+          Profile" mode to switch into first — so Save has to be reachable
+          from wherever you are on a long page. Desktop keeps a sticky top
+          bar; mobile gets a fixed bottom bar instead (thumb reach, and it
+          can't be missed by scrolling past it), matching the pattern the
+          user specifically asked for: "save يتميز في الموبايل". */}
+      <div
+        style={isMobile ? {
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
+          backgroundColor: dark ? "#0A121C" : "#fff",
+          borderTop: `1px solid ${BORDER}`,
+          boxShadow: "0 -4px 16px rgba(0,0,0,0.12)",
+          padding: "10px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+        } : {
+          position: "sticky", top: 60, zIndex: 50,
+          backgroundColor: dark ? "#0A121C" : "#fff",
+          borderBottom: `1px solid ${BORDER}`,
+          padding: "10px 24px",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        }}
+      >
+        {!isMobile && <span style={{ color: TEXT, fontSize: 14, fontWeight: 700 }}>{t.editProfile}</span>}
+        {saveErr && <span style={{ color: "#ef4444", fontSize: 12, fontWeight: 600 }}>{saveErr}</span>}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            padding: isMobile ? "12px 0" : "8px 20px", width: isMobile ? "100%" : undefined,
+            backgroundColor: saveErr ? "#ef4444" : GREEN, border: "none", borderRadius: 8,
+            color: "#000", fontSize: 14, fontWeight: 800, cursor: saving ? "wait" : "pointer",
+            fontFamily: "'IBM Plex Sans Arabic',sans-serif",
+          }}
+        >
+          <Save size={14} />{saveMsg || (saving ? t.saving : t.saveChanges)}
+        </button>
+      </div>
 
       <div style={{ maxWidth: 1440, margin: "0 auto", padding: "24px 24px" }}>
 
@@ -645,16 +654,6 @@ export default function DashboardPage() {
                   </span>
                 )}
               </a>
-            )}
-            {!edit && (
-              // Routes to the dedicated guided flow instead of toggling the
-              // page's own inline edit mode — see /profile/me/complete.
-              // `edit` can no longer become true from this page; its inline
-              // form branches below are kept but unreachable rather than
-              // deleted, per the "demote, don't delete" instruction.
-              <button onClick={() => router.push("/profile/me/complete")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 18px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
-                <Pencil size={14} />{t.editProfile}
-              </button>
             )}
           </div>
         </div>
@@ -767,22 +766,6 @@ export default function DashboardPage() {
 
             {/* Right col — same as talent profile view */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
-                  <MessageCircle size={14} color={GREEN} />{t.message}
-                </button>
-                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#000", borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", border: "none" }}>
-                  <Calendar size={14} />{t.bookNow}
-                </button>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
-                  <Heart size={13} />{t.favorite}
-                </button>
-                <button style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
-                  <Share2 size={13} />{t.share}
-                </button>
-              </div>
               {/* Escrow */}
               <div style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16 }}>
                 <p style={{ color: MUTED, fontSize: 10, fontWeight: 700, marginBottom: 12, letterSpacing: 0.8, margin: "0 0 12px" }}>{t.escrowTitle}</p>
@@ -883,18 +866,6 @@ export default function DashboardPage() {
               <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.physicalInfo}</h3>
-                  {!edit && (
-                    // Routes to the guided flow's physical/measurements step
-                    // instead of this page's own quick-edit modal — avoids a
-                    // second, narrower physical-data editor living alongside
-                    // the wizard's (which also covers eye_color).
-                    <button
-                      onClick={() => router.push("/profile/me/complete?step=physical")}
-                      style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", backgroundColor: "rgba(0,201,177,0.08)", border: `1px solid rgba(0,201,177,0.2)`, borderRadius: 8, color: "#00C9B1", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
-                    >
-                      ✏️ {lang === "ar" ? "تعديل" : "Edit"}
-                    </button>
-                  )}
                 </div>
                 {edit ? (
                   <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
