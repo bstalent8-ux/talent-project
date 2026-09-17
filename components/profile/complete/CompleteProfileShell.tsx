@@ -20,6 +20,7 @@ import { cdnImage } from "@/lib/images";
 import { getWizardSteps, type WizardStepKey } from "@/components/profile/completion-wizard-steps";
 import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 import { calculateCompletion } from "@/lib/profile-completion";
+import { uploadToCloudinary, cloudinaryUploadErrorText } from "@/lib/cloudinary-client-upload";
 import {
   DAY_KEYS, DAY_LABELS, MONTH_LABELS, parseAvailabilitySchedule,
   type AvailabilitySchedule, type AvailabilityException, type DatesMap, type ExceptionType, type TimeSlot,
@@ -80,6 +81,8 @@ const TX = {
     locked: "يفتح قريباً",
     portfolioCaption: "تعليق (اختياري)",
     addPhoto: "إضافة صورة", addVideo: "إضافة فيديو",
+    portfolioErrTooBig: "الملف أكبر من 200 ميجا — جرب فيديو أصغر.",
+    portfolioErrSave: "اترفع بس ما اتحفظش في البروفايل، جرب تاني.",
     addPackage: "إضافة باقة", addAddon: "إضافة حق استخدام",
     pkgName: "اسم الباقة", pkgPrice: "السعر (جنيه)", pkgFeatures: "المميزات",
     pkgPopular: "الأكثر طلباً", addFeature: "إضافة ميزة",
@@ -158,6 +161,8 @@ const TX = {
     locked: "Coming soon",
     portfolioCaption: "Caption (optional)",
     addPhoto: "Add Photo", addVideo: "Add Video",
+    portfolioErrTooBig: "That file is over 200MB — try a smaller video.",
+    portfolioErrSave: "Uploaded but couldn't save to your profile — try again.",
     addPackage: "Add package", addAddon: "Add usage right",
     pkgName: "Package name", pkgPrice: "Price (EGP)", pkgFeatures: "Features",
     pkgPopular: "Most Popular", addFeature: "Add feature",
@@ -413,6 +418,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const [portfolioMedia, setPortfolioMedia] = useState<any[]>(portfolioItems ?? []);
   const [portfolioUploading, setPortfolioUploading] = useState(false);
   const [portfolioCaption, setPortfolioCaption] = useState("");
+  const [portfolioError, setPortfolioError] = useState("");
 
   type PkgItem = { id: string; name: string; price: string; popular: boolean; features: string[] };
   type AddonItem = { key: string; label: string; price: number };
@@ -450,34 +456,45 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
     setUploading(false);
   };
 
+  const MAX_PORTFOLIO_VIDEO_BYTES = 200 * 1024 * 1024;
+
   const handlePortfolioFile = async (file: File, type: "photo" | "video") => {
+    if (type === "video" && file.size > MAX_PORTFOLIO_VIDEO_BYTES) {
+      setPortfolioError(t.portfolioErrTooBig);
+      return;
+    }
     setPortfolioUploading(true);
+    setPortfolioError("");
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!;
+    const folder = (process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER ?? "talents") + "/portfolio";
+
+    const result = await uploadToCloudinary(file, { cloudName, uploadPreset, folder, resourceType: type === "video" ? "video" : "image" });
+    if (!result.ok) {
+      console.error("[portfolio upload]", result.errorKind, result.errorMessage ?? "");
+      setPortfolioError(cloudinaryUploadErrorText(result.errorKind!, lang));
+      setPortfolioUploading(false);
+      return;
+    }
+
     try {
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-      const folder = (process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER ?? "talents") + "/portfolio";
-      const endpoint = type === "video"
-        ? `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`
-        : `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", uploadPreset!);
-      fd.append("folder", folder);
-      const res = await fetch(endpoint, { method: "POST", body: fd });
-      const data = await res.json();
-      if (data.secure_url) {
-        const saveRes = await fetch("/api/portfolio", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: data.secure_url, media_type: type, caption: portfolioCaption || null }),
-        });
-        const saved = await saveRes.json();
-        if (saved.item) {
-          setPortfolioMedia(prev => [saved.item, ...prev]);
-          setPortfolioCaption("");
-          await onUpdate();
-        }
+      const saveRes = await fetch("/api/portfolio", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: result.url, media_type: type, caption: portfolioCaption || null }),
+      });
+      const saved = await saveRes.json();
+      if (saved.item) {
+        setPortfolioMedia(prev => [saved.item, ...prev]);
+        setPortfolioCaption("");
+        await onUpdate();
+      } else {
+        setPortfolioError(t.portfolioErrSave);
       }
-    } catch {}
+    } catch (e) {
+      console.error("[portfolio upload] saving item failed:", e);
+      setPortfolioError(t.portfolioErrSave);
+    }
     setPortfolioUploading(false);
   };
 
@@ -898,6 +915,9 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                   <input id="cp-portfolio-video" type="file" accept="video/*" multiple style={{ display: "none" }} disabled={portfolioUploading}
                     onChange={e => { const files = e.target.files; handlePortfolioFiles(files, "video"); e.target.value = ""; }} />
                 </div>
+                {portfolioError && (
+                  <p style={{ color: "#EF4444", fontSize: 12.5, margin: "10px 0 0" }} role="alert">{portfolioError}</p>
+                )}
               </div>
             )}
 

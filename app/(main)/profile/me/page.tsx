@@ -18,6 +18,7 @@ import ProfileCompletionCard from "@/components/profile/ProfileCompletionCard";
 import AvatarCropModal from "@/components/profile/AvatarCropModal";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
 import { COMPLETION_THRESHOLDS } from "@/lib/profile-completion";
+import { uploadToCloudinary, cloudinaryUploadErrorText } from "@/lib/cloudinary-client-upload";
 
 /* ─── colour helpers ─── */
 const GREEN = "#00D26A";
@@ -225,6 +226,7 @@ export default function DashboardPage() {
   const [uploading,     setUploading]     = useState(false);
   const [cropFile,      setCropFile]      = useState<File | null>(null);
   const [mediaUploading,setMediaUploading]= useState(false);
+  const [mediaError,    setMediaError]    = useState("");
   const [caption,       setCaption]       = useState("");
   const [media,         setMedia]         = useState<MediaItem[]>([]);
   const [profile,       setProfile]       = useState<any>(null);
@@ -362,27 +364,41 @@ export default function DashboardPage() {
     }
   };
 
+  const MAX_MEDIA_VIDEO_BYTES = 200 * 1024 * 1024;
+
   const handleMediaUpload = async (file: File, type: "photo"|"video") => {
+    if (type === "video" && file.size > MAX_MEDIA_VIDEO_BYTES) {
+      setMediaError(lang === "ar" ? "الملف أكبر من 200 ميجا — جرب فيديو أصغر." : "That file is over 200MB — try a smaller video.");
+      return;
+    }
     setMediaUploading(true);
+    setMediaError("");
+
+    const result = await uploadToCloudinary(file, {
+      cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
+      uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!,
+      folder: (process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER ?? "talents") + "/portfolio",
+      resourceType: type === "video" ? "video" : "image",
+    });
+    if (!result.ok) {
+      console.error("[portfolio upload]", result.errorKind, result.errorMessage ?? "");
+      setMediaError(cloudinaryUploadErrorText(result.errorKind!, lang));
+      setMediaUploading(false);
+      return;
+    }
+
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
-      fd.append("folder", (process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER ?? "talents") + "/portfolio");
-      const endpoint = type === "video"
-        ? `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`
-        : `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`;
-      const res  = await fetch(endpoint, { method: "POST", body: fd });
-      const data = await res.json();
-      if (data.secure_url) {
-        const saveRes = await fetch("/api/portfolio", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: data.secure_url, media_type: type, caption: caption || null }),
-        });
-        const saved = await saveRes.json();
-        if (saved.item) { setMedia(prev => [saved.item, ...prev]); setCaption(""); }
-      }
-    } catch {}
+      const saveRes = await fetch("/api/portfolio", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: result.url, media_type: type, caption: caption || null }),
+      });
+      const saved = await saveRes.json();
+      if (saved.item) { setMedia(prev => [saved.item, ...prev]); setCaption(""); }
+      else setMediaError(lang === "ar" ? "اترفع بس ما اتحفظش، جرب تاني." : "Uploaded but couldn't save — try again.");
+    } catch (e) {
+      console.error("[portfolio upload] saving item failed:", e);
+      setMediaError(lang === "ar" ? "اترفع بس ما اتحفظش، جرب تاني." : "Uploaded but couldn't save — try again.");
+    }
     setMediaUploading(false);
   };
 
@@ -809,6 +825,9 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
+              {mediaError && (
+                <p style={{ color: "#ef4444", fontSize: 12, margin: "0 0 12px", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }} role="alert">{mediaError}</p>
+              )}
               {media.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 0", color: MUTED, fontSize: 14 }}>{t.noMedia}</div>
               ) : (
