@@ -8,7 +8,7 @@ export const RESEND_COOLDOWN_SECONDS = 45;
 const MAX_ATTEMPTS = 5;
 const SENDER = "Talents Platform <noreply@talent-s.com>";
 
-export type OtpPurpose = "register";
+export type OtpPurpose = "register" | "login" | "reset_password";
 
 export function emailOtpConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
@@ -26,16 +26,17 @@ async function hashCode(email: string, code: string): Promise<string> {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function template(code: string, lang: "ar" | "en") {
+function template(code: string, lang: "ar" | "en", purpose: OtpPurpose) {
+  const isReset = purpose === "reset_password";
   if (lang === "ar") {
     return {
-      subject: "كود تفعيل حسابك في Talents",
-      html: `<div dir="rtl" style="font-family:sans-serif"><h2>تفعيل الحساب</h2><p>كود التحقق الخاص بك:</p><p style="font-size:28px;font-weight:800;letter-spacing:4px">${code}</p><p>صالح لمدة ${CODE_TTL_MINUTES} دقائق. لو مطلبتش الكود دا، تجاهل الرسالة.</p></div>`,
+      subject: isReset ? "كود إعادة تعيين كلمة المرور" : "كود تفعيل حسابك في Talents",
+      html: `<div dir="rtl" style="font-family:sans-serif"><h2>${isReset ? "إعادة تعيين كلمة المرور" : "تفعيل الحساب"}</h2><p>كود التحقق الخاص بك:</p><p style="font-size:28px;font-weight:800;letter-spacing:4px">${code}</p><p>صالح لمدة ${CODE_TTL_MINUTES} دقائق. لو مطلبتش الكود دا، تجاهل الرسالة.</p></div>`,
     };
   }
   return {
-    subject: "Your Talents account verification code",
-    html: `<div style="font-family:sans-serif"><h2>Verify your account</h2><p>Your verification code:</p><p style="font-size:28px;font-weight:800;letter-spacing:4px">${code}</p><p>Valid for ${CODE_TTL_MINUTES} minutes. If you didn't request this, ignore this email.</p></div>`,
+    subject: isReset ? "Your password reset code" : "Your Talents account verification code",
+    html: `<div style="font-family:sans-serif"><h2>${isReset ? "Reset your password" : "Verify your account"}</h2><p>Your verification code:</p><p style="font-size:28px;font-weight:800;letter-spacing:4px">${code}</p><p>Valid for ${CODE_TTL_MINUTES} minutes. If you didn't request this, ignore this email.</p></div>`,
   };
 }
 
@@ -45,10 +46,9 @@ export interface EmailOtpResult {
   retryAfterSeconds?: number;
 }
 
-export async function sendEmailOtp(email: string, lang: "ar" | "en"): Promise<EmailOtpResult> {
+export async function sendEmailOtp(email: string, lang: "ar" | "en", purpose: OtpPurpose = "register"): Promise<EmailOtpResult> {
   if (!emailOtpConfigured()) return { ok: false, error: "otp not configured" };
 
-  const purpose: OtpPurpose = "register";
   const normalizedEmail = email.trim().toLowerCase();
 
   const { data: last } = await adminClient
@@ -79,7 +79,7 @@ export async function sendEmailOtp(email: string, lang: "ar" | "en"): Promise<Em
   });
   if (insertErr) return { ok: false, error: "failed to create code" };
 
-  const { subject, html } = template(code, lang);
+  const { subject, html } = template(code, lang, purpose);
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -97,8 +97,7 @@ export async function sendEmailOtp(email: string, lang: "ar" | "en"): Promise<Em
   return { ok: true };
 }
 
-export async function verifyEmailOtp(email: string, code: string): Promise<EmailOtpResult> {
-  const purpose: OtpPurpose = "register";
+export async function verifyEmailOtp(email: string, code: string, purpose: OtpPurpose = "register"): Promise<EmailOtpResult> {
   const normalizedEmail = email.trim().toLowerCase();
 
   const { data: row } = await adminClient
@@ -144,4 +143,17 @@ export async function hasRecentVerifiedRegisterOtp(email: string): Promise<boole
     .maybeSingle();
   if (!data?.consumed_at) return false;
   return Date.now() - new Date(data.consumed_at).getTime() < 15 * 60_000;
+}
+
+// Supabase's admin API has no "get user by email" lookup, only by id — the
+// talent pool is small (dozens, not thousands, same posture as every other
+// full-table admin scan in this codebase) so one listUsers() page covers it.
+// Used by /api/auth/reset-password/* to turn a verified email back into the
+// auth.users id it needs to actually change the password.
+export async function findUserIdByEmail(email: string): Promise<string | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const { data, error } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (error) return null;
+  const users = data.users as { id: string; email?: string | null }[];
+  return users.find((u) => u.email?.toLowerCase() === normalizedEmail)?.id ?? null;
 }

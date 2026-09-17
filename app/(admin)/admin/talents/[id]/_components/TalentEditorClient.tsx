@@ -4,13 +4,14 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
-import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Save, ArrowLeft, Plus, Trash2, Eye } from "lucide-react";
 import TalentActionsPanel from "./TalentActionsPanel";
 import TalentBrandsPanel from "./TalentBrandsPanel";
 import { LeadWhatsAppButton } from "@/app/(admin)/admin/leads/_components/LeadContactActions";
 import TalentComplaintButton from "../../_components/TalentComplaintButton";
 import type { TalentAction, AdminTalentBrand } from "@/features/admin/types";
 import { TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
+import { canonicalTalentPath } from "@/lib/talent-profile-route";
 
 const TX = {
   ar: {
@@ -18,7 +19,7 @@ const TX = {
     fullName: "الاسم الكامل", handle: "اسم المستخدم", city: "المدينة",
     category: "التصنيف", bio: "نبذة", specialties: "التخصصات (مفصولة بفاصلة)",
     availability: "التوفر",
-    save: "حفظ التغييرات", saving: "جاري الحفظ...", back: "رجوع",
+    save: "حفظ التغييرات", saving: "جاري الحفظ...", back: "رجوع", viewProfile: "عرض البروفايل",
     registrationTitle: "بيانات التسجيل", email: "البريد الإلكتروني", phone: "رقم الهاتف",
     registeredAt: "تاريخ التسجيل", notProvided: "غير متوفر",
     saved: "تم الحفظ بنجاح", error: "حدث خطأ",
@@ -50,7 +51,7 @@ const TX = {
     fullName: "Full Name", handle: "Username", city: "City",
     category: "Category", bio: "Bio", specialties: "Specialties (comma-separated)",
     availability: "Availability",
-    save: "Save Changes", saving: "Saving...", back: "Back",
+    save: "Save Changes", saving: "Saving...", back: "Back", viewProfile: "View profile",
     registrationTitle: "Registration Info", email: "Email", phone: "Phone Number",
     registeredAt: "Registered On", notProvided: "Not provided",
     saved: "Saved successfully", error: "An error occurred",
@@ -444,7 +445,19 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
             </span>
           </div>
         </div>
-        <div style={{ marginInlineStart: "auto" }}>
+        <div style={{ marginInlineStart: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+          {form.handle && (
+            <a
+              href={canonicalTalentPath(identity.category, form.handle)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={t.viewProfile}
+              aria-label={t.viewProfile}
+              style={{ color: MUTED, display: "flex", padding: 4 }}
+            >
+              <Eye size={20} />
+            </a>
+          )}
           <TalentComplaintButton
             talentProfileId={talentProfileId}
             fullName={identity.fullName}

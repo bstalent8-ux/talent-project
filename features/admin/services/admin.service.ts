@@ -889,6 +889,10 @@ export interface AdminSupportTicket {
   /** Internal-only note, never shown to the ticket submitter — distinct
    *  from adminReply, which is user-facing. */
   adminNote:     string | null;
+  /** talent_profiles.id this ticket is about — set only for tickets filed
+   *  from the talents table / edit-profile page (20260916_support_ticket_
+   *  talent_link.sql). Null for a self-reported ticket. */
+  talentId:      string | null;
   createdAt:   string;
 }
 
@@ -915,7 +919,7 @@ export async function fetchAdminSupportTicketsPage({
 
   let query = adminClient
     .from("contact_messages")
-    .select("id, name, email, phone, type, subject, message, status, admin_reply, replied_at, context, attachment_url, attachment_type, assigned_admin, admin_note, created_at", { count: "exact" })
+    .select("id, name, email, phone, type, subject, message, status, admin_reply, replied_at, context, attachment_url, attachment_type, assigned_admin, admin_note, talent_id, created_at", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -940,6 +944,7 @@ export async function fetchAdminSupportTicketsPage({
     attachmentType: (r as Record<string, unknown>).attachment_type as "image" | "video" | null ?? null,
     assignedAdmin:  (r as Record<string, unknown>).assigned_admin as string | null ?? null,
     adminNote:      (r as Record<string, unknown>).admin_note as string | null ?? null,
+    talentId:       (r as Record<string, unknown>).talent_id as string | null ?? null,
     createdAt:  r.created_at,
   }));
 

@@ -7,7 +7,8 @@ import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import type { AdminSupportTicket } from "@/features/admin/services/admin.service";
-import { Copy, Image as ImageIcon, Mail, Phone, Trash2, User, Video, X } from "lucide-react";
+import Link from "next/link";
+import { Copy, Eye, Image as ImageIcon, Mail, Phone, Trash2, User, Video, X } from "lucide-react";
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   new:     { bg: "rgba(239,68,68,0.15)",  text: "#EF4444" },
@@ -39,6 +40,7 @@ const TX = {
     adminNote: "ملاحظة داخلية (تظهر للأدمن بس)", adminNotePH: "اكتب ملاحظتك هنا...",
     assignedTable: "المسؤول", unassigned: "لسه مش معينلها حد",
     submittedByUser: "المستخدم بنفسه", submittedByAdmin: "رفعها الأدمن",
+    viewProfile: "عرض بروفايل الموهبة",
   },
   en: {
     from: "From", subject: "Subject", status: "Status",
@@ -57,6 +59,7 @@ const TX = {
     adminNote: "Internal note (admin-only)", adminNotePH: "Write your note here...",
     assignedTable: "Assigned", unassigned: "Unassigned",
     submittedByUser: "Filed by the user", submittedByAdmin: "Filed by admin",
+    viewProfile: "View talent's profile",
   },
 };
 
@@ -238,16 +241,29 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                         {new Date(v.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}
                       </td>
                       <td style={{ ...cellStyle, width: 1 }}>
-                        {canDelete && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setPendingDelete(v); }}
-                            title={t.delete}
-                            aria-label={t.delete}
-                            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-error)", display: "flex", padding: 4 }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        )}
+                        <div style={{ display: "flex", gap: 4 }}>
+                          {v.talentId && (
+                            <Link
+                              href={`/admin/talents/${v.talentId}`}
+                              onClick={(e) => e.stopPropagation()}
+                              title={t.viewProfile}
+                              aria-label={t.viewProfile}
+                              style={{ color: MUTED, display: "flex", padding: 4 }}
+                            >
+                              <Eye size={15} />
+                            </Link>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setPendingDelete(v); }}
+                              title={t.delete}
+                              aria-label={t.delete}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-error)", display: "flex", padding: 4 }}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -489,6 +505,16 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
               >
                 {t.send}
               </button>
+              {selected.talentId && (
+                <Link
+                  href={`/admin/talents/${selected.talentId}`}
+                  title={t.viewProfile}
+                  aria-label={t.viewProfile}
+                  style={{ marginInlineStart: canDelete ? undefined : "auto", padding: "8px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, display: "flex", cursor: "pointer" }}
+                >
+                  <Eye size={15} />
+                </Link>
+              )}
               {canDelete && (
                 <button
                   disabled={saving}
