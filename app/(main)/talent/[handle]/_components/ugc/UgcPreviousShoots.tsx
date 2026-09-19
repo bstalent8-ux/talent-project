@@ -34,13 +34,15 @@ interface Tile {
   date: string | null;
 }
 
-export default function UgcPreviousShoots({ experience, brands }: { experience: ExperienceItem[] | null; brands: BrandItem[] }) {
+export default function UgcPreviousShoots({ experience, brands, variant = "ugc" }: { experience: ExperienceItem[] | null; brands: BrandItem[]; variant?: "ugc" | "model" }) {
+  const model = variant === "model";
   const phone = useIsMobile(640);
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const compact = useIsMobile(1024);
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
+  const CARD = model ? (dark ? "var(--bg-card)" : "#FFFFFF") : (dark ? "#0D1623" : "#FFFFFF");
+  const BORDER = model ? (dark ? "var(--border-subtle)" : "#E2E8F0") : (dark ? "rgba(255,255,255,0.10)" : "#E5E7EB");
+  const ACCENT = model ? "#d89b37" : PURPLE;
   const TILE_BORDER = dark ? "rgba(255,255,255,0.10)" : "#E7EAF0";
   const TEXT = dark ? "#fff" : "#0F172A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
@@ -65,9 +67,9 @@ export default function UgcPreviousShoots({ experience, brands }: { experience: 
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: i * 0.05 }}
-      style={{ border: `1px solid ${TILE_BORDER}`, borderRadius: 12, padding: 14, minWidth: 0, backgroundColor: dark ? "rgba(255,255,255,0.02)" : "#fff", display: "flex", flexDirection: "column" }}
+      style={{ border: `1px solid ${TILE_BORDER}`, borderRadius: 12, padding: 14, minWidth: 0, textAlign: model ? "center" : undefined, backgroundColor: dark ? "rgba(255,255,255,0.02)" : "#fff", display: "flex", flexDirection: "column" }}
     >
-      {t.verified && (
+      {t.verified && !model && (
         <span style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 4, backgroundColor: VERIFIED_GREEN, color: "#fff", borderRadius: 6, padding: "2px 7px", fontSize: 10, fontWeight: 800, letterSpacing: 0.3 }}>
           <ShieldCheck size={10} />{ar ? "موثّق" : "VERIFIED"}
         </span>
@@ -79,9 +81,14 @@ export default function UgcPreviousShoots({ experience, brands }: { experience: 
           <span style={{ color: TEXT, fontSize: tall ? 20 : 16, fontWeight: 800, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{t.name}</span>
         )}
       </div>
-      <div style={{ color: TEXT, fontSize: 14, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</div>
+      {!model && <div style={{ color: TEXT, fontSize: 14, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</div>}
       <div style={{ color: t.subtitle ? MUTED : FAINT, fontSize: 12, marginTop: 6 }}>{t.subtitle ?? noContent}</div>
       <div style={{ color: FAINT, fontSize: 12, marginTop: 6 }}>{t.date ?? noContent}</div>
+      {model && t.verified && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 10, color: "#22c55e", fontSize: 11, fontWeight: 800, letterSpacing: 0.3 }}>
+          <ShieldCheck size={13} />{ar ? "موثّق" : "VERIFIED"}
+        </div>
+      )}
     </motion.div>
   );
 
@@ -101,7 +108,7 @@ export default function UgcPreviousShoots({ experience, brands }: { experience: 
             <button
               type="button"
               onClick={opts.toggle}
-              style={{ background: "none", border: "none", padding: 0, color: PURPLE, fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
+              style={{ background: "none", border: "none", padding: 0, color: ACCENT, fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
             >
               {opts.open ? (ar ? "عرض أقل" : "Show Less") : (ar ? "عرض الكل" : "View All")}
             </button>
@@ -121,7 +128,7 @@ export default function UgcPreviousShoots({ experience, brands }: { experience: 
   return (
     <div style={{ display: "grid", gridTemplateColumns: compact ? "minmax(0,1fr)" : "minmax(0,1fr) minmax(0,1fr)", gap: 20, alignItems: "start" }}>
       {card({
-        title: ar ? "أعمال سابقة" : "Previous Shoots", note: ar ? "(رفعها المنشئ)" : "(Uploaded by Creator)",
+        title: ar ? "أعمال سابقة" : "Previous Shoots", note: model ? undefined : ar ? "(رفعها المنشئ)" : "(Uploaded by Creator)",
         items: shoots, cols: shootCols, open: shootsOpen, toggle: () => setShootsOpen((o) => !o), tall: false, anchor: "ugc-shoots",
       })}
       {card({

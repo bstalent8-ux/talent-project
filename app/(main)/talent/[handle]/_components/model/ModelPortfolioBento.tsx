@@ -6,7 +6,7 @@
 // portfolioItems, including videos, without fabricating media metadata.
 
 import { useState } from "react";
-import { Star, Play } from "lucide-react";
+import { Star, Play, Plus } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
@@ -99,13 +99,14 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
           </span>
         )}
         {item.caption && (
-          <div style={{ position: "absolute", bottom: 10, insetInlineEnd: 10, backgroundColor: "rgba(10,13,20,0.85)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 9px", borderRadius: 6, maxWidth: "70%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {item.caption}
+          <div style={{ position: "absolute", bottom: 10, insetInlineStart: 10, display: "flex", alignItems: "center", gap: 5, backgroundColor: "rgba(10,13,20,0.85)", border: "1px solid rgba(255,255,255,0.14)", color: "#fff", fontSize: 11.5, fontWeight: 700, padding: "4px 10px", borderRadius: 6, maxWidth: "calc(100% - 52px)" }}>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.caption}</span>
+            {index === 0 && <Plus size={12} color={GOLD} />}
           </div>
         )}
-        <div style={{ position: "absolute", bottom: 10, insetInlineStart: 10 }}>
-          <span style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.6)", border: `1px solid ${GOLD}66`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {video ? <Play size={11} color={GOLD} fill={GOLD} /> : <Star size={12} color={GOLD} fill={GOLD} />}
+        <div style={{ position: "absolute", bottom: 10, insetInlineEnd: 10 }}>
+          <span style={{ width: 26, height: 26, borderRadius: "50%", backgroundColor: "rgba(10,13,20,0.72)", border: `1px solid ${GOLD}66`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {video ? <Play size={12} color={GOLD} fill={GOLD} /> : <Star size={13} color={GOLD} fill={GOLD} />}
           </span>
         </div>
       </div>
@@ -163,7 +164,7 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
         @media (min-width: 768px) {
           .model-bento-top {
             display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
+            grid-template-columns: minmax(0, 34fr) minmax(0, 66fr) !important;
           }
           .model-bento-hero-wrap { grid-column: 1 / span 1; }
           .model-bento-top:not(.model-bento-solo) .model-bento-hero-tile { aspect-ratio: auto !important; height: 100% !important; }

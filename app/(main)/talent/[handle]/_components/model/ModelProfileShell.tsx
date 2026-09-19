@@ -56,8 +56,8 @@ import {
 import type { PublicProfileDTO } from "@/features/profiles/types/dto";
 import type { PackageItem } from "@/features/talent-profile/types";
 
-import PackagesSection from "../PackagesSection";
-import ExperienceSection from "../ExperienceSection";
+import UgcPackages from "../ugc/UgcPackages";
+import UgcPreviousShoots from "../ugc/UgcPreviousShoots";
 import UsageRightsSection from "../UsageRightsSection";
 import { FALLBACK_ADDONS_AR, FALLBACK_ADDONS_EN } from "@/lib/booking/addons";
 
@@ -68,7 +68,6 @@ import ModelPortfolioBento from "./ModelPortfolioBento";
 import ModelGalleryLightbox from "./ModelGalleryLightbox";
 import ModelSidebar from "./ModelSidebar";
 import ModelStickyBar from "./ModelStickyBar";
-import ModelVerifiedBrands from "./ModelVerifiedBrands";
 import ModelBottomGrid from "./ModelBottomGrid";
 import ModelTabs, { type ModelTab } from "./ModelTabs";
 
@@ -185,13 +184,16 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
               <ModelPortfolioBento portfolioItems={portfolioItems} onOpenGallery={setGalleryIndex} />
             </div>
 
-            <div id="model-shoots" className="model-shoots-row" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-              <ExperienceSection experience={experience} variant="model" />
-              <ModelVerifiedBrands brands={brands} />
+            <div id="model-shoots">
+              <UgcPreviousShoots variant="model" experience={experience} brands={brands} />
             </div>
 
             <div id="model-packages">
-              <PackagesSection packages={packages} variant="model" onSelect={setSelectedPackage} />
+              <UgcPackages variant="model" packages={packages} selectedId={selectedPackage?.id} onSelectPackage={setSelectedPackage} />
+            </div>
+
+            <div id="model-performance">
+              <ModelBottomGrid reviews={reviews} reviewCount={talent.reviewCount} bookingStats={bookingStats} modelMetrics={talent.modelMetrics} registeredAt={talent.registeredAt ?? null} brands={brands} experience={experience} />
             </div>
 
             <UsageRightsSection
@@ -201,19 +203,16 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
               onToggle={toggleAddon}
               showBookButton={false}
             />
-
-            <div id="model-performance">
-              <ModelBottomGrid reviews={reviews} reviewCount={talent.reviewCount} bookingStats={bookingStats} modelMetrics={talent.modelMetrics} registeredAt={talent.registeredAt ?? null} brands={brands} />
-            </div>
           </div>
 
-          <ModelSidebar talent={talent} brands={brands} portfolioItems={portfolioItems} />
+          <ModelSidebar talent={talent} portfolioItems={portfolioItems} />
         </div>
       </div>
 
       <ModelStickyBar
         selectedPackage={selectedPackage}
         addonsTotal={addonsTotal}
+        avgProjectValue={talent.modelMetrics?.avgProjectValue ?? null}
         identityVerified={Boolean(talent.identityVerified)}
         onContinueToBrief={() => setShowBrief(true)}
       />
@@ -255,7 +254,7 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
         />
       )}
 
-      <style>{`@media (min-width:1024px){.model-shell-grid{grid-template-columns:minmax(0,1fr) minmax(280px,0.4fr) !important}}@media (min-width:640px){.model-shoots-row{grid-template-columns:1fr 1fr !important}}`}</style>
+      <style>{`@media (min-width:1024px){.model-shell-grid{grid-template-columns:minmax(0,1fr) minmax(280px,0.4fr) !important}}`}</style>
     </main>
   );
 }
