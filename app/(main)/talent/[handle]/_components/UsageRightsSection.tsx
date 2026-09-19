@@ -18,9 +18,11 @@ interface Props {
    * booking CTA (e.g. the Model page's sticky bar) — avoids two competing
    * calls to action pricing the same thing. */
   showBookButton?: boolean;
+  /** Single column (add-ons, then Order Summary) for narrow slots. */
+  stacked?: boolean;
 }
 
-export default function UsageRightsSection({ selectedPackage, addons: addonsProp, checked: checkedProp, onToggle, showBookButton = true }: Props) {
+export default function UsageRightsSection({ selectedPackage, addons: addonsProp, checked: checkedProp, onToggle, showBookButton = true, stacked = false }: Props) {
   const [checkedState, setCheckedState] = useState<Record<string, boolean>>({});
   const isMobile = useIsMobile();
   const { dark, lang } = useSite();
@@ -38,7 +40,7 @@ export default function UsageRightsSection({ selectedPackage, addons: addonsProp
   const addonTotal = addons.reduce((sum, a) => sum + (checked[a.key] ? a.price : 0), 0);
   const total = basePrice + addonTotal;
 
-  const fmt = (n: number) => n.toLocaleString("ar-EG");
+  const fmt = (n: number) => n.toLocaleString(ar ? "ar-EG" : "en-US");
 
   // Without add-ons there is nothing to price up — the block is only a
   // calculator over them.
@@ -47,7 +49,7 @@ export default function UsageRightsSection({ selectedPackage, addons: addonsProp
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
       <h2 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 18, fontWeight: 800, marginBottom: 20, margin: "0 0 20px" }}>{ar ? "حقوق الاستخدام والإضافات" : "Usage Rights & Add-ons"}</h2>
-      {addons.length > 0 && <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: 20 }}>
+      {addons.length > 0 && <div style={{ display: "grid", gridTemplateColumns: isMobile || stacked ? "1fr" : "2fr 1fr", gap: 20 }}>
         {/* Add-ons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {addons.map(a => (

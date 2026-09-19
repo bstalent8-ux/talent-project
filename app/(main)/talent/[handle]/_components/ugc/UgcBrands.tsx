@@ -12,7 +12,7 @@ import type { BrandItem } from "@/features/talent-profile/types";
 const PURPLE = "#6C4DFF";
 const VISIBLE = 14;
 
-export default function UgcBrands({ brands }: { brands: BrandItem[] }) {
+export default function UgcBrands({ brands, bare = false }: { brands: BrandItem[]; bare?: boolean }) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
@@ -26,8 +26,8 @@ export default function UgcBrands({ brands }: { brands: BrandItem[] }) {
   const shown = expanded ? brands : brands.slice(0, VISIBLE);
   const pill = { padding: "8px 16px", borderRadius: 8, border: `1px solid ${PILL_BORDER}`, fontSize: 13.5, fontWeight: 600, backgroundColor: "transparent" } as const;
 
-  return (
-    <section style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, padding: 22, minWidth: 0 }}>
+  const body = (
+    <>
       <h2 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: "0 0 18px" }}>{ar ? "براندات اشتغلت معاها" : "Brands I've Worked With"}</h2>
 
       {brands.length === 0 ? (
@@ -50,6 +50,14 @@ export default function UgcBrands({ brands }: { brands: BrandItem[] }) {
           )}
         </div>
       )}
+    </>
+  );
+
+  // bare: rendered inside a parent card that supplies the chrome.
+  if (bare) return body;
+  return (
+    <section style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, padding: 22, minWidth: 0 }}>
+      {body}
     </section>
   );
 }

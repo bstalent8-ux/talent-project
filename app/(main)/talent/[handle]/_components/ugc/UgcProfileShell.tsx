@@ -185,7 +185,7 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
         favoriteError={favoriteError}
       />
 
-      <div style={{ width: "min(var(--container-max), 100%)", margin: "0 auto", padding: "24px var(--container-pad)" }}>
+      <div style={{ width: "min(1760px, 100%)", margin: "0 auto", padding: "24px var(--container-pad)", boxSizing: "border-box" }}>
         <UgcTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
         {/* Portfolio + specialties sit side by side straight under the hero. */}
@@ -203,36 +203,41 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
           <UgcPreviousShoots experience={experience} brands={brands} />
         </div>
 
-        {/* Packages + brands worked with, side by side. */}
-        <div style={{ display: "grid", gridTemplateColumns: compact ? "minmax(0,1fr)" : "minmax(0,1.75fr) minmax(0,1fr)", gap: 20, alignItems: "start", marginBottom: 20 }}>
+        {/* Packages + usage rights share one row; everything below stacks full width. */}
+        <div style={{ display: "grid", gridTemplateColumns: compact ? "minmax(0,1fr)" : "minmax(0,1.6fr) minmax(0,1fr)", gap: 20, alignItems: "start", marginBottom: 20 }}>
           <UgcPackages packages={packages} selectedId={selectedPackage?.id} onSelectPackage={setSelectedPackage} />
-          <UgcBrands brands={brands} />
+          <UsageRightsSection
+            selectedPackage={selectedPackage}
+            addons={addons}
+            checked={checkedAddons}
+            onToggle={toggleAddon}
+            showBookButton={false}
+            stacked
+          />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(280px, 0.4fr)", gap: 20, alignItems: "start" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
-            {hasPerformance && <UgcPerformanceMetrics talent={talent} bookingStats={bookingStats} />}
-            <UsageRightsSection
-              selectedPackage={selectedPackage}
-              addons={addons}
-              checked={checkedAddons}
-              onToggle={toggleAddon}
-              showBookButton={false}
-            />
+        {hasPerformance && (
+          <div style={{ marginBottom: 20 }}>
+            <UgcPerformanceMetrics talent={talent} bookingStats={bookingStats} />
           </div>
+        )}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <UgcSafetyTrust
-              talentUserId={talent.id}
-              talentName={talent.name}
-              talentAvatar={talent.avatarUrl ?? null}
-              onOpenBrief={() => setShowBrief(true)}
-            />
-          </div>
-        </div>
+        {/* One card: brands worked with, then trust / booking / ask actions. */}
+        <section style={{ backgroundColor: dark ? "#0D1623" : "#FFFFFF", border: `1px solid ${dark ? "rgba(255,255,255,0.10)" : "#E5E7EB"}`, borderRadius: 18, padding: compact ? 16 : 22, marginBottom: 20, minWidth: 0 }}>
+          <UgcBrands brands={brands} bare />
+          <div style={{ height: 1, backgroundColor: dark ? "rgba(255,255,255,0.10)" : "#E5E7EB", margin: "22px 0" }} />
+          <UgcSafetyTrust
+            joined
+            stackJoined={compact}
+            talentUserId={talent.id}
+            talentName={talent.name}
+            talentAvatar={talent.avatarUrl ?? null}
+            onOpenBrief={() => setShowBrief(true)}
+          />
+        </section>
 
         {/* Last row: reviews, insights and recent activity (insights/activity are fixed demo text). */}
-        <div style={{ display: "grid", gridTemplateColumns: compact ? "minmax(0,1fr)" : "minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr)", gap: 20, alignItems: "start", marginTop: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: compact ? "minmax(0,1fr)" : "minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr)", gap: 20, alignItems: "start" }}>
           <UgcReviews reviews={reviews} brands={brands} />
           <UgcInsightsActivity />
         </div>

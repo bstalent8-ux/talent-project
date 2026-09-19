@@ -563,7 +563,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
     <div style={{ width: "100%", backgroundColor: BAND, color: "#fff", position: "relative", overflow: "hidden", fontFamily: FONT }}>
       <div style={{ position: "absolute", top: -80, insetInlineStart: "38%", width: 420, height: 420, borderRadius: "50%", background: `radial-gradient(circle, ${PURPLE}26, transparent 70%)`, pointerEvents: "none" }} />
 
-      <div style={{ position: "relative", width: "min(var(--container-max), 100%)", margin: "0 auto", padding: `${compact ? 20 : 30}px ${padX}`, boxSizing: "border-box" }}>
+      <div style={{ position: "relative", width: "min(1760px, 100%)", margin: "0 auto", padding: `${compact ? 20 : 30}px ${padX}`, boxSizing: "border-box" }}>
         {compact ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {identity}

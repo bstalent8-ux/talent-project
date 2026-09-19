@@ -20,9 +20,15 @@ interface Props {
   talentName: string;
   talentAvatar: string | null;
   onOpenBrief: () => void;
+  /** Lay the three cards out side by side instead of stacked. */
+  horizontal?: boolean;
+  /** Render without card chrome, as three hairline-divided columns inside a parent card. */
+  joined?: boolean;
+  /** Stack the joined columns (phones / tablets). */
+  stackJoined?: boolean;
 }
 
-export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar, onOpenBrief }: Props) {
+export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar, onOpenBrief, horizontal = false, joined = false, stackJoined = false }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
@@ -43,9 +49,16 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
     }));
   }
 
+  const HAIR = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
+  const cols = joined && !stackJoined;
+  // Joined: no per-block card chrome — the parent card frames all three, hairlines split them.
+  const block = (i: number, extra: React.CSSProperties = {}): React.CSSProperties => joined
+    ? { padding: cols ? "0 22px" : "18px 0", ...(cols ? { paddingInlineStart: i === 0 ? 0 : 22, paddingInlineEnd: i === 2 ? 0 : 22, borderInlineStart: i === 0 ? "none" : `1px solid ${HAIR}` } : { borderTop: i === 0 ? "none" : `1px solid ${HAIR}`, paddingTop: i === 0 ? 0 : 18 }), ...extra }
+    : {};
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 20 }}>
+    <div style={joined ? (cols ? { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", alignItems: "stretch" } : { display: "flex", flexDirection: "column" }) : horizontal ? { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 20, alignItems: "stretch" } : { display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={joined ? block(0) : { backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 20 }}>
         <h3 style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 14px", display: "flex", alignItems: "center", gap: 8 }}>
           <ShieldCheck size={16} color={EMERALD} />{ar ? "الأمان والثقة" : "Safety & Trust"}
         </h3>
@@ -58,7 +71,7 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
         </div>
       </div>
 
-      <div style={{ backgroundColor: `${EMERALD}0d`, border: `1px solid ${EMERALD}44`, borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={joined ? block(1, { display: "flex", flexDirection: "column", gap: 12 }) : { backgroundColor: `${EMERALD}0d`, border: `1px solid ${EMERALD}44`, borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: EMERALD, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <FileCheck2 size={16} color="#fff" />
@@ -76,7 +89,7 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
         </ProtectedAction>
       </div>
 
-      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={joined ? block(2, { display: "flex", flexDirection: "column", gap: 12 }) : { backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: `${VIOLET}22`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <MessageSquare size={16} color={VIOLET} />
