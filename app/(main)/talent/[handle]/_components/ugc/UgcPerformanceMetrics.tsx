@@ -44,8 +44,8 @@ export default function UgcPerformanceMetrics({ talent, bookingStats }: Props) {
   if (!hasAny) return null;
 
   return (
-    <section id="ugc-performance" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24 }}>
-      <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 800, margin: "0 0 16px" }}>{ar ? "مؤشرات الأداء" : "Performance Metrics"}</h2>
+    <section id="ugc-track-record" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 24 }}>
+      <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 800, margin: "0 0 16px" }}>{ar ? "سجل الحجوزات" : "Booking Track Record"}</h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
         {cards.map((c, i) => (
           <motion.div key={c.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}

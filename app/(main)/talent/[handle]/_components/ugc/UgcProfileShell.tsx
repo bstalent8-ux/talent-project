@@ -25,6 +25,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { useGuestGuard } from "@/contexts/GuestGuard";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useFavoriteTalent } from "@/hooks/useFavoriteTalent";
 import type { PermissionAction } from "@/lib/permissions";
 import DirectBriefModal from "@/components/DirectBriefModal";
@@ -50,7 +51,7 @@ import UgcVideoPortfolio from "./UgcVideoPortfolio";
 import UgcVideoLightbox from "./UgcVideoLightbox";
 import UgcPerformanceMetrics from "./UgcPerformanceMetrics";
 import UgcContentSpecialties from "./UgcContentSpecialties";
-import UgcContentChart from "./UgcContentChart";
+import UgcPerformanceOverview from "./UgcPerformanceOverview";
 import UgcPreviousShoots from "./UgcPreviousShoots";
 import UgcPackages from "./UgcPackages";
 import UgcBrands from "./UgcBrands";
@@ -70,6 +71,7 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
   const ar = lang !== "en";
   const router = useRouter();
   const guard = useGuestGuard();
+  const compact = useIsMobile(1024);
 
   const talent          = useMemo(() => toTalentData(profile), [profile]);
   const presenceLinks   = useMemo(() => toPresenceLinks(profile), [profile]);
@@ -150,12 +152,12 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
   const tabs = useMemo<UgcTab[]>(() => {
     const list: UgcTab[] = [];
     if (portfolioItems.length > 0) list.push({ key: "portfolio", anchor: "ugc-portfolio", label: ar ? "معرض الفيديوهات" : "Video Portfolio" });
-    if (hasPerformance) list.push({ key: "performance", anchor: "ugc-performance", label: ar ? "مؤشرات الأداء" : "Performance" });
-    if ((experience ?? []).length > 0) list.push({ key: "shoots", anchor: "ugc-shoots", label: ar ? "أعمال سابقة" : "Previous Shoots" });
-    if ((packages ?? []).length > 0) list.push({ key: "packages", anchor: "ugc-packages", label: ar ? "الباقات والأسعار" : "Packages & Prices" });
-    if (reviews.length > 0) list.push({ key: "reviews", anchor: "ugc-reviews", label: ar ? "التقييمات" : "Reviews" });
+    list.push({ key: "performance", anchor: "ugc-performance", label: ar ? "مؤشرات الأداء" : "Performance" });
+    list.push({ key: "shoots", anchor: "ugc-shoots", label: ar ? "أعمال سابقة" : "Previous Shoots" });
+    list.push({ key: "packages", anchor: "ugc-packages", label: ar ? "الباقات والأسعار" : "Packages & Prices" });
+    list.push({ key: "reviews", anchor: "ugc-reviews", label: ar ? "التقييمات" : "Reviews" });
     return list;
-  }, [portfolioItems.length, hasPerformance, experience, packages, reviews.length, ar]);
+  }, [portfolioItems.length, ar]);
 
   return (
     <main
@@ -186,12 +188,30 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
       <div style={{ width: "min(var(--container-max), 100%)", margin: "0 auto", padding: "24px var(--container-pad)" }}>
         <UgcTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
+        {/* Portfolio + specialties sit side by side straight under the hero. */}
+        <div style={{ display: "grid", gridTemplateColumns: compact ? "minmax(0,1fr)" : "minmax(0,7fr) minmax(0,3fr)", gap: 20, alignItems: "start", marginBottom: 20 }}>
+          <UgcVideoPortfolio portfolioItems={portfolioItems} onSelectVideo={setLightboxItem} />
+          <UgcContentSpecialties specialties={talent.specialties ?? []} />
+        </div>
+
+        {/* Performance metrics + content-type mix (fixed demo figures — see the component). */}
+        <div style={{ marginBottom: 20 }}>
+          <UgcPerformanceOverview />
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <UgcPreviousShoots experience={experience} brands={brands} />
+        </div>
+
+        {/* Packages + brands worked with, side by side. */}
+        <div style={{ display: "grid", gridTemplateColumns: compact ? "minmax(0,1fr)" : "minmax(0,1.75fr) minmax(0,1fr)", gap: 20, alignItems: "start", marginBottom: 20 }}>
+          <UgcPackages packages={packages} selectedId={selectedPackage?.id} onSelectPackage={setSelectedPackage} />
+          <UgcBrands brands={brands} />
+        </div>
+
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(280px, 0.4fr)", gap: 20, alignItems: "start" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
-            <UgcVideoPortfolio portfolioItems={portfolioItems} onSelectVideo={setLightboxItem} />
             {hasPerformance && <UgcPerformanceMetrics talent={talent} bookingStats={bookingStats} />}
-            <UgcPreviousShoots experience={experience} brands={brands} />
-            <UgcPackages packages={packages} selectedId={selectedPackage?.id} onSelectPackage={setSelectedPackage} />
             <UsageRightsSection
               selectedPackage={selectedPackage}
               addons={addons}
@@ -199,14 +219,9 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
               onToggle={toggleAddon}
               showBookButton={false}
             />
-            <UgcReviews reviews={reviews} rating={talent.rating} />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <UgcContentSpecialties specialties={talent.specialties ?? []} />
-            <UgcContentChart hasPortfolio={portfolioItems.length > 0} />
-            <UgcBrands brands={brands} />
-            <UgcInsightsActivity show={reviews.length > 0 || bookingStats.completed > 0} />
             <UgcSafetyTrust
               talentUserId={talent.id}
               talentName={talent.name}
@@ -214,6 +229,12 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
               onOpenBrief={() => setShowBrief(true)}
             />
           </div>
+        </div>
+
+        {/* Last row: reviews, insights and recent activity (insights/activity are fixed demo text). */}
+        <div style={{ display: "grid", gridTemplateColumns: compact ? "minmax(0,1fr)" : "minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr)", gap: 20, alignItems: "start", marginTop: 20 }}>
+          <UgcReviews reviews={reviews} brands={brands} />
+          <UgcInsightsActivity />
         </div>
       </div>
 

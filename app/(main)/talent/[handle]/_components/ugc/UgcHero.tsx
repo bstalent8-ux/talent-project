@@ -438,7 +438,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
   const statsRow = stats.length > 0 && (
     <div style={{
       display: phone ? "grid" : "flex", gridTemplateColumns: phone ? "repeat(2, minmax(0,1fr))" : undefined,
-      alignItems: "center", gap: phone ? 16 : 0, rowGap: 16, flexWrap: "wrap",
+      alignItems: "center", columnGap: phone ? 16 : 0, rowGap: 16, flexWrap: "wrap",
     }}>
       {stats.map((node, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", ...(phone ? {} : { paddingInlineEnd: 26, marginInlineEnd: 26, borderInlineEnd: i < stats.length - 1 ? `1px solid ${LINE}` : "none" }) }}>

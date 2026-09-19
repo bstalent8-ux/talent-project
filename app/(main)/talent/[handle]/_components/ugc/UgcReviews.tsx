@@ -1,83 +1,108 @@
 "use client";
 
-// Port of ugc/untitled/components/ReviewsSection.tsx — real Review[] with a
-// real per-star breakdown computed from that array. The source's inline
-// "Write a Review" form is not reproduced: reviews are brand-authored after
-// a completed booking (POST /api/bookings/[id]/review), not a public form
-// on the profile — see CLAUDE.md §10.1.
+// ─── Reviews ───────────────────────────────────────────────────────────────
+// Card matching the approved reference: "Reviews (N)" + "View All", each review
+// with a brand logo, brand name, package line, score + stars, quote, date and a
+// "Recommended" tag. Real reviews only:
+//   - logo        → the matching talent_brands logo, else the brand's initial
+//   - package     → not stored with a review, so that line reads "No content"
+//   - Recommended → shown for 4-5 star reviews
+// No reviews → the card says "No content".
 
-import { Star, ShieldCheck } from "lucide-react";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useState } from "react";
+import { Star } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
-import type { Review } from "@/features/talent-profile/types";
+import type { Review, BrandItem } from "@/features/talent-profile/types";
 
-const VIOLET = "#16a3a3"; // site --color-accent, was violet
-const GOLD = "#F4B740";
+const PURPLE = "#6C4DFF";
+const GOLD = "#F5B301";
+const VISIBLE = 2;
 
-export default function UgcReviews({ reviews, rating }: { reviews: Review[]; rating: number }) {
-  const isMobile = useIsMobile();
+function findLogo(names: string[], brands: BrandItem[]): string | null {
+  const hit = brands.find((b) => b.logo_url && names.some((n) => n && n.toLowerCase().includes(b.name.toLowerCase())));
+  return hit?.logo_url ?? null;
+}
+
+export default function UgcReviews({ reviews, brands = [] }: { reviews: Review[]; rating?: number; brands?: BrandItem[] }) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
+  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
   const TEXT = dark ? "#fff" : "#0F172A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+  const noContent = ar ? "لا يوجد محتوى" : "No content";
+  const [open, setOpen] = useState(false);
 
-  if (reviews.length === 0) return null;
-
-  const counts = [5, 4, 3, 2, 1].map((star) => reviews.filter((r) => r.rating === star).length);
-  const maxCount = Math.max(...counts, 1);
+  const canExpand = reviews.length > VISIBLE;
+  const visible = open ? reviews : reviews.slice(0, VISIBLE);
 
   return (
-    <section id="ugc-reviews" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
-      <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 800, margin: "0 0 4px" }}>{ar ? "تقييمات العملاء" : "Client Reviews"}</h2>
-      <p style={{ color: MUTED, fontSize: 12, margin: "0 0 20px" }}>{reviews.length} {ar ? "تقييم موثّق" : "verified reviews"}</p>
-
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "auto 1fr", gap: 24, padding: 16, borderRadius: 14, backgroundColor: SURFACE, border: `1px solid ${BORDER}`, marginBottom: 20, alignItems: "center" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ color: TEXT, fontSize: 34, fontWeight: 900 }}>{rating.toFixed(1)}</div>
-          <div style={{ display: "flex", gap: 2, justifyContent: "center", margin: "4px 0" }}>
-            {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={14} color={GOLD} fill={s <= Math.round(rating) ? GOLD : "transparent"} />)}
-          </div>
-          <div style={{ color: MUTED, fontSize: 11 }}>{reviews.length} {ar ? "تقييم" : "reviews"}</div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {[5, 4, 3, 2, 1].map((star, i) => (
-            <div key={star} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-              <span style={{ color: MUTED, width: 40, flexShrink: 0 }}>{star} {ar ? "نجوم" : "stars"}</span>
-              <div style={{ flex: 1, height: 6, backgroundColor: dark ? "#1a2535" : "#E2E8F0", borderRadius: 4, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${(counts[i] / maxCount) * 100}%`, backgroundColor: GOLD, borderRadius: 4 }} />
-              </div>
-              <span style={{ color: MUTED, width: 18, textAlign: "right", flexShrink: 0 }}>{counts[i]}</span>
-            </div>
-          ))}
-        </div>
+    <section id="ugc-reviews" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, padding: 22, minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
+        <h2 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: 0 }}>
+          {ar ? "التقييمات" : "Reviews"}
+          <span style={{ color: MUTED, fontSize: 14, fontWeight: 500, marginInlineStart: 6 }}>({reviews.length})</span>
+        </h2>
+        {canExpand && (
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            style={{ background: "none", border: "none", padding: 0, color: PURPLE, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
+          >
+            {open ? (ar ? "عرض أقل" : "Show Less") : (ar ? "عرض الكل" : "View All")}
+          </button>
+        )}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {reviews.map((r) => (
-          <div key={r.id} style={{ padding: 16, borderRadius: 14, backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, backgroundColor: `${VIOLET}22`, border: `1px solid ${VIOLET}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: VIOLET }}>
-                  {r.author[0]}
+      {reviews.length === 0 ? (
+        <div style={{ padding: "28px 0", textAlign: "center", color: MUTED, fontSize: 14, fontWeight: 600 }}>{noContent}</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {visible.map((r, i) => {
+            const logo = findLogo([r.author, r.brand], brands);
+            const initial = (r.author || r.brand || "?").trim().charAt(0).toUpperCase();
+            return (
+              <div key={r.id} style={{ display: "flex", gap: 14, padding: "16px 0", borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, paddingTop: i === 0 ? 0 : 16 }}>
+                <div style={{ width: 54, height: 54, borderRadius: "50%", backgroundColor: "#0A0E1A", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {logo ? (
+                    <img src={logo} alt={r.author} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ color: "#fff", fontSize: 20, fontWeight: 800 }}>{initial}</span>
+                  )}
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ color: TEXT, fontSize: 13, fontWeight: 700, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.author}</p>
-                  <p style={{ color: MUTED, fontSize: 11, margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
-                    <ShieldCheck size={11} color="#10B981" />{r.date}
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ color: TEXT, fontSize: 15, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.author}</div>
+                      <div style={{ color: MUTED, fontSize: 12.5, marginTop: 3 }}>{noContent}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                      <span style={{ color: TEXT, fontSize: 14, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{r.rating.toFixed(1)}</span>
+                      <span style={{ display: "flex", gap: 1 }}>
+                        {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={14} color={s <= Math.round(r.rating) ? GOLD : MUTED} fill={s <= Math.round(r.rating) ? GOLD : "transparent"} />)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p style={{ color: TEXT, fontSize: 13.5, lineHeight: 1.55, margin: "10px 0 0" }}>
+                    {r.text ? `"${r.text}"` : noContent}
                   </p>
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10, marginTop: 10 }}>
+                    <span style={{ color: MUTED, fontSize: 12 }}>{r.date}</span>
+                    {r.rating >= 4 && (
+                      <span style={{ padding: "3px 10px", borderRadius: 6, backgroundColor: dark ? "rgba(34,197,94,0.16)" : "#DCFCE7", color: dark ? "#86EFAC" : "#15803D", fontSize: 11.5, fontWeight: 700 }}>
+                        {ar ? "موصى به" : "Recommended"}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div style={{ display: "flex", flexShrink: 0 }}>
-                {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={12} color={s <= r.rating ? GOLD : MUTED} fill={s <= r.rating ? GOLD : "transparent"} />)}
-              </div>
-            </div>
-            {r.text && <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.7, margin: 0 }}>&quot;{r.text}&quot;</p>}
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

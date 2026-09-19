@@ -1,106 +1,85 @@
 "use client";
 
-// Port of ugc/untitled/components/InsightsAndActivity.tsx. HARDCODED per
-// explicit request — "best content type" / "top industry" / "estimated
-// bookings" have no real analytics behind them, and per-event activity
-// logging (video delivered / booked / profile viewed) isn't tracked
-// anywhere in the schema. Kept visible only once the talent has at least
-// one review or completed booking, so a brand-new empty profile doesn't
-// show fabricated insight cards with nothing behind them.
+// ─── Insights + Recent Activity ────────────────────────────────────────────
+// Two cards built to the approved reference. The contents are FIXED demo text
+// shown identically on every UGC profile, by explicit request — no analytics or
+// per-event activity log exists behind them (best content type, top industry,
+// estimated bookings, "delivered / reviewed / booked / viewed" events).
+// Renders as a fragment so the shell can lay both cards out in one grid row.
 
-import { Lightbulb, Sparkles, Activity, TrendingUp, Flame, Video, Star, Calendar, Eye } from "lucide-react";
+import {
+  Lightbulb, Shapes, Sparkles, CalendarCheck, Target, Play, Star, Calendar, Eye,
+} from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 
-const ACCENT = "#16a3a3";
+const INDIGO = "#5B6CF0";
 
-const ACTIVITY = [
-  { icon: Video, color: "#3B82F6", bg: "rgba(59,130,246,0.12)", action: { ar: "تم تسليم 3 فيديوهات لصالح TechStore", en: "Delivered 3 videos to TechStore" }, time: { ar: "منذ يومين", en: "2 days ago" } },
-  { icon: Star, color: "#F4B740", bg: "rgba(244,183,64,0.12)", action: { ar: "تقييم جديد 5 نجوم من Glow Beauty", en: "New 5-star review from Glow Beauty" }, time: { ar: "منذ 5 أيام", en: "5 days ago" } },
-  { icon: Calendar, color: "#10B981", bg: "rgba(16,185,129,0.12)", action: { ar: "حجز جديد مؤكد من BeBold", en: "Booked by BeBold Fitness Wear" }, time: { ar: "منذ أسبوع", en: "1 week ago" } },
+const INSIGHTS = [
+  { icon: Shapes, title: { ar: "أفضل نوع محتوى أداءً", en: "Best performing content type" }, body: { ar: "مراجعات المنتجات (تفاعل أعلى بنسبة 72%)", en: "Product Reviews (72% higher engagement)" } },
+  { icon: Sparkles, title: { ar: "أفضل قطاع أداءً", en: "Top performing industry" }, body: { ar: "الجمال والعناية بالبشرة (نسبة نجاح 85%)", en: "Beauty & Skincare (85% success rate)" } },
+  { icon: CalendarCheck, title: { ar: "الحجوزات الشهرية المتوقعة", en: "Estimated monthly bookings" }, body: { ar: "3-5 مشاريع", en: "3-5 projects" }, badge: { ar: "طلب عالي", en: "High Demand" } },
+  { icon: Target, title: { ar: "حسّن نسبة التطابق", en: "Improve your match score" }, body: { ar: "أضف تنوع أكتر في أساليب المحتوى", en: "Add more variety in content styles" } },
 ];
 
-export default function UgcInsightsActivity({ show }: { show: boolean }) {
+const ACTIVITY = [
+  { icon: Play, color: "#3B82F6", bg: "#E5EEFE", darkBg: "rgba(59,130,246,0.18)", text: { ar: "تم تسليم 3 فيديوهات لـ TechStore", en: "Delivered 3 videos to TechStore" }, time: { ar: "من يومين", en: "2 days ago" } },
+  { icon: Star, color: "#F59E0B", bg: "#FEF1C7", darkBg: "rgba(245,158,11,0.18)", text: { ar: "تقييم جديد من Glow Beauty", en: "New review from Glow Beauty" }, time: { ar: "من 5 أيام", en: "5 days ago" } },
+  { icon: Calendar, color: "#6C4DFF", bg: "#ECE8FF", darkBg: "rgba(108,77,255,0.20)", text: { ar: "حجز من BeBold", en: "Booked by BeBold" }, time: { ar: "من أسبوع", en: "1 week ago" } },
+  { icon: Eye, color: "#64748B", bg: "#ECEFF4", darkBg: "rgba(148,163,184,0.16)", text: { ar: "شاف الملف Nike", en: "Profile viewed by Nike" }, time: { ar: "من أسبوعين", en: "2 weeks ago" } },
+];
+
+export default function UgcInsightsActivity() {
   const { dark, lang } = useSite();
-  const ar = lang !== "en";
+  const L = lang !== "en" ? "ar" : "en";
+  const ar = L === "ar";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
+  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
   const TEXT = dark ? "#fff" : "#0F172A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
-
-  if (!show) return null;
+  const card = { backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, padding: 22, minWidth: 0 } as const;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <h3 style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: 0, display: "flex", alignItems: "center", gap: 7 }}>
-            <Lightbulb size={13} color="#F4B740" />{ar ? "رؤى Talents" : "Talents Insights"}
-          </h3>
-          <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 20, backgroundColor: `${ACCENT}1f`, color: ACCENT, border: `1px solid ${ACCENT}55`, fontWeight: 800 }}>
-            AI Powered
-          </span>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-          <div style={{ display: "flex", gap: 8, padding: 9, borderRadius: 11, backgroundColor: dark ? "rgba(99,102,241,0.08)" : "#EEF2FF", border: `1px solid ${dark ? "rgba(99,102,241,0.2)" : "#E0E7FF"}` }}>
-            <div style={{ width: 22, height: 22, borderRadius: 7, backgroundColor: "#4F46E5", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <TrendingUp size={12} />
-            </div>
-            <div>
-              <div style={{ color: TEXT, fontSize: 11, fontWeight: 800 }}>{ar ? "النوع الأكثر أداءً" : "Best performing content type"}</div>
-              <div style={{ color: MUTED, fontSize: 10, marginTop: 1 }}>{ar ? "مراجعات المنتجات (تفاعل أعلى بنسبة 72٪)" : "Product Reviews (72% higher engagement rate)"}</div>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 8, padding: 9, borderRadius: 11, backgroundColor: dark ? "rgba(244,63,94,0.08)" : "#FFF1F2", border: `1px solid ${dark ? "rgba(244,63,94,0.2)" : "#FFE4E6"}` }}>
-            <div style={{ width: 22, height: 22, borderRadius: 7, backgroundColor: "#F43F5E", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <Sparkles size={12} />
-            </div>
-            <div>
-              <div style={{ color: TEXT, fontSize: 11, fontWeight: 800 }}>{ar ? "أعلى قطاع مبيعات" : "Top performing industry"}</div>
-              <div style={{ color: MUTED, fontSize: 10, marginTop: 1 }}>{ar ? "العناية بالبشرة والتجميل (نسبة نجاح 85٪)" : "Beauty & Skincare (85% campaign success rate)"}</div>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6, padding: 9, borderRadius: 11, backgroundColor: dark ? "rgba(16,185,129,0.08)" : "#ECFDF5", border: `1px solid ${dark ? "rgba(16,185,129,0.2)" : "#D1FAE5"}` }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ width: 22, height: 22, borderRadius: 7, backgroundColor: "#10B981", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Flame size={12} />
+    <>
+      <section style={card}>
+        <h2 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: "0 0 18px", display: "flex", alignItems: "center", gap: 9 }}>
+          <Lightbulb size={17} color="#F5B301" />{ar ? "رؤى" : "Insights"}
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          {INSIGHTS.map((it) => (
+            <div key={it.title.en} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <span style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", color: INDIGO, flexShrink: 0 }}>
+                <it.icon size={24} strokeWidth={1.6} />
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ color: TEXT, fontSize: 13.5, fontWeight: 700 }}>{it.title[L]}</div>
+                <div style={{ color: MUTED, fontSize: 12.5, marginTop: 3 }}>{it.body[L]}</div>
               </div>
-              <div>
-                <div style={{ color: TEXT, fontSize: 11, fontWeight: 800 }}>{ar ? "الحجوزات الشهرية المقدرة" : "Estimated monthly bookings"}</div>
-                <div style={{ color: MUTED, fontSize: 10, marginTop: 1 }}>{ar ? "3 - 5 مشاريع شهرياً" : "3-5 projects / month"}</div>
-              </div>
+              {it.badge && (
+                <span style={{ padding: "3px 10px", borderRadius: 6, backgroundColor: dark ? "rgba(34,197,94,0.16)" : "#DCFCE7", color: dark ? "#86EFAC" : "#15803D", fontSize: 11.5, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>
+                  {it.badge[L]}
+                </span>
+              )}
             </div>
-            <span style={{ padding: "2px 7px", borderRadius: 20, backgroundColor: "#10B981", color: "#fff", fontSize: 9, fontWeight: 800, flexShrink: 0, whiteSpace: "nowrap" }}>
-              {ar ? "طلب عالي" : "High Demand"}
-            </span>
-          </div>
+          ))}
         </div>
-      </div>
+      </section>
 
-      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <h3 style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: 0, display: "flex", alignItems: "center", gap: 7 }}>
-            <Activity size={13} color="#10B981" />{ar ? "النشاط الأخير" : "Recent Activity"}
-          </h3>
-          <span style={{ fontSize: 10, fontWeight: 700, color: MUTED }}>{ar ? "مباشر" : "Live"}</span>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {ACTIVITY.map((a, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <div style={{ width: 22, height: 22, borderRadius: 7, backgroundColor: a.bg, color: a.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <a.icon size={12} />
-              </div>
+      <section style={card}>
+        <h2 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: "0 0 18px" }}>{ar ? "آخر النشاط" : "Recent Activity"}</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          {ACTIVITY.map((a) => (
+            <div key={a.text.en} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <span style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: dark ? a.darkBg : a.bg, color: a.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <a.icon size={16} />
+              </span>
               <div style={{ minWidth: 0 }}>
-                <p style={{ color: TEXT, fontSize: 11, fontWeight: 700, margin: 0, lineHeight: 1.35 }}>{ar ? a.action.ar : a.action.en}</p>
-                <span style={{ color: MUTED, fontSize: 9.5, fontWeight: 600 }}>{ar ? a.time.ar : a.time.en}</span>
+                <div style={{ color: TEXT, fontSize: 13.5, fontWeight: 600 }}>{a.text[L]}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{a.time[L]}</div>
               </div>
             </div>
           ))}
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 }

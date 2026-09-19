@@ -1,21 +1,33 @@
 "use client";
 
-// Port of ugc/untitled/components/PackagesSection.tsx's 3-card layout —
-// violet "most popular" gradient card, real PackageItem[] (id/name/price/
-// popular/features). Source's billing-cycle toggle (single vs. monthly
-// retainer with a 15% discount) has no real feature behind it — Talents
-// packages are one-time prices, not subscriptions — so it is not
-// reproduced. Selecting a package opens the real DirectBriefModal (source's
-// own 3-step escrow-deposit wizard has no backing; booking is manual
-// confirmation only, see CLAUDE.md §10.1).
+// ─── Packages ──────────────────────────────────────────────────────────────
+// Card matching the approved reference: "Packages" + subtitle, then up to three
+// package cards — icon, name, price, dot-bullet features and a "Select Package"
+// button, with the popular one framed in purple under a "Most Popular" tab.
+// Real PackageItem[] only (name / price / popular / features / icon). Selecting a
+// package feeds the real booking flow. No packages → the card says "No content".
 
-import { Check, Sparkles, Shield, Clock, ArrowRight } from "lucide-react";
+import { Check, Crown, Gem, Medal, Rocket, Sun } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { PackageItem } from "@/features/talent-profile/types";
 
-const VIOLET = "#16a3a3"; // site --color-accent, was violet
-const EMERALD = "#10B981";
+const PURPLE = "#6C4DFF";
+
+// Admin-set `icon` keys (see PackageItem.icon); anything else gets the medal.
+const ICONS: Record<string, { Icon: typeof Medal; color: string; bg: string }> = {
+  sun:     { Icon: Sun,    color: "#F59E0B", bg: "#FEF3C7" },
+  diamond: { Icon: Gem,    color: "#38A9F5", bg: "#E1F1FE" },
+  gem:     { Icon: Gem,    color: "#38A9F5", bg: "#E1F1FE" },
+  crown:   { Icon: Crown,  color: "#D4A017", bg: "#FBF0CC" },
+  rocket:  { Icon: Rocket, color: PURPLE,    bg: "#ECE8FF" },
+};
+const DEFAULT_ICON = { Icon: Medal, color: "#B7791F", bg: "#FBEBD3" };
+
+function formatPrice(price: string): string {
+  const n = Number(String(price).replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n.toLocaleString("en-US") : price;
+}
 
 interface Props {
   packages: PackageItem[] | null;
@@ -24,78 +36,88 @@ interface Props {
 }
 
 export default function UgcPackages({ packages, selectedId, onSelectPackage }: Props) {
-  const isMobile = useIsMobile();
+  const phone = useIsMobile(640);
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
+  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
+  const TILE_BORDER = dark ? "rgba(255,255,255,0.12)" : "#E3E7EE";
   const TEXT = dark ? "#fff" : "#0F172A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+  const POPULAR_BG = dark ? "rgba(108,77,255,0.12)" : "#F7F5FF";
 
   const data = (packages ?? []).filter((p) => p.name && p.price);
-  if (data.length === 0) return null;
+  const cols = phone ? 1 : Math.min(3, Math.max(1, data.length));
 
   return (
-    <section id="ugc-packages" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
-      <h2 style={{ color: TEXT, fontSize: 20, fontWeight: 900, margin: "0 0 4px" }}>{ar ? "الباقات والأسعار" : "Packages & Pricing"}</h2>
-      <p style={{ color: MUTED, fontSize: 12.5, margin: "0 0 20px" }}>
-        {ar ? "اختر الباقة المناسبة لحملتك." : "Choose the package that fits your campaign."}
+    <section id="ugc-packages" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, padding: phone ? 16 : 22, minWidth: 0 }}>
+      <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 800, margin: 0 }}>{ar ? "الباقات" : "Packages"}</h2>
+      <p style={{ color: MUTED, fontSize: 13, margin: "4px 0 22px" }}>
+        {ar ? "اختر الباقة المثالية لمشروعك" : "Choose the perfect package for your project"}
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : `repeat(${Math.min(3, data.length)}, 1fr)`, gap: 16 }}>
-        {data.map((pkg) => (
-          <div
-            key={pkg.id}
-            style={{
-              position: "relative", borderRadius: 18, padding: 20, display: "flex", flexDirection: "column", gap: 14,
-              background: pkg.popular ? `linear-gradient(160deg, #0d2321, ${VIOLET}, #0a1a17)` : SURFACE,
-              border: pkg.popular ? `1px solid ${VIOLET}` : `1px solid ${BORDER}`,
-              color: pkg.popular ? "#fff" : TEXT,
-            }}
-          >
-            {pkg.popular && (
-              <span style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: 20, background: `linear-gradient(90deg, ${VIOLET}, #0f766e)`, color: "#fff", fontSize: 10.5, fontWeight: 800, display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
-                <Sparkles size={11} />{ar ? "الأكثر طلباً" : "Most Popular"}
-              </span>
-            )}
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 8px" }}>{pkg.name}</h3>
-              <div style={{ fontSize: 30, fontWeight: 900 }}>
-                {pkg.price} <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.7 }}>{ar ? "جنيه" : "EGP"}</span>
+      {data.length === 0 ? (
+        <div style={{ padding: "28px 0", textAlign: "center", color: MUTED, fontSize: 14, fontWeight: 600 }}>
+          {ar ? "لا يوجد محتوى" : "No content"}
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 14, alignItems: "stretch", paddingTop: 6 }}>
+          {data.map((pkg) => {
+            const { Icon, color, bg } = ICONS[pkg.icon ?? ""] ?? DEFAULT_ICON;
+            const selected = selectedId === pkg.id;
+            const filled = pkg.popular || selected;
+            return (
+              <div
+                key={pkg.id}
+                style={{
+                  position: "relative", borderRadius: 14, padding: "20px 16px 16px", display: "flex", flexDirection: "column", gap: 16, minWidth: 0,
+                  border: pkg.popular ? `1.5px solid ${PURPLE}` : `1px solid ${TILE_BORDER}`,
+                  backgroundColor: pkg.popular ? POPULAR_BG : (dark ? "rgba(255,255,255,0.02)" : "#fff"),
+                }}
+              >
+                {pkg.popular && (
+                  <span style={{ position: "absolute", top: -11, left: "50%", transform: "translateX(-50%)", padding: "3px 14px", borderRadius: 8, backgroundColor: PURPLE, color: "#fff", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+                    {ar ? "الأكثر طلباً" : "Most Popular"}
+                  </span>
+                )}
+
+                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                  <span style={{ width: 42, height: 42, borderRadius: "50%", backgroundColor: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon size={21} color={color} />
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pkg.name}</h3>
+                    <div style={{ color: TEXT, fontSize: 19, fontWeight: 800, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
+                      {formatPrice(pkg.price)} <span style={{ fontSize: 12, fontWeight: 600, color: MUTED }}>{ar ? "جنيه" : "EGP"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 9, flex: 1 }}>
+                  {pkg.features.map((f, i) => (
+                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13, color: TEXT, lineHeight: 1.35 }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: TEXT, flexShrink: 0, marginTop: 7 }} />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  onClick={() => onSelectPackage(pkg)}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 8, cursor: "pointer",
+                    fontFamily: "'IBM Plex Sans Arabic',sans-serif", fontWeight: 700, fontSize: 13.5,
+                    border: `1.5px solid ${PURPLE}`, backgroundColor: filled ? PURPLE : "transparent", color: filled ? "#fff" : PURPLE,
+                  }}
+                >
+                  {selected ? <><Check size={14} />{ar ? "تم الاختيار" : "Selected"}</> : (ar ? "اختيار الباقة" : "Select Package")}
+                </button>
               </div>
-            </div>
-            {pkg.features.length > 0 && (
-              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-                {pkg.features.map((f, i) => (
-                  <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5 }}>
-                    <span style={{ width: 16, height: 16, borderRadius: 999, backgroundColor: pkg.popular ? "rgba(255,255,255,0.15)" : `${EMERALD}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                      <Check size={10} color={pkg.popular ? "#fff" : EMERALD} />
-                    </span>
-                    <span style={{ opacity: pkg.popular ? 0.9 : 1 }}>{f}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <button
-              onClick={() => onSelectPackage(pkg)}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "11px 0", borderRadius: 12, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
-                border: selectedId === pkg.id ? `1px solid ${EMERALD}` : "none",
-                background: selectedId === pkg.id ? "transparent" : (pkg.popular ? `linear-gradient(90deg, ${EMERALD}, #14B8A6)` : "#0F172A"),
-                color: selectedId === pkg.id ? EMERALD : (pkg.popular ? "#052e16" : "#fff"),
-                fontWeight: 800, fontSize: 13,
-              }}
-            >
-              {selectedId === pkg.id ? (ar ? "تم الاختيار" : "Selected") : <>{ar ? "اختيار الباقة" : "Select Package"}<ArrowRight size={14} /></>}
-            </button>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 10, opacity: 0.7 }}>
-              <Shield size={11} color={EMERALD} />{ar ? "حماية دفع كاملة" : "Full payment protection"}
-            </div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

@@ -1,108 +1,140 @@
 "use client";
 
-// Port of ugc/untitled/components/VideoPortfolio.tsx — 9:16 vertical grid,
-// play overlay, hover scale. Dropped vs. source: category filter chips,
-// hook-rate tag, duration badge, view count — portfolio_items has no
-// category/hook-rate/duration/views fields, so none of that is real.
-// The play-overlay click opens a real lightbox (item.url / item.media_type
-// / item.caption only) instead of the source's fake-metric video modal.
+// ─── Video Portfolio ───────────────────────────────────────────────────────
+// Card matching the approved reference: "Video Portfolio" + "View All" header,
+// a row of 5 portrait tiles (translucent play button, duration pill), and the
+// clip's title under each tile. Real data only:
+//   - title  → portfolio_items.caption, "No content" when the clip has none
+//   - length → read from the video's own metadata in the browser
+//   - views  → not stored anywhere, so that line isn't rendered
+// No portfolio at all → the card stays and says "No content".
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Play, ImageIcon, ChevronDown, ChevronUp } from "lucide-react";
+import { Play, ImageIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
-const VIOLET = "#16a3a3"; // site --color-accent, was violet
+const PURPLE = "#6C4DFF";
+
+function videoPoster(url: string | null): string | undefined {
+  if (!url || !url.includes("res.cloudinary.com") || !url.includes("/video/upload/")) return undefined;
+  const [withoutQuery] = url.split("#")[0].split("?");
+  const marker = "/video/upload/";
+  const at = withoutQuery.indexOf(marker);
+  if (at === -1) return undefined;
+  const prefix = withoutQuery.slice(0, at + marker.length);
+  const publicId = withoutQuery.slice(at + marker.length).replace(/\.[a-z0-9]+$/i, ".jpg");
+  return `${prefix}so_0.5,f_jpg,q_auto,w_360/${publicId}`;
+}
+
+function formatDuration(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
 
 interface Props {
   portfolioItems: PortfolioItem[];
   onSelectVideo: (item: PortfolioItem) => void;
 }
 
+function Tile({ item, index, onSelect, TEXT, MUTED, noContent }: {
+  item: PortfolioItem; index: number; onSelect: (item: PortfolioItem) => void; TEXT: string; MUTED: string; noContent: string;
+}) {
+  const video = item.media_type?.toLowerCase() === "video";
+  const [duration, setDuration] = useState<number | null>(null);
+  const src = video ? videoPoster(item.url) : item.url ? cdnImage(item.url, 360) : undefined;
+  const title = item.caption?.trim();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04 }}
+      style={{ minWidth: 0 }}
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onSelect(item)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(item); } }}
+        style={{
+          position: "relative", aspectRatio: "3 / 4", borderRadius: 14, overflow: "hidden", cursor: "pointer",
+          backgroundColor: "#141A2B", backgroundImage: src ? `url(${src})` : undefined, backgroundSize: "cover", backgroundPosition: "center",
+        }}
+      >
+        {video && item.url && (
+          <video
+            src={item.url}
+            preload="metadata"
+            muted
+            playsInline
+            onLoadedMetadata={(e) => { const d = e.currentTarget.duration; if (Number.isFinite(d)) setDuration(d); }}
+            style={{ display: "none" }}
+          />
+        )}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(2,6,23,0.35), transparent 50%)" }} />
+        <span style={{
+          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 34, height: 34, borderRadius: "50%",
+          backgroundColor: "rgba(255,255,255,0.28)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          {video ? <Play size={14} color="#fff" fill="#fff" /> : <ImageIcon size={14} color="#fff" />}
+        </span>
+        {video && duration !== null && (
+          <span style={{ position: "absolute", bottom: 8, insetInlineEnd: 8, padding: "2px 7px", borderRadius: 8, backgroundColor: "rgba(10,14,26,0.72)", color: "#fff", fontSize: 11, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+            {formatDuration(duration)}
+          </span>
+        )}
+      </div>
+      <div style={{ marginTop: 10, fontSize: 13.5, fontWeight: 600, color: title ? TEXT : MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {title || noContent}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function UgcVideoPortfolio({ portfolioItems, onSelectVideo }: Props) {
-  const isMobile = useIsMobile();
+  const phone = useIsMobile(640);
+  const compact = useIsMobile(1024);
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
+  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
   const TEXT = dark ? "#fff" : "#0F172A";
   const MUTED = dark ? "#A8B3C2" : "#64748B";
   const [expanded, setExpanded] = useState(false);
 
-  if (portfolioItems.length === 0) return null;
-
-  // One row visible by default (5 desktop / 2 mobile), tiles taller to fill
-  // the height two rows used to take — everything else behind Show More.
-  const initialCount = isMobile ? 2 : 5;
-  const visibleItems = expanded ? portfolioItems : portfolioItems.slice(0, initialCount);
-  const hiddenCount = portfolioItems.length - visibleItems.length;
+  const cols = phone ? 2 : compact ? 3 : 5;
+  const initialCount = phone ? 4 : cols;
+  const canExpand = portfolioItems.length > initialCount;
+  const visible = expanded ? portfolioItems : portfolioItems.slice(0, initialCount);
+  const noContent = ar ? "لا يوجد محتوى" : "No content";
 
   return (
-    <section id="ugc-portfolio" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div>
-          <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 800, margin: 0 }}>{ar ? "معرض نماذج الفيديوهات" : "Video Portfolio"}</h2>
-          <p style={{ color: MUTED, fontSize: 12, margin: "4px 0 0" }}>
-            {ar ? "أعمال حقيقية بصيغة رأسية 9:16" : "Real 9:16 vertical UGC work"}
-          </p>
-        </div>
-        <span style={{ color: VIOLET, fontSize: 13, fontWeight: 800 }}>{portfolioItems.length}</span>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(5,1fr)", gap: 12 }}>
-        {visibleItems.map((item, i) => (
-          <motion.div
-            key={item.id ?? i}
-            whileHover={{ scale: 1.03 }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-            onClick={() => onSelectVideo(item)}
-            style={{
-              position: "relative", aspectRatio: "9 / 16", borderRadius: 14, overflow: "hidden",
-              cursor: "pointer", border: `1px solid ${BORDER}`, backgroundColor: "#0B0F19",
-              backgroundImage: item.media_type !== "video" && item.url ? `url(${cdnImage(item.url, 280)})` : undefined,
-              backgroundSize: "cover", backgroundPosition: "center",
-            }}
+    <section id="ugc-portfolio" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, padding: phone ? 16 : 22, minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
+        <h2 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: 0 }}>{ar ? "معرض الفيديوهات" : "Video Portfolio"}</h2>
+        {canExpand && (
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            style={{ background: "none", border: "none", padding: 0, color: PURPLE, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
           >
-            {item.media_type === "video" && item.url && (
-              <video src={item.url} muted playsInline preload="metadata" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-            )}
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(to top, rgba(2,6,23,0.75), transparent 55%)` }}>
-              <div style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: `${VIOLET}CC`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {item.media_type === "video" ? <Play size={16} color="#fff" fill="#fff" /> : <ImageIcon size={16} color="#fff" />}
-              </div>
-            </div>
-            {item.caption && (
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "18px 8px 8px", background: "linear-gradient(to top, rgba(2,6,23,0.9), transparent)" }}>
-                <p style={{ color: "#fff", fontSize: 10, fontWeight: 600, margin: 0 }}>{item.caption}</p>
-              </div>
-            )}
-          </motion.div>
-        ))}
+            {expanded ? (ar ? "عرض أقل" : "Show Less") : (ar ? "عرض الكل" : "View All")}
+          </button>
+        )}
       </div>
 
-      {portfolioItems.length > initialCount && (
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-            width: "100%", marginTop: 14, padding: "10px 0", borderRadius: 10,
-            border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: MUTED,
-            fontSize: 13, fontWeight: 700, cursor: "pointer",
-            fontFamily: "'IBM Plex Sans Arabic',sans-serif",
-          }}
-        >
-          {expanded ? (
-            <>{ar ? "عرض أقل" : "Show Less"}<ChevronUp size={15} /></>
-          ) : (
-            <>{ar ? `عرض المزيد (${hiddenCount}+)` : `Show More (${hiddenCount}+)`}<ChevronDown size={15} /></>
-          )}
-        </button>
+      {portfolioItems.length === 0 ? (
+        <div style={{ padding: "28px 0", textAlign: "center", color: MUTED, fontSize: 14, fontWeight: 600 }}>{noContent}</div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, columnGap: phone ? 12 : 14, rowGap: 18 }}>
+          {visible.map((item, i) => (
+            <Tile key={item.id ?? i} item={item} index={i} onSelect={onSelectVideo} TEXT={TEXT} MUTED={MUTED} noContent={noContent} />
+          ))}
+        </div>
       )}
     </section>
   );
