@@ -5,11 +5,14 @@ import { adminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
 import { getAdminUser } from "@/lib/auth/require-admin";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
-import { notifyMediaReviewed } from "@/lib/notifications/events";
+import { notifyMediaReviewed, notifyAvatarReviewed } from "@/lib/notifications/events";
 
 // Approve or reject one or many portfolio uploads waiting in the review queue.
 //
-//   PATCH { ids: string[], action: "approve" | "reject", reason?: string }
+//   PATCH { ids: string[], action: "approve" | "reject", reason?: string, kind?: "media" | "avatar" }
+//
+// kind "avatar" reviews talents' new PROFILE photos instead (ids are profile ids): approve
+// promotes profiles.pending_avatar_url to avatar_url; reject keeps the last approved photo live.
 //
 // Approving flips portfolio_items.is_approved on (the single "public" switch every
 // public read already filters on); rejecting keeps it off and records why, so the
@@ -26,7 +29,7 @@ export async function PATCH(req: NextRequest) {
   const admin = await getAdminUser();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403, headers: privateNoStoreHeaders() });
 
-  const body = await req.json().catch(() => null) as { ids?: unknown; action?: unknown; reason?: unknown } | null;
+  const body = await req.json().catch(() => null) as { ids?: unknown; action?: unknown; reason?: unknown; kind?: unknown } | null;
   const ids = Array.isArray(body?.ids) ? [...new Set(body!.ids.filter((x): x is string => typeof x === "string" && UUID.test(x)))] : [];
   const action = body?.action;
   const reason = typeof body?.reason === "string" ? body.reason.trim().slice(0, 500) : "";
@@ -43,6 +46,8 @@ export async function PATCH(req: NextRequest) {
 
   const approve = action === "approve";
   const now = new Date().toISOString();
+
+  if (body?.kind === "avatar") return reviewAvatars({ ids, approve, reason, adminId: admin.id, now });
 
   // Only touch rows that actually change state, so a double-click can't re-notify.
   const { data: existing, error: readErr } = await adminClient
@@ -96,4 +101,37 @@ export async function PATCH(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, updated: targetIds.length, status: approve ? "approved" : "rejected" }, { headers: privateNoStoreHeaders() });
+}
+
+// ─── Profile photos ─────────────────────────────────────────────────────────
+async function reviewAvatars(o: { ids: string[]; approve: boolean; reason: string; adminId: string; now: string }) {
+  const { ids, approve, reason, adminId, now } = o;
+  const { data: rows, error } = await adminClient
+    .from("profiles")
+    .select("id, handle, pending_avatar_url, avatar_review_status")
+    .in("id", ids)
+    .eq("role", "talent");
+  if (error) {
+    const missing = /avatar_review_status|pending_avatar_url/.test(error.message);
+    return NextResponse.json({ error: missing ? "migration_required" : error.message }, { status: missing ? 409 : 500, headers: privateNoStoreHeaders() });
+  }
+
+  // Approve works from pending or rejected (re-approve); reject only from pending.
+  const targets = (rows ?? []).filter((r) => r.pending_avatar_url && (approve ? ["pending", "rejected"].includes(r.avatar_review_status as string) : r.avatar_review_status === "pending"));
+  if (targets.length === 0) return NextResponse.json({ ok: true, updated: 0 }, { headers: privateNoStoreHeaders() });
+
+  let updated = 0;
+  for (const r of targets) {
+    const patch = approve
+      ? { avatar_url: r.pending_avatar_url, pending_avatar_url: null, avatar_review_status: null, avatar_rejection_reason: null, avatar_reviewed_by: adminId, avatar_reviewed_at: now }
+      : { avatar_review_status: "rejected", avatar_rejection_reason: reason, avatar_reviewed_by: adminId, avatar_reviewed_at: now };
+    // Guard on the exact pending url so a photo the talent re-uploaded a moment ago isn't overwritten.
+    const { data: done } = await adminClient.from("profiles").update(patch).eq("id", r.id).eq("pending_avatar_url", r.pending_avatar_url as string).select("id");
+    if (!done?.length) continue;
+    updated += 1;
+    invalidateTalent((r.handle as string | null) ?? r.id);
+    notifyAvatarReviewed({ recipientId: r.id, adminId, approved: approve, reason: approve ? null : reason }).catch(() => null);
+  }
+
+  return NextResponse.json({ ok: true, updated, status: approve ? "approved" : "rejected" }, { headers: privateNoStoreHeaders() });
 }

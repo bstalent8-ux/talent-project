@@ -86,7 +86,11 @@ export async function POST(req: NextRequest) {
     }
 
     // profiles columns: id, handle, full_name, avatar_url, city, bio, role, brand_category
-    const profilePayload: Record<string, unknown> = { ...pick(profileData, PROFILE_FIELDS), id: targetId, role: effectiveRole };
+    // A talent's avatar_url is NOT writable here: new photos go through
+    // /api/profile/avatar into the admin review queue (pending_avatar_url), so this
+    // route can't be used to publish an unreviewed photo by passing a URL.
+    const writableFields = effectiveRole === "talent" ? PROFILE_FIELDS.filter((f) => f !== "avatar_url") : PROFILE_FIELDS;
+    const profilePayload: Record<string, unknown> = { ...pick(profileData, writableFields), id: targetId, role: effectiveRole };
     let { error: profileErr } = await adminClient.from("profiles").upsert(profilePayload);
 
     // handle is UNIQUE — two different signups can derive the same slug from

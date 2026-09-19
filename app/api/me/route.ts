@@ -63,6 +63,15 @@ export async function GET(req: NextRequest) {
 
     if (!profile) return NextResponse.json({ error: "profile not found" }, { status: 404, headers: privateNoStoreHeaders() });
 
+    // The owner's own view of a photo waiting for review. Separate, error-tolerant
+    // read so /api/me keeps working before 20260919_avatar_moderation.sql is applied.
+    const { data: avatarReview } = await adminClient
+      .from("profiles")
+      .select("pending_avatar_url, avatar_review_status, avatar_rejection_reason")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (avatarReview) Object.assign(profile, avatarReview);
+
     // Talent profile — loaded through the provider layer.
     // Guarded on typeSlug: a brand user has a brand_profiles row, and this
     // endpoint has always returned null for them under the `talentProfile` key.

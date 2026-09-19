@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
+import { notifyAdminMediaPending } from "@/lib/notifications/events";
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,21 +45,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // save to DB
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("handle, role, full_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile?.role === "talent") {
+      // A talent's new profile photo waits for an admin before the public sees it.
+      // profiles.avatar_url stays the last APPROVED photo (every public read uses it);
+      // the new one is parked in pending_avatar_url — see 20260919_avatar_moderation.sql.
+      const { error: pendingErr } = await adminClient
+        .from("profiles")
+        .update({
+          pending_avatar_url:      cloudData.secure_url,
+          avatar_review_status:    "pending",
+          avatar_rejection_reason: null,
+          avatar_submitted_at:     new Date().toISOString(),
+        })
+        .eq("id", user.id);
+      if (pendingErr) {
+        // Fail closed: without the review columns there is no safe place to park the
+        // photo, and publishing it directly would bypass moderation.
+        console.error("[avatar] review columns missing or write failed:", pendingErr.message);
+        return NextResponse.json({ error: "avatar_review_unavailable" }, { status: 503, headers: privateNoStoreHeaders() });
+      }
+      notifyAdminMediaPending({ submitterId: user.id, submitterName: profile.full_name ?? profile.handle ?? "—", kind: "avatar" }).catch(() => null);
+      return NextResponse.json(
+        { avatar_url: profile.avatar_url ?? null, pending_avatar_url: cloudData.secure_url, avatar_review_status: "pending" },
+        { headers: privateNoStoreHeaders() },
+      );
+    }
+
+    // Brands (logos) are unchanged: they publish immediately.
     await adminClient
       .from("profiles")
       .update({ avatar_url: cloudData.secure_url })
       .eq("id", user.id);
 
-    const { data: profile } = await adminClient
-      .from("profiles")
-      .select("handle, role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profile?.role === "talent") {
-      invalidateTalent(profile.handle ?? user.id);
-    } else if (profile?.role === "brand") {
+    if (profile?.role === "brand") {
       const { invalidateBrand } = await import("@/lib/cache");
       invalidateBrand(profile.handle ?? user.id);
     }

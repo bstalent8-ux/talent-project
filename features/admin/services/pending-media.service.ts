@@ -11,6 +11,8 @@ import { mediaReviewStatus, type MediaReviewStatus } from "@/lib/media-review";
 
 export type PendingMediaStatus = MediaReviewStatus | "all";
 export type PendingMediaType = "photo" | "video" | "all";
+/** What the queue is showing: portfolio media, or talents' new profile photos. */
+export type PendingKind = "media" | "avatar";
 
 export interface AdminPendingMedia {
   id:              string;
@@ -21,6 +23,8 @@ export interface AdminPendingMedia {
   status:          MediaReviewStatus;
   rejectionReason: string | null;
   reviewedAt:      string | null;
+  /** Avatar reviews only: the approved photo that stays live until this one is approved. */
+  currentUrl?:     string | null;
   talent: {
     talentId:  string;
     userId:    string;
@@ -146,4 +150,75 @@ export async function fetchPendingMediaPage(opts: {
   });
 
   return { items, total: res.count ?? 0 };
+}
+
+// ─── Profile-photo reviews ──────────────────────────────────────────────────
+// A talent's new profile photo is parked in profiles.pending_avatar_url until an
+// admin approves it (20260919_avatar_moderation.sql). Items reuse the media shape:
+// `id` is the PROFILE id, `url` the new photo, `currentUrl` the live one.
+
+export interface AvatarReviewCounts { pending: number; rejected: number; migrated: boolean }
+
+export async function fetchAvatarReviewCounts(): Promise<AvatarReviewCounts> {
+  const count = async (status: "pending" | "rejected") =>
+    adminClient.from("profiles").select("id", { count: "exact" }).eq("role", "talent").eq("avatar_review_status", status).limit(1);
+  const [p, r] = await Promise.all([count("pending"), count("rejected")]);
+  if (p.error) return { pending: 0, rejected: 0, migrated: false };
+  return { pending: p.count ?? 0, rejected: r.count ?? 0, migrated: true };
+}
+
+export async function fetchAvatarReviewPage(opts: {
+  status:   "pending" | "rejected" | "all";
+  q?:       string;
+  page:     number;
+  pageSize: number;
+}): Promise<{ items: AdminPendingMedia[]; total: number }> {
+  const { status, q, page, pageSize } = opts;
+  const from = (page - 1) * pageSize;
+
+  let query = adminClient
+    .from("profiles")
+    .select("id, full_name, handle, avatar_url, pending_avatar_url, avatar_review_status, avatar_rejection_reason, avatar_submitted_at, avatar_reviewed_at", { count: "exact" })
+    .eq("role", "talent");
+  query = status === "all" ? query.in("avatar_review_status", ["pending", "rejected"]) : query.eq("avatar_review_status", status);
+  const like = (q ?? "").replace(/[%_,()]/g, " ").trim();
+  if (like) query = query.or(`full_name.ilike.%${like}%,handle.ilike.%${like}%`);
+
+  const res = await query.order("avatar_submitted_at", { ascending: status === "pending", nullsFirst: false }).range(from, from + pageSize - 1);
+  if (res.error) return { items: [], total: 0 };
+
+  const rows = (res.data ?? []) as Record<string, any>[];
+  const userIds = rows.map((r) => r.id as string);
+  const { data: tps } = userIds.length
+    ? await adminClient.from("talent_profiles").select("id, user_id, category, status").in("user_id", userIds)
+    : { data: [] as any[] };
+  const tpByUser = new Map((tps ?? []).map((t) => [t.user_id as string, t]));
+
+  const items: AdminPendingMedia[] = rows
+    .filter((r) => r.pending_avatar_url)
+    .map((r) => {
+      const tp = tpByUser.get(r.id);
+      return {
+        id:              r.id,
+        url:             r.pending_avatar_url,
+        mediaType:       "photo",
+        caption:         null,
+        createdAt:       r.avatar_submitted_at ?? new Date().toISOString(),
+        status:          r.avatar_review_status === "rejected" ? "rejected" : "pending",
+        rejectionReason: r.avatar_rejection_reason ?? null,
+        reviewedAt:      r.avatar_reviewed_at ?? null,
+        currentUrl:      r.avatar_url ?? null,
+        talent: {
+          talentId:      tp?.id ?? "",
+          userId:        r.id,
+          name:          r.full_name ?? "—",
+          handle:        r.handle ?? null,
+          category:      tp?.category ?? null,
+          avatarUrl:     r.avatar_url ?? null,
+          profileStatus: tp?.status ?? null,
+        },
+      };
+    });
+
+  return { items, total: res.count ?? items.length };
 }

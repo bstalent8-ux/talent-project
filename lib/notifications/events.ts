@@ -719,8 +719,24 @@ export async function notifyAdminMediaPending(input: {
   submitterId:   string;
   submitterName: string;
   count?:        number;
+  /** "avatar" = a new profile photo rather than portfolio media. */
+  kind?:         "media" | "avatar";
 }): Promise<number> {
   const n = input.count ?? 1;
+  if (input.kind === "avatar") {
+    return notifyRole(["admin"], {
+      type:      "BRAND_MOMENT_SUBMITTED",
+      senderId:  input.submitterId,
+      actionUrl: "/admin/pending-data?kind=avatar",
+      ...withI18n({
+        title: { ar: "صورة بروفايل جديدة بانتظار المراجعة", en: "New profile photo awaiting review" },
+        message: {
+          ar: `${input.submitterName} غيّر صورة بروفايله وهتظهر للعامة بعد ما تتراجع.`,
+          en: `${input.submitterName} changed their profile photo — it goes public once reviewed.`,
+        },
+      }),
+    });
+  }
   return notifyRole(["admin"], {
     type:      "BRAND_MOMENT_SUBMITTED",
     senderId:  input.submitterId,
@@ -734,6 +750,32 @@ export async function notifyAdminMediaPending(input: {
         ar: `${input.submitterName} رفع ${n === 1 ? "ملفاً" : `${n} ملفات`} جديدة لازم تتراجع قبل ما تظهر على البروفايل.`,
         en: `${input.submitterName} uploaded ${n === 1 ? "a new file" : `${n} new files`} that must be reviewed before appearing on their profile.`,
       },
+    }),
+  });
+}
+
+/** An admin approved or rejected a talent's new profile photo. */
+export async function notifyAvatarReviewed(input: {
+  recipientId: string;
+  adminId?:    string | null;
+  approved:    boolean;
+  reason?:     string | null;
+}): Promise<void> {
+  await createNotification({
+    recipientId: input.recipientId,
+    type:        input.approved ? "PROFILE_APPROVED" : "PROFILE_REJECTED",
+    senderId:    input.adminId ?? null,
+    actionUrl:   "/profile/me",
+    ...withI18n({
+      title: input.approved
+        ? { ar: "تمت الموافقة على صورة بروفايلك", en: "Your profile photo was approved" }
+        : { ar: "لم تتم الموافقة على صورة بروفايلك", en: "Your profile photo wasn't approved" },
+      message: input.approved
+        ? { ar: "صورتك الجديدة ظهرت دلوقتي على بروفايلك.", en: "Your new photo is now live on your profile." }
+        : {
+            ar: input.reason ? snip(input.reason, 140) : "ارفع صورة تانية وهتتراجع.",
+            en: input.reason ? snip(input.reason, 140) : "Upload another photo and it will be reviewed.",
+          },
     }),
   });
 }

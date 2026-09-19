@@ -341,9 +341,15 @@ export default function DashboardPage() {
       fd.append("file", file);
       const res  = await fetch("/api/profile/avatar", { method: "POST", body: fd });
       const data = await res.json();
-      if (data.avatar_url) {
+      if (data.pending_avatar_url) {
+        // Talent photos wait for an admin: the approved avatar_url is untouched, the new
+        // one is shown to the owner only, marked "pending review".
+        setProfile((p: any) => ({ ...p, pending_avatar_url: data.pending_avatar_url, avatar_review_status: "pending", avatar_rejection_reason: null }));
+      } else if (data.avatar_url) {
         setForm((f: any) => ({ ...f, avatar_url: data.avatar_url }));
         setProfile((p: any) => ({ ...p, avatar_url: data.avatar_url }));
+      } else if (data.error === "avatar_review_unavailable") {
+        setMediaError(lang === "ar" ? "مش قادرين نستلم الصورة دلوقتي، جرب بعد شوية." : "We can't take a new photo right now — try again shortly.");
       }
     } catch {}
     setUploading(false);
@@ -565,6 +571,8 @@ export default function DashboardPage() {
   );
 
   const displayName = profile.full_name || profile.handle || "";
+  // The owner sees their own new photo while it waits for review; everyone else still gets profile.avatar_url.
+  const pendingAvatar: string | null = profile.avatar_review_status === "pending" && profile.pending_avatar_url ? profile.pending_avatar_url : null;
   const memberSince = profile.created_at
     ? new Date(profile.created_at).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US", { month: "long", year: "numeric" })
     : "";
@@ -666,14 +674,24 @@ export default function DashboardPage() {
             {/* Avatar */}
             <div style={{ position: "relative" }}>
               <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 200, height: isMobile ? 220 : 260, borderRadius: 14, overflow: "hidden", background: dark ? "linear-gradient(160deg,#1e3a5f,#0d2137,#050B12)" : "linear-gradient(160deg,#dbeafe,#bfdbfe,#93c5fd)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {(edit ? form.avatar_url : profile.avatar_url) ? (
-                  <img src={edit ? form.avatar_url : profile.avatar_url} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                {(pendingAvatar ?? (edit ? form.avatar_url : profile.avatar_url)) ? (
+                  <img src={pendingAvatar ?? (edit ? form.avatar_url : profile.avatar_url)} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   <div style={{ width: 72, height: 72, borderRadius: "50%", backgroundColor: "rgba(0,210,106,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, fontWeight: 900, color: GREEN }}>
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
+              {profile.avatar_review_status === "pending" && (
+                <span style={{ position: "absolute", top: 8, insetInlineStart: 8, insetInlineEnd: 8, textAlign: "center", padding: "3px 6px", borderRadius: 6, fontSize: 10.5, fontWeight: 800, backgroundColor: "rgba(244,183,64,0.95)", color: "#1a1206" }}>
+                  {lang === "ar" ? "قيد المراجعة — مش ظاهرة للعامة" : "Pending review — not public yet"}
+                </span>
+              )}
+              {profile.avatar_review_status === "rejected" && (
+                <p style={{ margin: "8px 0 0", fontSize: 11.5, lineHeight: 1.5, color: "#ef4444" }}>
+                  {lang === "ar" ? "صورتك الجديدة اترفضت" : "Your new photo was rejected"}{profile.avatar_rejection_reason ? `: ${profile.avatar_rejection_reason}` : ""}
+                </p>
+              )}
               {edit && (
                 <>
                   <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile(f); e.target.value = ""; }} />

@@ -1386,3 +1386,19 @@ talent's profile is already approved.**
 - **Not covered:** avatars (`/api/profile/avatar`) still publish immediately — only portfolio media is
   moderated. Talents keep their approved media when the profile is later suspended (that path is
   unchanged).
+
+### Profile-photo moderation (same day)
+
+A **talent's** new profile photo is reviewed too (brands' logos are exempt). `profiles.avatar_url` stays the last
+*approved* photo — every public read uses it — while an upload is parked in `profiles.pending_avatar_url` with
+`avatar_review_status` (`NULL | 'pending' | 'rejected'`), `avatar_rejection_reason`, `avatar_submitted_at`,
+`avatar_reviewed_by/at` (`supabase/migrations/20260919_avatar_moderation.sql`, hand-run; **run it before deploying**).
+- `POST /api/profile/avatar` (talent) parks the photo and notifies admins; it **fails closed** (`503
+  avatar_review_unavailable`) if the columns don't exist rather than publishing unreviewed.
+- `POST /api/profile` **no longer accepts `avatar_url` for talents** (it was a bypass: any URL could be set directly).
+- `GET /api/me` returns the owner's `pending_avatar_url` / `avatar_review_status` / `avatar_rejection_reason` (in a separate,
+  error-tolerant read); `/profile/me` shows the pending photo with a "Pending review" badge, the wizard shows a status line.
+- Admin: `/admin/pending-data?kind=avatar` (the "Profile photos" switch on the same page, same `pendingData` permission).
+  `PATCH /api/admin/pending-media` with `kind: "avatar"` (ids = profile ids): approve promotes `pending_avatar_url` →
+  `avatar_url`; reject keeps the last approved photo live and records the reason. The update is guarded on the exact pending
+  URL so a photo re-uploaded a moment earlier isn't overwritten.

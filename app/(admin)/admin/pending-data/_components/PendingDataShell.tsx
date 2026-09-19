@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, AlertTriangle } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
-import type { PendingMediaCounts, PendingMediaStatus, PendingMediaType } from "@/features/admin/services/pending-media.service";
+import type { AvatarReviewCounts, PendingKind, PendingMediaCounts, PendingMediaStatus, PendingMediaType } from "@/features/admin/services/pending-media.service";
 
 const STATUS_TABS: PendingMediaStatus[] = ["pending", "rejected", "approved", "all"];
 const STATUS_COLOR: Record<PendingMediaStatus, string> = {
@@ -19,6 +19,9 @@ const TX = {
     intro: "أي صور أو فيديوهات ترفعها الموهبة لازم تتراجع هنا قبل ما تظهر على بروفايلها العام — حتى لو البروفايل نفسه معتمد.",
     pending: "قيد المراجعة", rejected: "مرفوض", approved: "معتمد", all: "الكل",
     typeAll: "كل الأنواع", photo: "صور", video: "فيديوهات",
+    kindMedia: "معرض الأعمال", kindAvatar: "صور البروفايل",
+    avatarIntro: "أي صورة بروفايل جديدة بترفعها الموهبة بتفضل هنا، والصورة القديمة المعتمدة هي اللي بتظهر للعامة لحد ما توافق على الجديدة.",
+    avatarMigration: "لتفعيل مراجعة صور البروفايل شغّل supabase/migrations/20260919_avatar_moderation.sql في Supabase. لحد ما يتشغل رفع صور البروفايل للمواهب متوقف.",
     search: "ابحث باسم الموهبة أو الـhandle...",
     migration: "لتفعيل حالة \"مرفوض\" وسبب الرفض شغّل ملف الـSQL: supabase/migrations/20260919_media_moderation.sql في Supabase. لحد ما يتشغل، الاعتماد بيشتغل والرفض لأ.",
   },
@@ -27,12 +30,17 @@ const TX = {
     intro: "Every photo or video a talent uploads must be reviewed here before it appears on their public profile — even when the profile itself is already approved.",
     pending: "Pending", rejected: "Rejected", approved: "Approved", all: "All",
     typeAll: "All types", photo: "Photos", video: "Videos",
+    kindMedia: "Portfolio media", kindAvatar: "Profile photos",
+    avatarIntro: "A new profile photo waits here. The last approved photo stays public until you approve the new one.",
+    avatarMigration: "To turn on profile-photo review run supabase/migrations/20260919_avatar_moderation.sql in Supabase. Until then talents can not upload a new profile photo.",
     search: "Search by talent name or handle...",
     migration: "To enable the Rejected state and rejection reasons, run supabase/migrations/20260919_media_moderation.sql in Supabase. Until then approving works but rejecting doesn't.",
   },
 };
 
 interface Props {
+  kind:     PendingKind;
+  avatarCounts: AvatarReviewCounts;
   status:   PendingMediaStatus;
   type:     PendingMediaType;
   q:        string;
@@ -42,7 +50,7 @@ interface Props {
 
 // Sidebar + topbar + status tabs + filters — rendered immediately, never suspended.
 // Only the media grid (children, wrapped in <Suspense> by page.tsx) shows a skeleton.
-export default function PendingDataShell({ status, type, q, counts, children }: Props) {
+export default function PendingDataShell({ kind, avatarCounts, status, type, q, counts, children }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -51,9 +59,11 @@ export default function PendingDataShell({ status, type, q, counts, children }: 
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const TEXT = dark ? "#f1f5f9" : "#0f172a";
 
-  const hrefFor = (next: Partial<{ status: string; type: string; q: string }>) => {
-    const v = { status, type, q, ...next };
+  const isAvatar = kind === "avatar";
+  const hrefFor = (next: Partial<{ status: string; type: string; q: string; kind: string }>) => {
+    const v = { status, type, q, kind, ...next };
     const p = new URLSearchParams();
+    if (v.kind === "avatar") p.set("kind", "avatar");
     if (v.status && v.status !== "pending") p.set("status", v.status);
     if (v.type && v.type !== "all") p.set("type", v.type);
     if (v.q) p.set("q", v.q);
@@ -71,13 +81,35 @@ export default function PendingDataShell({ status, type, q, counts, children }: 
     timer.current = setTimeout(() => router.push(hrefFor({ q: value })), 350);
   }
 
-  const count = (s: PendingMediaStatus) => (s === "all" ? counts.pending + counts.approved + counts.rejected : counts[s]);
+  const count = (s: PendingMediaStatus) => {
+    if (isAvatar) return s === "all" ? avatarCounts.pending + avatarCounts.rejected : s === "approved" ? 0 : avatarCounts[s];
+    return s === "all" ? counts.pending + counts.approved + counts.rejected : counts[s];
+  };
+  const tabs = isAvatar ? STATUS_TABS.filter((s) => s !== "approved") : STATUS_TABS;
 
   return (
     <AdminShell title={t.title}>
-      <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.7, margin: "0 0 16px", maxWidth: 760 }}>{t.intro}</p>
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+        {([["media", t.kindMedia, counts.pending], ["avatar", t.kindAvatar, avatarCounts.pending]] as const).map(([k, label, pending]) => {
+          const active = kind === k;
+          return (
+            <Link key={k} href={hrefFor({ kind: k, status: "pending", type: "all", q: "" })} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10, textDecoration: "none", fontSize: 13.5, fontWeight: active ? 800 : 500, border: `1px solid ${active ? TEXT : BORDER}`, backgroundColor: active ? (dark ? "#1e293b" : "#0f172a") : "transparent", color: active ? "#fff" : MUTED }}>
+              {label}
+              {pending > 0 && <span style={{ minWidth: 20, textAlign: "center", padding: "1px 7px", borderRadius: 10, fontSize: 11, fontWeight: 800, backgroundColor: "#F4B740", color: "#111" }}>{pending}</span>}
+            </Link>
+          );
+        })}
+      </div>
 
-      {!counts.migrated && (
+      <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.7, margin: "0 0 16px", maxWidth: 760 }}>{isAvatar ? t.avatarIntro : t.intro}</p>
+
+      {isAvatar && !avatarCounts.migrated && (
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(244,183,64,0.12)", border: "1px solid rgba(244,183,64,0.4)", color: dark ? "#fcd34d" : "#92400e", fontSize: 12.5, lineHeight: 1.6 }}>
+          <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />{t.avatarMigration}
+        </div>
+      )}
+
+      {!isAvatar && !counts.migrated && (
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(244,183,64,0.12)", border: "1px solid rgba(244,183,64,0.4)", color: dark ? "#fcd34d" : "#92400e", fontSize: 12.5, lineHeight: 1.6 }}>
           <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />{t.migration}
         </div>
@@ -85,7 +117,7 @@ export default function PendingDataShell({ status, type, q, counts, children }: 
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {STATUS_TABS.map((s) => {
+          {tabs.map((s) => {
             const active = status === s;
             const col = STATUS_COLOR[s];
             return (
@@ -108,7 +140,7 @@ export default function PendingDataShell({ status, type, q, counts, children }: 
         </div>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, border: `1px solid ${BORDER}`, backgroundColor: CARD }}>
+          {!isAvatar && <div style={{ display: "flex", gap: 4, padding: 3, borderRadius: 10, border: `1px solid ${BORDER}`, backgroundColor: CARD }}>
             {TYPES.map((ty) => {
               const active = type === ty;
               const label = ty === "all" ? t.typeAll : ty === "photo" ? t.photo : t.video;
@@ -118,7 +150,7 @@ export default function PendingDataShell({ status, type, q, counts, children }: 
                 </Link>
               );
             })}
-          </div>
+          </div>}
           <div style={{ position: "relative" }}>
             <Search size={14} color={MUTED} style={{ position: "absolute", insetInlineStart: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
             <input

@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import PendingDataShell from "./_components/PendingDataShell";
 import PendingMediaSection from "./_components/PendingMediaSection";
 import PendingMediaSkeleton from "./_components/PendingMediaSkeleton";
-import { fetchPendingMediaCounts, type PendingMediaStatus, type PendingMediaType } from "@/features/admin/services/pending-media.service";
+import { fetchPendingMediaCounts, fetchAvatarReviewCounts, type PendingKind, type PendingMediaStatus, type PendingMediaType } from "@/features/admin/services/pending-media.service";
 
 const PAGE_SIZE = 24;
 const STATUSES: PendingMediaStatus[] = ["pending", "rejected", "approved", "all"];
@@ -22,16 +22,19 @@ interface Props {
 export default async function AdminPendingDataPage({ searchParams }: Props) {
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
-  const status = (STATUSES as string[]).includes(String(sp.status)) ? (sp.status as PendingMediaStatus) : "pending";
+  const kind: PendingKind = sp.kind === "avatar" ? "avatar" : "media";
+  const rawStatus = (STATUSES as string[]).includes(String(sp.status)) ? (sp.status as PendingMediaStatus) : "pending";
+  // Profile photos only ever wait ("pending") or come back ("rejected") — an approved one just becomes the avatar.
+  const status: PendingMediaStatus = kind === "avatar" && rawStatus === "approved" ? "pending" : rawStatus;
   const type = (TYPES as string[]).includes(String(sp.type)) ? (sp.type as PendingMediaType) : "all";
   const q = typeof sp.q === "string" ? sp.q.trim().slice(0, 80) : "";
 
-  const counts = await fetchPendingMediaCounts();
+  const [counts, avatarCounts] = await Promise.all([fetchPendingMediaCounts(), fetchAvatarReviewCounts()]);
 
   return (
-    <PendingDataShell status={status} type={type} q={q} counts={counts}>
-      <Suspense key={`${page}-${status}-${type}-${q}`} fallback={<PendingMediaSkeleton />}>
-        <PendingMediaSection page={page} pageSize={PAGE_SIZE} status={status} type={type} q={q} migrated={counts.migrated} />
+    <PendingDataShell kind={kind} status={status} type={type} q={q} counts={counts} avatarCounts={avatarCounts}>
+      <Suspense key={`${kind}-${page}-${status}-${type}-${q}`} fallback={<PendingMediaSkeleton />}>
+        <PendingMediaSection kind={kind} page={page} pageSize={PAGE_SIZE} status={status} type={type} q={q} migrated={counts.migrated} />
       </Suspense>
     </PendingDataShell>
   );

@@ -8,7 +8,7 @@ import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { cdnImage } from "@/lib/images";
-import type { AdminPendingMedia, PendingMediaStatus, PendingMediaType } from "@/features/admin/services/pending-media.service";
+import type { AdminPendingMedia, PendingKind, PendingMediaStatus, PendingMediaType } from "@/features/admin/services/pending-media.service";
 
 const STATUS_COLOR = { pending: "#F4B740", approved: "#00D26A", rejected: "#EF4444" } as const;
 
@@ -19,7 +19,7 @@ const TX = {
     selected: (n: number) => `${n} محدد`, approveSel: "اعتماد المحدد", rejectSel: "رفض المحدد", clear: "إلغاء التحديد",
     selectAll: "تحديد الكل في الصفحة",
     empty: { pending: "لا يوجد شيء بانتظار المراجعة 🎉", rejected: "لا توجد وسائط مرفوضة", approved: "لا توجد وسائط معتمدة", all: "لا توجد وسائط" },
-    photo: "صورة", video: "فيديو", noCaption: "بدون تعليق",
+    photo: "صورة", video: "فيديو", noCaption: "بدون تعليق", profilePhoto: "صورة بروفايل", current: "الحالية",
     profile: "البروفايل", uploaded: "اترفع", reason: "سبب الرفض",
     rejectTitle: "رفض الوسائط", rejectHint: "الموهبة هتشوف السبب ده وتقدر ترفع بديل.",
     rejectPlaceholder: "اكتب سبب الرفض...", cancel: "إلغاء", confirmReject: "تأكيد الرفض", confirmApprove: "تأكيد الاعتماد",
@@ -36,7 +36,7 @@ const TX = {
     selected: (n: number) => `${n} selected`, approveSel: "Approve selected", rejectSel: "Reject selected", clear: "Clear",
     selectAll: "Select all on page",
     empty: { pending: "Nothing waiting for review 🎉", rejected: "No rejected media", approved: "No approved media", all: "No media" },
-    photo: "Photo", video: "Video", noCaption: "No caption",
+    photo: "Photo", video: "Video", noCaption: "No caption", profilePhoto: "Profile photo", current: "Current",
     profile: "Profile", uploaded: "Uploaded", reason: "Rejection reason",
     rejectTitle: "Reject media", rejectHint: "The talent will see this reason and can upload a replacement.",
     rejectPlaceholder: "Why is this being rejected...", cancel: "Cancel", confirmReject: "Confirm reject", confirmApprove: "Confirm approve",
@@ -61,6 +61,7 @@ function videoPoster(url: string): string | undefined {
 }
 
 interface Props {
+  kind:     PendingKind;
   items:    AdminPendingMedia[];
   total:    number;
   page:     number;
@@ -73,7 +74,8 @@ interface Props {
 
 type Pending = { ids: string[]; action: "approve" | "reject" } | null;
 
-export default function PendingMediaGrid({ items, total, page, pageSize, status, type, q }: Props) {
+export default function PendingMediaGrid({ kind, items, total, page, pageSize, status, type, q }: Props) {
+  const isAvatar = kind === "avatar";
   const { dark, lang } = useSite();
   const t = TX[lang];
   const router = useRouter();
@@ -108,7 +110,7 @@ export default function PendingMediaGrid({ items, total, page, pageSize, status,
       const res = await fetch("/api/admin/pending-media", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: modal.ids, action: modal.action, reason: reason.trim() }),
+        body: JSON.stringify({ ids: modal.ids, action: modal.action, reason: reason.trim(), kind }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) { setError(body.error === "migration_required" ? t.migration : t.err); setBusy(false); return; }
@@ -121,6 +123,7 @@ export default function PendingMediaGrid({ items, total, page, pageSize, status,
 
   const hrefFor = (p: number) => {
     const params = new URLSearchParams();
+    if (isAvatar) params.set("kind", "avatar");
     if (p > 1) params.set("page", String(p));
     if (status !== "pending") params.set("status", status);
     if (type !== "all") params.set("type", type);
@@ -173,7 +176,7 @@ export default function PendingMediaGrid({ items, total, page, pageSize, status,
                 tabIndex={0}
                 onClick={() => setPreview(it)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPreview(it); } }}
-                style={{ position: "relative", aspectRatio: "4 / 3", cursor: "zoom-in", backgroundColor: dark ? "#141A2B" : "#E9EEF5", backgroundImage: src ? `url(${src})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}
+                style={{ position: "relative", aspectRatio: isAvatar ? "1 / 1" : "4 / 3", cursor: "zoom-in", backgroundColor: dark ? "#141A2B" : "#E9EEF5", backgroundImage: src ? `url(${src})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}
               >
                 {video && (
                   <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -181,7 +184,7 @@ export default function PendingMediaGrid({ items, total, page, pageSize, status,
                   </span>
                 )}
                 <span style={{ position: "absolute", top: 8, insetInlineEnd: 8, padding: "2px 9px", borderRadius: 999, fontSize: 11, fontWeight: 800, backgroundColor: `${col}dd`, color: "#111" }}>{t[it.status]}</span>
-                <span style={{ position: "absolute", bottom: 8, insetInlineStart: 8, padding: "2px 8px", borderRadius: 6, fontSize: 10.5, fontWeight: 700, backgroundColor: "rgba(10,13,20,0.72)", color: "#fff" }}>{video ? t.video : t.photo}</span>
+                <span style={{ position: "absolute", bottom: 8, insetInlineStart: 8, padding: "2px 8px", borderRadius: 6, fontSize: 10.5, fontWeight: 700, backgroundColor: "rgba(10,13,20,0.72)", color: "#fff" }}>{isAvatar ? t.profilePhoto : video ? t.video : t.photo}</span>
                 {canUpdate && (
                   <input
                     type="checkbox"
@@ -205,9 +208,15 @@ export default function PendingMediaGrid({ items, total, page, pageSize, status,
                   </div>
                 </div>
 
-                <div style={{ color: it.caption ? TEXT : MUTED, fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.caption ?? t.noCaption}</div>
+                {!isAvatar && <div style={{ color: it.caption ? TEXT : MUTED, fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.caption ?? t.noCaption}</div>}
                 <div style={{ color: MUTED, fontSize: 11 }}>{t.uploaded}: {new Date(it.createdAt).toLocaleString(lang === "ar" ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" })}</div>
 
+                {isAvatar && it.currentUrl && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, color: MUTED, fontSize: 11 }}>
+                    <span style={{ width: 26, height: 26, borderRadius: "50%", backgroundImage: `url(${cdnImage(it.currentUrl, 64)})`, backgroundSize: "cover", border: `1px solid ${BORDER}` }} />
+                    {t.current}
+                  </div>
+                )}
                 {it.talent.profileStatus && it.talent.profileStatus !== "approved" && (
                   <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#F4B740", fontSize: 11 }}>
                     <AlertTriangle size={12} />{t.profilePending} ({it.talent.profileStatus})
