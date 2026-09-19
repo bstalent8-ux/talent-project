@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
-import { formatTalentTag } from "@/lib/talent-tags";
 import type { AdminTalentFilterOptions, TalentScoreOp } from "@/features/admin/services/admin.service";
 
 const STATUS_FILTERS = ["all", "pending", "approved", "rejected", "suspended"] as const;
@@ -12,7 +11,7 @@ const STATUS_FILTERS = ["all", "pending", "approved", "rejected", "suspended"] a
 const TX = {
   ar: {
     title: "المواهب", all: "الكل", pending: "قيد الانتظار", approved: "معتمد", rejected: "مرفوض", suspended: "موقوف",
-    filterCategory: "التصنيف: الكل", filterCity: "المدينة: الكل",
+    filterCategory: "التصنيف: الكل", categoryUgc: "UGC", categoryModel: "Model", categoryOthers: "أخرى", filterCity: "المدينة: الكل",
     duplicateAll: "التكرار: الكل", duplicateWith: "فيه تكرار", duplicateWithout: "بدون تكرار",
     searchPlaceholder: "بحث بالاسم أو رقم الهاتف...",
     scoreAny: "السكور: الكل", scoreEq: "السكور = ", scoreLte: "السكور ≤ ", scoreGte: "السكور ≥ ",
@@ -20,7 +19,7 @@ const TX = {
   },
   en: {
     title: "Talents", all: "All", pending: "Pending", approved: "Approved", rejected: "Rejected", suspended: "Suspended",
-    filterCategory: "Category: All", filterCity: "City: All",
+    filterCategory: "Category: All", categoryUgc: "UGC", categoryModel: "Model", categoryOthers: "Others", filterCity: "City: All",
     duplicateAll: "Duplication: All", duplicateWith: "With duplication", duplicateWithout: "Without duplication",
     searchPlaceholder: "Search by name or phone...",
     scoreAny: "Score: Any", scoreEq: "Score = ", scoreLte: "Score ≤ ", scoreGte: "Score ≥ ",
@@ -141,7 +140,9 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
             style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: category ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
           >
             <option value="">{t.filterCategory}</option>
-            {filterOptions.categories.map((c) => <option key={c} value={c}>{formatTalentTag(c, lang)}</option>)}
+            <option value="ugc">{t.categoryUgc}</option>
+            <option value="model">{t.categoryModel}</option>
+            <option value="others">{t.categoryOthers}</option>
           </select>
           <select
             value={city ?? ""}

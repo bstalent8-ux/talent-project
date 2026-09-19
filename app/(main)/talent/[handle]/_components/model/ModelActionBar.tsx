@@ -76,7 +76,7 @@ export default function ModelActionBar({ talentId, talentName, talentAvatar, tal
             }}
           >
             <Heart size={15} fill={isFavorited ? "#fb7185" : "none"} />
-            {isFavorited ? (ar ? "في المفضلة" : "Favorited") : (ar ? "إضافة للمفضلة" : "Favorite")}
+            {isFavorited ? (ar ? "تم الحفظ" : "Saved") : (ar ? "حفظ" : "Save")}
           </button>
         </ProtectedAction>
         {favoriteError && (
@@ -97,7 +97,7 @@ export default function ModelActionBar({ talentId, talentName, talentAvatar, tal
             onClick={openMessage}
             style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 800, color: "#0b0d13", background: `linear-gradient(135deg, #e5a93c, #c88924)`, border: "none", borderRadius: 10, padding: "9px 18px", cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
           >
-            <MessageCircle size={15} />{ar ? `تواصل مع ${talentName}` : `Contact ${talentName}`}
+            <MessageCircle size={15} />{ar ? `تواصل مع ${talentName.split(" ")[0]}` : `Contact ${talentName.split(" ")[0]}`}
           </button>
         </ProtectedAction>
       </div>

@@ -12,7 +12,6 @@
 import type { TalentData, BrandItem, PortfolioItem } from "@/features/talent-profile/types";
 import MeasurementsSection from "../MeasurementsSection";
 import BrandsCard from "../BrandsCard";
-import ModelMatchScore from "./ModelMatchScore";
 import ModelAiInsights from "./ModelAiInsights";
 import ModelWeeklyAvailability from "./ModelWeeklyAvailability";
 import ModelRecentActivity from "./ModelRecentActivity";
@@ -26,7 +25,6 @@ interface Props {
 export default function ModelSidebar({ talent, brands, portfolioItems }: Props) {
   return (
     <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
-      <ModelMatchScore />
       <ModelAiInsights />
       <ModelWeeklyAvailability availability={talent.availability} schedule={talent.availabilitySchedule} />
       {talent.measurements && <MeasurementsSection measurements={talent.measurements} languages={talent.languages} />}

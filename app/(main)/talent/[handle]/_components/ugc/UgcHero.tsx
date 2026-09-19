@@ -64,7 +64,7 @@ function formatResponseTime(hours: number, ar: boolean): string {
   return ar ? `${days} ${days === 1 ? "يوم" : "أيام"}` : `${days} ${days === 1 ? "Day" : "Days"}`;
 }
 
-function toHref(key: string, value: string): string {
+export function toHref(key: string, value: string): string {
   if (/^https?:\/\//i.test(value)) return value;
   const base = PROFILE_URL_BASE[key];
   if (!base) return `https://${value}`;
@@ -73,7 +73,7 @@ function toHref(key: string, value: string): string {
 }
 
 /** "@nour.ugc" from a stored value that is either a bare handle or a full URL. */
-function displayHandle(value: string): string | null {
+export function displayHandle(value: string): string | null {
   const raw = value.trim();
   if (!raw) return null;
   let last = raw;
@@ -102,7 +102,7 @@ function videoPoster(url: string | null): string | undefined {
 }
 
 // ─── Platform marks ────────────────────────────────────────────────────────
-function PlatformMark({ kind }: { kind: string }) {
+export function PlatformMark({ kind }: { kind: string }) {
   const size = 40;
   switch (kind) {
     case "instagram":

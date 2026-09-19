@@ -124,6 +124,17 @@ export interface AdminTalentFilterOptions {
   cities:     string[];
 }
 
+/** Category filter for the admin Talents list. "others" is everything that isn't
+ *  UGC or Model (including a missing category); any other value matches exactly. */
+export const TALENT_PRIMARY_CATEGORIES = ["ugc", "model"] as const;
+function applyTalentCategory<Q>(query: Q, category: string): Q {
+  const q = query as any;
+  if (category === "others") {
+    return q.or(`category.is.null,category.not.in.(${TALENT_PRIMARY_CATEGORIES.join(",")})`, { referencedTable: "talent_profiles" }) as Q;
+  }
+  return q.eq("talent_profiles.category", category) as Q;
+}
+
 export async function fetchAdminTalentFilterOptions(): Promise<AdminTalentFilterOptions> {
   const [{ data: categoryRows }, { data: cityRows }] = await Promise.all([
     adminClient.from("talent_profiles").select("category"),
@@ -388,7 +399,7 @@ export async function fetchAdminTalentsPage({
 
     let groupedQuery = adminClient.from("profiles").select(SELECT).eq("role", "talent").in("id", dupIds);
     if (status && status !== "all") groupedQuery = groupedQuery.eq("talent_profiles.status", status);
-    if (category) groupedQuery = groupedQuery.eq("talent_profiles.category", category);
+    if (category) groupedQuery = applyTalentCategory(groupedQuery, category);
     if (city) groupedQuery = groupedQuery.eq("city", city);
     groupedQuery = applyTalentSearch(groupedQuery, q);
 
@@ -441,7 +452,7 @@ export async function fetchAdminTalentsPage({
     if (restrictIds && restrictIds.length === 0) return { talents: [], total: 0, duplicateTotal };
     let scoreQuery = adminClient.from("profiles").select(SELECT).eq("role", "talent");
     if (status && status !== "all") scoreQuery = scoreQuery.eq("talent_profiles.status", status);
-    if (category) scoreQuery = scoreQuery.eq("talent_profiles.category", category);
+    if (category) scoreQuery = applyTalentCategory(scoreQuery, category);
     if (city) scoreQuery = scoreQuery.eq("city", city);
     scoreQuery = applyTalentSearch(scoreQuery, q);
     if (restrictIds) scoreQuery = scoreQuery.in("id", restrictIds);
@@ -467,7 +478,7 @@ export async function fetchAdminTalentsPage({
     .range(from, to);
 
   if (status && status !== "all") query = query.eq("talent_profiles.status", status);
-  if (category) query = query.eq("talent_profiles.category", category);
+  if (category) query = applyTalentCategory(query, category);
   if (city) query = query.eq("city", city);
   query = applyTalentSearch(query, q);
 

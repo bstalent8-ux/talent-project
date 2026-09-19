@@ -166,14 +166,18 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
       />
 
       <div style={{ width: "min(var(--container-max, 1440px), 100%)", margin: "0 auto", padding: "20px var(--container-pad, 24px)" }}>
+        {/* Hero spans the full container width; the two-column grid starts below it. */}
+        <div style={{ marginBottom: 20 }}>
+          <ModelHero
+            talent={talent}
+            presenceLinks={presenceLinks}
+            firstPortfolioItem={portfolioItems[0] ?? null}
+            onOpenGallery={() => setGalleryIndex(0)}
+          />
+        </div>
+
         <div className="model-shell-grid" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20, alignItems: "start" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
-            <ModelHero
-              talent={talent}
-              presenceLinks={presenceLinks}
-              firstPortfolioItem={portfolioItems[0] ?? null}
-              onOpenGallery={() => setGalleryIndex(0)}
-            />
             <ModelKeyStats talent={talent} bookingStats={bookingStats} />
             <ModelTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 

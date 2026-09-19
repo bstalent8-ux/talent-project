@@ -47,7 +47,9 @@ export default function UgcPackages({ packages, selectedId, onSelectPackage }: P
   const POPULAR_BG = dark ? "rgba(108,77,255,0.12)" : "#F7F5FF";
 
   const data = (packages ?? []).filter((p) => p.name && p.price);
-  const cols = phone ? 1 : Math.min(3, Math.max(1, data.length));
+  // Always three tracks: a lone package keeps the width it has when there are three
+  // and sits at the inline-start side (left in LTR, right in RTL) instead of stretching.
+  const cols = phone ? 1 : 3;
 
   return (
     <section id="ugc-packages" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, padding: phone ? 16 : 22, minWidth: 0 }}>
