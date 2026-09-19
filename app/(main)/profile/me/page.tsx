@@ -660,7 +660,7 @@ export default function DashboardPage() {
 
         {/* ─── Hero card ─── */}
         <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 16 : 24, marginBottom: 24, overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "200px 1fr 320px", gap: isMobile ? 20 : 24, alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "200px minmax(0,1fr) 320px", gap: isMobile ? 20 : 24, alignItems: "start" }}>
 
             {/* Avatar */}
             <div style={{ position: "relative" }}>
@@ -785,18 +785,18 @@ export default function DashboardPage() {
         </div>
 
         {/* ─── Main grid ─── */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "minmax(0,2fr) minmax(0,1fr)", gap: 24 }}>
 
           {/* Left col */}
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
             {/* Portfolio */}
             <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
                 <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 800, margin: 0 }}>{t.portfolio}</h2>
                 {edit && (
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <input value={caption} onChange={e => setCaption(e.target.value)} placeholder={t.captionPlaceholder} style={{ padding: "6px 10px", backgroundColor: INP, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 12, outline: "none", width: 140, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }} />
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", minWidth: 0, maxWidth: "100%" }}>
+                    <input value={caption} onChange={e => setCaption(e.target.value)} placeholder={t.captionPlaceholder} style={{ padding: "6px 10px", backgroundColor: INP, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 12, outline: "none", width: isMobile ? "100%" : 140, boxSizing: "border-box", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }} />
                     <input ref={photoRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => { handleMediaFilesUpload(e.target.files,"photo"); e.target.value=""; }} />
                     <button onClick={() => photoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(0,210,106,0.1)", border: "1px solid rgba(0,210,106,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Upload size={12} />{t.addPhoto}
@@ -814,7 +814,7 @@ export default function DashboardPage() {
               {media.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 0", color: MUTED, fontSize: 14 }}>{t.noMedia}</div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 10 }}>
                   {media.slice(0, 6).map((item, i) => (
                     <div key={item.id} style={{ position: "relative", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", border: `1px solid ${BORDER}`, background: item.url ? `url(${item.url}) center/cover` : SURFACE }}>
                       {item.media_type === "video" && (
@@ -837,7 +837,7 @@ export default function DashboardPage() {
             <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
               <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>{t.socialLinks}</h3>
               {edit ? (
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "repeat(2,minmax(0,1fr))", gap: 12 }}>
                   {([["instagram", t.instagram], ["tiktok", t.tiktok], ["youtube", t.youtube], ["linkedin", t.linkedin]] as [string,string][]).map(([k, label]) => (
                     <div key={k}>
                       <label style={{ color: MUTED, fontSize: 11, display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>{SOCIAL_ICONS[k]} {label}</label>
@@ -868,7 +868,7 @@ export default function DashboardPage() {
                   <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.physicalInfo}</h3>
                 </div>
                 {edit ? (
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "repeat(2,minmax(0,1fr))", gap: 12 }}>
                     {([["height",t.height],["weight",t.weight],["age",t.age],["hair_color",t.hairColor],["shoe_size",t.shoeSize],["languages",t.languages],["dialect",t.dialect]] as [string,string][]).map(([k, label]) => (
                       <div key={k}>
                         <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{label}</label>
@@ -917,7 +917,7 @@ export default function DashboardPage() {
                     {packages.map((pkg) => (
                       <div key={pkg.id} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, position: "relative", backgroundColor: SURFACE }}>
                         <button onClick={() => delPkg(pkg.id)} style={{ position: "absolute", top: 10, left: lang === "ar" ? 10 : undefined, right: lang === "ar" ? undefined : 10, background: "rgba(220,38,38,0.15)", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", padding: "3px 7px", fontSize: 11 }}>✕</button>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10, marginBottom: 10 }}>
                           <div>
                             <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{t.pkgName}</label>
                             <input value={pkg.name} onChange={e => setPkg(pkg.id, "name", e.target.value)} style={inp} />
@@ -947,7 +947,7 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(220px,1fr))", gap: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "repeat(auto-fill,minmax(220px,1fr))", gap: 14 }}>
                     {packages.map(pkg => (
                       <div key={pkg.id} style={{ border: `1px solid ${pkg.popular ? GREEN : BORDER}`, borderRadius: 12, padding: 16, backgroundColor: SURFACE, position: "relative" }}>
                         {pkg.popular && <span style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", backgroundColor: GREEN, color: "#000", fontSize: 10, fontWeight: 800, borderRadius: 20, padding: "2px 10px", whiteSpace: "nowrap" }}>{t.pkgPopular}</span>}
@@ -980,7 +980,7 @@ export default function DashboardPage() {
                 {edit ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {addons.map(addon => (
-                      <div key={addon.key} style={{ display: "grid", gridTemplateColumns: "1fr 140px 36px", gap: 8, alignItems: "end" }}>
+                      <div key={addon.key} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 140px 36px", gap: 8, alignItems: "end" }}>
                         <div>
                           <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 3 }}>{t.addonLabel}</label>
                           <input value={addon.label} onChange={e => setAddon(addon.key, "label", e.target.value)} style={inp} />
@@ -1017,7 +1017,7 @@ export default function DashboardPage() {
                 <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{lang === "ar" ? "إحصائيات الحساب" : "Account Stats"}</h3>
               </div>
               <p style={{ color: MUTED, fontSize: 11, marginBottom: 16 }}>{t.readOnly}</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10 }}>
                 {[
                   { icon: <Star size={14} color={GOLD} fill={GOLD} />, label: lang === "ar" ? "التقييم" : "Rating", val: tp?.avg_rating ? Number(tp.avg_rating).toFixed(1) : "—" },
                   { icon: <Eye size={14} color={GREEN} />,              label: lang === "ar" ? "مشاهدات" : "Views",  val: tp?.profile_views ?? 0 },
@@ -1146,7 +1146,7 @@ export default function DashboardPage() {
               <h3 style={{ color:TEXT, fontSize:17, fontWeight:700, margin:0 }}>📏 {t.physicalInfo}</h3>
               <button onClick={() => setPhysicalModal(false)} style={{ background: dark?"rgba(255,255,255,0.08)":"#f1f5f9", border:"none", borderRadius:8, width:32, height:32, cursor:"pointer", fontSize:16, color:MUTED, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(2,minmax(0,1fr))", gap:12 }}>
               {([
                 ["height",    t.height,    "ltr"],
                 ["weight",    t.weight,    "ltr"],

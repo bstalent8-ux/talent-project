@@ -25,15 +25,20 @@ export default async function AdminTalentsPage({ searchParams }: Props) {
   const dir = sp.dir === "asc" || sp.dir === "desc" ? sp.dir : undefined;
   const duplicate = sp.duplicate === "with" || sp.duplicate === "without" ? sp.duplicate : "all";
   const q = typeof sp.q === "string" ? sp.q : undefined;
+  const scoreOp = typeof sp.scoreOp === "string" && ["eq", "lte", "gte"].includes(sp.scoreOp)
+    ? (sp.scoreOp as "eq" | "lte" | "gte")
+    : undefined;
+  const scoreRaw = typeof sp.score === "string" && sp.score.trim() !== "" ? Number(sp.score) : NaN;
+  const score = Number.isFinite(scoreRaw) ? Math.min(100, Math.max(0, Math.round(scoreRaw))) : undefined;
   const requestedPageSize = Number(sp.pageSize);
   const pageSize = ALLOWED_PAGE_SIZES.includes(requestedPageSize) ? requestedPageSize : DEFAULT_PAGE_SIZE;
 
   const filterOptions = await fetchAdminTalentFilterOptions();
 
   return (
-    <AdminTalentsShell status={status} category={category} city={city} duplicate={duplicate} q={q} filterOptions={filterOptions}>
-      <Suspense key={`${page}-${status}-${pageSize}-${category}-${city}-${sort}-${dir}-${duplicate}-${q}`} fallback={<TalentsTableSkeleton />}>
-        <TalentsTableSection page={page} pageSize={pageSize} status={status} category={category} city={city} sort={sort} dir={dir} duplicate={duplicate} q={q} />
+    <AdminTalentsShell status={status} category={category} city={city} duplicate={duplicate} q={q} score={score} scoreOp={scoreOp} filterOptions={filterOptions}>
+      <Suspense key={`${page}-${status}-${pageSize}-${category}-${city}-${sort}-${dir}-${duplicate}-${q}-${scoreOp}-${score}`} fallback={<TalentsTableSkeleton />}>
+        <TalentsTableSection page={page} pageSize={pageSize} status={status} category={category} city={city} sort={sort} dir={dir} duplicate={duplicate} q={q} score={score} scoreOp={scoreOp} />
       </Suspense>
     </AdminTalentsShell>
   );

@@ -573,15 +573,15 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   };
   const label: React.CSSProperties = { color: MUTED, fontSize: 12, display: "block", marginBottom: 5, fontWeight: 600 };
   const ghostBtn: React.CSSProperties = {
-    padding: "12px 20px", background: "transparent", border: `1px solid ${BORDER}`,
+    padding: isMobile ? "12px 14px" : "12px 20px", background: "transparent", border: `1px solid ${BORDER}`,
     borderRadius: "var(--radius-sm)", color: MUTED, fontSize: 14, fontWeight: 700,
-    cursor: "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", gap: 6,
+    cursor: "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
   };
   const primaryBtn = (disabled?: boolean): React.CSSProperties => ({
-    padding: "12px 24px", background: disabled ? "var(--bg-card-muted)" : TEAL,
+    padding: isMobile ? "12px 16px" : "12px 24px", background: disabled ? "var(--bg-card-muted)" : TEAL,
     border: "none", borderRadius: "var(--radius-sm)", color: disabled ? MUTED : INK,
     fontSize: 14, fontWeight: 800, cursor: disabled ? "not-allowed" : "pointer",
-    fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", gap: 6,
+    fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
   });
   const infoBanner = (text: string) => (
     <div style={{
@@ -635,7 +635,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   });
 
   return (
-    <main dir={dir} style={{ fontFamily: "var(--font-sans)", background: "var(--bg-page)", minHeight: "100vh" }}>
+    <main dir={dir} style={{ fontFamily: "var(--font-sans)", background: "var(--bg-page)", minHeight: "100vh", paddingBottom: isMobile ? 88 : 0 }}>
       {/* ─── Top bar ─── */}
       <div style={{
         position: "sticky", top: 0, zIndex: 40, background: "var(--bg-page)",
@@ -646,10 +646,13 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
           {lang === "ar" ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
           {t.back}
         </button>
-        <span style={{ color: MUTED, fontSize: 13, fontWeight: 700 }}>{t.stepOf(stepIdx + 1, steps.length)}</span>
-        <button onClick={handleSaveDraft} disabled={saving} style={{ ...ghostBtn, opacity: saving ? 0.6 : 1 }}>
-          {saving ? t.saving : t.saveDraft}
-        </button>
+        <span style={{ color: MUTED, fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" }}>{t.stepOf(stepIdx + 1, steps.length)}</span>
+        {/* Phones: Save Draft lives in the bottom nav; a third button here didn't fit a 320px bar. */}
+        {!isMobile && (
+          <button onClick={handleSaveDraft} disabled={saving} style={{ ...ghostBtn, opacity: saving ? 0.6 : 1 }}>
+            {saving ? t.saving : t.saveDraft}
+          </button>
+        )}
       </div>
 
       {saveError && (
@@ -668,7 +671,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
 
       <div style={{
         maxWidth: 1280, margin: "0 auto", padding: isMobile ? "16px" : "28px",
-        display: "grid", gridTemplateColumns: isMobile ? "1fr" : "300px 1fr", gap: isMobile ? 16 : 32,
+        display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "300px minmax(0,1fr)", gap: isMobile ? 16 : 32,
         alignItems: "start",
       }}>
         {/* ─── Desktop persistent sidebar ─── */}
@@ -767,7 +770,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
             )}
 
             {currentStep === "physical" && (
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,minmax(0,1fr))" : "repeat(3,minmax(0,1fr))", gap: 14 }}>
                 {MODEL_PHYSICAL_FIELDS.map((k) => {
                   const l = k === "height" ? (lang === "ar" ? "الطول (سم)" : "Height (cm)")
                     : k === "weight" ? (lang === "ar" ? "الوزن (كجم)" : "Weight (kg)")
@@ -793,7 +796,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
               <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
                 <div>
                   <label style={{ ...label, marginBottom: 10 }}>{t.labels.category}</label>
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,minmax(0,1fr))" : "repeat(3,minmax(0,1fr))", gap: 8 }}>
                     {CATEGORIES.map((c) => (
                       <button key={c.value} onClick={() => setCategory(c.value)} style={{
                         padding: "10px 12px", borderRadius: "var(--radius-sm)", fontSize: 13, fontWeight: 700,
@@ -814,7 +817,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                     {packages.map((pkg) => (
                       <div key={pkg.id} style={{ border: `1px solid ${BORDER}`, borderRadius: "var(--radius-md)", padding: 14, position: "relative", background: SURFACE }}>
                         <button onClick={() => delPkg(pkg.id)} style={{ position: "absolute", top: 10, insetInlineEnd: 10, background: "rgba(223,63,77,0.14)", border: "none", borderRadius: 6, color: RED, cursor: "pointer", padding: "2px 8px", fontSize: 12 }}>✕</button>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 8, marginBottom: 8 }}>
                           <div>
                             <label style={label}>{t.pkgName}</label>
                             <input value={pkg.name} onChange={e => setPkg(pkg.id, "name", e.target.value)} style={inp} />
@@ -850,7 +853,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                   <p style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: "0 0 10px" }}>{t.reviewSections.usage_addons}</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {addons.map((addon) => (
-                      <div key={addon.key} style={{ display: "grid", gridTemplateColumns: "1fr 120px 36px", gap: 8, alignItems: "end" }}>
+                      <div key={addon.key} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 120px 36px", gap: 8, alignItems: "end" }}>
                         <div>
                           <label style={label}>{t.addonName}</label>
                           <input value={addon.label} onChange={e => setAddon(addon.key, "label", e.target.value)} style={inp} />
@@ -873,7 +876,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
             {currentStep === "portfolio" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {portfolioMedia.length > 0 && (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 8 }}>
                     {portfolioMedia.map((item: any) => (
                       <div key={item.id} style={{ position: "relative", borderRadius: "var(--radius-sm)", overflow: "hidden", aspectRatio: "1", background: "var(--bg-card-muted)" }}>
                         {item.media_type === "video" ? (
@@ -890,7 +893,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                   <label style={label}>{t.portfolioCaption}</label>
                   <input value={portfolioCaption} onChange={e => setPortfolioCaption(e.target.value)} style={inp} />
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10 }}>
                   <label htmlFor="cp-portfolio-photo" style={{
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
                     padding: "18px 12px", border: `2px dashed ${TEAL}`, borderRadius: "var(--radius-md)",
@@ -978,7 +981,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                           </button>
                         </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(7,minmax(0,1fr))", gap: 4, marginBottom: 4 }}>
                           {DAY_KEYS.map((day) => (
                             <div key={day} style={{ textAlign: "center", color: MUTED, fontSize: 11, fontWeight: 700, padding: "4px 0" }}>
                               {lang === "ar" ? DAY_LABELS[day].short_ar : DAY_LABELS[day].short_en}
@@ -986,7 +989,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                           ))}
                         </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(7,minmax(0,1fr))", gap: 4 }}>
                           {calendarCells.map((dateStr, i) => {
                             if (!dateStr) return <div key={`empty-${i}`} />;
                             const isPast = dateStr < todayISO;
@@ -1140,7 +1143,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
           </div>
 
           {/* ─── bottom nav (mirrors top) ─── */}
-          <div style={{ display: "flex", gap: 10, marginTop: 26, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 26, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
             <button onClick={handleBack} style={ghostBtn}>
               {lang === "ar" ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
               {t.back}
@@ -1148,7 +1151,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
             <button onClick={handleSaveDraft} disabled={saving} style={{ ...ghostBtn, flex: 1, justifyContent: "center" }}>
               {saving ? t.saving : t.saveDraft}
             </button>
-            <button onClick={handleSaveContinue} disabled={saving} style={{ ...primaryBtn(saving), flex: 2, justifyContent: "center" }}>
+            <button onClick={handleSaveContinue} disabled={saving} style={{ ...primaryBtn(saving), flex: isMobile ? "1 1 100%" : 2, justifyContent: "center" }}>
               {saving ? t.saving : stepIdx < steps.length - 1 ? t.saveContinue : t.completeBtn}
             </button>
           </div>

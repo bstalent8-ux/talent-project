@@ -11,7 +11,7 @@ import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
 import SortableTh from "@/components/admin/SortableTh";
 import type { AdminTalent, TalentStatus } from "@/features/admin/types";
-import type { TalentDuplicateFilter } from "@/features/admin/services/admin.service";
+import type { TalentDuplicateFilter, TalentScoreOp } from "@/features/admin/services/admin.service";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
 import { profileApprovedNotificationContent } from "@/lib/notifications/content/profile-approved";
 import { profileApprovedEmail } from "@/lib/email/templates/profile-approved";
@@ -90,9 +90,11 @@ interface Props {
   dir?:      "asc" | "desc";
   duplicate?: TalentDuplicateFilter;
   q?: string;
+  score?: number;
+  scoreOp?: TalentScoreOp;
 }
 
-function hrefFor(page: number, status: string, pageSize: number, category?: string, city?: string, sort?: string, dir?: "asc" | "desc", duplicate?: TalentDuplicateFilter, q?: string) {
+function hrefFor(page: number, status: string, pageSize: number, category?: string, city?: string, sort?: string, dir?: "asc" | "desc", duplicate?: TalentDuplicateFilter, q?: string, score?: number, scoreOp?: TalentScoreOp) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (status !== "all") params.set("status", status);
@@ -102,13 +104,14 @@ function hrefFor(page: number, status: string, pageSize: number, category?: stri
   if (sort) { params.set("sort", sort); params.set("dir", dir ?? "asc"); }
   if (duplicate && duplicate !== "all") params.set("duplicate", duplicate);
   if (q) params.set("q", q);
+  if (scoreOp && typeof score === "number") { params.set("scoreOp", scoreOp); params.set("score", String(score)); }
   const qs = params.toString();
   return qs ? `/admin/talents?${qs}` : "/admin/talents";
 }
 
-const SORT_COL = { name: "full_name", city: "city", registered: "created_at" } as const;
+const SORT_COL = { name: "full_name", city: "city", registered: "created_at", completion: "score" } as const;
 
-export default function TalentsTable({ talents, total, duplicateTotal, page, pageSize, status, category, city, sort, dir, duplicate, q }: Props) {
+export default function TalentsTable({ talents, total, duplicateTotal, page, pageSize, status, category, city, sort, dir, duplicate, q, score, scoreOp }: Props) {
   const { dark, lang } = useSite();
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.talents?.canDelete;
@@ -120,7 +123,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
   // a plain sort click can't compose with it — ignored while that view is on.
   function goSort(col: string, nextDir: "asc" | "desc") {
     if (duplicate === "with") return;
-    router.push(hrefFor(1, status, pageSize, category, city, col, nextDir, duplicate, q));
+    router.push(hrefFor(1, status, pageSize, category, city, col, nextDir, duplicate, q, score, scoreOp));
     router.refresh();
   }
 
@@ -250,7 +253,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
         {duplicateTotal > 0 ? (
           <Link
-            href={hrefFor(1, status, pageSize, category, city, sort, dir, "with", q)}
+            href={hrefFor(1, status, pageSize, category, city, sort, dir, "with", q, score, scoreOp)}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "6px 12px", borderRadius: 20,
@@ -281,7 +284,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                   <th style={thStyle}>{t.phone}</th>
                   <th style={thCenterStyle}>{t.category}</th>
                   <SortableTh label={t.city} col={SORT_COL.city} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
-                  <th style={thCenterStyle}>{t.completion}</th>
+                  <SortableTh label={t.completion} col={SORT_COL.completion} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
                   <SortableTh label={t.registered} col={SORT_COL.registered} activeCol={sort} activeDir={dir} onSort={goSort} align="center" />
                   <th style={thCenterStyle}>{t.status}</th>
                   <th style={thStyle}>{t.actions}</th>
@@ -426,10 +429,10 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
       <AdminPagination
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => hrefFor(p, status, pageSize, category, city, sort, dir, duplicate, q)}
+        buildHref={(p) => hrefFor(p, status, pageSize, category, city, sort, dir, duplicate, q, score, scoreOp)}
         total={total}
         pageSize={pageSize}
-        buildPageSizeHref={(size) => hrefFor(1, status, size, category, city, sort, dir, duplicate, q)}
+        buildPageSizeHref={(size) => hrefFor(1, status, size, category, city, sort, dir, duplicate, q, score, scoreOp)}
       />
 
       {modal && confirmConfig && (

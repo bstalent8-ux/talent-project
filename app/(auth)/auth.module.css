@@ -329,6 +329,19 @@
   color: var(--text-muted);
 }
 
+/* Phones: the country name is what eats the row and leaves the number box too
+   narrow to read its own placeholder. Flag + dial code already identify the
+   country; the full name stays in the dropdown list. */
+@media (max-width: 480px) {
+  .phoneCountryName {
+    display: none;
+  }
+  .phoneCountryTrigger {
+    padding: 0 var(--space-2);
+    gap: 0.25rem;
+  }
+}
+
 .phoneChevron {
   flex-shrink: 0;
   color: var(--text-muted);

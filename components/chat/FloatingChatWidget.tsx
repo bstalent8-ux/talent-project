@@ -3,7 +3,9 @@ import {
   useState, useEffect, useRef, useCallback,
   type KeyboardEvent,
 } from "react";
+import { usePathname } from "next/navigation";
 import { cdnImage } from "@/lib/images";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import { useConversationPresence } from "@/hooks/notifications/useConversationPresence";
@@ -29,6 +31,11 @@ function initials(name: string | null) {
 // ─── component ────────────────────────────────────────────────────────────────
 export default function FloatingChatWidget({ myId }: { myId: string }) {
   const { dark, lang } = useSite();
+  const pathname = usePathname();
+  const isMobile = useIsMobile();
+  // /profile/me pins a full-width Save bar to the bottom on phones — lift the
+  // bubble (and its panel) above it so it never covers the Save button.
+  const fabBottom = isMobile && pathname?.startsWith("/profile/me") ? 88 : 24;
   const ar = lang === "ar";
 
   // ─── widget state ────────────────────────────────────────────────────────
@@ -306,8 +313,9 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
 
   // ─── render ───────────────────────────────────────────────────────────────
   const totalUnread = convs.reduce((s, c) => s + (c.unread_count ?? 0), 0);
-  const panelW = 360;
-  const panelH = 520;
+  // Never wider/taller than the viewport: a fixed 360px overflowed 320-360px phones.
+  const panelW = "min(360px, calc(100vw - 32px))";
+  const panelH = `min(520px, calc(100dvh - ${fabBottom + 96}px))`;
 
   const TX = {
     ar: { title: "المحادثات", back: "رجوع", empty: "لا توجد محادثات", placeholder: "اكتب رسالة...", startNew: "ابدأ محادثة جديدة", noLogin: "سجّل دخولك أولاً", blocked: "مش مسموح تبعت رقم تليفون أو إيميل أو رابط واتساب/تليجرام في الشات." },
@@ -321,7 +329,7 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
       {/* Panel */}
       {open && (
         <div style={{
-          position: "fixed", bottom: 84, insetInlineEnd: 24, zIndex: 9998,
+          position: "fixed", bottom: fabBottom + 60, insetInlineEnd: isMobile ? 16 : 24, zIndex: 9998,
           width: panelW, height: panelH,
           backgroundColor: BG, border: `1px solid ${BORDER}`,
           borderRadius: 18,
@@ -532,7 +540,7 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
       <button
         onClick={handleFabClick}
         style={{
-          position: "fixed", bottom: 24, insetInlineEnd: 24, zIndex: 9999,
+          position: "fixed", bottom: fabBottom, insetInlineEnd: isMobile ? 16 : 24, zIndex: 9999,
           width: 56, height: 56, borderRadius: "50%", border: "none",
           backgroundColor: GOLD, cursor: "pointer", overflow: "visible",
           boxShadow: "0 8px 24px rgba(255,184,0,0.45)",

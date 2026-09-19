@@ -87,6 +87,21 @@ export interface AdminTalentsPageParams {
    *  with every other filter). Same box the admin types a name or a phone
    *  digit string into — see applyTalentSearch() below. */
   q?: string;
+  /** Profile-completion score filter (0-100). completionScore is computed in
+   *  JS, not a DB column, so this restricts by id list — same approach as
+   *  the duplicate filter. Needs both `score` and `scoreOp` to apply. */
+  score?:   number;
+  scoreOp?: TalentScoreOp;
+}
+
+export type TalentScoreOp = "eq" | "lte" | "gte";
+
+function scoreMatches(score: number, op: TalentScoreOp, target: number): boolean {
+  switch (op) {
+    case "eq":  return score === target;
+    case "lte": return score <= target;
+    case "gte": return score >= target;
+  }
 }
 
 /** `.or("full_name.ilike.%x%,phone_number.ilike.%x%")` — PostgREST's filter
@@ -140,6 +155,9 @@ interface DuplicateInfoEntry {
    *  cluster — stable only within one computeTalentDuplicateInfo() call,
    *  which is all the "with duplication" grouped view needs it for. */
   clusterId: string;
+  /** This talent's completion score — already computed here for the
+   *  "best in cluster" pick, reused by the score filter. */
+  score: number;
 }
 
 /** Full-table scan (talent pool is dozens, not thousands — same posture as
@@ -154,7 +172,7 @@ async function computeTalentDuplicateInfo(): Promise<Map<string, DuplicateInfoEn
   const { data } = await adminClient
     .from("profiles")
     .select(`
-      id, full_name, phone_number, avatar_url, city,
+      id, full_name, phone_number, avatar_url, city, bio,
       talent_profiles!inner (id, category, social_links, packages, specialties, availability, bio)
     `)
     .eq("role", "talent");
@@ -234,6 +252,7 @@ async function computeTalentDuplicateInfo(): Promise<Map<string, DuplicateInfoEn
         isBest: isDup && id === bestId,
         matchedBy: Array.from(matchedBy.get(id) ?? []),
         clusterId: root,
+        score: scoreById.get(id) ?? 0,
       });
     }
   }
@@ -323,6 +342,8 @@ export async function fetchAdminTalentsPage({
   dir,
   duplicate = "all",
   q,
+  score,
+  scoreOp,
 }: AdminTalentsPageParams): Promise<AdminTalentsPageResult> {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
@@ -335,6 +356,13 @@ export async function fetchAdminTalentsPage({
   // with/without toggle below has a ready-made id list to restrict to.
   const duplicateInfo = await computeTalentDuplicateInfo();
   const duplicateTotal = Array.from(duplicateInfo.values()).filter((v) => v.isDuplicate).length;
+
+  // Score filter → an id allow-list (null = no score filter). Both `score`
+  // and `scoreOp` must be present; a half-specified filter is ignored.
+  const scoreIds: Set<string> | null =
+    scoreOp && typeof score === "number" && Number.isFinite(score)
+      ? new Set(Array.from(duplicateInfo.entries()).filter(([, v]) => scoreMatches(v.score, scoreOp, score)).map(([id]) => id))
+      : null;
 
   const SELECT = `
     id, handle, full_name, avatar_url, city, bio, created_at, phone_number,
@@ -353,7 +381,9 @@ export async function fetchAdminTalentsPage({
   // this fetches every matching row unpaginated and paginates in JS after
   // grouping, instead of the DB range() used below.
   if (duplicate === "with") {
-    const dupIds = Array.from(duplicateInfo.entries()).filter(([, v]) => v.isDuplicate).map(([id]) => id);
+    const dupIds = Array.from(duplicateInfo.entries())
+      .filter(([id, v]) => v.isDuplicate && (!scoreIds || scoreIds.has(id)))
+      .map(([id]) => id);
     if (dupIds.length === 0) return { talents: [], total: 0, duplicateTotal };
 
     let groupedQuery = adminClient.from("profiles").select(SELECT).eq("role", "talent").in("id", dupIds);
@@ -395,6 +425,39 @@ export async function fetchAdminTalentsPage({
     return { talents, total: sorted.length, duplicateTotal };
   }
 
+  // Id allow-list from the duplicate ("without") and score filters, shared by
+  // the paths below (null = no restriction).
+  const restrictIds: string[] | null = (duplicate === "without" || scoreIds)
+    ? Array.from(duplicateInfo.entries())
+        .filter(([id, v]) => (duplicate !== "without" || !v.isDuplicate) && (!scoreIds || scoreIds.has(id)))
+        .map(([id]) => id)
+    : null;
+
+  // Sorting by score: completionScore is computed in JS, not a column, so a
+  // DB .order() cannot do it. Same approach as the grouped duplicate view —
+  // fetch every matching row unpaginated (talent pool is small), sort in JS
+  // by the already-computed score, then paginate.
+  if (sort === "score") {
+    if (restrictIds && restrictIds.length === 0) return { talents: [], total: 0, duplicateTotal };
+    let scoreQuery = adminClient.from("profiles").select(SELECT).eq("role", "talent");
+    if (status && status !== "all") scoreQuery = scoreQuery.eq("talent_profiles.status", status);
+    if (category) scoreQuery = scoreQuery.eq("talent_profiles.category", category);
+    if (city) scoreQuery = scoreQuery.eq("city", city);
+    scoreQuery = applyTalentSearch(scoreQuery, q);
+    if (restrictIds) scoreQuery = scoreQuery.in("id", restrictIds);
+
+    const { data: scoreData, error: scoreError } = await scoreQuery;
+    if (scoreError) return { talents: [], total: 0, duplicateTotal };
+    const scoreRows = (scoreData ?? []) as unknown as Record<string, unknown>[];
+    const sign = dir === "desc" ? -1 : 1;
+    scoreRows.sort((a, b) => {
+      const diff = (duplicateInfo.get(a.id as string)?.score ?? 0) - (duplicateInfo.get(b.id as string)?.score ?? 0);
+      return diff !== 0 ? diff * sign : String(a.id).localeCompare(String(b.id));
+    });
+    const talents = await buildAdminTalents(scoreRows.slice(from, from + pageSize), duplicateInfo);
+    return { talents, total: scoreRows.length, duplicateTotal };
+  }
+
   let query = adminClient
     .from("profiles")
     .select(SELECT, { count: "exact" })
@@ -408,10 +471,9 @@ export async function fetchAdminTalentsPage({
   if (city) query = query.eq("city", city);
   query = applyTalentSearch(query, q);
 
-  if (duplicate === "without") {
-    const ids = Array.from(duplicateInfo.entries()).filter(([, v]) => !v.isDuplicate).map(([id]) => id);
-    if (ids.length === 0) return { talents: [], total: 0, duplicateTotal };
-    query = query.in("id", ids);
+  if (restrictIds) {
+    if (restrictIds.length === 0) return { talents: [], total: 0, duplicateTotal };
+    query = query.in("id", restrictIds);
   }
 
   const { data, count, error } = await query;

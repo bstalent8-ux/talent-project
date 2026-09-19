@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import { formatTalentTag } from "@/lib/talent-tags";
-import type { AdminTalentFilterOptions } from "@/features/admin/services/admin.service";
+import type { AdminTalentFilterOptions, TalentScoreOp } from "@/features/admin/services/admin.service";
 
 const STATUS_FILTERS = ["all", "pending", "approved", "rejected", "suspended"] as const;
 
@@ -15,12 +15,16 @@ const TX = {
     filterCategory: "التصنيف: الكل", filterCity: "المدينة: الكل",
     duplicateAll: "التكرار: الكل", duplicateWith: "فيه تكرار", duplicateWithout: "بدون تكرار",
     searchPlaceholder: "بحث بالاسم أو رقم الهاتف...",
+    scoreAny: "السكور: الكل", scoreEq: "السكور = ", scoreLte: "السكور ≤ ", scoreGte: "السكور ≥ ",
+    scorePlaceholder: "0-100",
   },
   en: {
     title: "Talents", all: "All", pending: "Pending", approved: "Approved", rejected: "Rejected", suspended: "Suspended",
     filterCategory: "Category: All", filterCity: "City: All",
     duplicateAll: "Duplication: All", duplicateWith: "With duplication", duplicateWithout: "Without duplication",
     searchPlaceholder: "Search by name or phone...",
+    scoreAny: "Score: Any", scoreEq: "Score = ", scoreLte: "Score ≤ ", scoreGte: "Score ≥ ",
+    scorePlaceholder: "0-100",
   },
 };
 
@@ -30,6 +34,8 @@ interface Props {
   city?: string;
   duplicate?: "all" | "with" | "without";
   q?: string;
+  score?: number;
+  scoreOp?: TalentScoreOp;
   filterOptions: AdminTalentFilterOptions;
   children: React.ReactNode;
 }
@@ -38,7 +44,7 @@ interface Props {
 // rendered immediately, never suspended. Only the table (passed as
 // `children`, wrapped in <Suspense> by page.tsx) shows a skeleton while its
 // page/filter combo loads.
-export default function AdminTalentsShell({ status, category, city, duplicate = "all", q, filterOptions, children }: Props) {
+export default function AdminTalentsShell({ status, category, city, duplicate = "all", q, score, scoreOp, filterOptions, children }: Props) {
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
@@ -47,14 +53,15 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
   const CARD = dark ? "#0D1623" : "#FFFFFF";
   const TEXT = dark ? "#f1f5f9" : "#0f172a";
 
-  function hrefFor(overrides: Partial<{ status: string; category: string; city: string; duplicate: string; q: string }>) {
-    const next = { status, category, city, duplicate, q, ...overrides };
+  function hrefFor(overrides: Partial<{ status: string; category: string; city: string; duplicate: string; q: string; score: number | null; scoreOp: string | null }>) {
+    const next = { status, category, city, duplicate, q, score, scoreOp, ...overrides };
     const params = new URLSearchParams();
     if (next.status && next.status !== "all") params.set("status", next.status);
     if (next.category) params.set("category", next.category);
     if (next.city) params.set("city", next.city);
     if (next.duplicate && next.duplicate !== "all") params.set("duplicate", next.duplicate);
     if (next.q) params.set("q", next.q);
+    if (next.scoreOp && typeof next.score === "number") { params.set("scoreOp", next.scoreOp); params.set("score", String(next.score)); }
     const qs = params.toString();
     return qs ? `/admin/talents?${qs}` : "/admin/talents";
   }
@@ -66,6 +73,34 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
   const [draft, setDraft] = useState(q ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => { setDraft(q ?? ""); }, [q]);
+
+  // Score filter: operator select + 0-100 number box. Filter only applies
+  // once BOTH are set; the number box is debounced like the search box.
+  const [scoreDraft, setScoreDraft] = useState(typeof score === "number" ? String(score) : "");
+  const scoreDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { setScoreDraft(typeof score === "number" ? String(score) : ""); }, [score]);
+  // The operator lives in local state too: the URL only carries scoreOp once a
+  // number exists, so driving the select/number box purely off the URL made
+  // picking an operator first snap back to "Any" and hide the number box.
+  const [opDraft, setOpDraft] = useState<string>(scoreOp ?? "");
+  useEffect(() => { setOpDraft(scoreOp ?? ""); }, [scoreOp]);
+
+  function onScoreChange(value: string) {
+    const cleaned = value.replace(/\D/g, "").slice(0, 3);
+    setScoreDraft(cleaned);
+    if (scoreDebounce.current) clearTimeout(scoreDebounce.current);
+    scoreDebounce.current = setTimeout(() => {
+      if (cleaned === "") { router.push(hrefFor({ score: null, scoreOp: null })); return; }
+      router.push(hrefFor({ score: Math.min(100, Number(cleaned)), scoreOp: opDraft || "gte" }));
+    }, 400);
+  }
+
+  function onScoreOpChange(op: string) {
+    setOpDraft(op);
+    if (!op) { setScoreDraft(""); router.push(hrefFor({ score: null, scoreOp: null })); return; }
+    // No number typed yet: nothing to filter on, just reveal the number box.
+    if (scoreDraft !== "") router.push(hrefFor({ scoreOp: op, score: Math.min(100, Number(scoreDraft)) }));
+  }
 
   function onSearchChange(value: string) {
     setDraft(value);
@@ -125,6 +160,27 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
             <option value="with">{t.duplicateWith}</option>
             <option value="without">{t.duplicateWithout}</option>
           </select>
+          <div style={{ display: "flex", gap: 4 }}>
+            <select
+              value={opDraft}
+              onChange={(e) => onScoreOpChange(e.target.value)}
+              style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${opDraft ? "#00D26A" : BORDER}`, backgroundColor: CARD, color: opDraft ? "#00D26A" : MUTED, fontSize: 12.5, cursor: "pointer", fontWeight: opDraft ? 700 : 400 }}
+            >
+              <option value="">{t.scoreAny}</option>
+              <option value="eq">{t.scoreEq}</option>
+              <option value="lte">{t.scoreLte}</option>
+              <option value="gte">{t.scoreGte}</option>
+            </select>
+            {opDraft && (
+              <input
+                value={scoreDraft}
+                onChange={(e) => onScoreChange(e.target.value)}
+                inputMode="numeric"
+                placeholder={t.scorePlaceholder}
+                style={{ width: 64, padding: "7px 8px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: TEXT, fontSize: 12.5, outline: "none", textAlign: "center" }}
+              />
+            )}
+          </div>
         </div>
       </div>
       {children}
