@@ -130,7 +130,7 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
         )}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }} className="model-bento-top">
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }} className={`model-bento-top${row1.length > 0 || row2.length > 0 ? "" : " model-bento-solo"}`}>
         {hero && (
           <div className="model-bento-hero-wrap">
             {tile(hero, 0, "3 / 4", 560, "model-bento-hero-tile")}
@@ -166,7 +166,11 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
             grid-template-columns: 1fr 1fr !important;
           }
           .model-bento-hero-wrap { grid-column: 1 / span 1; }
-          .model-bento-hero-tile { aspect-ratio: auto !important; height: 100% !important; }
+          .model-bento-top:not(.model-bento-solo) .model-bento-hero-tile { aspect-ratio: auto !important; height: 100% !important; }
+          /* One photo only: nothing to stretch against, so the tile keeps its 3:4 ratio
+             (height:100% of a row with no other content collapsed it to a 2px line). */
+          .model-bento-solo { grid-template-columns: minmax(0, 1fr) !important; }
+          .model-bento-solo .model-bento-hero-wrap { max-width: 360px; }
           .model-bento-right { grid-column: 2 / span 1; }
         }
       `}</style>
