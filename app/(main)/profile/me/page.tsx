@@ -18,6 +18,7 @@ import AvatarCropModal from "@/components/profile/AvatarCropModal";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
 import { COMPLETION_THRESHOLDS } from "@/lib/profile-completion";
 import { uploadToCloudinary, cloudinaryUploadErrorText } from "@/lib/cloudinary-client-upload";
+import MediaReviewBadge, { mediaReviewNotice } from "@/components/profile/MediaReviewBadge";
 
 /* ─── colour helpers ─── */
 const GREEN = "#00D26A";
@@ -52,7 +53,7 @@ const SOCIAL_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
-type MediaItem  = { id: string; url: string; media_type: "photo" | "video"; caption: string | null };
+type MediaItem  = { id: string; url: string; media_type: "photo" | "video"; caption: string | null; is_approved?: boolean | null; review_status?: string | null; rejection_reason?: string | null };
 type PkgItem    = { id: string; name: string; price: string; popular: boolean; features: string[] };
 type AddonItem  = { key: string; label: string; price: number };
 
@@ -822,6 +823,7 @@ export default function DashboardPage() {
                           <Play size={24} color="#fff" />
                         </div>
                       )}
+                      <MediaReviewBadge item={item} lang={lang} />
                       {edit && (
                         <button onClick={() => handleDeleteMedia(item.id)} style={{ position: "absolute", top: 6, left: 6, width: 26, height: 26, borderRadius: "50%", backgroundColor: "rgba(220,38,38,0.9)", border: "none", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <Trash2 size={12} />
@@ -830,6 +832,9 @@ export default function DashboardPage() {
                     </div>
                   ))}
                 </div>
+              )}
+              {mediaReviewNotice(media, lang) && (
+                <p style={{ color: MUTED, fontSize: 12, lineHeight: 1.7, margin: "12px 0 0" }}>{mediaReviewNotice(media, lang)}</p>
               )}
             </div>
 

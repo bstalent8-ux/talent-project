@@ -710,5 +710,64 @@ export async function notifyAdminTalentSupportTicket(input: {
   });
 }
 
+// ─── Portfolio media moderation ──────────────────────────────────────────────
+
+/** A talent uploaded photos/videos that wait for review. Fans out to admins.
+ *  Reuses the BRAND_MOMENT_SUBMITTED type (camera icon, "submitted for review")
+ *  so no notification_types row has to be added. */
+export async function notifyAdminMediaPending(input: {
+  submitterId:   string;
+  submitterName: string;
+  count?:        number;
+}): Promise<number> {
+  const n = input.count ?? 1;
+  return notifyRole(["admin"], {
+    type:      "BRAND_MOMENT_SUBMITTED",
+    senderId:  input.submitterId,
+    actionUrl: "/admin/pending-data",
+    ...withI18n({
+      title: {
+        ar: "وسائط جديدة بانتظار المراجعة",
+        en: "New media awaiting review",
+      },
+      message: {
+        ar: `${input.submitterName} رفع ${n === 1 ? "ملفاً" : `${n} ملفات`} جديدة لازم تتراجع قبل ما تظهر على البروفايل.`,
+        en: `${input.submitterName} uploaded ${n === 1 ? "a new file" : `${n} new files`} that must be reviewed before appearing on their profile.`,
+      },
+    }),
+  });
+}
+
+/** An admin approved or rejected some of a talent's uploads. */
+export async function notifyMediaReviewed(input: {
+  recipientId: string;
+  adminId?:    string | null;
+  approved:    boolean;
+  count:       number;
+  reason?:     string | null;
+}): Promise<void> {
+  const n = input.count;
+  await createNotification({
+    recipientId: input.recipientId,
+    type:        input.approved ? "PROFILE_APPROVED" : "PROFILE_REJECTED",
+    senderId:    input.adminId ?? null,
+    actionUrl:   "/profile/me",
+    ...withI18n({
+      title: input.approved
+        ? { ar: "تمت الموافقة على وسائطك", en: "Your media was approved" }
+        : { ar: "لم تتم الموافقة على بعض وسائطك", en: "Some of your media wasn't approved" },
+      message: input.approved
+        ? {
+            ar: n === 1 ? "ملف واحد من أعمالك ظهر دلوقتي على بروفايلك." : `${n} ملفات من أعمالك ظهرت دلوقتي على بروفايلك.`,
+            en: n === 1 ? "1 of your uploads is now live on your profile." : `${n} of your uploads are now live on your profile.`,
+          }
+        : {
+            ar: input.reason ? snip(input.reason, 140) : "راجع الملفات المرفوضة في أعمالك وارفع بدلها.",
+            en: input.reason ? snip(input.reason, 140) : "Check the rejected files in your portfolio and upload replacements.",
+          },
+    }),
+  });
+}
+
 // Re-exported so feature code never needs two imports.
 export { createBulkNotifications, createNotification, notifyEveryone, notifyRole } from "./service";

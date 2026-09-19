@@ -13,6 +13,7 @@ const RESOURCE_LABELS: Record<AdminResourceKey, { ar: string; en: string }> = {
   candidates: { ar: "المرشحين", en: "Candidates" },
   talents: { ar: "المواهب", en: "Talents" },
   verifications: { ar: "طلبات التحقق", en: "Verifications" },
+  pendingData: { ar: "بيانات قيد المراجعة", en: "Pending Data" },
   talentDemand: { ar: "طلب أنواع المواهب", en: "Talent Demand" },
   bookings: { ar: "الحجوزات", en: "Bookings" },
   reviews: { ar: "التقييمات", en: "Reviews" },

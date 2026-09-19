@@ -1348,3 +1348,41 @@ already had it (`bookings/direct`, `jobs/[id]/apply`, `jobs`, `profile`,
 `schema.safeParse(await req.json().catch(() => null))`, 400 (or the route's
 existing generic error) on failure. Verified the escrow E2E still passes and
 that each new schema rejects malformed input.
+
+---
+
+## Portfolio media moderation — 2026-09-19
+
+Every photo/video a talent uploads (`POST /api/portfolio`) now lands in a review queue
+and is **hidden from the public profile until an admin approves it — even when the
+talent's profile is already approved.**
+
+- **`portfolio_items.is_approved` is the single "public" switch.** Every public read already
+  filtered on it (`talent.repository.ts findPortfolio`, the explore public-read policy), so
+  nothing on the read side changed. The upload route used to insert `is_approved: true`; it now
+  inserts `false`. Existing rows stay approved (297 at the time).
+- **Review trail:** `review_status` (`pending|approved|rejected`), `reviewed_by`, `reviewed_at`,
+  `rejection_reason` — added by `supabase/migrations/20260919_media_moderation.sql` (hand-run).
+  New columns default to `pending`/`false`, so any insert path that forgets to say otherwise is
+  queued, never published. **Until that migration runs**, the queue works off `is_approved` alone
+  (approving works; *rejecting* returns `409 migration_required` because the reason has nowhere to
+  go). `lib/media-review.ts` holds the shared status helper with that fallback.
+- **Admin page `/admin/pending-data`** (resource key `pendingData`, Talents group in the sidebar):
+  tabs Pending / Rejected / Approved / All with counts, type + talent search filters, thumbnail/video
+  cards with a full-size preview, single + bulk approve, reject with a required reason (quick-reason
+  chips), and "take down" for an already-approved item. Reads: `features/admin/services/
+  pending-media.service.ts`; writes: `PATCH /api/admin/pending-media` (`requirePermission("pendingData",
+  "update")`, ≤200 ids, only rows that actually change state are touched/notified, one notification per
+  talent, `invalidateTalent` per handle). **A restricted admin role sees nothing until it has
+  `pendingData` rows** — `supabase/migrations/20260919_pending_data_permission.sql` copies each role's
+  `talents` access over; review it, or grant on `/admin/roles`.
+- **Notifications:** admins get `notifyAdminMediaPending` (reuses the `BRAND_MOMENT_SUBMITTED` type — no
+  `notification_types` row needed); the talent gets `notifyMediaReviewed` (reuses `PROFILE_APPROVED` /
+  `PROFILE_REJECTED`, action URL `/profile/me`).
+- **Owner UI:** `/api/me` now returns `is_approved`, `review_status`, `rejection_reason` for the owner's
+  own items; `components/profile/MediaReviewBadge.tsx` shows "Pending review" / "Rejected" on each tile
+  in `/profile/me` and the complete-profile wizard, plus a one-line explainer. The public profile never
+  receives non-approved media.
+- **Not covered:** avatars (`/api/profile/avatar`) still publish immediately — only portfolio media is
+  moderated. Talents keep their approved media when the profile is later suspended (that path is
+  unchanged).

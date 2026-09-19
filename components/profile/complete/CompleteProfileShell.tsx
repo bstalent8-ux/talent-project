@@ -21,6 +21,7 @@ import { getWizardSteps, type WizardStepKey } from "@/components/profile/complet
 import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 import { calculateCompletion } from "@/lib/profile-completion";
 import { uploadToCloudinary, cloudinaryUploadErrorText } from "@/lib/cloudinary-client-upload";
+import MediaReviewBadge, { mediaReviewNotice } from "@/components/profile/MediaReviewBadge";
 import {
   DAY_KEYS, DAY_LABELS, MONTH_LABELS, parseAvailabilitySchedule,
   type AvailabilitySchedule, type AvailabilityException, type DatesMap, type ExceptionType, type TimeSlot,
@@ -884,10 +885,14 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                         ) : (
                           <img src={cdnImage(item.url, 320)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         )}
+                        <MediaReviewBadge item={item} lang={lang === "ar" ? "ar" : "en"} />
                         <button onClick={() => handleDeletePortfolio(item.id)} style={{ position: "absolute", top: 4, insetInlineEnd: 4, width: 22, height: 22, borderRadius: "50%", background: "rgba(223,63,77,0.9)", border: "none", color: "#fff", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>✕</button>
                       </div>
                     ))}
                   </div>
+                )}
+                {mediaReviewNotice(portfolioMedia, lang === "ar" ? "ar" : "en") && (
+                  <p style={{ color: MUTED, fontSize: 12, lineHeight: 1.7, margin: 0 }}>{mediaReviewNotice(portfolioMedia, lang === "ar" ? "ar" : "en")}</p>
                 )}
                 <div>
                   <label style={label}>{t.portfolioCaption}</label>

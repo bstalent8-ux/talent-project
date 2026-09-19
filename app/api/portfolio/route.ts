@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { canPerformAction } from "@/lib/permissions";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 import { ProfileError, profileService } from "@/features/profiles";
+import { notifyAdminMediaPending } from "@/lib/notifications/events";
 
 /**
  * talent_profiles.id for the caller, through the provider layer.
@@ -49,14 +50,23 @@ export async function POST(req: NextRequest) {
   if (resolved instanceof NextResponse) return resolved;
   const tp = resolved;
 
-  const { data, error } = await adminClient
-    .from("portfolio_items")
-    .insert({ talent_id: tp.id, url, media_type: media_type ?? "photo", caption: caption ?? null, sort_order: 0, is_approved: true })
-    .select()
-    .single();
+  // Every upload waits for admin review before it can show on the public profile,
+  // whatever the state of the profile itself. is_approved is the public switch; the
+  // review_status column (migration 20260919_media_moderation.sql) records the trail.
+  const base = { talent_id: tp.id, url, media_type: media_type ?? "photo", caption: caption ?? null, sort_order: 0, is_approved: false };
+  let { data, error } = await adminClient.from("portfolio_items").insert({ ...base, review_status: "pending" }).select().single();
+  if (error && /review_status/.test(error.message)) {
+    // Migration not applied yet — is_approved:false alone already keeps the row private.
+    ({ data, error } = await adminClient.from("portfolio_items").insert(base).select().single());
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: privateNoStoreHeaders() });
   invalidateTalent(profile?.handle ?? user.id);
+
+  // Tell the admins there is something to review. Never blocks the upload.
+  const { data: who } = await adminClient.from("profiles").select("full_name").eq("id", user.id).single();
+  notifyAdminMediaPending({ submitterId: user.id, submitterName: who?.full_name ?? profile?.handle ?? "—" }).catch(() => null);
+
   return NextResponse.json({ item: data }, { headers: privateNoStoreHeaders() });
 }
 

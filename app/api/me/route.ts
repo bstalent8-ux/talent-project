@@ -17,7 +17,7 @@ const TALENT_PROFILE_KEYS = [
 ] as const;
 
 // Ditto for portfolio items — no is_approved key, and no is_approved filter.
-const PORTFOLIO_KEYS = ["id", "url", "media_type", "caption", "sort_order"] as const;
+const PORTFOLIO_KEYS = ["id", "url", "media_type", "caption", "sort_order", "is_approved", "review_status", "rejection_reason"] as const;
 
 function project<T extends Record<string, unknown>>(row: T | null, keys: readonly string[]) {
   if (!row) return null;
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     if (talentCore?.id) {
       const { data: items } = await adminClient
         .from("portfolio_items")
-        .select("id, url, media_type, caption, sort_order")
+        .select("*")
         .eq("talent_id", talentCore.id as string)
         .order("sort_order", { ascending: true });
       portfolioItems = (items ?? []).map((i) => project(i, PORTFOLIO_KEYS));
