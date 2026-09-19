@@ -164,7 +164,7 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
         favoriteError={favoriteError}
       />
 
-      <div style={{ width: "min(var(--container-max, 1440px), 100%)", margin: "0 auto", padding: "20px var(--container-pad, 24px)" }}>
+      <div style={{ width: "min(1760px, 100%)", margin: "0 auto", padding: "20px var(--container-pad, 24px)", boxSizing: "border-box" }}>
         {/* Hero spans the full container width; the two-column grid starts below it. */}
         <div style={{ marginBottom: 20 }}>
           <ModelHero

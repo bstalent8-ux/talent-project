@@ -52,7 +52,7 @@ export default function ModelActionBar({ talentId, talentName, talentAvatar, tal
 
   return (
     <div style={{
-      width: "100%", maxWidth: "var(--container-max, 1440px)", margin: "0 auto",
+      width: "100%", maxWidth: 1760, margin: "0 auto",
       padding: "12px var(--container-pad, 24px)", display: "flex", alignItems: "center",
       justifyContent: "space-between", gap: 12, borderBottom: `1px solid ${BORDER}`, flexWrap: "wrap",
     }}>
