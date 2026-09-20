@@ -198,6 +198,12 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
   }, [moreOpen]);
 
   const isOwner = Boolean(user?.id && user.id === talent.id);
+  // The adapter falls back to the raw category id ("ugc") when the talent never wrote
+  // a headline — show the real title instead of that internal key.
+  const ownTitle = talent.title?.trim();
+  const headline = ownTitle && ownTitle.toLowerCase() !== (talent.category ?? "").trim().toLowerCase()
+    ? ownTitle
+    : (ar ? "صانع محتوى UGC ومنتج محتوى" : "UGC Creator & Content Producer");
   const displayName = talent.name.includes("@") ? talent.handle || talent.name.split("@")[0] : talent.name;
   const completedPct = bookingStats.total > 0 ? Math.round((bookingStats.completed / bookingStats.total) * 100) : null;
   const avgResponseHours = talent.modelMetrics?.avgResponseHours ?? null;
@@ -315,7 +321,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           <h1 style={{ fontSize: phone ? 22 : compact ? 28 : 32, fontWeight: 800, margin: 0, lineHeight: 1.15, overflowWrap: "anywhere" }}>{displayName}</h1>
           {talent.verified && <BadgeCheck size={phone ? 22 : 28} color="#fff" fill="#1D9BF0" strokeWidth={1.8} style={{ flexShrink: 0 }} />}
         </div>
-        {talent.title && <p style={{ color: "#E2E8F0", fontSize: phone ? 13 : 15.5, fontWeight: 600, margin: 0 }}>{talent.title}</p>}
+        <p style={{ color: "#E2E8F0", fontSize: phone ? 13 : 15.5, fontWeight: 600, margin: 0 }}>{headline}</p>
 
         <div style={{ display: "flex", alignItems: "center", gap: 18, color: "#CBD5E1", fontSize: 13.5, flexWrap: "wrap" }}>
           {talent.location && <span style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin size={15} />{talent.location}</span>}

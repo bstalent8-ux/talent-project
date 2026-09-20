@@ -65,6 +65,12 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
   const SURFACE = dark ? "var(--bg-card-muted)" : "#F8FAFC";
   const HAIR = dark ? "rgba(255,255,255,0.12)" : "#E2E8F0";
 
+  // The adapter falls back to the raw category id ("model") when the talent never wrote
+  // a headline — show a real title instead of that internal key.
+  const ownTitle = talent.title?.trim();
+  const headline = ownTitle && ownTitle.toLowerCase() !== (talent.category ?? "").trim().toLowerCase()
+    ? ownTitle
+    : (ar ? "موديل محترف" : "Professional Model");
   const displayName = talent.name.includes("@") ? talent.handle || talent.name.split("@")[0] : talent.name;
   const tags = talent.specialties?.length
     ? talent.specialties.slice(0, 6).map((tag) => formatTalentTag(tag, lang))
@@ -138,7 +144,7 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
       <h1 style={{ color: TEXT, fontFamily: SERIF, fontSize: phone ? 34 : compact ? 44 : 52, fontWeight: 500, lineHeight: 1.08, margin: 0, letterSpacing: "-0.01em", overflowWrap: "anywhere" }}>{displayName}</h1>
 
       <div style={{ display: "flex", alignItems: "center", gap: 14, color: TEXT, fontSize: 14.5, fontWeight: 600, flexWrap: "wrap" }}>
-        {talent.title && <span>{talent.title}</span>}
+        <span>{headline}</span>
         {talent.location && (
           <span style={{ display: "flex", alignItems: "center", gap: 5, color: MUTED, fontWeight: 500 }}>
             <MapPin size={15} color={GOLD} />{talent.location}

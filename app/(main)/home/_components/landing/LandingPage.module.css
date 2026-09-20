@@ -537,9 +537,20 @@
   right: -0.25rem;
 }
 
+/* Phones: no hover to reveal the arrows, so keep them visible — they are the way
+   to jump straight to a card without fighting the drift or a long swipe. */
 @media (max-width: 720px) {
   .categoryNavBtn {
-    display: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    opacity: 0.92;
+    pointer-events: auto;
+  }
+  .categoryNavBtnLeft {
+    left: 0.35rem;
+  }
+  .categoryNavBtnRight {
+    right: 0.35rem;
   }
 }
 

@@ -628,20 +628,28 @@ function Talent500Section({ lang }: { lang: LandingLang }) {
 
 /** How many identical copies of the category list the looping rail renders. */
 const RAIL_SETS = 3;
+/** How long the auto-drift stays paused after the last touch / wheel / arrow. */
+const RAIL_RESUME_MS = 5000;
 
 function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; categoryCounts: Record<"ugc" | "model", number> }) {
   const t = pageCopy[lang];
   const ar = lang === "ar";
   const railRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
+  const pauseUntilRef = useRef(0);
 
-  // Touch / trackpad / mouse-wheel scrolling: the rail is rendered as THREE
-  // identical sets and the reader is always kept inside the middle one. Whenever
-  // scrolling drifts into the first or last set (by hand or by the auto-loop) it
-  // is silently moved one set-width back — the content is identical, so the jump
-  // is invisible and the rail wraps endlessly in both directions. Working with the
-  // absolute distance (`readA`) keeps LTR and RTL (scrollLeft runs negative)
-  // identical.
+  // Endless rail, by hand or on its own. The rail renders THREE identical sets and
+  // the reader is kept inside the middle one; whenever scrolling drifts into the
+  // first or last set it is moved one set-width back — the content is identical,
+  // so the jump is invisible. Working with the absolute distance (`readA`) keeps
+  // LTR and RTL (scrollLeft runs negative) identical.
+  //
+  // The jump happens only once scrolling has been idle for a moment (a fling's
+  // momentum is never interrupted mid-flight — writing scrollLeft mid-fling stalls
+  // it on phones); only if a hard end is very close does it jump at once.
+  //
+  // Auto-drift pauses whenever the reader touches, wheels, taps an arrow or hovers
+  // (mouse only), and resumes a few seconds after the last interaction.
   useEffect(() => {
     const el = railRef.current;
     if (!el) return;
@@ -649,68 +657,77 @@ function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; catego
     const readA = () => (ar ? -el.scrollLeft : el.scrollLeft);
     const writeA = (a: number) => { el.scrollLeft = ar ? -a : a; };
     writeA(setWidth());
+
     const wrap = () => {
       const s = setWidth();
       const a = readA();
       if (a < s * 0.5) writeA(a + s);
       else if (a >= s * 1.5) writeA(a - s);
     };
-    el.addEventListener("scroll", wrap, { passive: true });
-    return () => el.removeEventListener("scroll", wrap);
+    let idleTimer: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      const s = setWidth();
+      const a = readA();
+      const nearEnd = a < 120 || a > el.scrollWidth - el.clientWidth - 120;
+      if (nearEnd) { wrap(); return; }
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(wrap, 140);
+      void s;
+    };
+
+    const pauseFor = (ms: number) => { pauseUntilRef.current = performance.now() + ms; };
+    const touchStart = () => { pauseUntilRef.current = Infinity; };
+    const touchEnd = () => pauseFor(RAIL_RESUME_MS);
+    const wheel = () => pauseFor(RAIL_RESUME_MS);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("touchstart", touchStart, { passive: true });
+    el.addEventListener("touchend", touchEnd, { passive: true });
+    el.addEventListener("touchcancel", touchEnd, { passive: true });
+    el.addEventListener("wheel", wheel, { passive: true });
+    return () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("touchstart", touchStart);
+      el.removeEventListener("touchend", touchEnd);
+      el.removeEventListener("touchcancel", touchEnd);
+      el.removeEventListener("wheel", wheel);
+    };
   }, [ar]);
 
-  // Auto-loop: drifts the rail slowly along that same wrapped band. Paused while
-  // hovered/focused (desktop), while a finger/wheel is moving it, and for a couple
-  // of seconds afterwards so a swipe is never fought; skipped entirely for
-  // prefers-reduced-motion.
-  //
-  // The position lives in a plain JS float: `el.scrollLeft` rounds to whole
-  // pixels, so `+= 0.3` per frame would read back unchanged forever.
+  // Auto-drift along that same band. The position lives in a plain JS float
+  // (`el.scrollLeft` rounds to whole pixels, so `+= 0.3` would read back
+  // unchanged forever) and is re-synced from the element after any pause so a
+  // manual scroll is never fought. Skipped for prefers-reduced-motion.
   useEffect(() => {
     const el = railRef.current;
     if (!el || hovering) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const setWidth = () => el.scrollWidth / RAIL_SETS;
     const readA = () => (ar ? -el.scrollLeft : el.scrollLeft);
     const writeA = (a: number) => { el.scrollLeft = ar ? -a : a; };
 
-    let userActive = false;
-    let resumeTimer: ReturnType<typeof setTimeout> | undefined;
-    const begin = () => { userActive = true; if (resumeTimer) clearTimeout(resumeTimer); };
-    const end = () => {
-      if (resumeTimer) clearTimeout(resumeTimer);
-      resumeTimer = setTimeout(() => { userActive = false; }, 2500);
-    };
-    const wheel = () => { begin(); end(); };
-    el.addEventListener("touchstart", begin, { passive: true });
-    el.addEventListener("touchend", end, { passive: true });
-    el.addEventListener("touchcancel", end, { passive: true });
-    el.addEventListener("wheel", wheel, { passive: true });
-
-    const reduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const speed = 0.3;
     let position = readA();
-    let raf = 0;
-    if (!reduced) {
-      raf = requestAnimationFrame(function tick() {
-        if (userActive) {
-          position = readA();
-        } else {
-          const s = setWidth();
-          position += speed;
-          if (position >= s * 1.5) position -= s;
-          writeA(position);
-        }
-        raf = requestAnimationFrame(tick);
-      });
-    }
-    return () => {
-      cancelAnimationFrame(raf);
-      if (resumeTimer) clearTimeout(resumeTimer);
-      el.removeEventListener("touchstart", begin);
-      el.removeEventListener("touchend", end);
-      el.removeEventListener("touchcancel", end);
-      el.removeEventListener("wheel", wheel);
-    };
+    let lastWritten = position;
+    let paused = false;
+    let raf = requestAnimationFrame(function tick() {
+      // Anything that moved the rail besides this loop (scrollbar drag, keyboard,
+      // a fling still coasting) counts as the reader taking over.
+      if (Math.abs(readA() - lastWritten) > 2) pauseUntilRef.current = performance.now() + RAIL_RESUME_MS;
+      if (performance.now() < pauseUntilRef.current) {
+        paused = true;
+        lastWritten = readA();
+      } else {
+        if (paused) { position = readA(); paused = false; }
+        const s = setWidth();
+        position += speed;
+        if (position >= s * 1.5) position -= s;
+        writeA(position);
+        lastWritten = readA();
+      }
+      raf = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(raf);
   }, [ar, hovering]);
 
   // Repeats the category list enough times per half that the half is always
@@ -723,6 +740,8 @@ function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; catego
   const railItems = Array.from({ length: RAIL_SETS }, () => railHalf).flat();
 
   function nudge(px: number) {
+    // Pause the drift so the smooth scroll isn't fought.
+    pauseUntilRef.current = performance.now() + RAIL_RESUME_MS;
     railRef.current?.scrollBy({ left: px, behavior: "smooth" });
   }
 
@@ -742,9 +761,9 @@ function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; catego
 
         <div
           className={styles.categoryRailWrap}
-          onMouseEnter={() => setHovering(true)}
-          onMouseLeave={() => setHovering(false)}
-          onFocus={() => setHovering(true)}
+          onPointerEnter={(e) => { if (e.pointerType === "mouse") setHovering(true); }}
+          onPointerLeave={(e) => { if (e.pointerType === "mouse") setHovering(false); }}
+          onFocus={(e) => { if (e.target.matches(":focus-visible")) setHovering(true); }}
           onBlur={() => setHovering(false)}
         >
           <div className={styles.categoryGrid} ref={railRef}>
