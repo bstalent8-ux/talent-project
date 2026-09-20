@@ -65,4 +65,13 @@ describe("buildMetaPixelSnippet — the loader initializes fbq only, never PageV
     expect(snippet).not.toContain("PageView");
     expect(snippet).not.toMatch(/fbq\(\s*['"]track['"]/);
   });
+
+  it("defers the fbevents.js download until the page has loaded (queue stub stays immediate)", async () => {
+    const { buildMetaPixelSnippet } = await import("./meta-pixel");
+    const snippet = buildMetaPixelSnippet("123456");
+    expect(snippet).toContain("n.queue=[]");
+    expect(snippet).toContain("addEventListener('load'");
+    expect(snippet).toContain("requestIdleCallback");
+    expect(snippet).toContain("https://connect.facebook.net/en_US/fbevents.js");
+  });
 });

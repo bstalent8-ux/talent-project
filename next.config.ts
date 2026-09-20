@@ -61,11 +61,11 @@ const nextConfig: NextConfig = {
               // Storage, and the Meta Pixel's tracking beacon. Was `https:`.
               "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://*.supabase.co https://www.facebook.com",
               "media-src 'self' data: blob: https://res.cloudinary.com https://*.supabase.co",
-              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://challenges.cloudflare.com",
+              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://challenges.cloudflare.com https://www.facebook.com",
               `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.cloudinary.com https://www.facebook.com https://graph.facebook.com https://challenges.cloudflare.com${__impeccableLiveDev}`,
               "frame-ancestors 'self'",
               "base-uri 'self'",
-              "form-action 'self'",
+              "form-action 'self' https://www.facebook.com",
               "object-src 'none'",
             ].join("; "),
           },

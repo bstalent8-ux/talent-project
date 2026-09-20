@@ -429,7 +429,10 @@
 }
 
 .footer::before {
+  /* WebP is ~40x smaller than the PNG (44 KB vs 1.6 MB); the PNG line stays only as the
+     fallback for a browser without image-set()/WebP support. */
   background-image: url("/assets/footer-img.png");
+  background-image: image-set(url("/assets/footer-img.webp") type("image/webp"), url("/assets/footer-img.png") type("image/png"));
   background-position: center bottom;
   background-repeat: no-repeat;
   background-size: cover;

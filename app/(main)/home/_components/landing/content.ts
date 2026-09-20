@@ -62,6 +62,18 @@ export const heroMedia = {
     "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=82",
 };
 
+/**
+ * Responsive variants of an Unsplash photo (same image, different `w` / `q`), so a phone
+ * downloads ~80 KB instead of the 520 KB desktop-size file. Returns null for any other
+ * host (an admin-uploaded hero, a video ...), which keeps using its URL as is.
+ */
+export function unsplashResponsive(url: string, widths: number[] = [640, 1024, 1440, 1920], quality = 70) {
+  if (!url.startsWith("https://images.unsplash.com/")) return null;
+  const at = (w: number) => url.replace(/([?&])w=\d+/, "$1w=" + w).replace(/([?&])q=\d+/, "$1q=" + quality);
+  const src = at(widths[Math.min(2, widths.length - 1)]);
+  return { src, srcSet: widths.map((w) => at(w) + " " + w + "w").join(", ") };
+}
+
 export const pageCopy = {
   ar: {
     heroBadge: "منصة موثوقة للمواهب والبراندات",
@@ -157,7 +169,7 @@ export const categories: CategoryItem[] = [
     description: { ar: "محتوى أصلي للمنتجات والحملات", en: "Native product and campaign content" },
     count: "",
     icon: Clapperboard,
-    image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80",
+    image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=560&q=72",
     filterKey: "ugc",
   },
   {
@@ -165,7 +177,7 @@ export const categories: CategoryItem[] = [
     description: { ar: "أزياء، جمال، منتجات ولايف ستايل", en: "Fashion, beauty, products and lifestyle" },
     count: "",
     icon: Sparkles,
-    image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
+    image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=560&q=72",
     filterKey: "model",
   },
   // Not real categories yet (no signup path, no filter, no real accounts) —
@@ -175,7 +187,7 @@ export const categories: CategoryItem[] = [
     description: { ar: "أزواج مع أطفالهم لمحتوى عائلي وحملات لايف ستايل", en: "Couples with kids for family and lifestyle campaigns" },
     count: "",
     icon: Users,
-    image: "https://images.unsplash.com/photo-1476703993599-0035a21b17a9?auto=format&fit=crop&w=900&q=80",
+    image: "https://images.unsplash.com/photo-1476703993599-0035a21b17a9?auto=format&fit=crop&w=560&q=72",
     comingSoon: true,
   },
   {
@@ -183,7 +195,7 @@ export const categories: CategoryItem[] = [
     description: { ar: "التواجد في الفعاليات وتوزيع العينات للزوار", en: "Event presence and sampling for visitors" },
     count: "",
     icon: Gift,
-    image: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=80",
+    image: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=560&q=72",
     comingSoon: true,
   },
 ];

@@ -1241,7 +1241,7 @@
   border: 1px solid color-mix(in srgb, var(--cta-gold) 28%, transparent);
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--cta-stage) 96%, transparent), color-mix(in srgb, var(--cta-card) 90%, transparent)),
-    url("https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80") center / cover;
+    url("https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=600&q=60") center / cover;
   color: var(--cta-ink);
   min-height: 100%;
 }
@@ -1436,7 +1436,7 @@
   color: #fff;
   background:
     radial-gradient(110% 95% at 50% 50%, rgba(4, 9, 13, 0.84), rgba(4, 9, 13, 0.96)),
-    url("https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1800&q=82") center / cover;
+    url("https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1400&q=60") center / cover;
 }
 
 .finalCtaContent {

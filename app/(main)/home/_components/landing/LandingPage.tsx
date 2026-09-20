@@ -40,6 +40,7 @@ import {
   features,
   floatingChips,
   heroMedia,
+  unsplashResponsive,
   pageCopy,
   quoteIcon,
   stats,
@@ -383,6 +384,9 @@ function HeroSection({
     event.currentTarget.style.setProperty("--hero-cursor-y", "34%");
   }
 
+  // Phones get a small variant of the hero photo instead of the 2200px desktop file.
+  const heroImage = media.type === "image" ? unsplashResponsive(media.url) : null;
+
   return (
     <section
       ref={heroRef}
@@ -398,7 +402,14 @@ function HeroSection({
         ) : media.type === "video" ? (
           <video src={media.url} poster={media.poster} autoPlay muted loop playsInline />
         ) : (
-          <img src={media.url} alt="" />
+          <img
+            src={heroImage?.src ?? media.url}
+            srcSet={heroImage?.srcSet}
+            sizes={heroImage ? "100vw" : undefined}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+          />
         )}
       </div>
       <div className={styles.heroOverlay} aria-hidden="true" />
