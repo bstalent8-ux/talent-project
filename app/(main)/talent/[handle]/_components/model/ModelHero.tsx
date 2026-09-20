@@ -22,6 +22,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
 import { formatTalentTag } from "@/lib/talent-tags";
+import { formatCity, formatLocation } from "@/lib/format-location";
 import { PlatformMark, displayHandle, toHref } from "../ugc/UgcHero";
 import type { TalentData, PortfolioItem } from "@/features/talent-profile/types";
 
@@ -34,6 +35,21 @@ const PLATFORM_LABEL: Record<string, string> = {
   linkedin: "LinkedIn", telegram: "Telegram", website: "Website", other: "Link",
 };
 const SOCIAL_ORDER = ["instagram", "tiktok", "facebook", "youtube", "linkedin", "telegram"];
+
+// LAYOUT-ONLY placeholders, by explicit request ("exactly like the reference"): every
+// model page shows the full band even where the real value doesn't exist yet. A real
+// value (specialties, bio, tier, follower link ...) always wins over these. Replace
+// them with live data and delete the constants.
+const DEMO_TAGS = {
+  en: ["Fashion", "Commercial", "Beauty", "TVC", "Runway"],
+  ar: ["أزياء", "إعلانات", "جمال", "TVC", "عروض أزياء"],
+};
+const DEMO_BIO = {
+  ar: "موديل احترافي بخبرة في التصوير التجاري والأزياء والإعلانات. أعمل مع براندات راقية وأسلم دائماً في الوقت المحدد.",
+  en: "Professional model with experience in commercial, fashion and advertising shoots. I work with premium brands and always deliver on time.",
+};
+const DEMO_FOLLOWERS: Record<string, string> = { instagram: "24.8K", tiktok: "8.2K", facebook: "12K", youtube: "5.1K", linkedin: "1.9K", telegram: "2.4K" };
+const DEMO_SOCIAL_FILL = ["instagram", "tiktok", "facebook"];
 
 // Fixed demo breakdown (see header). The first two rows follow the model's own
 // specialty and city; the weights are illustrative.
@@ -72,22 +88,29 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
     ? ownTitle
     : (ar ? "موديل محترف" : "Professional Model");
   const displayName = talent.name.includes("@") ? talent.handle || talent.name.split("@")[0] : talent.name;
-  const tags = talent.specialties?.length
-    ? talent.specialties.slice(0, 6).map((tag) => formatTalentTag(tag, lang))
-    : talent.category ? [formatTalentTag(talent.category, lang)] : [];
-  const tier = talent.modelMetrics?.tier ? String(talent.modelMetrics.tier).toUpperCase() : null;
-  const tierLabel = tier ? (tier.includes("MODEL") ? tier : `${tier} MODEL`) : null;
-  const topRated = talent.rating >= 4.5 && talent.reviewCount >= 3;
+  const realTags = talent.specialties?.length ? talent.specialties.slice(0, 6).map((tag) => formatTalentTag(tag, lang)) : [];
+  const tags = realTags.length ? realTags : DEMO_TAGS[ar ? "ar" : "en"];
+  const tier = talent.modelMetrics?.tier ? String(talent.modelMetrics.tier).toUpperCase() : "GOLD";
+  const tierLabel = tier.includes("MODEL") ? tier : `${tier} MODEL`;
+  const bio = talent.bio?.trim() || DEMO_BIO[ar ? "ar" : "en"];
+  const location = formatLocation(talent.location, lang);
   const photoUrl = talent.avatarUrl ?? (firstPortfolioItem?.media_type !== "video" ? firstPortfolioItem?.url : null) ?? null;
 
-  // Social strip: real accounts first (max 4 slots), the website / other link last as "Portfolio / Website".
-  const socials = SOCIAL_ORDER.filter((k) => presenceLinks[k]);
-  const webKey = presenceLinks.website ? "website" : presenceLinks.other ? "other" : null;
-  const slots = [...socials.slice(0, webKey ? 3 : 4), ...(webKey ? [webKey] : [])];
+  // Social strip: real accounts first (clickable), padded with the reference's three
+  // platforms as inert placeholders; the website / other link always closes the row.
+  // Follower counts aren't stored, so every count is a placeholder.
+  const realSocials = SOCIAL_ORDER.filter((k) => presenceLinks[k]);
+  const filler = DEMO_SOCIAL_FILL.filter((k) => !realSocials.includes(k));
+  const platformKeys = [...realSocials, ...filler].slice(0, 3);
+  const webKey = presenceLinks.website ? "website" : presenceLinks.other ? "other" : "website";
+  const slots: { key: string; real: boolean }[] = [
+    ...platformKeys.map((key) => ({ key, real: Boolean(presenceLinks[key]) })),
+    { key: webKey, real: Boolean(presenceLinks[webKey]) },
+  ];
 
   const factorNames = [
-    tags[0] ?? (ar ? "موديل" : "Model"),
-    talent.location || (ar ? "القاهرة" : "Cairo"),
+    tags[0] === DEMO_TAGS.en[0] || tags[0] === DEMO_TAGS.ar[0] ? (ar ? "موديل أزياء" : "Fashion Model") : `${tags[0]}${ar ? "" : " Model"}`,
+    formatCity(talent.location, lang),
     ...FACTOR_LABELS[ar ? "ar" : "en"].slice(2),
   ];
 
@@ -105,7 +128,8 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
           {displayName.charAt(0).toUpperCase()}
         </div>
       )}
-      {topRated && (
+      {/* Always shown for the layout — see DEMO_* note above. */}
+      {true && (
         <span style={{ position: "absolute", top: 12, insetInlineStart: 12, backgroundColor: GOLD, color: "#0b0d13", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 800, letterSpacing: 0.3 }}>
           TOP RATED
         </span>
@@ -134,7 +158,7 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
             <CheckCircle2 size={13} />{ar ? "موثّق" : "VERIFIED"}
           </span>
         )}
-        {tierLabel && (
+        {true && (
           <span style={{ display: "flex", alignItems: "center", gap: 6, color: GOLD, border: `1px solid ${GOLD}88`, backgroundColor: "rgba(216,155,55,0.10)", borderRadius: 8, padding: "5px 12px", fontSize: 11.5, fontWeight: 800 }}>
             <span style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: GOLD }} />{tierLabel}
           </span>
@@ -145,11 +169,9 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
 
       <div style={{ display: "flex", alignItems: "center", gap: 14, color: TEXT, fontSize: 14.5, fontWeight: 600, flexWrap: "wrap" }}>
         <span>{headline}</span>
-        {talent.location && (
-          <span style={{ display: "flex", alignItems: "center", gap: 5, color: MUTED, fontWeight: 500 }}>
-            <MapPin size={15} color={GOLD} />{talent.location}
-          </span>
-        )}
+        <span style={{ display: "flex", alignItems: "center", gap: 5, color: MUTED, fontWeight: 500 }}>
+          <MapPin size={15} color={GOLD} />{location}
+        </span>
       </div>
 
       {tags.length > 0 && (
@@ -160,45 +182,41 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
         </div>
       )}
 
-      {talent.bio && (
-        <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.85, margin: 0, maxWidth: 560, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{talent.bio}</p>
-      )}
+        <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.85, margin: 0, maxWidth: 560, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{bio}</p>
 
-      {slots.length > 0 && (
-        <div style={{ border: `1px solid ${GOLD}99`, borderRadius: 14, padding: "14px 18px", marginTop: 4 }}>
-          <div style={{ color: TEXT, fontSize: 13, fontWeight: 800, marginBottom: 12 }}>{ar ? "الحسابات الاجتماعية" : "Social Profiles"}</div>
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 14 }}>
-            {slots.map((key, i) => {
-              const isWeb = key === "website" || key === "other";
-              const handle = isWeb ? null : displayHandle(presenceLinks[key]);
-              return (
-                <a
-                  key={key}
-                  href={toHref(key, presenceLinks[key])}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: TEXT, minWidth: 0,
-                    paddingInlineEnd: 20, marginInlineEnd: 20, borderInlineEnd: i < slots.length - 1 ? `1px solid ${HAIR}` : "none",
-                  }}
-                >
-                  {isWeb ? (
-                    <span style={{ width: 34, height: 34, borderRadius: "50%", border: `1.5px solid ${HAIR}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}><Link2 size={16} /></span>
-                  ) : (
-                    <span style={{ display: "flex", transform: "scale(0.85)", transformOrigin: "center", width: 34, height: 34, alignItems: "center", justifyContent: "center", flexShrink: 0 }}><PlatformMark kind={key} /></span>
-                  )}
-                  <span style={{ minWidth: 0 }}>
-                    <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, lineHeight: 1.2, maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {isWeb ? (ar ? "الأعمال / الموقع" : "Portfolio / Website") : (handle ?? (ar ? "عرض الحساب" : "View profile"))}
-                    </span>
-                    {!isWeb && <span style={{ display: "block", fontSize: 11.5, color: MUTED, marginTop: 2 }}>{PLATFORM_LABEL[key]}</span>}
+      <div style={{ border: `1px solid ${GOLD}99`, borderRadius: 14, padding: "14px 18px", marginTop: 4 }}>
+        <div style={{ color: TEXT, fontSize: 13, fontWeight: 800, marginBottom: 12 }}>{ar ? "الحسابات الاجتماعية" : "Social Profiles"}</div>
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 14 }}>
+          {slots.map((slot, i) => {
+            const { key, real } = slot;
+            const isWeb = key === "website" || key === "other";
+            const cellStyle = {
+              display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: TEXT, minWidth: 0,
+              paddingInlineEnd: 20, marginInlineEnd: 20, borderInlineEnd: i < slots.length - 1 ? `1px solid ${HAIR}` : "none",
+            } as const;
+            const body = (
+              <>
+                {isWeb ? (
+                  <span style={{ width: 34, height: 34, borderRadius: "50%", border: `1.5px solid ${HAIR}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}><Link2 size={16} /></span>
+                ) : (
+                  <span style={{ display: "flex", transform: "scale(0.85)", transformOrigin: "center", width: 34, height: 34, alignItems: "center", justifyContent: "center", flexShrink: 0 }}><PlatformMark kind={key} /></span>
+                )}
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, lineHeight: 1.2, maxWidth: 130, overflow: isWeb ? "visible" : "hidden", textOverflow: "ellipsis", whiteSpace: isWeb ? "normal" : "nowrap" }}>
+                    {isWeb ? (ar ? "الأعمال / الموقع" : "Portfolio / Website") : (DEMO_FOLLOWERS[key] ?? "—")}
                   </span>
-                </a>
-              );
-            })}
-          </div>
+                  {!isWeb && <span style={{ display: "block", fontSize: 11.5, color: MUTED, marginTop: 2 }}>{PLATFORM_LABEL[key]}</span>}
+                </span>
+              </>
+            );
+            return real ? (
+              <a key={key} href={toHref(key, presenceLinks[key])} title={isWeb ? undefined : displayHandle(presenceLinks[key]) ?? undefined} target="_blank" rel="noopener noreferrer" style={cellStyle}>{body}</a>
+            ) : (
+              <div key={key} style={cellStyle}>{body}</div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 

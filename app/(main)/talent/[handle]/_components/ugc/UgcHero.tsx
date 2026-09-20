@@ -23,7 +23,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   MapPin, Globe, Shield, Star, MessageCircle, MessageSquarePlus, Heart, Share2, Play,
   Clock3, ClipboardCheck, Timer, Sparkles, BadgeCheck, Gem, Lock, Pencil, ChevronDown, Link2, ExternalLink,
@@ -32,6 +32,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import { useGuestGuard } from "@/contexts/GuestGuard";
 import { cdnImage } from "@/lib/images";
+import { formatLocation } from "@/lib/format-location";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 import type { TalentData, BookingStats, PortfolioItem } from "@/features/talent-profile/types";
 
@@ -180,6 +181,11 @@ interface Props {
 
 export default function UgcHero({ talent, presenceLinks, portfolioItems, bookingStats, onOpenBrief, onOpenVideo, isFavorited, onToggleFavorite, favoriteError }: Props) {
   const compact = useIsMobile(1024);
+  // Hero cards grow slightly under the pointer (skipped for reduced-motion).
+  const reduceMotion = useReducedMotion();
+  const lift = reduceMotion ? undefined : { scale: 1.06, zIndex: 3 };
+  const liftSmall = reduceMotion ? undefined : { scale: 1.05, zIndex: 3 };
+  const liftSpring = { type: "spring" as const, stiffness: 320, damping: 22 };
   const phone = useIsMobile(640);
   const { lang } = useSite();
   const { user } = useGuestGuard();
@@ -235,8 +241,13 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
     const src = video ? videoPoster(item.url) : item.url ? cdnImage(item.url, 420) : undefined;
     const fadeDir = ar ? "to left" : "to right";
     return (
-      <div
+      <motion.div
         key={item.id}
+        whileHover={lift}
+        transition={liftSpring}
+        style={{ position: "relative", minWidth: 0, flex: compact ? (phone ? "0 0 116px" : "0 0 168px") : undefined }}
+      >
+      <div
         role="button"
         tabIndex={0}
         onClick={() => onOpenVideo(item)}
@@ -245,7 +256,6 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           position: "relative", aspectRatio: compact ? "3 / 4" : "8 / 7", borderRadius: 14, overflow: "hidden", cursor: "pointer",
           border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#141A2B",
           backgroundImage: src ? `url(${src})` : undefined, backgroundSize: "cover", backgroundPosition: "center",
-          flex: compact ? (phone ? "0 0 116px" : "0 0 168px") : undefined,
           transform: opts.tilt && !compact ? `perspective(520px) rotateY(${ar ? -9 : 9}deg)` : undefined,
           WebkitMaskImage: opts.fade && !compact ? `linear-gradient(${fadeDir}, #000 55%, transparent 100%)` : undefined,
           maskImage: opts.fade && !compact ? `linear-gradient(${fadeDir}, #000 55%, transparent 100%)` : undefined,
@@ -258,11 +268,12 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           </span>
         )}
       </div>
+      </motion.div>
     );
   };
 
   const matchCard = (
-    <div style={{
+    <motion.div whileHover={liftSmall} transition={liftSpring} style={{ position: "relative",
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, textAlign: "center",
       padding: "14px 10px", borderRadius: 16, border: `1px solid ${LINE}`, backgroundColor: "rgba(255,255,255,0.03)",
       minHeight: compact ? 96 : undefined, aspectRatio: compact ? undefined : "8 / 7",
@@ -273,7 +284,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
       <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: PURPLE_SOFT }}>
         <Sparkles size={12} />{ar ? "الميزة جاية قريب" : "Coming soon"}
       </div>
-    </div>
+    </motion.div>
   );
 
   const identity = (
@@ -324,19 +335,19 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
         <p style={{ color: "#E2E8F0", fontSize: phone ? 13 : 15.5, fontWeight: 600, margin: 0 }}>{headline}</p>
 
         <div style={{ display: "flex", alignItems: "center", gap: 18, color: "#CBD5E1", fontSize: 13.5, flexWrap: "wrap" }}>
-          {talent.location && <span style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin size={15} />{talent.location}</span>}
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin size={15} />{formatLocation(talent.location, lang)}</span>
           {talent.languages && <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Globe size={15} />{talent.languages}</span>}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 2 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 12, backgroundColor: `${AMBER}14`, border: `1px solid ${AMBER}66`, color: "#fff", fontSize: 13, fontWeight: 700 }}>
+          <motion.span whileHover={liftSmall} transition={liftSpring} style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 12, backgroundColor: `${AMBER}14`, border: `1px solid ${AMBER}66`, color: "#fff", fontSize: 13, fontWeight: 700 }}>
             <Shield size={18} color={AMBER} fill={AMBER} />{ar ? "منشئ ذهبي" : "Gold Creator"}
-          </span>
+          </motion.span>
           {talent.rating > 0 && (
-            <span style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.04)", border: `1px solid ${LINE}`, color: "#fff", fontSize: 13, fontWeight: 700 }}>
+            <motion.span whileHover={liftSmall} transition={liftSpring} style={{ position: "relative", display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.04)", border: `1px solid ${LINE}`, color: "#fff", fontSize: 13, fontWeight: 700 }}>
               <Star size={15} color={AMBER} fill={AMBER} />{talent.rating.toFixed(1)}
               <span style={{ color: MUTED, fontWeight: 500 }}>({talent.reviewCount} {ar ? "تقييم" : "reviews"})</span>
-            </span>
+            </motion.span>
           )}
         </div>
       </div>
@@ -424,10 +435,14 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
     </div>
   );
 
+  // LAYOUT-ONLY placeholders for now: the row is shown in full so the band matches the
+  // reference, using these fixed sample values whenever the real number does not exist
+  // yet (real values still win as soon as they do). Replace with live metrics.
+  const DEMO_STATS = { response: { ar: "من 2 لـ 3 أيام", en: "2-3 Days" }, completion: "98%", onTime: "100%" };
   const stats: React.ReactNode[] = [];
-  if (avgResponseHours !== null) stats.push(stat(<Clock3 size={30} strokeWidth={1.4} />, formatResponseTime(avgResponseHours, ar), ar ? "وقت الرد" : "Avg. Response Time", "resp"));
-  if (completedPct !== null) stats.push(stat(<ClipboardCheck size={30} strokeWidth={1.4} />, `${completedPct}%`, ar ? "نسبة الإنجاز" : "Completion Rate", "comp"));
-  if (autoOnTimeRate !== null) stats.push(stat(<Timer size={30} strokeWidth={1.4} />, `${Math.round(autoOnTimeRate)}%`, ar ? "في الموعد" : "On-Time Delivery", "ontime"));
+  stats.push(stat(<Clock3 size={30} strokeWidth={1.4} />, avgResponseHours !== null ? formatResponseTime(avgResponseHours, ar) : DEMO_STATS.response[ar ? "ar" : "en"], ar ? "وقت الرد" : "Avg. Response Time", "resp"));
+  stats.push(stat(<ClipboardCheck size={30} strokeWidth={1.4} />, completedPct !== null ? `${completedPct}%` : DEMO_STATS.completion, ar ? "نسبة الإنجاز" : "Completion Rate", "comp"));
+  stats.push(stat(<Timer size={30} strokeWidth={1.4} />, autoOnTimeRate !== null ? `${Math.round(autoOnTimeRate)}%` : DEMO_STATS.onTime, ar ? "في الموعد" : "On-Time Delivery", "ontime"));
   if (talent.availability) {
     const yes = talent.availability === "available";
     stats.push(
