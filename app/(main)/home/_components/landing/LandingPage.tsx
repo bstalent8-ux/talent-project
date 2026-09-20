@@ -626,59 +626,91 @@ function Talent500Section({ lang }: { lang: LandingLang }) {
   );
 }
 
+/** How many identical copies of the category list the looping rail renders. */
+const RAIL_SETS = 3;
+
 function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; categoryCounts: Record<"ugc" | "model", number> }) {
   const t = pageCopy[lang];
   const ar = lang === "ar";
   const railRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
 
-  // Auto-loop: the rail's content is rendered several times back-to-back
-  // (see railItems below), so "one set" (railHalf) is exactly half of
-  // scrollWidth — wrapping across that half-point at the seam is invisible
-  // because both halves are identical. Paused on hover/focus (see the
-  // .categoryNavBtn reveal) and skipped entirely for prefers-reduced-motion.
+  // Touch / trackpad / mouse-wheel scrolling: the rail is rendered as THREE
+  // identical sets and the reader is always kept inside the middle one. Whenever
+  // scrolling drifts into the first or last set (by hand or by the auto-loop) it
+  // is silently moved one set-width back — the content is identical, so the jump
+  // is invisible and the rail wraps endlessly in both directions. Working with the
+  // absolute distance (`readA`) keeps LTR and RTL (scrollLeft runs negative)
+  // identical.
+  useEffect(() => {
+    const el = railRef.current;
+    if (!el) return;
+    const setWidth = () => el.scrollWidth / RAIL_SETS;
+    const readA = () => (ar ? -el.scrollLeft : el.scrollLeft);
+    const writeA = (a: number) => { el.scrollLeft = ar ? -a : a; };
+    writeA(setWidth());
+    const wrap = () => {
+      const s = setWidth();
+      const a = readA();
+      if (a < s * 0.5) writeA(a + s);
+      else if (a >= s * 1.5) writeA(a - s);
+    };
+    el.addEventListener("scroll", wrap, { passive: true });
+    return () => el.removeEventListener("scroll", wrap);
+  }, [ar]);
+
+  // Auto-loop: drifts the rail slowly along that same wrapped band. Paused while
+  // hovered/focused (desktop), while a finger/wheel is moving it, and for a couple
+  // of seconds afterwards so a swipe is never fought; skipped entirely for
+  // prefers-reduced-motion.
   //
-  // Two independent requirements, both needed for a genuinely seamless loop:
-  //
-  // 1. A single set must be wider than the rail's own clientWidth — with too
-  //    few categories, the old flat 2x duplicate made a half narrower than
-  //    the viewport, so the browser clamped scrollLeft at
-  //    -(scrollWidth-clientWidth) before the code's wrap point was ever
-  //    reached, and the rail froze pinned at that clamp (confirmed live:
-  //    with only 4 categories doubled, half-width ~1021px < a ~1135px
-  //    viewport pinned it dead at -908). railItems below repeats the
-  //    category list enough times per half to stay wider than any real
-  //    viewport.
-  //
-  // 2. The position must be tracked in a plain JS float (`position`), not by
-  //    reading `el.scrollLeft` back as the running total. The DOM property
-  //    rounds to whole pixels, so `el.scrollLeft += 0.25` reads back
-  //    unchanged forever once the fractional part can't move the rounded
-  //    value — a slow, readable speed made this fire on literally every
-  //    frame (confirmed live: 1200+ ticks, scrollLeft pinned at exactly 0
-  //    throughout). Keeping the accumulator in JS avoids the rounding trap
-  //    regardless of how slow the animation runs.
+  // The position lives in a plain JS float: `el.scrollLeft` rounds to whole
+  // pixels, so `+= 0.3` per frame would read back unchanged forever.
   useEffect(() => {
     const el = railRef.current;
     if (!el || hovering) return;
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const setWidth = () => el.scrollWidth / RAIL_SETS;
+    const readA = () => (ar ? -el.scrollLeft : el.scrollLeft);
+    const writeA = (a: number) => { el.scrollLeft = ar ? -a : a; };
 
-    // RTL scrollLeft direction follows the modern spec (Chrome/Firefox/Safari
-    // 15+): it runs 0 → -maxScroll instead of 0 → +maxScroll.
-    const dirSign = ar ? -1 : 1;
-    // Slowed down significantly (was 0.6px/frame ≈ 36px/s) so each card
-    // stays readable as it crosses the rail.
+    let userActive = false;
+    let resumeTimer: ReturnType<typeof setTimeout> | undefined;
+    const begin = () => { userActive = true; if (resumeTimer) clearTimeout(resumeTimer); };
+    const end = () => {
+      if (resumeTimer) clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => { userActive = false; }, 2500);
+    };
+    const wheel = () => { begin(); end(); };
+    el.addEventListener("touchstart", begin, { passive: true });
+    el.addEventListener("touchend", end, { passive: true });
+    el.addEventListener("touchcancel", end, { passive: true });
+    el.addEventListener("wheel", wheel, { passive: true });
+
+    const reduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const speed = 0.3;
-    let position = el.scrollLeft;
-    let raf = requestAnimationFrame(function tick() {
-      const singleSetWidth = el.scrollWidth / 2;
-      position += dirSign * speed;
-      if (dirSign > 0 && position >= singleSetWidth) position -= singleSetWidth;
-      else if (dirSign < 0 && position <= -singleSetWidth) position += singleSetWidth;
-      el.scrollLeft = position;
-      raf = requestAnimationFrame(tick);
-    });
-    return () => cancelAnimationFrame(raf);
+    let position = readA();
+    let raf = 0;
+    if (!reduced) {
+      raf = requestAnimationFrame(function tick() {
+        if (userActive) {
+          position = readA();
+        } else {
+          const s = setWidth();
+          position += speed;
+          if (position >= s * 1.5) position -= s;
+          writeA(position);
+        }
+        raf = requestAnimationFrame(tick);
+      });
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      if (resumeTimer) clearTimeout(resumeTimer);
+      el.removeEventListener("touchstart", begin);
+      el.removeEventListener("touchend", end);
+      el.removeEventListener("touchcancel", end);
+      el.removeEventListener("wheel", wheel);
+    };
   }, [ar, hovering]);
 
   // Repeats the category list enough times per half that the half is always
@@ -688,7 +720,7 @@ function CategoriesSection({ lang, categoryCounts }: { lang: LandingLang; catego
   // repeats are decorative for the loop, not distinct content.
   const railRepeat = Math.max(2, Math.ceil(12 / categories.length));
   const railHalf = Array.from({ length: railRepeat }, () => categories).flat();
-  const railItems = [...railHalf, ...railHalf];
+  const railItems = Array.from({ length: RAIL_SETS }, () => railHalf).flat();
 
   function nudge(px: number) {
     railRef.current?.scrollBy({ left: px, behavior: "smooth" });

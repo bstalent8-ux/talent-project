@@ -1265,6 +1265,11 @@
   padding: 1.2rem;
 }
 
+/* The icon used to sit flush against the title; give it room. */
+.featureCard .iconBubble {
+  margin-bottom: 0.95rem;
+}
+
 .testimonialGrid {
   display: grid;
   grid-auto-flow: column;
