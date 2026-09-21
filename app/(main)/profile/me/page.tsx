@@ -19,6 +19,7 @@ import type { CompletionDTO } from "@/features/profiles/types/dto";
 import { COMPLETION_THRESHOLDS } from "@/lib/profile-completion";
 import { uploadToCloudinary, cloudinaryUploadErrorText } from "@/lib/cloudinary-client-upload";
 import MediaReviewBadge, { mediaReviewNotice } from "@/components/profile/MediaReviewBadge";
+import { fromDbAvailability } from "@/lib/availability-status";
 
 /* ─── colour helpers ─── */
 const GREEN = "#00D26A";
@@ -306,7 +307,7 @@ export default function DashboardPage() {
       shoe_size:    sl.shoe_size      ?? "",
       languages:    sl.languages      ?? "",
       dialect:      sl.dialect        ?? "",
-      availability: talentProf?.availability ?? "available",
+      availability: fromDbAvailability(talentProf?.availability),
     });
     setStatus("ready");
   };

@@ -6,6 +6,7 @@ import "server-only";
 // in TalentProfileProvider, not here.
 
 import { adminClient } from "@/lib/supabase/admin";
+import { toDbAvailability } from "@/lib/availability-status";
 import { fromSupabaseError } from "../errors/profile-error";
 import type {
   RawPortfolioRow,
@@ -108,7 +109,9 @@ export const talentRepository = {
    * fails must surface as a thrown error so the caller shows it, not get
    * quietly stripped and reported as success.
    */
-  async upsert(userId: string, patch: Record<string, unknown>): Promise<void> {
+  async upsert(userId: string, rawPatch: Record<string, unknown>): Promise<void> {
+    // The column accepts "busy", not "unavailable" — see lib/availability-status.ts.
+    const patch = "availability" in rawPatch ? { ...rawPatch, availability: toDbAvailability(rawPatch.availability) } : rawPatch;
     const { data: updated, error } = await adminClient
       .from("talent_profiles")
       .update(patch)

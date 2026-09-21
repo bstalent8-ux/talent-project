@@ -19,6 +19,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { cdnImage } from "@/lib/images";
 import { getWizardSteps, type WizardStepKey } from "@/components/profile/completion-wizard-steps";
 import { GENERAL_PHYSICAL_FIELDS, MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
+import { fromDbAvailability } from "@/lib/availability-status";
 import { calculateCompletion } from "@/lib/profile-completion";
 import { uploadToCloudinary, cloudinaryUploadErrorText } from "@/lib/cloudinary-client-upload";
 import MediaReviewBadge, { mediaReviewNotice } from "@/components/profile/MediaReviewBadge";
@@ -297,7 +298,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const [presence, setPresence] = useState<Record<string, string>>(
     Object.fromEntries(TALENT_SOCIAL_KEYS.map((k) => [k, sl[k] ?? ""])),
   );
-  const [avail, setAvail] = useState(talentProfile?.availability ?? "available");
+  const [avail, setAvail] = useState(fromDbAvailability(talentProfile?.availability));
   const [schedule, setSchedule] = useState<AvailabilitySchedule>(() =>
     parseAvailabilitySchedule(talentProfile?.availability_schedule),
   );
