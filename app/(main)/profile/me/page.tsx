@@ -1137,8 +1137,8 @@ export default function DashboardPage() {
 
       {/* ── Physical Info Quick-Edit Modal ── */}
       {showWelcomeModal && (
-        <div onClick={e => e.target === e.currentTarget && setShowWelcomeModal(false)} style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
-          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:440, width:"100%", fontFamily:"'IBM Plex Sans Arabic',sans-serif", textAlign:"center" }} dir={lang === "ar" ? "rtl" : "ltr"}>
+        <div onClick={e => e.target === e.currentTarget && setShowWelcomeModal(false)} style={{ position:"fixed", inset:0, zIndex:10000, background:"rgba(0,0,0,0.7)", display:"flex", justifyContent:"center", padding:16, overflowY:"auto", overscrollBehavior:"contain" }}>
+          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:440, width:"100%", margin:"auto", boxSizing:"border-box", fontFamily:"'IBM Plex Sans Arabic',sans-serif", textAlign:"center" }} dir={lang === "ar" ? "rtl" : "ltr"}>
             <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(0,210,106,0.12)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:26 }}>
               🚀
             </div>
@@ -1167,7 +1167,7 @@ export default function DashboardPage() {
       )}
 
       {physicalModal && (
-        <div onClick={e => e.target === e.currentTarget && setPhysicalModal(false)} style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+        <div onClick={e => e.target === e.currentTarget && setPhysicalModal(false)} style={{ position:"fixed", inset:0, zIndex:10000, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
           <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:480, width:"100%", maxHeight:"90vh", overflowY:"auto", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
               <h3 style={{ color:TEXT, fontSize:17, fontWeight:700, margin:0 }}>📏 {t.physicalInfo}</h3>
