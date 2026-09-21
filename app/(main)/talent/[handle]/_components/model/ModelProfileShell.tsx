@@ -108,8 +108,8 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
     const list: ModelTab[] = [];
     if (portfolioItems.length > 0) list.push({ key: "portfolio", anchor: "model-portfolio", label: ar ? "Portfolio" : "Portfolio" });
     if ((experience ?? []).length > 0 || brands.some((b) => b.verified)) list.push({ key: "shoots", anchor: "model-shoots", label: ar ? "أعمال سابقة" : "Previous Work" });
-    if ((packages ?? []).length > 0) list.push({ key: "packages", anchor: "model-packages", label: ar ? "باقات وأسعار" : "Packages & Prices" });
     list.push({ key: "performance", anchor: "model-performance", label: ar ? "أداء وتقييم" : "Performance & Reviews" });
+    if ((packages ?? []).length > 0) list.push({ key: "packages", anchor: "model-packages", label: ar ? "باقات وأسعار" : "Packages & Prices" });
     return list;
   }, [portfolioItems.length, experience, brands, packages, ar]);
 
@@ -188,12 +188,12 @@ export default function ModelProfileShell({ profile }: { profile: PublicProfileD
               <UgcPreviousShoots variant="model" experience={experience} brands={brands} />
             </div>
 
-            <div id="model-packages">
-              <UgcPackages variant="model" packages={packages} selectedId={selectedPackage?.id} onSelectPackage={setSelectedPackage} />
-            </div>
-
             <div id="model-performance">
               <ModelBottomGrid reviews={reviews} reviewCount={talent.reviewCount} bookingStats={bookingStats} modelMetrics={talent.modelMetrics} registeredAt={talent.registeredAt ?? null} brands={brands} experience={experience} />
+            </div>
+
+            <div id="model-packages">
+              <UgcPackages variant="model" packages={packages} selectedId={selectedPackage?.id} onSelectPackage={setSelectedPackage} />
             </div>
 
             <UsageRightsSection
