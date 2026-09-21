@@ -1151,7 +1151,7 @@ export default function DashboardPage() {
                 : "Your profile won't show up in search or the Explore page for brands until you complete it."}
             </p>
             <button
-              onClick={() => { setShowWelcomeModal(false); setEdit(true); }}
+              onClick={() => { setShowWelcomeModal(false); router.push("/profile/me/complete"); }}
               style={{ width:"100%", padding:"12px 0", background:"#00C9B1", border:"none", borderRadius:10, color:"#fff", fontSize:14.5, fontWeight:700, cursor:"pointer", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}
             >
               {lang === "ar" ? "كمّل دلوقتي ←" : "Complete now →"}

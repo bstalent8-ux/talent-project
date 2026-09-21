@@ -1,9 +1,10 @@
 // ─── Guided completion wizard step sequence ────────────────────────────────
 // Pure, no JSX — importable from a vitest test without pulling in React.
-// The only category-aware branch is "physical": it exists solely for `model`
-// (the approved-minimum height/weight/shoe_size/hair_color/eye_color fields).
-// Every other talent category (ugc, and any legacy value such as fashion)
-// gets the same generic sequence — no bespoke flow invented for them.
+// Every talent gets the same sequence, including "physical": the completion
+// score counts that section (10 pts) for all talents, so a category without the
+// step could never reach 100%. Only the FIELDS differ — Models get the approved
+// measurements, everyone else gets age / languages / dialect
+// (see lib/profile-fields.ts).
 
 export type WizardStepKey =
   | "basic"
@@ -15,8 +16,6 @@ export type WizardStepKey =
   | "review";
 
 export function getWizardSteps(category?: string | null): WizardStepKey[] {
-  const steps: WizardStepKey[] = ["basic"];
-  if (category === "model") steps.push("physical");
-  steps.push("professional", "portfolio", "presence", "availability", "review");
-  return steps;
+  void category; // sequence no longer depends on category; kept for call-site stability
+  return ["basic", "physical", "professional", "portfolio", "presence", "availability", "review"];
 }

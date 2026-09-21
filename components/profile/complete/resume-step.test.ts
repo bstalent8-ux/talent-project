@@ -15,9 +15,9 @@ describe("resumeStepIndex", () => {
   });
 
   it("resumes at the first step whose required sections are not all done", () => {
-    const steps = getWizardSteps("ugc"); // basic, professional, portfolio, presence, availability, review
+    const steps = getWizardSteps("ugc"); // basic, physical, professional, portfolio, presence, availability, review
     const data = sections({
-      avatar: true, personal: true, bio: true, // basic — done
+      avatar: true, personal: true, bio: true, physical: true, // basic + physical — done
       categories: false, packages: false, usage_addons: false, // professional — not done
       portfolio: false, social: false, availability: false,
     });
@@ -27,7 +27,7 @@ describe("resumeStepIndex", () => {
   it("skips a fully-done step and lands on the next incomplete one", () => {
     const steps = getWizardSteps("ugc");
     const data = sections({
-      avatar: true, personal: true, bio: true,
+      avatar: true, personal: true, bio: true, physical: true,
       categories: true, packages: true, usage_addons: true, // professional — done too
       portfolio: false, social: false, availability: false, // portfolio next
     });
@@ -45,9 +45,15 @@ describe("resumeStepIndex", () => {
     expect(resumeStepIndex(steps, data)).toBe(steps.indexOf("physical"));
   });
 
-  it("never resumes at physical for ugc — that step does not exist in its sequence", () => {
+  it("resumes at physical for ugc too when it is the first unfinished step", () => {
     const steps = getWizardSteps("ugc");
-    expect(steps).not.toContain("physical");
+    const data = sections({
+      avatar: true, personal: true, bio: true,
+      physical: false,
+      categories: true, packages: true, usage_addons: true,
+      portfolio: true, social: true, availability: true,
+    });
+    expect(resumeStepIndex(steps, data)).toBe(steps.indexOf("physical"));
   });
 
   it("lands on the last step (review) once every other step's required sections are done", () => {

@@ -18,7 +18,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { cdnImage } from "@/lib/images";
 import { getWizardSteps, type WizardStepKey } from "@/components/profile/completion-wizard-steps";
-import { MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
+import { GENERAL_PHYSICAL_FIELDS, MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
 import { calculateCompletion } from "@/lib/profile-completion";
 import { uploadToCloudinary, cloudinaryUploadErrorText } from "@/lib/cloudinary-client-upload";
 import MediaReviewBadge, { mediaReviewNotice } from "@/components/profile/MediaReviewBadge";
@@ -61,7 +61,7 @@ const TX = {
     },
     steps: {
       basic:        { title: "المعلومات الأساسية", desc: "صورتك واسمك ومدينتك ونبذة مختصرة عنك." },
-      physical:      { title: "المقاسات", desc: "الطول والوزن ومقاس الحذاء ولون الشعر والعين — تظهر في ملف الموديل العام فقط." },
+      physical:      { title: "بياناتك الشخصية", desc: "للموديل: الطول والوزن والمقاسات ولون الشعر والعين. لباقي المواهب: السن واللغات واللهجة." },
       professional: { title: "المعلومات المهنية", desc: "تخصصك، باقاتك، وحقوق الاستخدام الإضافية." },
       portfolio:    { title: "معرض الأعمال", desc: "ارفع صوراً أو مقاطع فيديو تعرض أعمالك." },
       presence:     { title: "الحضور المهني", desc: "روابط حساباتك — تظهر كروابط فقط، بدون تحقق أو متابعين." },
@@ -70,7 +70,7 @@ const TX = {
     },
     banners: {
       presence: "لا نتحقق من حسابات التواصل الاجتماعي حالياً. الرابط الذي تضيفه يظهر كرابط فقط — وليس علامة \"موثّق\" أو \"متصل\".",
-      physical: "هذه البيانات تظهر فقط في الملف العام لفئة الموديل.",
+      physical: "المقاسات تظهر في الملف العام لفئة الموديل فقط. السن واللغات واللهجة تساعد البراندات تختار الأنسب لك.",
     },
     reviewSections: {
       avatar: "صورة الملف", personal: "الاسم والمدينة", bio: "النبذة الشخصية",
@@ -141,7 +141,7 @@ const TX = {
     },
     steps: {
       basic:        { title: "Basic Information", desc: "Your photo, name, city and a short bio." },
-      physical:      { title: "Measurements", desc: "Height, weight, shoe size, hair and eye color — shown on Model public profiles only." },
+      physical:      { title: "Personal details", desc: "Models: height, weight, measurements, hair and eye color. Everyone else: age, languages and dialect." },
       professional: { title: "Professional Details", desc: "Your specialty, packages and usage-rights add-ons." },
       portfolio:    { title: "Portfolio", desc: "Upload photos or videos that showcase your work." },
       presence:     { title: "Professional Presence", desc: "Links to your accounts — shown as links only, no follower counts or verification." },
@@ -150,7 +150,7 @@ const TX = {
     },
     banners: {
       presence: "We don't verify social accounts yet. A link you add is shown as a link only — not a \"Verified\" or \"Connected\" badge.",
-      physical: "This data only appears on Model-category public profiles.",
+      physical: "Measurements only appear on Model-category public profiles. Age, languages and dialect help brands pick the right fit.",
     },
     reviewSections: {
       avatar: "Profile photo", personal: "Name & city", bio: "Bio",
@@ -782,8 +782,11 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
 
             {currentStep === "physical" && (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,minmax(0,1fr))" : "repeat(3,minmax(0,1fr))", gap: 14 }}>
-                {MODEL_PHYSICAL_FIELDS.map((k) => {
-                  const l = k === "height" ? (lang === "ar" ? "الطول (سم)" : "Height (cm)")
+                {(category === "model" ? MODEL_PHYSICAL_FIELDS : GENERAL_PHYSICAL_FIELDS).map((k) => {
+                  const l = k === "age" ? (lang === "ar" ? "السن" : "Age")
+                    : k === "languages" ? (lang === "ar" ? "اللغات" : "Languages")
+                    : k === "dialect" ? (lang === "ar" ? "اللهجة" : "Dialect")
+                    : k === "height" ? (lang === "ar" ? "الطول (سم)" : "Height (cm)")
                     : k === "weight" ? (lang === "ar" ? "الوزن (كجم)" : "Weight (kg)")
                     : k === "shoe_size" ? (lang === "ar" ? "مقاس الحذاء (EU)" : "Shoe Size (EU)")
                     : k === "hair_color" ? (lang === "ar" ? "لون الشعر" : "Hair Color")
@@ -791,7 +794,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                     : k === "waist" ? t.labels.waist
                     : k === "hip" ? t.labels.hip
                     : t.labels.eyeColor;
-                  const isLtr = k === "height" || k === "weight" || k === "shoe_size" || k === "chest" || k === "waist" || k === "hip";
+                  const isLtr = k === "age" || k === "height" || k === "weight" || k === "shoe_size" || k === "chest" || k === "waist" || k === "hip";
                   return (
                     <div key={k}>
                       <label style={label}>{l}</label>

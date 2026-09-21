@@ -1,26 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { getWizardSteps } from "./completion-wizard-steps";
 
+const FULL = ["basic", "physical", "professional", "portfolio", "presence", "availability", "review"];
+
 describe("getWizardSteps", () => {
-  it("inserts a physical step for category=model, right after basic", () => {
-    const steps = getWizardSteps("model");
-    expect(steps).toEqual(["basic", "physical", "professional", "portfolio", "presence", "availability", "review"]);
+  it("gives a model the full sequence with physical right after basic", () => {
+    expect(getWizardSteps("model")).toEqual(FULL);
   });
 
-  it("has no physical step for category=ugc", () => {
-    const steps = getWizardSteps("ugc");
-    expect(steps).toEqual(["basic", "professional", "portfolio", "presence", "availability", "review"]);
-    expect(steps).not.toContain("physical");
+  it("gives ugc the same sequence — the completion score counts physical for every talent", () => {
+    expect(getWizardSteps("ugc")).toEqual(FULL);
   });
 
-  it("has no physical step for a legacy category (e.g. fashion) — no bespoke flow invented", () => {
-    const steps = getWizardSteps("fashion");
-    expect(steps).not.toContain("physical");
-  });
-
-  it("has no physical step when category is null/undefined", () => {
-    expect(getWizardSteps(null)).not.toContain("physical");
-    expect(getWizardSteps(undefined)).not.toContain("physical");
+  it("gives a legacy category (e.g. fashion) and null/undefined the same sequence", () => {
+    expect(getWizardSteps("fashion")).toEqual(FULL);
+    expect(getWizardSteps(null)).toEqual(FULL);
+    expect(getWizardSteps(undefined)).toEqual(FULL);
   });
 
   it("review is always the last step", () => {

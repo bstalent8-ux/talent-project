@@ -18,6 +18,9 @@ export const MODEL_PHYSICAL_FIELDS = [
   "height", "weight", "shoe_size", "hair_color", "eye_color", "chest", "waist", "hip",
 ] as const;
 
+// Physical-step fields for every non-Model talent (UGC and legacy categories).
+export const GENERAL_PHYSICAL_FIELDS = ["age", "languages", "dialect"] as const;
+
 export const TALENT_SOCIAL_KEYS = [
   "instagram", "tiktok", "facebook", "youtube", "linkedin", "telegram", "website", "other",
 ] as const;
