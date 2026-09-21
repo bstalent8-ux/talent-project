@@ -12,7 +12,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { FIELD_LABELS } from "../MeasurementsSection";
 
 const GOLD = "#d89b37";
-const VISIBLE = 5;
+const VISIBLE = 6;
 
 interface Props {
   measurements: Record<string, string> | null | undefined;
@@ -35,11 +35,12 @@ export default function ModelQuickBio({ measurements, languages }: Props) {
 
   if (languages) rows.push({ key: "languages", label: ar ? "اللغات" : "Languages", value: languages, Icon: Languages });
   if (m.height) rows.push({ key: "height", label: label("height"), value: `${m.height}${unit("height")}`, Icon: Ruler });
-  if (m.chest && m.waist && m.hip) rows.push({ key: "measurements", label: ar ? "المقاسات" : "Measurements", value: `${m.chest}/${m.waist}/${m.hip}`, Icon: Shirt });
   if (m.weight) rows.push({ key: "weight", label: label("weight"), value: `${m.weight}${unit("weight")}`, Icon: Scale });
   if (m.shoe_size) rows.push({ key: "shoe", label: label("shoe_size"), value: `${m.shoe_size}${unit("shoe_size")}`, Icon: Footprints });
   if (m.hair_color) rows.push({ key: "hair", label: label("hair_color"), value: m.hair_color, Icon: Palette });
   if (m.eye_color) rows.push({ key: "eye", label: label("eye_color"), value: m.eye_color, Icon: Eye });
+  // Body measurements are a longer, secondary row — keep them behind "View details".
+  if (m.chest && m.waist && m.hip) rows.push({ key: "measurements", label: ar ? "المقاسات" : "Measurements", value: `${m.chest}/${m.waist}/${m.hip}`, Icon: Shirt });
 
   const shown = open ? rows : rows.slice(0, VISIBLE);
   const canToggle = rows.length > VISIBLE;

@@ -60,6 +60,16 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
   const moreItems = rest.slice(ROW1_COUNT + ROW2_COUNT);
   const visibleMore = expanded ? moreItems : [];
 
+  // A row that isn't full keeps its column count and pads with quiet empty slots,
+  // so a lone last photo never stretches across the whole row.
+  const emptySlot = (key: string, aspect: string) => (
+    <div
+      key={key}
+      aria-hidden="true"
+      style={{ borderRadius: 12, aspectRatio: aspect, backgroundColor: TILE_BG, border: `1px dashed ${BORDER}`, opacity: 0.45 }}
+    />
+  );
+
   const tile = (item: PortfolioItem, index: number, aspect: string, renderWidth: number, extraClassName?: string) => {
     const video = isVideoItem(item);
     return (
@@ -141,13 +151,15 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
         {(row1.length > 0 || row2.length > 0) && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }} className="model-bento-right">
             {row1.length > 0 && (
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(${row1.length}, 1fr)`, gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${ROW1_COUNT}, minmax(0, 1fr))`, gap: 12 }}>
                 {row1.map((item, i) => tile(item, i + 1, "4 / 3", 380))}
+                {Array.from({ length: ROW1_COUNT - row1.length }, (_, i) => emptySlot(`e1-${i}`, "4 / 3"))}
               </div>
             )}
             {row2.length > 0 && (
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(${row2.length}, 1fr)`, gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${ROW2_COUNT}, minmax(0, 1fr))`, gap: 12 }}>
                 {row2.map((item, i) => tile(item, i + 1 + ROW1_COUNT, "1 / 1", 220))}
+                {Array.from({ length: ROW2_COUNT - row2.length }, (_, i) => emptySlot(`e2-${i}`, "1 / 1"))}
               </div>
             )}
           </div>

@@ -89,6 +89,7 @@ const TX = {
     weight:         "الوزن (كجم)",
     age:            "العمر",
     hairColor:      "لون الشعر",
+    eyeColor:       "لون العين",
     shoeSize:       "مقاس الجزمة",
     languages:      "اللغة",
     dialect:        "اللهجة",
@@ -155,6 +156,7 @@ const TX = {
     weight:         "Weight (kg)",
     age:            "Age",
     hairColor:      "Hair Color",
+    eyeColor:       "Eye Color",
     shoeSize:       "Shoe Size",
     languages:      "Language",
     dialect:        "Dialect",
@@ -281,6 +283,7 @@ export default function DashboardPage() {
       weight:     sl.weight     ?? "",
       age:        sl.age        ?? "",
       hair_color: sl.hair_color ?? "",
+      eye_color:  sl.eye_color  ?? "",
       shoe_size:  sl.shoe_size  ?? "",
       languages:  sl.languages  ?? "",
       dialect:    sl.dialect    ?? "",
@@ -299,6 +302,7 @@ export default function DashboardPage() {
       weight:       sl.weight         ?? "",
       age:          sl.age            ?? "",
       hair_color:   sl.hair_color     ?? "",
+      eye_color:    sl.eye_color      ?? "",
       shoe_size:    sl.shoe_size      ?? "",
       languages:    sl.languages      ?? "",
       dialect:      sl.dialect        ?? "",
@@ -435,7 +439,7 @@ export default function DashboardPage() {
       instagram: form.instagram, tiktok: form.tiktok,
       youtube: form.youtube, linkedin: form.linkedin,
       height: form.height, weight: form.weight,
-      age: form.age, hair_color: form.hair_color,
+      age: form.age, hair_color: form.hair_color, eye_color: form.eye_color,
       shoe_size: form.shoe_size, languages: form.languages,
       dialect: form.dialect,
       usage_addons: addons,
@@ -892,7 +896,7 @@ export default function DashboardPage() {
                 </div>
                 {edit ? (
                   <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "repeat(2,minmax(0,1fr))", gap: 12 }}>
-                    {([["height",t.height],["weight",t.weight],["age",t.age],["hair_color",t.hairColor],["shoe_size",t.shoeSize],["languages",t.languages],["dialect",t.dialect]] as [string,string][]).map(([k, label]) => (
+                    {([["height",t.height],["weight",t.weight],["age",t.age],["hair_color",t.hairColor],["eye_color",t.eyeColor],["shoe_size",t.shoeSize],["languages",t.languages],["dialect",t.dialect]] as [string,string][]).map(([k, label]) => (
                       <div key={k}>
                         <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{label}</label>
                         <input value={form[k]} onChange={e => setF(k, e.target.value)} style={inp} />
@@ -901,13 +905,13 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                    {([["height",t.height],["weight",t.weight],["age",t.age],["hair_color",t.hairColor],["shoe_size",t.shoeSize],["languages",t.languages],["dialect",t.dialect]] as [string,string][]).filter(([k]) => form[k]).map(([k, label]) => (
+                    {([["height",t.height],["weight",t.weight],["age",t.age],["hair_color",t.hairColor],["eye_color",t.eyeColor],["shoe_size",t.shoeSize],["languages",t.languages],["dialect",t.dialect]] as [string,string][]).filter(([k]) => form[k]).map(([k, label]) => (
                       <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
                         <span style={{ color: MUTED, fontSize: 13 }}>{label}</span>
                         <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{form[k]}</span>
                       </div>
                     ))}
-                    {!["height","weight","age","hair_color","shoe_size","languages","dialect"].some(k => form[k]) && (
+                    {!["height","weight","age","hair_color","eye_color","shoe_size","languages","dialect"].some(k => form[k]) && (
                       <button
                         onClick={() => router.push("/profile/me/complete?step=physical")}
                         style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: `1px dashed rgba(0,201,177,0.3)`, borderRadius: 10, color: "#00C9B1", fontSize: 13, fontWeight: 700, cursor: "pointer", background: "transparent", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
@@ -1175,6 +1179,7 @@ export default function DashboardPage() {
                 ["weight",    t.weight,    "ltr"],
                 ["age",       t.age,       "ltr"],
                 ["hair_color",t.hairColor, ""],
+                ["eye_color", t.eyeColor,  ""],
                 ["shoe_size", t.shoeSize,  "ltr"],
               ] as [string,string,string][]).map(([k,label,d]) => (
                 <div key={k}>

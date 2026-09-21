@@ -66,15 +66,15 @@ export default function ModelKeyStats({ talent, bookingStats, onOpenReviews }: P
               borderInlineStart: i % cols === 0 ? "none" : `1px solid ${HAIR}`, cursor: c.onClick ? "pointer" : undefined,
             }}
           >
-            <span style={{ fontSize: 12.5, color: MUTED, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{c.label}</span>
+            <span style={{ fontSize: 12, color: MUTED, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{c.label}</span>
             {c.value === null ? (
-              <span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>{noContent}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>{noContent}</span>
             ) : (
-              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: phone ? 22 : 26, fontWeight: 800, lineHeight: 1.1, color: c.star ? GOLD : TEXT, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: phone ? 18 : 20, fontWeight: 800, lineHeight: 1.1, color: c.star ? GOLD : TEXT, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
                 {c.star && <Star size={phone ? 18 : 21} color={GOLD} fill={GOLD} />}{c.value}
               </span>
             )}
-            {c.sub && <span style={{ fontSize: 11.5, color: MUTED }}>{c.sub}</span>}
+            {c.sub && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>{c.sub}</span>}
           </div>
         ))}
       </div>
