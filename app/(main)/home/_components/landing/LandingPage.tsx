@@ -32,6 +32,9 @@ import BrandMomentSubmitPanel from "./BrandMomentSubmitPanel";
 import ScrollReveal from "@/components/motion/ScrollReveal";
 import ScrollProgressPath from "@/components/motion/ScrollProgressPath";
 import styles from "./LandingPage.module.css";
+
+/** Sign-up CTAs are for visitors only; `loading` reserves layout until auth resolves. */
+type AuthState = { status: "loading" } | { status: "guest" } | { status: "member"; role: string | null };
 import {
   brandSteps,
   categories,
@@ -297,9 +300,9 @@ function SectionHeader({
 }
 
 function HeroSection({
-  lang, totalTalents, completedProjects, avgRating, media,
+  lang, totalTalents, completedProjects, avgRating, media, authState,
 }: {
-  lang: LandingLang; totalTalents: number; completedProjects: number; avgRating: number; media: DesignMedia;
+  lang: LandingLang; totalTalents: number; completedProjects: number; avgRating: number; media: DesignMedia; authState: AuthState;
 }) {
   const heroRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
@@ -480,12 +483,23 @@ function HeroSection({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.24 }}
           >
-            <ButtonLink href="/become-talent">
-              {t.primaryCta}
-              <ArrowIcon lang={lang} />
-            </ButtonLink>
-            <ButtonLink href="/explore" variant="secondary">
-              {t.secondaryCta}
+            {authState.status === "guest" && (
+              <ButtonLink href="/become-talent">
+                {t.primaryCta}
+                <ArrowIcon lang={lang} />
+              </ButtonLink>
+            )}
+            {/* Signed-in talents get a way back to their own profile instead of a signup CTA. */}
+            {authState.status === "member" && authState.role === "talent" && (
+              <ButtonLink href="/profile/me">
+                {lang === "ar" ? "بروفايلي" : "My profile"}
+                <ArrowIcon lang={lang} />
+              </ButtonLink>
+            )}
+            {/* While auth resolves, keep the primary slot's space so the hero doesn't jump. */}
+            {authState.status === "loading" && <span aria-hidden="true" style={{ display: "inline-block", minWidth: 190, minHeight: 48, visibility: "hidden" }} />}
+            <ButtonLink href="/explore" variant={authState.status === "member" && authState.role !== "talent" ? undefined : "secondary"}>
+              {authState.status === "member" ? (lang === "ar" ? "استكشف المواهب" : "Explore talent") : t.secondaryCta}
             </ButtonLink>
           </motion.div>
 
@@ -567,8 +581,9 @@ const TALENT_500_PERKS = [
   },
 ];
 
-function Talent500Section({ lang }: { lang: LandingLang }) {
+function Talent500Section({ lang, authState }: { lang: LandingLang; authState: AuthState }) {
   const ar = lang === "ar";
+  if (authState.status === "member") return null;
   return (
     <section className={`${styles.section} ${styles.sectionWhite}`} aria-labelledby="landing-talent-500">
       <div className={styles.container}>
@@ -1162,7 +1177,7 @@ function FAQSection({ lang }: { lang: LandingLang }) {
   );
 }
 
-function FinalCTA({ lang }: { lang: LandingLang }) {
+function FinalCTA({ lang, authState }: { lang: LandingLang; authState: AuthState }) {
   const t = pageCopy[lang];
 
   return (
@@ -1176,9 +1191,11 @@ function FinalCTA({ lang }: { lang: LandingLang }) {
               {t.finalCtaPrimary}
               <ArrowIcon lang={lang} />
             </ButtonLink>
-            <ButtonLink href="/become-talent" variant="secondary">
-              {t.finalCtaSecondary}
-            </ButtonLink>
+            {authState.status !== "member" && (
+              <ButtonLink href="/become-talent" variant="secondary">
+                {t.finalCtaSecondary}
+              </ButtonLink>
+            )}
           </div>
         </div>
       </div>
@@ -1198,12 +1215,18 @@ export default function LandingPage({
 }: Props) {
   const displayedTalents = formatRealTalents(talents, lang);
   const designMedia = useDesignMedia();
+  const { loading, isGuest, user } = useGuestGuard();
+  const authState: AuthState = loading
+    ? { status: "loading" }
+    : isGuest
+      ? { status: "guest" }
+      : { status: "member", role: user?.role ?? null };
 
   return (
     <div className={styles.page} dir={lang === "ar" ? "rtl" : "ltr"}>
       <ScrollProgressPath />
-      <HeroSection lang={lang} totalTalents={totalTalents} completedProjects={completedProjects} avgRating={avgRating} media={designMedia} />
-      <ScrollReveal><Talent500Section lang={lang} /></ScrollReveal>
+      <HeroSection lang={lang} totalTalents={totalTalents} completedProjects={completedProjects} avgRating={avgRating} media={designMedia} authState={authState} />
+      <ScrollReveal><Talent500Section lang={lang} authState={authState} /></ScrollReveal>
       <ScrollReveal><CategoriesSection lang={lang} categoryCounts={categoryCounts} /></ScrollReveal>
       <ScrollReveal><FeaturedTalentsSection lang={lang} talents={displayedTalents} /></ScrollReveal>
       <ScrollReveal><WorkflowSection lang={lang} /></ScrollReveal>
@@ -1211,7 +1234,7 @@ export default function LandingPage({
       <ScrollReveal><FeatureSection lang={lang} /></ScrollReveal>
       <ScrollReveal><TestimonialsSection lang={lang} items={testimonials} /></ScrollReveal>
       <ScrollReveal><FAQSection lang={lang} /></ScrollReveal>
-      <ScrollReveal><FinalCTA lang={lang} /></ScrollReveal>
+      <ScrollReveal><FinalCTA lang={lang} authState={authState} /></ScrollReveal>
     </div>
   );
 }

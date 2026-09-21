@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import { useGuestGuard } from "@/contexts/GuestGuard";
 import SupportTicketModal from "@/components/support/SupportTicketModal";
 import styles from "./SiteChrome.module.css";
 
@@ -62,10 +63,11 @@ const TX = {
 
 type LinksMap = { [K in keyof (typeof TX)["ar"]["links"]]: string };
 
-const PLATFORM_LINKS = (t: LinksMap) => [
+const PLATFORM_LINKS = (t: LinksMap, signedIn: boolean) => [
   { label: t.home, href: "/home" },
   { label: t.explore, href: "/explore" },
-  { label: t.become, href: "/become-talent" },
+  // "Become a talent" is a sign-up link — visitors only.
+  ...(signedIn ? [] : [{ label: t.become, href: "/become-talent" }]),
   { label: t.brands, href: "/brands" },
   { label: t.community, href: "/community" },
   { label: t.jobs, href: "/jobs" },
@@ -107,6 +109,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export default function Footer() {
   const { lang, dark } = useSite();
+  const { loading, isGuest } = useGuestGuard();
   const t = TX[lang];
   const dir = lang === "ar" ? "rtl" : "ltr";
   const year = new Date().getFullYear();
@@ -149,7 +152,7 @@ export default function Footer() {
             <SupportTicketModal page="footer" />
           </div>
 
-          <LinkColumn title={t.sections.platform} links={PLATFORM_LINKS(t.links)} />
+          <LinkColumn title={t.sections.platform} links={PLATFORM_LINKS(t.links, !loading && !isGuest)} />
           <LinkColumn title={t.sections.company} links={COMPANY_LINKS(t.links)} />
           <LinkColumn title={t.sections.legal} links={LEGAL_LINKS(t.links)} />
         </div>

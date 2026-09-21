@@ -432,7 +432,7 @@ export default function RegisterPage() {
       router.push(safeNextPath() ?? (
         form.role !== "talent" ? "/profile/me" :
         isOtherTalentType      ? "/waitlist" :
-        "/onboarding"
+        "/profile/me/complete"
       ));
     } catch (e) {
       const message = e instanceof Error ? e.message : "";

@@ -391,7 +391,8 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
         </div>
       </section>
 
-      {/* ── Final CTA ──────────────────────────────────── */}
+      {/* ── Final CTA ── sign-up prompt: visitors only ── */}
+      {myRole === null && (
       <section className={styles.finalCta}>
         <div className={styles.finalCtaInner}>
           <h2>{ar ? "جاهز لإطلاق حملتك القادمة؟" : "Ready to launch your next campaign?"}</h2>
@@ -410,6 +411,7 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
           </div>
         </div>
       </section>
+      )}
 
       {briefTarget && (
         <DirectBriefModal
