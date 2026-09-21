@@ -9,7 +9,7 @@ const TX = {
     badge:       "انضم كموهبة",
     title:       "حوّل إبداعك",
     titleAccent: "إلى مصدر دخل حقيقي",
-    sub:         "انضم لآلاف المواهب العربية الذين يعملون مع أفضل البراندات ويبنون مستقبلهم المهني معنا.",
+    sub:         "انضم كموهبة UGC أو موديل، واعرض أعمالك، وتعاون مع براندات تبحث عن مواهب مثلك.",
     cta:         "ابدأ الآن مجاناً",
     ctaSub:      "لا حاجة لبطاقة ائتمانية",
     howTitle:    "كيف تبدأ؟",
@@ -17,34 +17,21 @@ const TX = {
       { icon: "📝", title: "سجّل حسابك", body: "أنشئ حسابك المجاني في أقل من دقيقتين." },
       { icon: "🎨", title: "أضف محفظتك", body: "اعرض أعمالك وخبراتك لجذب البراندات المناسبة." },
       { icon: "💼", title: "تواصل مع البراندات", body: "تلقَّ عروض العمل وابدأ التعاون مباشرة." },
-      { icon: "💰", title: "احصل على مدفوعاتك", body: "ادفعات آمنة ومباشرة بعد إتمام كل مشروع." },
+      { icon: "💰", title: "احصل على مستحقاتك", body: "تُحفظ مدفوعات البراند لدى المنصة وتصلك بعد اعتماد الشغل المسلَّم." },
     ],
     benefitsTitle: "لماذا Talents؟",
     benefits: [
       { icon: "🌟", title: "براندات حقيقية", body: "تواصل مع شركات وعلامات تجارية موثوقة تبحث عن مواهب مثلك." },
-      { icon: "💸", title: "أسعار عادلة", body: "أنت تحدد أسعارك. لا وسطاء، لا خصومات مخفية." },
-      { icon: "🔒", title: "مدفوعات آمنة", body: "نظام إيداع يضمن حصولك على مستحقاتك في كل مشروع." },
+      { icon: "💸", title: "أنت تحدد أسعارك", body: "أنشئ باقاتك بأسعارك الخاصة، والبراند يشوفها بوضوح قبل الحجز." },
+      { icon: "🔒", title: "مدفوعات محمية", body: "المنصة تحتفظ بمبلغ المشروع لحد ما الشغل يتسلَّم ويتعتمد." },
       { icon: "📈", title: "نمو مستمر", body: "بناء سمعتك عبر التقييمات وتنمية قاعدة عملائك." },
-      { icon: "🌍", title: "فرص لا حدود لها", body: "وصول لبراندات من السعودية والإمارات ومصر والعالم العربي." },
+      { icon: "🌍", title: "فرص أكتر", body: "اظهر لبراندات تبحث عن مواهب في السوق المصري والعربي." },
       { icon: "🤝", title: "مجتمع داعم", body: "انضم لمجتمع من المبدعين والمحترفين العرب." },
     ],
     typesTitle: "من يمكنه الانضمام؟",
     types: [
       { icon: "📱", label: "UGC Creator" },
-      { icon: "🎬", label: "Video Creator" },
-      { icon: "📸", label: "Photographer" },
-      { icon: "✍️", label: "Copywriter" },
-      { icon: "🎵", label: "Voice Over" },
-      { icon: "🎨", label: "Graphic Designer" },
-      { icon: "📊", label: "Social Media Manager" },
-      { icon: "💡", label: "Influencer" },
-    ],
-    statsTitle: "بالأرقام",
-    stats: [
-      { value: "1,000+", label: "موهبة نشطة" },
-      { value: "500+",   label: "براند موثوق" },
-      { value: "5,000+", label: "مشروع مكتمل" },
-      { value: "98%",    label: "رضا العملاء" },
+      { icon: "📸", label: "Model" },
     ],
     finalCta:    "جاهز للانطلاق؟",
     finalCtaSub: "انضم مجاناً وابدأ رحلتك الإبداعية.",
@@ -54,7 +41,7 @@ const TX = {
     badge:       "Join as a Talent",
     title:       "Turn Your Creativity",
     titleAccent: "into Real Income",
-    sub:         "Join thousands of Arab talents working with top brands and building their careers on Talents.",
+    sub:         "Join as a UGC creator or model, showcase your work, and collaborate with brands looking for talent like you.",
     cta:         "Get Started Free",
     ctaSub:      "No credit card required",
     howTitle:    "How It Works",
@@ -62,34 +49,21 @@ const TX = {
       { icon: "📝", title: "Create Your Account", body: "Sign up for free in less than 2 minutes." },
       { icon: "🎨", title: "Build Your Portfolio", body: "Showcase your work and skills to attract the right brands." },
       { icon: "💼", title: "Connect with Brands", body: "Receive job offers and start collaborating directly." },
-      { icon: "💰", title: "Get Paid", body: "Safe, direct payments after every completed project." },
+      { icon: "💰", title: "Get Paid", body: "The brand's payment is held by the platform and released to you once the delivered work is approved." },
     ],
     benefitsTitle: "Why Talents?",
     benefits: [
       { icon: "🌟", title: "Real Brands", body: "Connect with trusted companies and brands actively looking for talents like you." },
-      { icon: "💸", title: "Fair Pricing", body: "You set your rates. No middlemen, no hidden fees." },
-      { icon: "🔒", title: "Direct Payments", body: "Get paid directly by brands once your work is approved — no middlemen." },
+      { icon: "💸", title: "You Set Your Rates", body: "Create your own packages and prices — brands see them clearly before booking." },
+      { icon: "🔒", title: "Protected Payments", body: "The platform holds the project amount until the work is delivered and approved." },
       { icon: "📈", title: "Continuous Growth", body: "Build your reputation through reviews and grow your client base." },
-      { icon: "🌍", title: "Unlimited Opportunities", body: "Access brands from Saudi Arabia, UAE, Egypt, and the Arab world." },
+      { icon: "🌍", title: "More Opportunities", body: "Get discovered by brands looking for talent in the Egyptian and Arab market." },
       { icon: "🤝", title: "Supportive Community", body: "Join a community of Arab creative professionals." },
     ],
     typesTitle: "Who Can Join?",
     types: [
       { icon: "📱", label: "UGC Creator" },
-      { icon: "🎬", label: "Video Creator" },
-      { icon: "📸", label: "Photographer" },
-      { icon: "✍️", label: "Copywriter" },
-      { icon: "🎵", label: "Voice Over" },
-      { icon: "🎨", label: "Graphic Designer" },
-      { icon: "📊", label: "Social Media Manager" },
-      { icon: "💡", label: "Influencer" },
-    ],
-    statsTitle: "By the Numbers",
-    stats: [
-      { value: "1,000+", label: "Active Talents" },
-      { value: "500+",   label: "Trusted Brands" },
-      { value: "5,000+", label: "Projects Completed" },
-      { value: "98%",    label: "Client Satisfaction" },
+      { icon: "📸", label: "Model" },
     ],
     finalCta:    "Ready to Launch?",
     finalCtaSub: "Join for free and start your creative journey.",
@@ -184,29 +158,6 @@ export default function BecomeTalentClient() {
             </Link>
             <span style={{ color: MUTED, fontSize: 12 }}>{t.ctaSub}</span>
           </motion.div>
-        </div>
-      </section>
-
-      {/* ── Stats ── */}
-      <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 60px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
-          {t.stats.map((s, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 * i }}
-              style={{
-                background: CARD, border: `1px solid ${BORDER}`,
-                borderRadius: 16, padding: "24px 16px", textAlign: "center",
-              }}
-            >
-              <div style={{
-                fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, margin: "0 0 6px",
-                backgroundImage: `linear-gradient(135deg, ${TEAL}, ${GREEN})`,
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-              }}>{s.value}</div>
-              <div style={{ color: MUTED, fontSize: 12, fontWeight: 600 }}>{s.label}</div>
-            </motion.div>
-          ))}
         </div>
       </section>
 

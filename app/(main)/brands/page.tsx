@@ -35,6 +35,15 @@ function detectIndustry(name: string, bio: string | null): string | null {
   return null;
 }
 
+// QA / E2E fixture accounts must never surface on a public listing.
+const TEST_ACCOUNT = /(qa|e2e|test)/i;
+
+// /brands is deliberately behind the "Coming soon" overlay (see the Navbar
+// "Soon" tag). While that's true, don't fetch or render real brand rows behind
+// the blur — otherwise the page says "coming soon" while a live list shows
+// through it. Flip to false to go live.
+const COMING_SOON = true;
+
 async function fetchPublicBrands(): Promise<BrandCard[]> {
   const attempts = [
     "id, handle, full_name, avatar_url, city, bio, brand_category, brand_status, account_status, is_verified, is_approved",
@@ -61,6 +70,7 @@ async function fetchPublicBrands(): Promise<BrandCard[]> {
   const publicRows = rows.filter((brand) => (
     !["blocked", "suspended", "rejected"].includes(brand.account_status ?? "active")
     && (!brand.brand_status || brand.brand_status === "approved")
+    && !TEST_ACCOUNT.test(`${brand.full_name ?? ""} ${brand.handle ?? ""}`)
   ));
 
   const brandIds = publicRows.map((brand) => brand.id);
@@ -92,16 +102,22 @@ async function fetchPublicBrands(): Promise<BrandCard[]> {
 }
 
 export default async function BrandsPage() {
-  const brands = await cachedPublic(
-    ["brands-public-list"],
-    [CACHE_TAGS.brands.list],
-    CACHE_SECONDS.tenMinutes,
-    fetchPublicBrands,
-  );
+  const brands = COMING_SOON
+    ? []
+    : await cachedPublic(
+        ["brands-public-list"],
+        [CACHE_TAGS.brands.list],
+        CACHE_SECONDS.tenMinutes,
+        fetchPublicBrands,
+      );
 
   return (
-    <ComingSoonOverlay>
+    COMING_SOON ? (
+      <ComingSoonOverlay>
+        <BrandsClient brands={brands} />
+      </ComingSoonOverlay>
+    ) : (
       <BrandsClient brands={brands} />
-    </ComingSoonOverlay>
+    )
   );
 }

@@ -153,7 +153,6 @@ export const pageCopy = {
 export const stats = [
   { value: { ar: "موثّقة", en: "Verified" }, label: { ar: "كل المواهب بعد مراجعة يدوية", en: "Every talent, manually reviewed" } },
   { value: { ar: "—", en: "—" }, label: { ar: "متوسط التقييم", en: "Avg. rating" } },
-  { value: { ar: "24/7", en: "24/7" }, label: { ar: "دعم على مدار الساعة", en: "Support coverage" } },
 ];
 
 // Platform restricted to UGC + Model talents only (matches
@@ -261,7 +260,7 @@ export const features: FeatureItem[] = [
   },
   {
     title: { ar: "حالة دفع واضحة", en: "Clear payment status" },
-    description: { ar: "تأكيد يدوي واضح ينقل الحجز إلى التنفيذ بدون وعود غير مبنية.", en: "Manual confirmation keeps bookings moving without overstating payment automation." },
+    description: { ar: "الدفع بيتأكد من فريق المنصة قبل ما الشغل يبدأ، وبتتابع حالته في كل خطوة.", en: "The platform team confirms payment before work starts, and you can follow its status at every step." },
     icon: WalletCards,
   },
   {
@@ -309,8 +308,8 @@ export const faqs: FAQItem[] = [
     answer: { ar: "نعم، التصميم مبني RTL/LTR وتبديل اللغة موجود ضمن النظام الحالي.", en: "Yes, the layout supports RTL/LTR and follows the existing language switcher." },
   },
   {
-    question: { ar: "هل الباقات هنا تنفيذ كامل؟", en: "Are packages fully implemented?" },
-    answer: { ar: "الباقات الآن ديناميكية من لوحة التحكم، والاشتراك يتفعل مباشرة بدون ربط دفع في هذه المرحلة.", en: "Packages are now managed dynamically from admin, and subscriptions activate immediately without payment integration in this phase." },
+    question: { ar: "إزاي أشترك في باقة؟", en: "How do I subscribe to a plan?" },
+    answer: { ar: "اختار الباقة المناسبة من صفحة الباقات واشترك من حسابك، وبتتفعل على حسابك مباشرة.", en: "Pick a plan on the Packages page and subscribe from your account — it activates on your account right away." },
   },
 ];
 

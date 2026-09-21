@@ -309,15 +309,18 @@ function HeroSection({
   // rating (was a fabricated "98% satisfaction" — no satisfaction-survey
   // data exists, so this is real avg rating instead), [3] = support
   // coverage claim (left as static copy, not a number).
-  const localizedStats = stats.map((item, index) => {
-    // Only the avg-rating tile (index 1) has a real number behind it — see
-    // content.ts for why the other two are deliberately non-numeric.
-    if (index === 1 && avgRating > 0) {
-      const rating = avgRating.toFixed(1);
-      return { ...item, value: { ar: rating, en: rating } };
-    }
-    return item;
-  });
+  const localizedStats = stats
+    .map((item, index) => {
+      // Only the avg-rating tile (index 1) has a real number behind it — see
+      // content.ts for why the other tile is deliberately non-numeric.
+      if (index === 1 && avgRating > 0) {
+        const rating = avgRating.toFixed(1);
+        return { ...item, value: { ar: rating, en: rating } };
+      }
+      return item;
+    })
+    // No ratings yet → the tile would read "—". Show nothing rather than a dash.
+    .filter((item, index) => index !== 1 || avgRating > 0);
 
   function handleHeroSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -518,7 +521,7 @@ function HeroSection({
           )}
         </div>
 
-        <div className={styles.statsStrip} aria-label={lang === "ar" ? "إحصائيات المنصة" : "Platform statistics"}>
+        <div className={styles.statsStrip} style={{ gridTemplateColumns: `repeat(${localizedStats.length}, minmax(0, 1fr))` }} aria-label={lang === "ar" ? "إحصائيات المنصة" : "Platform statistics"}>
           {localizedStats.map((item) => (
             <div className={styles.stat} key={item.label.en}>
               <div className={styles.statValue}>{localize(item.value, lang)}</div>
@@ -1036,11 +1039,7 @@ function CampaignSection({ lang, moments }: { lang: LandingLang; moments: Public
                   </div>
                 </article>
               ))
-            ) : (
-              <p className={styles.sectionDescription}>
-                {lang === "ar" ? "لسه مفيش لحظات براندات معتمدة." : "No approved brand moments yet."}
-              </p>
-            )}
+            ) : null}
             <BrandMomentSubmitPanel lang={lang} />
           </div>
 
@@ -1103,6 +1102,9 @@ function FeatureSection({ lang }: { lang: LandingLang }) {
 function TestimonialsSection({ lang, items }: { lang: LandingLang; items: PublicTestimonial[] }) {
   const t = pageCopy[lang];
 
+  // No approved testimonials yet → don't render an empty "What clients say" block.
+  if (items.length === 0) return null;
+
   return (
     <section className={`${styles.section} ${styles.sectionWhite}`} aria-labelledby="landing-testimonials">
       <div className={styles.container}>
@@ -1111,7 +1113,7 @@ function TestimonialsSection({ lang, items }: { lang: LandingLang; items: Public
           kicker={t.testimonials}
           title={lang === "ar" ? "ثقة مبنية على تجربة واضحة" : "Trust built from clear client experience"}
         />
-        {items.length > 0 ? (
+        {(
           <div className={styles.testimonialGrid}>
             {items.map((testimonial) => (
               <article className={styles.testimonialCard} key={testimonial.id}>
@@ -1129,10 +1131,6 @@ function TestimonialsSection({ lang, items }: { lang: LandingLang; items: Public
               </article>
             ))}
           </div>
-        ) : (
-          <p className={styles.sectionDescription}>
-            {lang === "ar" ? "لسه مفيش آراء معتمدة." : "No approved testimonials yet."}
-          </p>
         )}
         <TestimonialSubmitPanel lang={lang} />
       </div>

@@ -7,9 +7,14 @@ export const runtime = 'edge';
 // renders the layout-driven shell for every other category, unchanged.
 
 import { notFound, redirect } from "next/navigation";
-import { loadTalentProfile, talentCategory, canonicalTalentPath } from "../../_lib/load-talent-profile";
+import { loadTalentProfile, talentCategory, canonicalTalentPath, buildTalentMetadata } from "../../_lib/load-talent-profile";
 import TalentProfileShell from "./_components/TalentProfileShell";
 import PendingPreviewBanner from "./_components/PendingPreviewBanner";
+
+export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params;
+  return buildTalentMetadata(handle);
+}
 
 export default async function TalentPage({
   params,

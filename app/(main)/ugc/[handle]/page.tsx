@@ -7,9 +7,14 @@ export const runtime = 'edge';
 // is never a second way to reach a non-UGC profile.
 
 import { notFound, redirect } from "next/navigation";
-import { loadTalentProfile, talentCategory, canonicalTalentPath } from "../../_lib/load-talent-profile";
+import { loadTalentProfile, talentCategory, canonicalTalentPath, buildTalentMetadata } from "../../_lib/load-talent-profile";
 import UgcProfileShell from "../../talent/[handle]/_components/ugc/UgcProfileShell";
 import PendingPreviewBanner from "../../talent/[handle]/_components/PendingPreviewBanner";
+
+export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params;
+  return buildTalentMetadata(handle);
+}
 
 export default async function UgcTalentPage({
   params,

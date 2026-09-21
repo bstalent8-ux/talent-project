@@ -5,13 +5,17 @@
 // forgotten filter here is a data leak (CLAUDE.md §8); do not duplicate this
 // logic into a route folder again.
 
+import type { Metadata } from "next";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
+import { cdnImage } from "@/lib/images";
+import { redactEmails } from "@/lib/public-display-name";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileError, profileService } from "@/features/profiles";
 import type { PublicProfileDTO, TalentPublicCore } from "@/features/profiles/types/dto";
 import type { ModerationStatus } from "@/features/profiles/types/raw";
 
-export { canonicalTalentPath } from "@/lib/talent-profile-route";
+import { canonicalTalentPath } from "@/lib/talent-profile-route";
+export { canonicalTalentPath };
 
 export interface LoadedTalentProfile {
   profile: PublicProfileDTO;
@@ -131,4 +135,58 @@ export async function loadTalentProfile(handle: string): Promise<LoadedTalentPro
 
 export function talentCategory(profile: PublicProfileDTO): string | null {
   return (profile.core as TalentPublicCore).category;
+}
+
+const CATEGORY_LABEL: Record<string, string> = {
+  ugc: "UGC Creator",
+  model: "Model",
+  fashion: "Model",
+};
+
+/**
+ * Real <title>/description/og tags for a talent profile page, shared by
+ * /ugc, /model and /talent. Without this every profile inherited the root
+ * layout's generic title and `og:url` (the homepage), so a shared profile link
+ * previewed as the homepage. Preview (owner/admin) renders are never indexed.
+ */
+export async function buildTalentMetadata(handle: string): Promise<Metadata> {
+  const loaded = await loadTalentProfile(handle);
+  if (!loaded) return { title: "Talent not found | Talents", robots: { index: false, follow: false } };
+
+  const { profile } = loaded;
+  const name = profile.identity.fullName?.trim() || profile.identity.handle || handle;
+  const category = talentCategory(profile);
+  const roleLabel = (category && CATEGORY_LABEL[category]) || "Talent";
+  const city = profile.identity.city?.trim();
+
+  const title = `${name} — ${roleLabel}${city ? ` in ${city}` : ""} | Talents`;
+  const bio = redactEmails(profile.identity.bio);
+  const description = bio
+    ? (bio.length > 155 ? `${bio.slice(0, 152).trimEnd()}…` : bio)
+    : `View ${name}'s portfolio, packages and reviews on Talents, and book directly.`;
+
+  const path = canonicalTalentPath(category, profile.identity.handle ?? handle);
+  const image = profile.identity.avatarUrl ? cdnImage(profile.identity.avatarUrl, 1200, "limit") : null;
+  const isPreview = loaded.isOwnerPreview || loaded.isAdminPreview;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    robots: isPreview ? { index: false, follow: false } : undefined,
+    openGraph: {
+      title,
+      description,
+      url: path,
+      siteName: "Talents",
+      type: "profile",
+      ...(image ? { images: [{ url: image, alt: name }] } : {}),
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+  };
 }

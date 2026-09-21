@@ -25,16 +25,68 @@ function formatDuration(months: number, lang: LandingLang) {
   return labels[months]?.[lang] ?? (lang === "ar" ? `${months} شهر` : `${months} months`);
 }
 
-function formatFeature(key: string, value: string) {
-  const label = key.replace(/_/g, " ");
+// Feature keys are admin-defined free text (snake_case). Known keys get a proper
+// bilingual label; anything else falls back to a Title Case of the key so a new
+// admin-created feature never shows as raw `some_key: value`.
+const FEATURE_LABELS: Record<string, { ar: string; en: string }> = {
+  monthly_actions:        { ar: "إجراءات شهرية", en: "Monthly actions" },
+  priority_visibility:    { ar: "أولوية الظهور", en: "Priority visibility" },
+  support_level:          { ar: "مستوى الدعم", en: "Support level" },
+  featured_profile:       { ar: "بروفايل مميز", en: "Featured profile" },
+  priority_discovery:     { ar: "أولوية في الاكتشاف", en: "Priority discovery" },
+  marketplace_access:     { ar: "الوصول للسوق", en: "Marketplace access" },
+  portfolio_limit:        { ar: "حد المعرض", en: "Portfolio items" },
+  review_portfolio_limit: { ar: "حد معرض التقييمات", en: "Review portfolio items" },
+  max_campaign_requests:  { ar: "طلبات الحملات", en: "Campaign requests" },
+  style_campaign_requests:{ ar: "طلبات حملات الأزياء", en: "Style campaign requests" },
+  restaurant_campaign_requests: { ar: "طلبات حملات المطاعم", en: "Restaurant campaign requests" },
+  ugc_brief_templates:    { ar: "قوالب بريف UGC", en: "UGC brief templates" },
+  shortlist_limit:        { ar: "حد القائمة المختصرة", en: "Shortlist size" },
+  lead_access:            { ar: "الوصول للعملاء المحتملين", en: "Lead access" },
+  job_posts:              { ar: "إعلانات الوظائف", en: "Job posts" },
+  profile_visibility:     { ar: "ظهور البروفايل", en: "Profile visibility" },
+  profile_boost:          { ar: "تعزيز البروفايل", en: "Profile boost" },
+};
+
+const FEATURE_VALUES: Record<string, { ar: string; en: string }> = {
+  basic:     { ar: "أساسي", en: "Basic" },
+  standard:  { ar: "قياسي", en: "Standard" },
+  high:      { ar: "عالي", en: "High" },
+  premium:   { ar: "مميز", en: "Premium" },
+  priority:  { ar: "أولوية", en: "Priority" },
+  dedicated: { ar: "مخصص", en: "Dedicated" },
+  community: { ar: "مجتمعي", en: "Community" },
+};
+
+function titleCaseKey(key: string) {
+  const words = key.replace(/_/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+function formatFeature(key: string, value: string, lang: LandingLang) {
+  const label = FEATURE_LABELS[key]?.[lang] ?? titleCaseKey(key);
   if (value === "true") return label;
-  if (value === "false") return `${label}: no`;
-  return `${label}: ${value}`;
+  if (value === "false") return lang === "ar" ? `${label}: غير متاح` : `${label}: not included`;
+  const known = FEATURE_VALUES[value.toLowerCase()]?.[lang];
+  const shown = known ?? (/^\d+$/.test(value) ? Number(value).toLocaleString(lang === "ar" ? "ar-EG" : "en-US") : value);
+  return `${label}: ${shown}`;
 }
 
 function formatPrice(plan: PackagePlan, lang: LandingLang) {
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(plan.price);
+}
+
+// A 0-price plan reads "Free", not "0 EGP / 120 months". Very long durations
+// (the hidden Free plan is stored as 120 months) mean "no expiry".
+function priceLabel(plan: PackagePlan, lang: LandingLang) {
+  if (plan.price === 0) {
+    return {
+      amount: lang === "ar" ? "مجاني" : "Free",
+      suffix: plan.duration_months >= 60 ? (lang === "ar" ? "للأبد" : "Forever") : formatDuration(plan.duration_months, lang),
+    };
+  }
+  return { amount: formatPrice(plan, lang), suffix: `${plan.currency} / ${formatDuration(plan.duration_months, lang)}` };
 }
 
 function audienceLabel(pkg: MarketplacePackage, lang: LandingLang) {
@@ -139,10 +191,8 @@ export default function PackageCard({
 
         {selectedPlan ? (
           <div className={styles.priceLine}>
-            <span className={styles.price}>{formatPrice(selectedPlan, lang)}</span>
-            <span className={styles.currency}>
-              {selectedPlan.currency} / {formatDuration(selectedPlan.duration_months, lang)}
-            </span>
+            <span className={styles.price}>{priceLabel(selectedPlan, lang).amount}</span>
+            <span className={styles.currency}>{priceLabel(selectedPlan, lang).suffix}</span>
           </div>
         ) : null}
 
@@ -175,19 +225,14 @@ export default function PackageCard({
           {pkg.features.slice(0, compact ? 4 : 8).map((feature) => (
             <li className={styles.feature} key={feature.id}>
               <Check size={16} />
-              <span>{formatFeature(feature.feature_key, feature.feature_value)}</span>
+              <span>{formatFeature(feature.feature_key, feature.feature_value, lang)}</span>
             </li>
           ))}
         </ul>
       </div>
 
       <div className={styles.cardFooter}>
-        {locked ? (
-          <button className={styles.secondaryButton} type="button" disabled aria-disabled="true">
-            <Lock size={14} />
-            {lang === "ar" ? "قريبًا" : "Coming Soon"}
-          </button>
-        ) : isFree ? (
+        {locked ? null : isFree ? (
           <button className={styles.secondaryButton} type="button" disabled aria-disabled="true">
             {lang === "ar" ? "خطتك الحالية" : "Current plan"}
           </button>
