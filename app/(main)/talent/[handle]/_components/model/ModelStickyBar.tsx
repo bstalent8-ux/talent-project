@@ -52,7 +52,7 @@ export default function ModelStickyBar({ selectedPackage, addonsTotal = 0, avgPr
       backgroundColor: BG, backdropFilter: "blur(14px)", borderTop: `1px solid ${BORDER}`,
       padding: "12px var(--container-pad, 24px)", boxShadow: "0 -8px 30px rgba(0,0,0,0.25)",
     }}>
-      <div style={{ maxWidth: 1760, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+      <div style={{ maxWidth: 1480, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap", minWidth: 0 }}>
           <div>
             <div style={{ color: MUTED, fontSize: 11.5 }}>{ar ? "السعر التقريبي" : "Estimated price"}</div>

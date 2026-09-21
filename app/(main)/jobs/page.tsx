@@ -4,6 +4,12 @@ import { Construction } from "lucide-react";
 import { adminClient } from "@/lib/supabase/admin";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import JobsClient from "./_components/JobsClient";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Jobs | Talents",
+  description: "Job posts from brands looking for UGC creators and models.",
+};
 import ComingSoonOverlay from "@/components/ComingSoonOverlay";
 import styles from "./_components/JobsPage.module.css";
 

@@ -234,8 +234,8 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
   const features: { icon: LucideIcon; title: string; text: string }[] = [
     { icon: ShieldCheck, title: ar ? "مواهب موثّقة" : "Verified talent",
       text: ar ? "نراجع كل ملف يدويًا لضمان الجودة والمصداقية قبل ظهوره." : "Every profile is manually reviewed for quality and authenticity." },
-    { icon: Wallet, title: ar ? "دفع مباشر" : "Direct payments",
-      text: ar ? "تدفع بعد الاتفاق مباشرة مع تأكيد يدوي لكل عملية." : "Pay the talent directly, with manual confirmation on every booking." },
+    { icon: Wallet, title: ar ? "مدفوعات محمية" : "Protected payments",
+      text: ar ? "المنصة تأكد دفعتك وتحتفظ بها لحد ما الشغل يتسلّم ويتعتمد." : "The platform confirms your payment and holds it until the work is delivered and approved." },
     { icon: MessagesSquare, title: ar ? "تواصل مباشر" : "Direct chat",
       text: ar ? "ناقش التفاصيل وأرسل البريف وتابع التسليم في مكان واحد." : "Discuss details, send briefs and track delivery in one place." },
     { icon: Star, title: ar ? "تقييمات حقيقية" : "Real reviews",
@@ -397,8 +397,8 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
           <h2>{ar ? "جاهز لإطلاق حملتك القادمة؟" : "Ready to launch your next campaign?"}</h2>
           <p>
             {ar
-              ? "انضم كبراند وابدأ بالتواصل مع المواهب، أو سجّل كموهبة واعرض أعمالك أمام آلاف البراندات."
-              : "Join as a brand and start reaching talent, or sign up as talent and put your work in front of thousands of brands."}
+              ? "انضم كبراند وابدأ بالتواصل مع المواهب، أو سجّل كموهبة واعرض أعمالك أمام البراندات."
+              : "Join as a brand and start reaching talent, or sign up as talent and put your work in front of brands."}
           </p>
           <div className={styles.ctaActions}>
             <Link href="/register" className={`${styles.button} ${styles.buttonPrimary}`}>

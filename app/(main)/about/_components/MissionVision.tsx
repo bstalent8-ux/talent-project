@@ -9,7 +9,7 @@ const TX = {
     mission: {
       tag: "رسالتنا",
       title: "نُمكّن المبدعين. نربط البراندات.",
-      body: "نحن هنا لنحوّل طريقة تعاون البراندات مع المواهب في العالم العربي. نؤمن أن كل موهبة — مؤثر، موديل، ممثل، أو صانع محتوى — تستحق أن تُوجَد في المكان المناسب أمام البراند المناسب. نبني جسراً حقيقياً بين الإبداع والتجارة، بشفافية واحترافية تامة.",
+      body: "نحن هنا لنحوّل طريقة تعاون البراندات مع المواهب في العالم العربي. نؤمن أن كل موهبة — موديل أو صانع محتوى UGC — تستحق أن تُوجَد في المكان المناسب أمام البراند المناسب. نبني جسراً حقيقياً بين الإبداع والتجارة، بشفافية واحترافية تامة.",
     },
     vision: {
       tag: "رؤيتنا",
@@ -21,7 +21,7 @@ const TX = {
     mission: {
       tag: "Our Mission",
       title: "Empowering creators. Connecting brands.",
-      body: "We're here to transform how brands collaborate with talent across the Arab world. We believe every creative — influencer, model, actor, or content creator — deserves to be in front of the right brand at the right time. We build a real bridge between creativity and commerce, with full transparency and professionalism.",
+      body: "We're here to transform how brands collaborate with talent across the Arab world. We believe every creative — model or UGC content creator — deserves to be in front of the right brand at the right time. We build a real bridge between creativity and commerce, with full transparency and professionalism.",
     },
     vision: {
       tag: "Our Vision",

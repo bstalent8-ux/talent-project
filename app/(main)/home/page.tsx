@@ -1,6 +1,13 @@
 export const runtime = 'edge';
 
 import HomeClient from "./_components/HomeClient";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Talents — Book Verified UGC Creators & Models",
+  description: "Talents connects brands with manually reviewed UGC creators and models in Egypt and the Arab world.",
+  alternates: { canonical: "/home" },
+};
 import { getCachedPublicTalentCards } from "@/features/talent-profile/services/public-talents.service";
 import {
   getCachedApprovedTestimonials,

@@ -3,6 +3,12 @@ export const runtime = "edge";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import { fetchFreePackage, fetchPublicPackages } from "@/features/packages/services/package.service";
 import PackagesClient from "./_components/PackagesClient";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Plans & Pricing | Talents",
+  description: "Compare Talents plans for creators and brands. The Free plan is available now.",
+};
 
 export default async function PackagesPage() {
   const [packages, freePackage] = await Promise.all([

@@ -3,7 +3,6 @@ import { useSite } from "@/contexts/SiteContext";
 import AboutHero    from "./AboutHero";
 import MissionVision from "./MissionVision";
 import HowItWorks   from "./HowItWorks";
-import StatsSection  from "./StatsSection";
 import AboutCTA      from "./AboutCTA";
 
 export default function AboutClient() {
@@ -18,7 +17,6 @@ export default function AboutClient() {
       <AboutHero    dark={dark} lang={lang} />
       <MissionVision dark={dark} lang={lang} />
       <HowItWorks   dark={dark} lang={lang} />
-      <StatsSection  dark={dark} lang={lang} />
       <AboutCTA      dark={dark} lang={lang} />
     </div>
   );

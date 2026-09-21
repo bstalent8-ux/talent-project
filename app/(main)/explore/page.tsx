@@ -8,6 +8,12 @@ import {
   type PublicTalentCard,
 } from "@/features/talent-profile/services/public-talents.service";
 import ExploreClient from "./_components/ExploreClient";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Explore Talent — UGC Creators & Models | Talents",
+  description: "Browse verified UGC creators and models in Egypt and the Arab world. Compare portfolios, prices and reviews, then book directly.",
+};
 
 export type TalentCard = PublicTalentCard;
 

@@ -168,8 +168,8 @@ export default function ContactClient() {
               </p>
               <p style={{ color: MUTED, fontSize: 12, lineHeight: 1.7, margin: 0 }}>
                 {ar
-                  ? "أكثر من 1000 موهبة وبراند يثقون بنا"
-                  : "Over 1,000 talents & brands trust us"}
+                  ? "كل الملفات تتراجع يدويًا قبل ظهورها"
+                  : "Every profile is manually reviewed before it goes live"}
               </p>
             </div>
           </div>

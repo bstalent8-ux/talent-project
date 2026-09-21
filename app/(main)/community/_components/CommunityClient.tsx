@@ -189,7 +189,6 @@ export default function CommunityClient() {
       { value: src.length ? `${src.length}+` : "—", label: ar ? "سؤال منشور" : "Questions" },
       { value: answers ? `${answers}+` : "—", label: ar ? "إجابة ونصيحة" : "Answers & tips" },
       { value: contributors ? `${contributors}+` : "—", label: ar ? "مشارك نشط" : "Contributors" },
-      { value: "24/7", label: ar ? "مجتمع نشط" : "Active community" },
     ];
   }, [statsLoaded, ar]);
 
@@ -201,7 +200,7 @@ export default function CommunityClient() {
     { icon: Handshake, title: ar ? "شراكات حقيقية" : "Real partnerships",
       text: ar ? "حوّل النقاش إلى تعاون فعلي بين المواهب والبراندات." : "Turn discussion into real collaboration between talent and brands." },
     { icon: Lightbulb, title: ar ? "شارك خبرتك" : "Share your expertise",
-      text: ar ? "إجابة واحدة مفيدة قد تبني سمعتك أمام آلاف الأعضاء." : "One helpful answer can build your reputation with thousands." },
+      text: ar ? "إجابة واحدة مفيدة قد تبني سمعتك أمام أعضاء المجتمع." : "One helpful answer can build your reputation with the community." },
   ];
 
   return (

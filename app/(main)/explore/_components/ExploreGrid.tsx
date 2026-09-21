@@ -20,6 +20,17 @@ interface Props {
   onSendBrief?: (talent: TalentCard) => void;
 }
 
+// Stored category is a raw slug ("ugc"/"model"); show a readable label.
+const CATEGORY_LABELS: Record<string, { ar: string; en: string }> = {
+  ugc:     { ar: "UGC Creator", en: "UGC Creator" },
+  model:   { ar: "موديل", en: "Model" },
+  fashion: { ar: "موديل", en: "Model" },
+};
+function categoryLabel(category: string, lang: "ar" | "en") {
+  const key = category.toLowerCase();
+  return CATEGORY_LABELS[key]?.[lang] ?? (category.charAt(0).toUpperCase() + category.slice(1));
+}
+
 function TalentCardItem({
   talent, lang, myRole, favoriteIds, onToggleFavorite, onSendBrief,
 }: {
@@ -106,7 +117,7 @@ function TalentCardItem({
           {talent.verified && <BadgeCheck size={13} />}
         </h3>
 
-        {talent.category && <span className={styles.talentCategory}>{talent.category}</span>}
+        {talent.category && <span className={styles.talentCategory}>{categoryLabel(talent.category, lang)}</span>}
 
         {talent.location && (
           <span className={styles.talentLocation}>

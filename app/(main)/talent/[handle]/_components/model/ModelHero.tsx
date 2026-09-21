@@ -154,15 +154,22 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
     <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         {talent.verified && (
-          <span style={{ display: "flex", alignItems: "center", gap: 6, color: dark ? "#34d399" : "#059669", border: "1px solid rgba(16,185,129,0.5)", backgroundColor: "rgba(16,185,129,0.08)", borderRadius: 8, padding: "5px 12px", fontSize: 11.5, fontWeight: 800 }}>
-            <CheckCircle2 size={13} />{ar ? "موثّق" : "VERIFIED"}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px 0 12px", borderRadius: 10, color: dark ? "#3ddc97" : "#059669", border: `1px solid ${dark ? "rgba(61,220,151,0.42)" : "rgba(5,150,105,0.45)"}`, backgroundColor: dark ? "rgba(61,220,151,0.09)" : "rgba(5,150,105,0.08)", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="11" fill="currentColor" />
+              <path d="M7.2 12.4l3.2 3.1 6.4-6.6" fill="none" stroke={dark ? "#0b1f17" : "#ffffff"} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {ar ? "موثّق" : "VERIFIED"}
           </span>
         )}
-        {true && (
-          <span style={{ display: "flex", alignItems: "center", gap: 6, color: GOLD, border: `1px solid ${GOLD}88`, backgroundColor: "rgba(216,155,55,0.10)", borderRadius: 8, padding: "5px 12px", fontSize: 11.5, fontWeight: 800 }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: GOLD }} />{tierLabel}
-          </span>
-        )}
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px 0 12px", borderRadius: 10, color: GOLD, border: `1px solid ${GOLD}80`, backgroundColor: "rgba(216,155,55,0.10)", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="11" fill="currentColor" />
+            <circle cx="12" cy="12" r="6.4" fill="none" stroke={dark ? "#1d1405" : "#ffffff"} strokeWidth="2" />
+            <circle cx="12" cy="12" r="2.2" fill={dark ? "#1d1405" : "#ffffff"} />
+          </svg>
+          {tierLabel}
+        </span>
       </div>
 
       <h1 style={{ color: TEXT, fontFamily: SERIF, fontSize: phone ? 34 : compact ? 44 : 52, fontWeight: 500, lineHeight: 1.08, margin: 0, letterSpacing: "-0.01em", overflowWrap: "anywhere" }}>{displayName}</h1>

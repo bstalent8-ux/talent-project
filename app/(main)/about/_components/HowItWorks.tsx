@@ -13,7 +13,7 @@ const TX = {
       { icon: UserCheck,    label: "الموهبة تتقدم",   body: "تجد المواهب المناسبة الفرصة وتتقدم أو يتواصل معها البراند مباشرة." },
       { icon: MessageSquare,label: "تواصل مباشر",     body: "الطرفان يتحدثان عبر المنصة لمناقشة التفاصيل والاتفاق." },
       { icon: Handshake,    label: "التنفيذ",          body: "تبدأ الموهبة العمل وتسلّم الناتج في الوقت المحدد." },
-      { icon: Star,         label: "التقييم",          body: "كلا الطرفين يقيّم التجربة لبناء ثقة المجتمع." },
+      { icon: Star,         label: "التقييم",          body: "بعد اعتماد الشغل، يقيّم البراند التجربة لبناء ثقة المجتمع." },
     ],
   },
   en: {
@@ -24,7 +24,7 @@ const TX = {
       { icon: UserCheck,     label: "Talent Applies",   body: "Matching talents find the opportunity and apply, or the brand reaches out directly." },
       { icon: MessageSquare, label: "Direct Chat",      body: "Both parties discuss details and agree on terms through the platform." },
       { icon: Handshake,     label: "Execution",        body: "The talent delivers the work on time as agreed." },
-      { icon: Star,          label: "Review",           body: "Both sides leave a review to build community trust." },
+      { icon: Star,          label: "Review",           body: "Once the work is approved, the brand leaves a review to build community trust." },
     ],
   },
 };
