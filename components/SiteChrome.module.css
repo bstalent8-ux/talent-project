@@ -1,55 +1,66 @@
 .siteNav {
+  /* Floating glass pill (Nova-style): detached from the top edge, blurred,
+     with a soft brand-coloured glow underneath and a lit top edge. */
   position: fixed;
-  inset: 0 0 auto;
+  inset: 8px 0 auto;
+  margin-inline: auto;
+  /* Slightly wider than the page container so the bar frames the content. */
+  width: min(calc(100% - 1.6rem), calc(var(--container-max) + 160px));
   z-index: var(--z-sticky);
-  height: 66px;
+  --nav-h: 58px;
+  height: var(--nav-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  /* Content aligns to the same edge as the centered .site-container below
-     it: base gutter on narrow/medium screens, growing past --container-max
-     so the bar's logo/controls never sit closer to the true viewport edge
-     than the page content does. The bar's own background stays full-bleed —
-     only the inner content padding scales. */
-  padding-inline: max(0.8rem, calc((100vw - var(--container-max)) / 2 + 0.8rem));
-  border: 0;
-  border-radius: 0;
+  padding-inline: 0.7rem;
+  box-sizing: border-box;
+  border: 1px solid var(--nav-border);
+  border-radius: 100px;
   background: var(--nav-bg);
   color: var(--nav-text);
-  backdrop-filter: blur(18px) saturate(1.12);
+  backdrop-filter: blur(24px) saturate(1.25);
+  -webkit-backdrop-filter: blur(24px) saturate(1.25);
   box-shadow: var(--nav-shadow);
+  animation: navIn 0.7s var(--ease-spring, cubic-bezier(0.34, 1.3, 0.64, 1)) both;
   transition:
     background-color var(--duration-base) var(--ease-standard),
     border-color var(--duration-base) var(--ease-standard),
-    box-shadow var(--duration-base) var(--ease-standard),
-    transform var(--duration-base) var(--ease-emphasis);
+    box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .darkChrome {
-  --nav-bg: color-mix(in srgb, var(--color-primary) 12%, rgba(8, 11, 17, 0.9));
+  --nav-bg: color-mix(in srgb, var(--color-primary) 10%, rgba(10, 14, 22, 0.55));
   --nav-panel: rgba(255, 255, 255, 0.065);
-  --nav-panel-hover: rgba(255, 255, 255, 0.11);
+  --nav-panel-hover: rgba(255, 255, 255, 0.1);
   --nav-border: rgba(255, 255, 255, 0.13);
   --nav-text: #f7fafc;
-  --nav-muted: rgba(247, 250, 252, 0.76);
-  --nav-shadow: 0 18px 42px rgba(0, 0, 0, 0.16);
+  --nav-muted: rgba(247, 250, 252, 0.68);
+  --nav-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 12px 60px color-mix(in srgb, var(--color-primary) 32%, transparent);
   --nav-menu-bg: color-mix(in srgb, var(--color-primary) 18%, rgba(10, 16, 22, 0.96));
   --nav-active-border: rgba(215, 168, 79, 0.56);
   --nav-on-gold: var(--bg-page);
+  --cta-shadow-hover: 0 16px 48px color-mix(in srgb, var(--color-primary) 60%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .lightChrome {
-  --nav-bg: color-mix(in srgb, var(--color-primary) 6%, rgba(247, 248, 248, 0.92));
+  --nav-bg: color-mix(in srgb, var(--color-primary) 5%, rgba(255, 255, 255, 0.62));
   --nav-panel: rgba(255, 255, 255, 0.64);
-  --nav-panel-hover: rgba(255, 255, 255, 0.86);
+  --nav-panel-hover: color-mix(in srgb, var(--color-primary) 9%, rgba(255, 255, 255, 0.7));
   --nav-border: rgba(15, 118, 110, 0.16);
   --nav-text: #101820;
   --nav-muted: #536575;
-  --nav-shadow: 0 18px 38px rgba(16, 24, 32, 0.1);
+  --nav-shadow:
+    0 24px 60px rgba(16, 24, 32, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 44px color-mix(in srgb, var(--color-primary) 16%, transparent);
   --nav-menu-bg: color-mix(in srgb, var(--color-primary) 8%, rgba(247, 248, 248, 0.96));
   --nav-active-border: rgba(185, 132, 34, 0.38);
   --nav-on-gold: var(--text-primary);
+  --cta-shadow-hover: 0 14px 40px color-mix(in srgb, var(--color-primary) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .brandWrap,
@@ -83,10 +94,10 @@
 .navLinks {
   position: absolute;
   left: 50%;
-  gap: 0.25rem;
-  padding: 0.25rem;
+  gap: 0.15rem;
+  padding: 0.2rem;
   border: 1px solid var(--nav-border);
-  border-radius: 10px;
+  border-radius: 100px;
   background: color-mix(in srgb, var(--nav-panel) 72%, transparent);
   transform: translateX(-50%);
 }
@@ -96,19 +107,17 @@
   display: inline-flex;
   align-items: center;
   min-height: 34px;
-  padding: 0 0.78rem;
+  padding: 0 0.85rem;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 100px;
   color: var(--nav-muted);
   font-size: 0.9rem;
   font-weight: 650;
   white-space: nowrap;
   transition:
-    color var(--duration-base) var(--ease-standard),
-    background-color var(--duration-base) var(--ease-standard),
+    background-color 0.8s var(--ease-spring, cubic-bezier(0.34, 1.3, 0.64, 1)),
     border-color var(--duration-base) var(--ease-standard),
-    box-shadow var(--duration-base) var(--ease-standard),
-    transform var(--duration-base) var(--ease-emphasis);
+    box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .navLink::after {
@@ -118,6 +127,75 @@
 .navLink:hover {
   color: var(--nav-text);
   background: var(--nav-panel-hover);
+}
+
+/* Neon comet running round the nav border (see NeonRing.tsx). The rect hugs the
+   parent box. */
+/* Overlays the nav's BORDER box (inset -1px = its 1px border) so the comet rides
+   exactly on the border line and follows the pill's real radius. */
+.neonRing {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 0 3px rgba(255, 138, 31, 0.6)) drop-shadow(0 0 8px rgba(255, 138, 31, 0.3));
+}
+
+.neonRect {
+  fill: none;
+  stroke-linecap: round;
+  x: 1px;
+  y: 1px;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  /* Circular end caps: radius = half the stroke-centre height. rx/ry must be equal —
+     a large rx with a clamped ry draws elliptical (narrower) ends. */
+  rx: calc((var(--nav-h) - 2px) / 2);
+  ry: calc((var(--nav-h) - 2px) / 2);
+}
+
+/* Text roll: two stacked copies inside a one-line mask; on hover the track
+   slides up so the second (brighter) copy rolls in — the Nova hover motion. */
+.flip {
+  display: inline-block;
+  height: 1.4em;
+  overflow: hidden;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.flipTrack {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.8s var(--ease-spring, cubic-bezier(0.34, 1.3, 0.64, 1));
+}
+
+.flipTrack > span {
+  display: block;
+  height: 1.4em;
+  line-height: 1.4;
+}
+
+.flipTrack > span:last-child {
+  color: var(--nav-text);
+}
+
+.navLink:hover .flipTrack,
+.bookButton:hover .flipTrack,
+.mobileLink:hover .flipTrack {
+  transform: translateY(-1.4em);
+}
+
+.navLinkActive .flipTrack > span:last-child {
+  color: var(--nav-on-gold);
+}
+
+.bookButton .flipTrack > span:last-child {
+  color: #fff;
 }
 
 .navLinkActive {
@@ -215,24 +293,26 @@
   justify-content: center;
   gap: 0.45rem;
   min-height: 40px;
-  padding: 0 1rem;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 42%, var(--nav-border));
-  border-radius: 10px;
-  background: var(--color-primary);
+  padding: 0 1.15rem;
+  border: 0;
+  border-radius: 100px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 62%, var(--color-success)) 100%);
   color: #fff;
   font-size: 0.9rem;
-  font-weight: 850;
-  box-shadow: none;
+  font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
   transition:
-    background-color var(--duration-base) var(--ease-standard),
-    transform var(--duration-base) var(--ease-emphasis),
-    box-shadow var(--duration-base) var(--ease-standard);
+    box-shadow 0.8s var(--ease-spring, cubic-bezier(0.34, 1.3, 0.64, 1)),
+    filter 0.8s var(--ease-spring, cubic-bezier(0.34, 1.3, 0.64, 1));
 }
 
 .bookButton:hover {
-  background: var(--color-primary-strong);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  filter: brightness(1.14) saturate(1.1);
+  box-shadow: var(--cta-shadow-hover, 0 16px 48px rgba(15, 118, 110, 0.55));
+}
+
+.bookButton:active {
+  filter: brightness(0.86);
 }
 
 .avatarWrap {
@@ -399,7 +479,8 @@
 }
 
 .navSpacer {
-  height: 68px;
+  /* nav bottom (8px top gap + 58px bar) + the same 8px gap below it */
+  height: 74px;
 }
 
 .navSpacerHero {
@@ -654,6 +735,11 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes navIn {
+  from { opacity: 0; transform: translateY(-28px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @keyframes menuIn {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -662,7 +748,6 @@
 @media (min-width: 981px) and (max-width: 1180px) {
   .siteNav {
     gap: 0.75rem;
-    padding-inline: 0.75rem;
   }
 
   .navLinks {
@@ -693,17 +778,19 @@
   }
 
   .siteNav {
-    inset: 0 0 auto;
-    height: 64px;
-    padding-inline: 0.85rem;
+    inset: 8px 0 auto;
+    --nav-h: 56px;
+    padding-inline: 0.7rem;
+    width: calc(100% - 1.2rem);
   }
 
   .mobileMenu {
-    inset: 5rem 0.85rem auto;
+    inset: 4.6rem 0.6rem auto;
   }
 
   .navSpacer {
-    height: 84px;
+    /* 8px top gap + 56px bar + 8px gap below */
+    height: 72px;
   }
 
   .navSpacerHero {
@@ -783,6 +870,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .siteNav {
+    animation: none;
+  }
+  .flipTrack {
+    transition: none;
+  }
   .navLink,
   .bookButton,
   .iconButton,

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import NeonRing from "@/components/NeonRing";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -96,6 +97,18 @@ const TX = {
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
+}
+
+// Two stacked copies of the label; CSS slides the track up on hover (text roll).
+function Flip({ children }: { children: string }) {
+  return (
+    <span className={styles.flip}>
+      <span className={styles.flipTrack}>
+        <span>{children}</span>
+        <span aria-hidden="true">{children}</span>
+      </span>
+    </span>
+  );
 }
 
 export default function Navbar() {
@@ -199,6 +212,7 @@ export default function Navbar() {
         dir={dir}
         aria-label={lang === "ar" ? "التنقل الرئيسي" : "Primary navigation"}
       >
+        <NeonRing period={5} />
         <div className={styles.brandWrap}>
           <Link className={styles.logoLink} href="/home" aria-label="Talents">
             <Image
@@ -223,7 +237,7 @@ export default function Navbar() {
                   key={item.href}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  {item.label}
+                  <Flip>{item.label}</Flip>
                   {item.soon && <span className={styles.navSoonBadge}>{t.soon}</span>}
                 </Link>
               );
@@ -310,7 +324,7 @@ export default function Navbar() {
           {!isMobile && cta && (
             <Link className={styles.bookButton} href={cta.href} aria-label={cta.label}>
               <cta.Icon size={17} aria-hidden="true" />
-              {cta.label}
+              <Flip>{cta.label}</Flip>
             </Link>
           )}
 

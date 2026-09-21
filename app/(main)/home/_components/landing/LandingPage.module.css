@@ -109,6 +109,23 @@
   transition: translate 180ms var(--ease-standard);
 }
 
+/* Light mode: let the photo sit lighter. The slate base keeps the white hero copy
+   readable now that the image no longer covers it fully. */
+:global([data-theme="light"]) .hero {
+  background-color: #3b4f58;
+}
+
+:global([data-theme="light"]) .heroMedia {
+  opacity: 0.62;
+}
+
+:global([data-theme="light"]) .heroOverlay {
+  background:
+    radial-gradient(circle at 20% 22%, color-mix(in srgb, var(--color-secondary) 16%, transparent), transparent 22rem),
+    radial-gradient(circle at 84% 18%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 20rem),
+    linear-gradient(180deg, rgba(5, 9, 12, 0.46), rgba(5, 9, 12, 0.22) 40%, rgba(5, 9, 12, 0.6));
+}
+
 .heroOverlay {
   position: absolute;
   inset: 0;
