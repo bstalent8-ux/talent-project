@@ -123,6 +123,43 @@ export async function PATCH(req: NextRequest) {
       saveError = await saveTalentProfileSection(uid, {
         social_links: { ...existingSocialLinks, usage_addons: data.usage_addons },
       });
+    } else if (section === "experience") {
+      // Whole-array replace, same shape as packages/usage_addons — the client
+      // sends the full list it wants saved. `verified` is the one field the
+      // talent can never set here: it is an admin-only trust signal (flipped
+      // through the admin talent editor's raw social_links JSON, same as
+      // talent_brands.verified), so it is always taken from what was already
+      // stored for that entry's id, never from the request body. A new or
+      // freshly-edited entry is unverified until an admin checks it.
+      const MAX_ITEMS = 10;
+      const MAX_TEXT = 500;
+      const clip = (v: unknown) => (typeof v === "string" ? v.trim().slice(0, MAX_TEXT) : "");
+      const existingExperience = Array.isArray(existingSocialLinks.experience) ? existingSocialLinks.experience : [];
+      const prevVerifiedById = new Map<string, boolean>(
+        existingExperience.map((e: any) => [String(e?.id ?? ""), Boolean(e?.verified)]),
+      );
+      const incoming = (Array.isArray(data.experience) ? data.experience.slice(0, MAX_ITEMS) : [])
+        .map((e: any) => {
+          const id = typeof e?.id === "string" && e.id ? e.id : crypto.randomUUID();
+          return {
+            id,
+            name: clip(e?.name),
+            year: clip(e?.year),
+            description: clip(e?.description) || null,
+            duration: clip(e?.duration) || null,
+            deliveredAt: clip(e?.deliveredAt) || null,
+            deliverable: clip(e?.deliverable) || null,
+            // Not domain-restricted — same trust level as portfolio_items.url:
+            // the client only ever gets a URL here from its own Cloudinary
+            // upload (unsigned preset), this route doesn't call Cloudinary.
+            logoUrl: clip(e?.logoUrl) || null,
+            verified: prevVerifiedById.get(id) ?? false,
+          };
+        })
+        .filter((e: { name: string }) => e.name.length > 0);
+      saveError = await saveTalentProfileSection(uid, {
+        social_links: { ...existingSocialLinks, experience: incoming },
+      });
     } else {
       return NextResponse.json({ error: "unknown section" }, { status: 400, headers: privateNoStoreHeaders() });
     }

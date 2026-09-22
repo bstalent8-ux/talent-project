@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { getWizardSteps } from "./completion-wizard-steps";
 
-const FULL = ["basic", "physical", "professional", "portfolio", "presence", "availability", "review"];
+const FULL = ["basic", "physical", "professional", "portfolio", "experience", "presence", "availability", "review"];
 
 describe("getWizardSteps", () => {
   it("gives a model the full sequence with physical right after basic", () => {

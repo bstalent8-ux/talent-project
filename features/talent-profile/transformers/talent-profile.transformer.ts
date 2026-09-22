@@ -67,9 +67,15 @@ function transformReviews(raw: RawReview[]): Review[] {
 function transformExperience(sl: Record<string, unknown>): ExperienceItem[] | null {
   if (!Array.isArray(sl.experience)) return null;
   return (sl.experience as Array<Record<string, unknown>>).map((e) => ({
+    id: e.id != null ? String(e.id) : undefined,
     name: String(e.name ?? ""),
     year: String(e.year ?? ""),
     verified: Boolean(e.verified),
+    description: e.description != null ? String(e.description) : null,
+    duration: e.duration != null ? String(e.duration) : null,
+    deliveredAt: e.deliveredAt != null ? String(e.deliveredAt) : null,
+    deliverable: e.deliverable != null ? String(e.deliverable) : null,
+    logoUrl: e.logoUrl != null ? String(e.logoUrl) : null,
   }));
 }
 

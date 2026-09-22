@@ -27,6 +27,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   MapPin, Globe, Shield, Star, MessageCircle, MessageSquarePlus, Heart, Share2, Play,
   Clock3, ClipboardCheck, Timer, Sparkles, BadgeCheck, Gem, Lock, Pencil, ChevronDown, Link2, ExternalLink,
+  MessageSquare, CheckCircle2, CalendarCheck, Eye, TrendingUp,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
@@ -40,6 +41,7 @@ const PURPLE = "#6C4DFF";
 const PURPLE_SOFT = "#8B74FF";
 const EMERALD = "#10B981";
 const AMBER = "#F4B740";
+const VIOLET = "#16a3a3"; // matches UgcPerformanceMetrics's site --color-accent
 const BAND = "#0A0E1A";
 const LINE = "rgba(255,255,255,0.14)";
 const MUTED = "#9AA4B5";
@@ -547,6 +549,32 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
     </div>
   );
 
+  // Booking Track Record — was its own labeled card further down the page;
+  // now a compact row of icon+number chips at the end of the Social Profiles
+  // line (no card, no separators, no labels — a tooltip carries the label).
+  // Same real numbers as before: rating, reviews, completed/total bookings,
+  // profile views, completion rate. Hidden entirely with no rating/reviews/bookings yet.
+  const hasTrackRecord = talent.rating > 0 || talent.reviewCount > 0 || bookingStats.total > 0;
+  const trackRecordItems = hasTrackRecord ? [
+    { Icon: Star,          value: talent.rating > 0 ? talent.rating.toFixed(1) : "—", color: AMBER,      label: ar ? "متوسط التقييم" : "Average Rating" },
+    { Icon: MessageSquare, value: String(talent.reviewCount),                          color: VIOLET,     label: ar ? "عدد التقييمات" : "Total Reviews" },
+    { Icon: CheckCircle2,  value: String(bookingStats.completed),                      color: EMERALD,    label: ar ? "المشاريع المكتملة" : "Completed Projects" },
+    { Icon: CalendarCheck, value: String(bookingStats.total),                          color: "#3B82F6",  label: ar ? "إجمالي الحجوزات" : "Total Bookings" },
+    { Icon: Eye,           value: talent.views,                                        color: "#06B6D4",  label: ar ? "مشاهدات الملف" : "Profile Views" },
+    { Icon: TrendingUp,    value: `${completedPct ?? 0}%`,                              color: EMERALD,    label: ar ? "نسبة الإنجاز" : "Completion Rate" },
+  ] : [];
+
+  const trackRecord = trackRecordItems.length > 0 && (
+    <div id="ugc-track-record" title={ar ? "سجل الحجوزات" : "Booking Track Record"} style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+      {trackRecordItems.map(({ Icon, value, color, label }, i) => (
+        <span key={i} title={label} style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
+          <Icon size={13} color={color} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", whiteSpace: "nowrap" }}>{value}</span>
+        </span>
+      ))}
+    </div>
+  );
+
   // Favorite / Share live in the free corner beside the social bar so the band
   // itself stays identical to the reference.
   const utilityButtons = (
@@ -593,6 +621,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
             <div style={{ maxWidth: phone ? undefined : 420 }}>{ctas}</div>
             {statsRow}
             {socialBar}
+            {trackRecord}
             <div style={{ display: "flex" }}>{utilityButtons}</div>
           </div>
         ) : (
@@ -613,6 +642,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
               {statsRow}
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 {socialBar}
+                {trackRecord}
                 {utilityButtons}
               </div>
             </div>

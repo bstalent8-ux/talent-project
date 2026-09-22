@@ -43,6 +43,29 @@ describe("calculateCompletion — social section picks up the new Professional P
   });
 });
 
+describe("calculateCompletion — experience (Previous Projects) section", () => {
+  it("counts experience as done once at least one entry exists", () => {
+    const talentProfile = { social_links: { experience: [{ id: "p1", name: "Campaign X", verified: false }] } };
+    const { sections } = calculateCompletion(baseProfile, talentProfile, basePortfolio);
+    const experience = sections.find((s) => s.key === "experience");
+    expect(experience?.done).toBe(true);
+    expect(experience?.weight).toBe(10);
+  });
+
+  it("counts experience as not done when the list is empty or absent", () => {
+    const { sections } = calculateCompletion(baseProfile, { social_links: { experience: [] } }, basePortfolio);
+    expect(sections.find((s) => s.key === "experience")?.done).toBe(false);
+    const { sections: sections2 } = calculateCompletion(baseProfile, {}, basePortfolio);
+    expect(sections2.find((s) => s.key === "experience")?.done).toBe(false);
+  });
+
+  it("every section's weight still sums to 100, so 100% stays reachable", () => {
+    const { sections } = calculateCompletion(baseProfile, {}, basePortfolio);
+    const total = sections.reduce((sum, s) => sum + s.weight, 0);
+    expect(total).toBe(100);
+  });
+});
+
 describe("calculateSectionProgress — ratios grow over the wider key lists", () => {
   it("physical progress reflects 1 of 11 keys (height/weight/hair_color/shoe_size/age/languages/dialect/eye_color/chest/waist/hip)", () => {
     const talentProfile = { social_links: { eye_color: "بني" } };

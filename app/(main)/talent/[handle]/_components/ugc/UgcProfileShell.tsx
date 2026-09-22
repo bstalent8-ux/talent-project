@@ -49,7 +49,6 @@ import UgcHero from "./UgcHero";
 import UgcTabs, { type UgcTab } from "./UgcTabs";
 import UgcVideoPortfolio from "./UgcVideoPortfolio";
 import UgcVideoLightbox from "./UgcVideoLightbox";
-import UgcPerformanceMetrics from "./UgcPerformanceMetrics";
 import UgcContentSpecialties from "./UgcContentSpecialties";
 import UgcPerformanceOverview from "./UgcPerformanceOverview";
 import UgcPreviousShoots from "./UgcPreviousShoots";
@@ -96,8 +95,6 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
 
   const toggleAddon = (key: string) => setCheckedAddons((prev) => ({ ...prev, [key]: !prev[key] }));
   const addonsTotal = addons.reduce((sum, a) => sum + (checkedAddons[a.key] ? a.price : 0), 0);
-
-  const hasPerformance = talent.rating > 0 || talent.reviewCount > 0 || bookingStats.total > 0;
 
   function openMessage() {
     window.dispatchEvent(new CustomEvent("open-chat-widget", {
@@ -215,12 +212,6 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
             stacked
           />
         </div>
-
-        {hasPerformance && (
-          <div style={{ marginBottom: 20 }}>
-            <UgcPerformanceMetrics talent={talent} bookingStats={bookingStats} />
-          </div>
-        )}
 
         {/* One card: brands worked with, then trust / booking / ask actions. */}
         <section style={{ backgroundColor: dark ? "#0D1623" : "#FFFFFF", border: `1px solid ${dark ? "rgba(255,255,255,0.10)" : "#E5E7EB"}`, borderRadius: 18, padding: compact ? 16 : 22, marginBottom: 20, minWidth: 0 }}>

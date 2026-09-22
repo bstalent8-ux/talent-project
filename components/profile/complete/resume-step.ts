@@ -18,6 +18,7 @@ export const STEP_COMPLETION_KEYS: Record<WizardStepKey, string[]> = {
   physical: ["physical"],
   professional: ["categories", "packages", "usage_addons"],
   portfolio: ["portfolio"],
+  experience: ["experience"],
   presence: ["social"],
   availability: ["availability"],
   review: [],

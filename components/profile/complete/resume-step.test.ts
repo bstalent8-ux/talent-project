@@ -61,7 +61,7 @@ describe("resumeStepIndex", () => {
     const data = sections({
       avatar: true, personal: true, bio: true, physical: true,
       categories: true, packages: true, usage_addons: true,
-      portfolio: true, social: true, availability: true,
+      portfolio: true, experience: true, social: true, availability: true,
     });
     expect(resumeStepIndex(steps, data)).toBe(steps.length - 1);
     expect(steps[resumeStepIndex(steps, data)]).toBe("review");

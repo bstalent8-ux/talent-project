@@ -61,9 +61,28 @@ export interface FeaturedCampaign {
 }
 
 export interface ExperienceItem {
+  /** Stable per-entry key for the wizard's add/edit/delete UI. Older admin-entered
+   * rows (pre this field) don't have one — the adapter backfills it on read. */
+  id?: string;
   name: string;
+  /** Legacy free-text year, still read for old entries; new entries leave it empty
+   * in favor of `deliveredAt`. */
   year: string;
+  /** `true` only when an admin has checked this entry — never settable by the
+   * talent (see POST /api/profile/complete's "experience" section, which always
+   * overwrites this from the previously-stored value, ignoring whatever the
+   * client sends). */
   verified: boolean;
+  description?: string | null;
+  /** Free text, e.g. "أسبوعين" / "3 days" — execution time, not a date. */
+  duration?: string | null;
+  /** Free text delivery date or window. */
+  deliveredAt?: string | null;
+  /** What was handed over, e.g. "3 short videos". */
+  deliverable?: string | null;
+  /** The talent's own upload for this entry — takes priority over a name-match
+   * against talent_brands' logo (see findBrandLogo() in UgcPreviousShoots). */
+  logoUrl?: string | null;
 }
 
 export interface Review {

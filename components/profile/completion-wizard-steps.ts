@@ -11,11 +11,12 @@ export type WizardStepKey =
   | "physical"
   | "professional"
   | "portfolio"
+  | "experience"
   | "presence"
   | "availability"
   | "review";
 
 export function getWizardSteps(category?: string | null): WizardStepKey[] {
   void category; // sequence no longer depends on category; kept for call-site stability
-  return ["basic", "physical", "professional", "portfolio", "presence", "availability", "review"];
+  return ["basic", "physical", "professional", "portfolio", "experience", "presence", "availability", "review"];
 }

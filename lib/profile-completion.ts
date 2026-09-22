@@ -36,6 +36,7 @@ export function calculateCompletion(
   const hasUsageAddons = (sl.usage_addons?.length ?? 0) > 0;
   const hasPhysical    = TALENT_PHYSICAL_KEYS
     .some(k => sl[k] && String(sl[k]).trim().length > 0);
+  const hasExperience  = (sl.experience?.length ?? 0) > 0;
 
   const sections: CompletionSection[] = [
     {
@@ -76,7 +77,10 @@ export function calculateCompletion(
     {
       key:    "portfolio",
       label:  { ar: "معرض الأعمال", en: "Portfolio" },
-      weight: 15,
+      // Was 15 — 5 points moved to "experience" below (2026-09-22): a case
+      // study is proof of work too, so the two now share what portfolio media
+      // used to carry alone. Total still sums to 100 (packages lost the other 5).
+      weight: 10,
       href:   "/profile/me",
       done:   portfolioItems?.length > 0,
     },
@@ -90,9 +94,17 @@ export function calculateCompletion(
     {
       key:    "packages",
       label:  { ar: "الباقات والأسعار", en: "Packages & Pricing" },
-      weight: 10,
+      // Was 10 — 5 points moved to "experience" below (2026-09-22).
+      weight: 5,
       href:   "/profile/me",
       done:   hasPackages,
+    },
+    {
+      key:    "experience",
+      label:  { ar: "مشاريع سابقة", en: "Previous projects" },
+      weight: 10,
+      href:   "/profile/me",
+      done:   hasExperience,
     },
     {
       key:    "usage_addons",
@@ -170,5 +182,8 @@ export function calculateSectionProgress(
     ),
 
     packages: ratio(talentProfile?.packages?.length ?? 0, 2),
+
+    // Matches the wizard's own "start with one or two" framing.
+    experience: ratio(sl.experience?.length ?? 0, 2),
   };
 }

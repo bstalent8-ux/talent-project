@@ -175,9 +175,15 @@ export function toExperience(dto: PublicProfileDTO): ExperienceItem[] | null {
   if (!Array.isArray(raw)) return null;
 
   return (raw as Array<Record<string, unknown>>).map((entry) => ({
-    name:     String(entry?.name ?? ""),
-    year:     String(entry?.year ?? ""),
-    verified: Boolean(entry?.verified),
+    id:          entry?.id != null ? String(entry.id) : undefined,
+    name:        String(entry?.name ?? ""),
+    year:        String(entry?.year ?? ""),
+    verified:    Boolean(entry?.verified),
+    description: entry?.description != null ? String(entry.description) : null,
+    duration:    entry?.duration != null ? String(entry.duration) : null,
+    deliveredAt: entry?.deliveredAt != null ? String(entry.deliveredAt) : null,
+    deliverable: entry?.deliverable != null ? String(entry.deliverable) : null,
+    logoUrl: entry?.logoUrl != null ? String(entry.logoUrl) : null,
   }));
 }
 

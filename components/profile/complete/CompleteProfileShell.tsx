@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   User, Briefcase, Ruler, Image as ImageIcon, Link2, CalendarCheck,
-  ClipboardCheck, Check, ChevronLeft, ChevronRight, Info, X, Play,
+  ClipboardCheck, Check, ChevronLeft, ChevronRight, Info, X, Play, History, ShieldCheck,
 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -65,6 +65,7 @@ const TX = {
       physical:      { title: "بياناتك الشخصية", desc: "للموديل: الطول والوزن والمقاسات ولون الشعر والعين. لباقي المواهب: السن واللغات واللهجة." },
       professional: { title: "المعلومات المهنية", desc: "تخصصك، باقاتك، وحقوق الاستخدام الإضافية." },
       portfolio:    { title: "معرض الأعمال", desc: "ارفع صوراً أو مقاطع فيديو تعرض أعمالك." },
+      experience:   { title: "مشاريع سابقة", desc: "أضف مشروع أو اتنين اشتغلتهم قبل كده — بيظهروا على بروفايلك بتفاصيلهم." },
       presence:     { title: "الحضور المهني", desc: "روابط حساباتك — تظهر كروابط فقط، بدون تحقق أو متابعين." },
       availability: { title: "حالة الإتاحة", desc: "هل أنت متاح لاستقبال عروض جديدة الآن؟" },
       review:       { title: "المراجعة النهائية", desc: "راجع كل قسم قبل إنهاء ملفك." },
@@ -72,12 +73,13 @@ const TX = {
     banners: {
       presence: "لا نتحقق من حسابات التواصل الاجتماعي حالياً. الرابط الذي تضيفه يظهر كرابط فقط — وليس علامة \"موثّق\" أو \"متصل\".",
       physical: "المقاسات تظهر في الملف العام لفئة الموديل فقط. السن واللغات واللهجة تساعد البراندات تختار الأنسب لك.",
+      experience: "المشروع بيظهر على طول على بروفايلك. علامة \"موثّق\" لا تظهر إلا لو راجعها أدمن — مش حاجة بتقدر تحطها بنفسك.",
     },
     reviewSections: {
       avatar: "صورة الملف", personal: "الاسم والمدينة", bio: "النبذة الشخصية",
       categories: "التخصص", social: "الحضور المهني", portfolio: "أعمالي",
       physical: "المقاسات", packages: "الباقات والأسعار", usage_addons: "حقوق الاستخدام",
-      availability: "حالة الإتاحة", payment: "بيانات الدفع",
+      experience: "مشاريع سابقة", availability: "حالة الإتاحة", payment: "بيانات الدفع",
     },
     notStarted: "لم يبدأ بعد",
     locked: "يفتح قريباً",
@@ -89,6 +91,13 @@ const TX = {
     pkgName: "اسم الباقة", pkgPrice: "السعر (جنيه)", pkgFeatures: "المميزات",
     pkgPopular: "الأكثر طلباً", addFeature: "إضافة ميزة",
     addonName: "الاسم", addonPrice: "السعر (جنيه)",
+    addProject: "إضافة مشروع",
+    expLogo: "لوجو الشركة", expLogoAdd: "إضافة لوجو", expLogoChange: "تغيير", expLogoRemove: "حذف",
+    expName: "اسم المشروع / البراند", expDescription: "وصف المشروع",
+    expDuration: "مدة التنفيذ", expDeliveredAt: "تاريخ/فترة التسليم", expDeliverable: "اللي اتسلّم",
+    expDescriptionHint: "إيه اللي اتعمل في المشروع؟", expDurationHint: "مثلاً: أسبوعين",
+    expDeliveredAtHint: "مثلاً: يوليو 2026", expDeliverableHint: "مثلاً: 3 فيديوهات قصيرة",
+    expVerified: "موثّق", expEmpty: "لسه معندكش مشاريع مضافة.",
     avail: {
       weeklyTitle: "التقويم",
       weeklyDesc: "اختر تاريخاً واحداً أو أكثر تكون متاحاً خلاله لاستقبال العروض.",
@@ -145,6 +154,7 @@ const TX = {
       physical:      { title: "Personal details", desc: "Models: height, weight, measurements, hair and eye color. Everyone else: age, languages and dialect." },
       professional: { title: "Professional Details", desc: "Your specialty, packages and usage-rights add-ons." },
       portfolio:    { title: "Portfolio", desc: "Upload photos or videos that showcase your work." },
+      experience:   { title: "Previous Projects", desc: "Add one or two projects you've worked on — they show up on your profile with full detail." },
       presence:     { title: "Professional Presence", desc: "Links to your accounts — shown as links only, no follower counts or verification." },
       availability: { title: "Availability", desc: "Are you available to receive new briefs right now?" },
       review:       { title: "Review", desc: "Check every section before you finish." },
@@ -152,12 +162,13 @@ const TX = {
     banners: {
       presence: "We don't verify social accounts yet. A link you add is shown as a link only — not a \"Verified\" or \"Connected\" badge.",
       physical: "Measurements only appear on Model-category public profiles. Age, languages and dialect help brands pick the right fit.",
+      experience: "A project shows up on your profile right away. The \"Verified\" badge only appears once an admin reviews it — you can't set that yourself.",
     },
     reviewSections: {
       avatar: "Profile photo", personal: "Name & city", bio: "Bio",
       categories: "Specialty", social: "Professional Presence", portfolio: "Portfolio",
       physical: "Measurements", packages: "Packages & Pricing", usage_addons: "Usage Rights",
-      availability: "Availability", payment: "Payment info",
+      experience: "Previous Projects", availability: "Availability", payment: "Payment info",
     },
     notStarted: "Not started",
     locked: "Coming soon",
@@ -169,6 +180,13 @@ const TX = {
     pkgName: "Package name", pkgPrice: "Price (EGP)", pkgFeatures: "Features",
     pkgPopular: "Most Popular", addFeature: "Add feature",
     addonName: "Name", addonPrice: "Price (EGP)",
+    addProject: "Add project",
+    expLogo: "Company logo", expLogoAdd: "Add logo", expLogoChange: "Change", expLogoRemove: "Remove",
+    expName: "Project / brand name", expDescription: "Project description",
+    expDuration: "Execution duration", expDeliveredAt: "Delivery date/window", expDeliverable: "What was delivered",
+    expDescriptionHint: "What did the project involve?", expDurationHint: "e.g. 2 weeks",
+    expDeliveredAtHint: "e.g. July 2026", expDeliverableHint: "e.g. 3 short videos",
+    expVerified: "Verified", expEmpty: "No projects added yet.",
     avail: {
       weeklyTitle: "Calendar",
       weeklyDesc: "Select one or more dates you're available to receive new offers.",
@@ -219,7 +237,7 @@ const PRESENCE_FIELDS: { key: string; icon: string }[] = [
 
 const STEP_ICONS: Record<WizardStepKey, React.ComponentType<{ size?: number; color?: string }>> = {
   basic: User, physical: Ruler, professional: Briefcase, portfolio: ImageIcon,
-  presence: Link2, availability: CalendarCheck, review: ClipboardCheck,
+  experience: History, presence: Link2, availability: CalendarCheck, review: ClipboardCheck,
 };
 
 // STEP_COMPLETION_KEYS / resumeStepIndex / stepDone live in ./resume-step.ts
@@ -438,6 +456,43 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const setAddon = (key: string, field: keyof AddonItem, val: any) => setAddons(as => as.map(a => a.key === key ? { ...a, [field]: val } : a));
   const delAddon = (key: string) => setAddons(as => as.filter(a => a.key !== key));
 
+  // Previous Projects. `verified` is read from existing entries (admin-set,
+  // via the admin talent editor) and carried through untouched — the wizard
+  // never exposes a way to set it; the API route re-derives it server-side
+  // from the previously-stored value regardless of what this sends, so this
+  // is defence in depth, not the only guard.
+  type ExpItem = { id: string; name: string; description: string; duration: string; deliveredAt: string; deliverable: string; logoUrl: string | null; verified: boolean };
+  const [experience, setExperience] = useState<ExpItem[]>(() =>
+    (sl.experience ?? []).map((e: any) => ({
+      id: e.id ?? crypto.randomUUID(),
+      name: e.name ?? "",
+      description: e.description ?? "",
+      duration: e.duration ?? "",
+      deliveredAt: e.deliveredAt ?? "",
+      deliverable: e.deliverable ?? "",
+      logoUrl: e.logoUrl ?? null,
+      verified: Boolean(e.verified),
+    })),
+  );
+  const addExp = () => setExperience(xs => [...xs, { id: crypto.randomUUID(), name: "", description: "", duration: "", deliveredAt: "", deliverable: "", logoUrl: null, verified: false }]);
+  const setExp = (id: string, field: keyof ExpItem, val: any) => setExperience(xs => xs.map(x => x.id === id ? { ...x, [field]: val } : x));
+  const delExp = (id: string) => setExperience(xs => xs.filter(x => x.id !== id));
+
+  const [expLogoUploading, setExpLogoUploading] = useState<Record<string, boolean>>({});
+  const handleExpLogoFile = async (id: string, file: File) => {
+    setExpLogoUploading(u => ({ ...u, [id]: true }));
+    try {
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!;
+      const folder = (process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER ?? "talents") + "/experience-logos";
+      const result = await uploadToCloudinary(file, { cloudName, uploadPreset, folder, resourceType: "image" });
+      if (result.ok) setExp(id, "logoUrl", result.url);
+      else console.error("[experience logo upload]", result.errorKind, result.errorMessage ?? "");
+    } finally {
+      setExpLogoUploading(u => ({ ...u, [id]: false }));
+    }
+  };
+
   const patchSection = async (section: string, data: Record<string, any>) => {
     const res = await fetch("/api/profile/complete", {
       method: "PATCH", headers: { "Content-Type": "application/json" },
@@ -534,6 +589,8 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
         if (category) await patchSection("categories", { category });
         if (packages.length) await patchSection("packages", { packages });
         if (addons.length) await patchSection("usage_addons", { usage_addons: addons });
+      } else if (key === "experience") {
+        if (experience.length) await patchSection("experience", { experience });
       } else if (key === "presence") {
         if (Object.values(presence).some((v) => v.trim().length > 2)) await patchSection("social", presence);
       } else if (key === "availability") {
@@ -733,6 +790,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
 
           {currentStep === "presence" && infoBanner(t.banners.presence)}
           {currentStep === "physical" && infoBanner(t.banners.physical)}
+          {currentStep === "experience" && infoBanner(t.banners.experience)}
 
           <div>
             {currentStep === "basic" && (
@@ -940,6 +998,80 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                 {portfolioError && (
                   <p style={{ color: "#EF4444", fontSize: 12.5, margin: "10px 0 0" }} role="alert">{portfolioError}</p>
                 )}
+              </div>
+            )}
+
+            {currentStep === "experience" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {experience.length === 0 && (
+                  <p style={{ color: MUTED, fontSize: 13, margin: 0 }}>{t.expEmpty}</p>
+                )}
+                {experience.map((exp) => (
+                  <div key={exp.id} style={{ border: `1px solid ${BORDER}`, borderRadius: "var(--radius-md)", padding: 14, position: "relative", background: SURFACE }}>
+                    <button onClick={() => delExp(exp.id)} style={{ position: "absolute", top: 10, insetInlineEnd: 10, background: "rgba(223,63,77,0.14)", border: "none", borderRadius: 6, color: RED, cursor: "pointer", padding: "2px 8px", fontSize: 12 }}>✕</button>
+
+                    {exp.verified && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 10, background: "rgba(30,166,114,0.14)", color: GREEN, borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 800 }}>
+                        <ShieldCheck size={12} />{t.expVerified}
+                      </span>
+                    )}
+
+                    <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{
+                        width: 52, height: 52, borderRadius: 10, flexShrink: 0, overflow: "hidden",
+                        background: INP, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {exp.logoUrl ? (
+                          <img src={exp.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                        ) : (
+                          <ImageIcon size={18} color={MUTED} />
+                        )}
+                      </div>
+                      <div>
+                        <label style={{ ...label, marginBottom: 6 }}>{t.expLogo}</label>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <label htmlFor={`exp-logo-${exp.id}`} style={{ color: TEAL, fontSize: 12.5, fontWeight: 700, cursor: expLogoUploading[exp.id] ? "not-allowed" : "pointer", opacity: expLogoUploading[exp.id] ? 0.6 : 1 }}>
+                            {expLogoUploading[exp.id] ? t.uploading : (exp.logoUrl ? t.expLogoChange : t.expLogoAdd)}
+                          </label>
+                          <input id={`exp-logo-${exp.id}`} type="file" accept="image/*" style={{ display: "none" }} disabled={expLogoUploading[exp.id]}
+                            onChange={e => { const f = e.target.files?.[0]; if (f) handleExpLogoFile(exp.id, f); e.target.value = ""; }} />
+                          {exp.logoUrl && (
+                            <button onClick={() => setExp(exp.id, "logoUrl", null)} style={{ background: "none", border: "none", color: RED, fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: 0, fontFamily: "var(--font-sans)" }}>
+                              {t.expLogoRemove}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: 8, maxWidth: "calc(100% - 34px)" }}>
+                      <label style={label}>{t.expName}</label>
+                      <input value={exp.name} onChange={e => setExp(exp.id, "name", e.target.value)} style={inp} />
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={label}>{t.expDescription}</label>
+                      <textarea rows={3} value={exp.description} onChange={e => setExp(exp.id, "description", e.target.value)}
+                        placeholder={t.expDescriptionHint} style={{ ...inp, resize: "vertical", lineHeight: 1.6 }} />
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "repeat(2,minmax(0,1fr))", gap: 8, marginBottom: 8 }}>
+                      <div>
+                        <label style={label}>{t.expDuration}</label>
+                        <input value={exp.duration} onChange={e => setExp(exp.id, "duration", e.target.value)} placeholder={t.expDurationHint} style={inp} />
+                      </div>
+                      <div>
+                        <label style={label}>{t.expDeliveredAt}</label>
+                        <input value={exp.deliveredAt} onChange={e => setExp(exp.id, "deliveredAt", e.target.value)} placeholder={t.expDeliveredAtHint} style={inp} />
+                      </div>
+                    </div>
+                    <div>
+                      <label style={label}>{t.expDeliverable}</label>
+                      <input value={exp.deliverable} onChange={e => setExp(exp.id, "deliverable", e.target.value)} placeholder={t.expDeliverableHint} style={inp} />
+                    </div>
+                  </div>
+                ))}
+                <button onClick={addExp} style={{ padding: "10px 0", background: "transparent", border: `1px dashed ${TEAL}`, borderRadius: "var(--radius-sm)", color: TEAL, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                  + {t.addProject}
+                </button>
               </div>
             )}
 
