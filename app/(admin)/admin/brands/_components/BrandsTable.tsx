@@ -35,6 +35,7 @@ const TX = {
     noData: "لا توجد شركات",
     view: "عرض",
     results: "نتيجة",
+    evidenceCategory: "نوع النشاط", evidenceDoc: "المستند", evidencePhotos: "الصور",
   },
   en: {
     name: "Name", username: "Username", city: "City",
@@ -54,6 +55,7 @@ const TX = {
     noData: "No brands found",
     view: "View",
     results: "results",
+    evidenceCategory: "Business type", evidenceDoc: "Document", evidencePhotos: "Photos",
   },
 };
 
@@ -252,6 +254,36 @@ export default function BrandsTable({ brands, total, page, pageSize, status, sor
           onConfirm={runModal}
           onCancel={() => { setModal(null); setReason(""); }}
         >
+          {modal.type === "approve" && (modal.brand.brandCategory || modal.brand.taxDocumentUrl || modal.brand.verificationPhotos.length > 0) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: showReason ? 14 : 0 }}>
+              {modal.brand.brandCategory && (
+                <div>
+                  <span style={{ color: MUTED, fontSize: 11.5, display: "block", marginBottom: 3 }}>{t.evidenceCategory}</span>
+                  <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{modal.brand.brandCategory}</span>
+                </div>
+              )}
+              {modal.brand.taxDocumentUrl && (
+                <div>
+                  <span style={{ color: MUTED, fontSize: 11.5, display: "block", marginBottom: 3 }}>{t.evidenceDoc}</span>
+                  <a href={modal.brand.taxDocumentUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa", display: "flex", alignItems: "center", gap: 4, fontSize: 12.5 }}>
+                    <ExternalLink size={13} /> {t.view}
+                  </a>
+                </div>
+              )}
+              {modal.brand.verificationPhotos.length > 0 && (
+                <div>
+                  <span style={{ color: MUTED, fontSize: 11.5, display: "block", marginBottom: 6 }}>{t.evidencePhotos}</span>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {modal.brand.verificationPhotos.map((url, i) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", border: `1px solid ${BORDER}`, display: "block" }}>
+                        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           {showReason && (
             <div>
               <label style={{ color: MUTED, fontSize: 13, display: "block", marginBottom: 6 }}>

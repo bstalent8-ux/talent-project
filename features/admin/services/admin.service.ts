@@ -792,7 +792,9 @@ export interface AdminBrand {
   city:            string | null;
   createdAt:       string;
   brandStatus:     string;
+  brandCategory:   string | null;
   taxDocumentUrl:  string | null;
+  verificationPhotos: string[];
   rejectionReason: string | null;
   accountStatus:   string;
   blockReason:     string | null;
@@ -829,24 +831,38 @@ export async function fetchAdminBrandsPage({
   const sortCol   = sort && BRAND_SORTABLE.has(sort) ? sort : "created_at";
   const ascending = sort ? dir !== "desc" : false;
 
-  let query = adminClient
-    .from("profiles")
-    .select(`
-      id, full_name, handle, city, created_at,
-      brand_status, tax_document_url, brand_rejection_reason,
-      is_approved, is_suspended
-    `, { count: "exact" })
-    .eq("role", "brand")
-    .order(sortCol, { ascending, nullsFirst: false })
-    .order("id", { ascending: true })
-    .range(from, to);
+  // brand_category / brand_verification_photos are hand-run migration columns
+  // (supabase/migrations/20260922_brand_verification.sql) — not applied yet
+  // on every environment. Fall back to the pre-migration select on a missing-
+  // column error (42703) instead of the whole page silently going empty.
+  const selectAttempts = [
+    `id, full_name, handle, city, created_at,
+     brand_status, brand_category, tax_document_url, brand_verification_photos, brand_rejection_reason,
+     is_approved, is_suspended`,
+    `id, full_name, handle, city, created_at,
+     brand_status, tax_document_url, brand_rejection_reason,
+     is_approved, is_suspended`,
+  ];
 
-  if (status && status !== "all") query = query.eq("brand_status", status);
+  let data: any[] | null = null;
+  let count: number | null = null;
+  for (const select of selectAttempts) {
+    let query = adminClient
+      .from("profiles")
+      .select(select, { count: "exact" })
+      .eq("role", "brand")
+      .order(sortCol, { ascending, nullsFirst: false })
+      .order("id", { ascending: true })
+      .range(from, to);
+    if (status && status !== "all") query = query.eq("brand_status", status);
 
-  const { data, count, error } = await query;
-  if (error) return { brands: [], total: 0 };
+    const res = await query;
+    if (!res.error) { data = res.data; count = res.count; break; }
+    if (res.error.code !== "42703") return { brands: [], total: 0 };
+  }
+  if (data === null) return { brands: [], total: 0 };
 
-  const brands = (data ?? []).map((b) => {
+  const brands = data.map((b) => {
     const isApproved  = (b as Record<string, unknown>).is_approved  as boolean ?? true;
     const isSuspended = (b as Record<string, unknown>).is_suspended as boolean ?? false;
     const accountStatus = isSuspended ? "suspended" : isApproved ? "active" : "pending";
@@ -856,9 +872,11 @@ export async function fetchAdminBrandsPage({
       handle:          b.handle,
       city:            b.city,
       createdAt:       b.created_at,
-      brandStatus:     (b as Record<string, unknown>).brand_status           as string ?? "approved",
-      taxDocumentUrl:  (b as Record<string, unknown>).tax_document_url       as string ?? null,
-      rejectionReason: (b as Record<string, unknown>).brand_rejection_reason as string ?? null,
+      brandStatus:     (b as Record<string, unknown>).brand_status               as string ?? "approved",
+      brandCategory:   (b as Record<string, unknown>).brand_category             as string ?? null,
+      taxDocumentUrl:  (b as Record<string, unknown>).tax_document_url           as string ?? null,
+      verificationPhotos: ((b as Record<string, unknown>).brand_verification_photos as string[] | null) ?? [],
+      rejectionReason: (b as Record<string, unknown>).brand_rejection_reason     as string ?? null,
       accountStatus,
       blockReason:     null,
     };

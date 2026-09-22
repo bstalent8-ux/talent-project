@@ -11,6 +11,7 @@ import NotificationsSection from "./NotificationsSection";
 import PrivacySection from "./PrivacySection";
 import AppearanceSection from "./AppearanceSection";
 import SupportSection from "./SupportSection";
+import type { MarketplaceCategory } from "@/features/categories/types";
 
 export interface SettingsProfile {
   id: string;
@@ -22,6 +23,10 @@ export interface SettingsProfile {
   avatar_url: string | null;
   phone_number: string | null;
   brand_status: string | null;
+  brand_category: string | null;
+  tax_document_url: string | null;
+  brand_verification_photos: string[] | null;
+  brand_rejection_reason: string | null;
 }
 
 interface Props {
@@ -29,6 +34,7 @@ interface Props {
   email: string | null;
   talentStatus: string | null;
   talentCategory: string | null;
+  brandCategories: MarketplaceCategory[];
 }
 
 type SectionKey = "account" | "profile" | "notifications" | "privacy" | "appearance" | "support";
@@ -38,6 +44,7 @@ export interface SectionProps {
   email: string | null;
   talentStatus: string | null;
   talentCategory: string | null;
+  brandCategories: MarketplaceCategory[];
   dark: boolean;
   lang: "ar" | "en";
   isMobile: boolean;
@@ -65,7 +72,7 @@ const TX = {
   },
 };
 
-export default function SettingsClient({ profile, email, talentStatus, talentCategory }: Props) {
+export default function SettingsClient({ profile, email, talentStatus, talentCategory, brandCategories }: Props) {
   const { dark, lang } = useSite();
   const isMobile = useIsMobile();
   const t = TX[lang];
@@ -121,7 +128,7 @@ export default function SettingsClient({ profile, email, talentStatus, talentCat
     );
   };
 
-  const sectionProps = { profile, email, talentStatus, talentCategory, dark, lang, isMobile };
+  const sectionProps = { profile, email, talentStatus, talentCategory, brandCategories, dark, lang, isMobile };
 
   return (
     <main dir={ar ? "rtl" : "ltr"} style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif", backgroundColor: BG, minHeight: "100vh", paddingBottom: 60 }}>

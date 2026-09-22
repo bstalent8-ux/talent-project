@@ -664,6 +664,31 @@ export async function notifyAdminNewBrandMoment(input: {
   });
 }
 
+/** A brand submitted their business type + verification document/photos via
+ * Settings > Profile. Reuses BRAND_MOMENT_SUBMITTED like every other
+ * "something needs admin review" event (media pending, brand moments) —
+ * no dedicated notification_types row needed. */
+export async function notifyAdminBrandVerificationSubmitted(input: {
+  brandId:   string;
+  brandName: string;
+}): Promise<number> {
+  return notifyRole(["admin"], {
+    type:      "BRAND_MOMENT_SUBMITTED",
+    senderId:  input.brandId,
+    actionUrl: "/admin/brands",
+    ...withI18n({
+      title: {
+        ar: "شركة قدّمت بيانات توثيق",
+        en: "Brand submitted verification details",
+      },
+      message: {
+        ar: `${input.brandName} رفع نوع النشاط ومستند/صور توثيق — محتاج مراجعة قبل الاعتماد.`,
+        en: `${input.brandName} submitted their business type and verification document/photos — needs review before approval.`,
+      },
+    }),
+  });
+}
+
 /** An unauthenticated visitor filed a support ticket (register/login page,
  * or the full Contact Us form). No senderId — the submitter has no session,
  * that's usually why they're filing the ticket. Fans out to admins. */

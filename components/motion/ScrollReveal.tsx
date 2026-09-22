@@ -17,34 +17,69 @@
 // prefers-reduced-motion: renders children with no animation at all.
 
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 
-function useScrollDirection() {
-  const [direction, setDirection] = useState<"up" | "down">("down");
+// ─── Shared scroll-direction store ──────────────────────────────────────────
+// Home mounts 9 ScrollReveal instances (one per landing section). The old
+// version called useScrollDirection() per instance — 9 independent
+// `window.addEventListener("scroll", ...)` handlers, each scheduling its own
+// requestAnimationFrame on EVERY scroll tick (not just on a direction
+// change), all computing the identical global answer. That's 9x the main-
+// thread work per scroll frame for one shared value — the reported "heavy"
+// scroll on /home. One listener now, ref-counted so it detaches once the
+// last ScrollReveal on the page unmounts, broadcasting to every subscriber
+// via useSyncExternalStore (no extra re-render machinery, no Context
+// provider to remember to add).
+let direction: "up" | "down" = "down";
+let lastY = typeof window !== "undefined" ? window.scrollY : 0;
+let ticking = false;
+let subscriberCount = 0;
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    let lastY = window.scrollY;
-    let ticking = false;
-
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
-        if (Math.abs(y - lastY) > 2) {
-          setDirection(y > lastY ? "down" : "up");
-          lastY = y;
-        }
-        ticking = false;
-      });
+function handleScroll() {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    const y = window.scrollY;
+    if (Math.abs(y - lastY) > 2) {
+      const next = y > lastY ? "down" : "up";
+      lastY = y;
+      if (next !== direction) {
+        direction = next;
+        listeners.forEach((l) => l());
+      }
+    } else {
+      lastY = y;
     }
+    ticking = false;
+  });
+}
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+function subscribe(onStoreChange: () => void) {
+  listeners.add(onStoreChange);
+  if (subscriberCount === 0) {
+    lastY = window.scrollY;
+    window.addEventListener("scroll", handleScroll, { passive: true });
+  }
+  subscriberCount++;
+  return () => {
+    listeners.delete(onStoreChange);
+    subscriberCount--;
+    if (subscriberCount === 0) window.removeEventListener("scroll", handleScroll);
+  };
+}
 
+function getSnapshot() {
   return direction;
+}
+
+function getServerSnapshot(): "up" | "down" {
+  return "down";
+}
+
+function useScrollDirection() {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export default function ScrollReveal({
