@@ -16,6 +16,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { useSite } from "@/contexts/SiteContext";
 import { LAYOUT_VARIANTS, LAYOUT_WIDTHS, type LayoutVariant, type LayoutWidth } from "@/features/profiles/validation/config-schemas";
 import { normalizeLayoutArray, type LayoutEntry } from "@/features/profiles/content/layout-entries";
@@ -302,17 +303,14 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
                   </span>
                 </div>
                 {showWidth ? (
-                  <select
+                  <CustomSelect
                     aria-label={tx.width}
                     disabled={saving}
-                    title={tx.width}
                     value={entry.width}
-                    onChange={(event) => setEntryWidth(slot, index, event.target.value as LayoutWidth)}
-                  >
-                    {LAYOUT_WIDTHS.map((width) => (
-                      <option key={width} value={width}>{tx.widthLabel[width]}</option>
-                    ))}
-                  </select>
+                    onChange={(v) => setEntryWidth(slot, index, v as LayoutWidth)}
+                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                    options={LAYOUT_WIDTHS.map((width) => ({ value: width, label: tx.widthLabel[width] }))}
+                  />
                 ) : null}
                 <button
                   aria-label={tx.moveUp}
@@ -385,14 +383,12 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
 
             <div className={styles.field}>
               <label>{tx.variant}</label>
-              <select
+              <CustomSelect
                 value={variant}
-                onChange={(event) => switchVariant(event.target.value as LayoutVariant)}
-              >
-                {LAYOUT_VARIANTS.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
+                onChange={(v) => switchVariant(v as LayoutVariant)}
+                colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                options={LAYOUT_VARIANTS.map((item) => ({ value: item, label: item }))}
+              />
             </div>
 
             <div className={styles.field}>

@@ -20,6 +20,7 @@ import { COMPLETION_THRESHOLDS } from "@/lib/profile-completion";
 import { uploadToCloudinary, cloudinaryUploadErrorText } from "@/lib/cloudinary-client-upload";
 import MediaReviewBadge, { mediaReviewNotice } from "@/components/profile/MediaReviewBadge";
 import { fromDbAvailability } from "@/lib/availability-status";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 /* ─── colour helpers ─── */
 const GREEN = "#00D26A";
@@ -737,10 +738,15 @@ export default function DashboardPage() {
                   {tp && (
                     <div>
                       <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{t.availability}</label>
-                      <select value={form.availability} onChange={e => setF("availability", e.target.value)} style={inp}>
-                        <option value="available">{t.available}</option>
-                        <option value="unavailable">{t.unavailable}</option>
-                      </select>
+                      <CustomSelect
+                        value={form.availability}
+                        onChange={(v) => setF("availability", v)}
+                        colors={{ border: BORDER, card: INP, text: TEXT, muted: MUTED, primary: GREEN, hover: CARD }}
+                        options={[
+                          { value: "available", label: t.available },
+                          { value: "unavailable", label: t.unavailable },
+                        ]}
+                      />
                     </div>
                   )}
                 </>

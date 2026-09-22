@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Plus, Search, Trash2, UserPlus, Users } from "l
 import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { ADMIN_RESOURCE_KEYS, type AdminResourceKey } from "@/lib/auth/admin-resources";
 import type { AdminRole, AdminRoleAuditEntry, AdminSearchResult } from "@/features/admin-roles/types";
 
@@ -414,10 +415,13 @@ function AssignRolePanel({ roles, lang, dark, onAssigned }: { roles: AdminRole[]
 
         {selected && (
           <>
-            <select value={roleChoice} onChange={(e) => setRoleChoice(e.target.value)} style={inputStyle}>
-              <option value="">{t.fullAccess}</option>
-              {roles.map((r) => <option key={r.id} value={r.id}>{lang === "ar" ? r.labelAr : r.labelEn}</option>)}
-            </select>
+            <CustomSelect
+              value={roleChoice}
+              onChange={setRoleChoice}
+              style={inputStyle}
+              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+              options={[{ value: "", label: t.fullAccess }, ...roles.map((r) => ({ value: r.id, label: lang === "ar" ? r.labelAr : r.labelEn }))]}
+            />
             <button
               type="button" disabled={saving} onClick={submitAssign}
               style={{ padding: "8px 16px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
@@ -488,10 +492,13 @@ function CreateAdminPanel({ roles, lang, dark, onCreated }: { roles: AdminRole[]
           onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
         <input required type="password" minLength={8} style={inputStyle} placeholder={t.confirmPasswordPh} value={form.confirmPassword}
           onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} />
-        <select value={form.roleId} onChange={(e) => setForm((f) => ({ ...f, roleId: e.target.value }))} style={inputStyle} title={t.roleForNewAdmin}>
-          <option value="">{t.fullAccess}</option>
-          {roles.map((r) => <option key={r.id} value={r.id}>{lang === "ar" ? r.labelAr : r.labelEn}</option>)}
-        </select>
+        <CustomSelect
+          value={form.roleId}
+          onChange={(v) => setForm((f) => ({ ...f, roleId: v }))}
+          style={inputStyle}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          options={[{ value: "", label: t.fullAccess }, ...roles.map((r) => ({ value: r.id, label: lang === "ar" ? r.labelAr : r.labelEn }))]}
+        />
         <button
           type="submit" disabled={busy}
           style={{ padding: "8px 18px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer", opacity: busy ? 0.7 : 1 }}

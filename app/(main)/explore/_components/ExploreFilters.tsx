@@ -1,6 +1,7 @@
 "use client";
 import { SlidersHorizontal, BadgeCheck, ChevronDown, X } from "lucide-react";
 import type { SortOption } from "./ExploreClient";
+import CustomSelect from "@/components/ui/CustomSelect";
 import styles from "./ExplorePage.module.css";
 
 interface TypeTab { key: string; label_ar: string; label_en: string }
@@ -88,15 +89,12 @@ export default function ExploreFilters({
       {/* Sort — a single select, not 4 stacked radio-style boxes */}
       <div className={styles.filterGroup}>
         <p className={styles.filterLabel}>{t.sort_by}</p>
-        <select
-          className={styles.sortSelect}
+        <CustomSelect
           value={sort}
-          onChange={(e) => onSort(e.target.value as SortOption)}
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.key} value={opt.key}>{ar ? opt.label_ar : opt.label_en}</option>
-          ))}
-        </select>
+          onChange={(v) => onSort(v as SortOption)}
+          aria-label={t.sort_by}
+          options={SORT_OPTIONS.map((opt) => ({ value: opt.key, label: ar ? opt.label_ar : opt.label_en }))}
+        />
       </div>
 
       {/* Talent type — wrapping chips instead of one full-width row per option */}

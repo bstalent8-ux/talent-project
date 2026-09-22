@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Mail, Phone, AtSign, AlertTriangle, Clock, Penci
 import { useSite } from "@/contexts/SiteContext";
 import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import MoveStageModal from "../../_components/MoveStageModal";
 import { LeadCallButton, LeadWhatsAppButton } from "../../_components/LeadContactActions";
 import LeadAssigneePicker from "../../_components/LeadAssigneePicker";
@@ -339,30 +340,38 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
 
         <div style={cardStyle}>
           <span style={labelStyle}>{t.changeStatus}</span>
-          <select
+          <CustomSelect
             value={lead.stage?.id ?? ""}
             disabled={busy}
-            onChange={(e) => changeStage(e.target.value)}
-            style={{ ...inputStyle, marginBottom: 14, cursor: "pointer" }}
-          >
-            {!lead.stage && <option value="">{t.none}</option>}
-            {stages.map((s) => <option key={s.id} value={s.id}>{ar ? s.labelAr : s.labelEn}</option>)}
-          </select>
+            onChange={changeStage}
+            style={{ marginBottom: 14 }}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            options={[
+              ...(!lead.stage ? [{ value: "", label: t.none }] : []),
+              ...stages.map((s) => ({ value: s.id, label: ar ? s.labelAr : s.labelEn })),
+            ]}
+          />
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
             <div>
               <span style={labelStyle}>{t.channel}</span>
-              <select value={lead.channel?.id ?? ""} disabled={busy} onChange={(e) => changeTaxonomy("channelId", e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
-                <option value="">{t.unset}</option>
-                {channels.map((c) => <option key={c.id} value={c.id}>{ar ? c.labelAr : c.labelEn}</option>)}
-              </select>
+              <CustomSelect
+                value={lead.channel?.id ?? ""}
+                disabled={busy}
+                onChange={(v) => changeTaxonomy("channelId", v)}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                options={[{ value: "", label: t.unset }, ...channels.map((c) => ({ value: c.id, label: ar ? c.labelAr : c.labelEn }))]}
+              />
             </div>
             <div>
               <span style={labelStyle}>{t.category}</span>
-              <select value={lead.category?.id ?? ""} disabled={busy} onChange={(e) => changeTaxonomy("categoryId", e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
-                <option value="">{t.unset}</option>
-                {categories.map((c) => <option key={c.id} value={c.id}>{ar ? c.labelAr : c.labelEn}</option>)}
-              </select>
+              <CustomSelect
+                value={lead.category?.id ?? ""}
+                disabled={busy}
+                onChange={(v) => changeTaxonomy("categoryId", v)}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                options={[{ value: "", label: t.unset }, ...categories.map((c) => ({ value: c.id, label: ar ? c.labelAr : c.labelEn }))]}
+              />
             </div>
           </div>
 
@@ -406,9 +415,12 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
             <div>
               <span style={labelStyle}>{t.actionType}</span>
-              <select value={actionType} onChange={(e) => setActionType(e.target.value)} style={inputStyle}>
-                {LEAD_ACTION_TYPES.map((a) => <option key={a} value={a}>{t[ACTION_LABEL_KEY[a]]}</option>)}
-              </select>
+              <CustomSelect
+                value={actionType}
+                onChange={setActionType}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                options={LEAD_ACTION_TYPES.map((a) => ({ value: a, label: t[ACTION_LABEL_KEY[a]] }))}
+              />
             </div>
             <div>
               <span style={labelStyle}>{t.followUp} <span style={{ opacity: 0.7 }}>({t.followUpDefault})</span></span>

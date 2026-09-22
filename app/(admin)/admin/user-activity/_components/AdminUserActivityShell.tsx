@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { USER_EVENT_NAMES, type UserEventName } from "@/features/admin/services/admin.service";
 
 const TX = {
@@ -79,16 +80,16 @@ export default function AdminUserActivityShell({
         </label>
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: MUTED }}>
           {t.event}
-          <select
-            defaultValue={eventName}
-            onChange={(e) => router.push(buildHref(from, to, e.target.value))}
-            style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "6px 10px", color: TEXT, fontSize: 13 }}
-          >
-            <option value="">{t.all}</option>
-            {(USER_EVENT_NAMES as readonly UserEventName[]).map((name) => (
-              <option key={name} value={name}>{t[name]}</option>
-            ))}
-          </select>
+          <CustomSelect
+            size="sm"
+            value={eventName}
+            onChange={(v) => router.push(buildHref(from, to, v))}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            options={[
+              { value: "", label: t.all },
+              ...(USER_EVENT_NAMES as readonly UserEventName[]).map((name) => ({ value: name, label: t[name] })),
+            ]}
+          />
         </label>
       </div>
 

@@ -11,6 +11,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { safeNextPath } from "@/lib/safe-next-path";
 import { deriveHandle } from "@/lib/handle";
 import SupportTicketModal from "@/components/support/SupportTicketModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { trackEvent } from "@/lib/analytics/track";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { getAttribution } from "@/lib/analytics/attribution";
@@ -522,22 +523,19 @@ export default function RegisterPage() {
             <label className={styles.label} htmlFor="register-category">
               {form.role === "talent" ? tx.talentType : tx.brandCategory}
             </label>
-            <select
+            <CustomSelect
               id="register-category"
-              className={`${styles.select} ${fieldErrors.category ? styles.inputInvalid : ""}`}
               value={form.role === "talent" ? form.talentType : form.brandCategory}
-              aria-invalid={Boolean(fieldErrors.category) || undefined}
-              onChange={(event) => {
-                if (form.role === "talent") set("talentType", event.target.value);
-                else set("brandCategory", event.target.value);
+              colors={fieldErrors.category ? { border: "var(--color-error)", card: "var(--bg-card-muted)" } : { card: "var(--bg-card-muted)" }}
+              onChange={(v) => {
+                if (form.role === "talent") set("talentType", v);
+                else set("brandCategory", v);
               }}
-            >
-              {(form.role === "talent" ? TALENT_TYPES : BRAND_CATEGORIES).map((item) => (
-                <option key={item.value} value={item.value}>
-                  {lang === "ar" ? item.ar : item.en}
-                </option>
-              ))}
-            </select>
+              options={(form.role === "talent" ? TALENT_TYPES : BRAND_CATEGORIES).map((item) => ({
+                value: item.value,
+                label: lang === "ar" ? item.ar : item.en,
+              }))}
+            />
             {fieldErrors.category && (
               <p className={styles.fieldError} role="alert">{fieldErrors.category}</p>
             )}

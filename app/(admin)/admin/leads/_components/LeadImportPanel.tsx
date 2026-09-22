@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { ChevronDown, ChevronUp, FileSpreadsheet, Link2, Plus, UserPlus } from "lucide-react";
+import CustomSelect from "@/components/ui/CustomSelect";
 import type { LeadTaxonomyTerm } from "@/features/leads/types";
 
 type Tab = "manual" | "excel" | "sheet";
@@ -237,14 +238,20 @@ export default function LeadImportPanel({ channels, categories }: { channels: Le
                   onChange={(e) => setManual((m) => ({ ...m, email: e.target.value }))} />
                 <input style={inputStyle} placeholder={t.handle} value={manual.socialHandle}
                   onChange={(e) => setManual((m) => ({ ...m, socialHandle: e.target.value }))} />
-                <select style={inputStyle} value={manual.channelId} onChange={(e) => setManual((m) => ({ ...m, channelId: e.target.value }))}>
-                  <option value="">{t.channelPh}</option>
-                  {channels.map((c) => <option key={c.id} value={c.id}>{lang === "ar" ? c.labelAr : c.labelEn}</option>)}
-                </select>
-                <select style={inputStyle} value={manual.categoryId} onChange={(e) => setManual((m) => ({ ...m, categoryId: e.target.value }))}>
-                  <option value="">{t.categoryPh}</option>
-                  {categories.map((c) => <option key={c.id} value={c.id}>{lang === "ar" ? c.labelAr : c.labelEn}</option>)}
-                </select>
+                <CustomSelect
+                  style={inputStyle}
+                  value={manual.channelId}
+                  onChange={(v) => setManual((m) => ({ ...m, channelId: v }))}
+                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                  options={[{ value: "", label: t.channelPh }, ...channels.map((c) => ({ value: c.id, label: lang === "ar" ? c.labelAr : c.labelEn }))]}
+                />
+                <CustomSelect
+                  style={inputStyle}
+                  value={manual.categoryId}
+                  onChange={(v) => setManual((m) => ({ ...m, categoryId: v }))}
+                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                  options={[{ value: "", label: t.categoryPh }, ...categories.map((c) => ({ value: c.id, label: lang === "ar" ? c.labelAr : c.labelEn }))]}
+                />
               </div>
               <input style={inputStyle} placeholder={t.note} value={manual.note}
                 onChange={(e) => setManual((m) => ({ ...m, note: e.target.value }))} />

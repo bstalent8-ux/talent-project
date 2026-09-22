@@ -16,6 +16,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { useSite } from "@/contexts/SiteContext";
 import { FIELD_TYPES } from "@/features/profiles/validation/config-schemas";
 import type { RawProfileField, RawProfileSection, RawProfileType } from "@/features/profiles/types/raw";
@@ -458,23 +459,21 @@ export default function FieldsClient({ profileType, section, initialFields }: Pr
                 </div>
                 <div className={styles.field}>
                   <label>{tx.fieldType}</label>
-                  <select
+                  <CustomSelect
                     disabled={lockedByValues}
                     value={form.field_type}
-                    onChange={(event) =>
+                    onChange={(value) =>
                       setForm((current) => ({
                         ...current,
-                        field_type: event.target.value,
+                        field_type: value,
                         // Constraints are per-type; carrying them across would
                         // send keys the strict API schema rejects.
                         validation: {},
                       }))
                     }
-                  >
-                    {FIELD_TYPES.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
+                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                    options={FIELD_TYPES.map((type) => ({ value: type, label: type }))}
+                  />
                 </div>
               </div>
 

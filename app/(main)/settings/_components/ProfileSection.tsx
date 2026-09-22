@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Eye, Pencil, ShieldCheck, Clock3, XCircle, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
+import CustomSelect from "@/components/ui/CustomSelect";
 import type { SectionProps } from "./SettingsClient";
 
 const TX = {
@@ -209,13 +210,16 @@ export default function ProfileSection({ profile, talentStatus, talentCategory, 
           <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 420 }}>
             <div>
               <label style={{ color: MUTED, fontSize: 12, display: "block", marginBottom: 5 }}>{t.type}</label>
-              <select value={vCategory} onChange={(e) => setVCategory(e.target.value)} style={{ ...inp, cursor: "pointer" }}>
-                <option value="" disabled>{t.typeSelect}</option>
-                {brandCategories.map((c) => (
-                  <option key={c.id} value={c.id}>{lang === "ar" ? c.label_ar : c.label_en}</option>
-                ))}
-                <option value="other">{t.typeOther}</option>
-              </select>
+              <CustomSelect
+                value={vCategory}
+                onChange={setVCategory}
+                placeholder={t.typeSelect}
+                colors={{ border: BORDER, card: INP, text: TEXT, muted: MUTED, primary: GREEN, hover: SURFACE }}
+                options={[
+                  ...brandCategories.map((c) => ({ value: c.id, label: lang === "ar" ? c.label_ar : c.label_en })),
+                  { value: "other", label: t.typeOther },
+                ]}
+              />
             </div>
 
             {vCategory === "other" && (

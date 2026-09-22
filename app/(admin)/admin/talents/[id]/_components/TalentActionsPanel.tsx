@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import { Clock, Phone, MessageSquare, Mail, Users, StickyNote, Pencil, Trash2, History as HistoryIcon, PlusCircle, MinusCircle } from "lucide-react";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { TALENT_ACTION_TYPES, type TalentAction, type TalentActionType, type TalentActionAuditEntry } from "@/features/admin/types";
 
 const TX = {
@@ -257,9 +258,13 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
             <div>
               <span style={labelStyle}>{t.actionType}</span>
-              <select value={actionType} onChange={(e) => setActionType(e.target.value as TalentActionType)} style={inp}>
-                {TALENT_ACTION_TYPES.map((a) => <option key={a} value={a}>{t.types[a]}</option>)}
-              </select>
+              <CustomSelect
+                value={actionType}
+                onChange={(v) => setActionType(v as TalentActionType)}
+                style={inp}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                options={TALENT_ACTION_TYPES.map((a) => ({ value: a, label: t.types[a] }))}
+              />
             </div>
             <div>
               <span style={labelStyle}>{t.followUp} <span style={{ opacity: 0.7 }}>{t.followUpHint}</span></span>
@@ -306,13 +311,13 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
                       <div>
                         <span style={labelStyle}>{t.actionType}</span>
-                        <select
+                        <CustomSelect
                           value={editForm.actionType}
-                          onChange={(e) => setEditForm((f) => ({ ...f, actionType: e.target.value as TalentActionType }))}
+                          onChange={(v) => setEditForm((f) => ({ ...f, actionType: v as TalentActionType }))}
                           style={inp}
-                        >
-                          {TALENT_ACTION_TYPES.map((a) => <option key={a} value={a}>{t.types[a]}</option>)}
-                        </select>
+                          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                          options={TALENT_ACTION_TYPES.map((a) => ({ value: a, label: t.types[a] }))}
+                        />
                       </div>
                       <div>
                         <span style={labelStyle}>{t.followUp}</span>

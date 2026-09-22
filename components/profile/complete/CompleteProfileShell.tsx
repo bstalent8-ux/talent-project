@@ -29,6 +29,7 @@ import {
 } from "@/lib/availability-schedule";
 import { resumeStepIndex, stepDone, STEP_COMPLETION_KEYS } from "@/components/profile/complete/resume-step";
 import type { CompletionDTO } from "@/features/profiles/types/dto";
+import CustomSelect from "@/components/ui/CustomSelect";
 import AvatarCropModal from "@/components/profile/AvatarCropModal";
 
 /* ─── translations ───────────────────────────────────────── */
@@ -1234,10 +1235,15 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                         </div>
                         <div>
                           <label style={label}>{t.avail.exceptionType}</label>
-                          <select value={newExceptionType} onChange={(e) => setNewExceptionType(e.target.value as ExceptionType)} style={{ ...inp, width: "auto" }}>
-                            <option value="unavailable">{t.avail.exceptionUnavailable}</option>
-                            <option value="custom">{t.avail.exceptionCustom}</option>
-                          </select>
+                          <CustomSelect
+                            value={newExceptionType}
+                            onChange={(v) => setNewExceptionType(v as ExceptionType)}
+                            style={{ width: "auto", minWidth: 160 }}
+                            options={[
+                              { value: "unavailable", label: t.avail.exceptionUnavailable },
+                              { value: "custom", label: t.avail.exceptionCustom },
+                            ]}
+                          />
                         </div>
                         {newExceptionType === "custom" && (
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1256,16 +1262,13 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                     <div>
                       <p style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 4px" }}>{t.avail.timezoneTitle}</p>
                       <p style={{ color: MUTED, fontSize: 12, lineHeight: 1.6, margin: "0 0 10px" }}>{t.avail.timezoneDesc}</p>
-                      <select
+                      <CustomSelect
                         value={schedule.timezone ?? ""}
-                        onChange={(e) => setSchedule((s) => ({ ...s, timezone: e.target.value || null }))}
-                        style={{ ...inp, direction: "ltr" }}
-                      >
-                        {!schedule.timezone && <option value="">—</option>}
-                        {timezoneOptions.map((tz) => (
-                          <option key={tz} value={tz}>{tz}</option>
-                        ))}
-                      </select>
+                        onChange={(v) => setSchedule((s) => ({ ...s, timezone: v || null }))}
+                        placeholder="—"
+                        style={{ direction: "ltr" }}
+                        options={timezoneOptions.map((tz) => ({ value: tz, label: tz }))}
+                      />
                     </div>
                   </div>
                 )}

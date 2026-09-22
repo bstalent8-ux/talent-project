@@ -14,6 +14,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { categoryMatchRank, MATCH_RANK_NONE } from "@/features/categories/matching";
 import DirectBriefModal from "@/components/DirectBriefModal";
 import { trackEvent } from "@/lib/analytics/track";
+import CustomSelect from "@/components/ui/CustomSelect";
 import styles from "./ExplorePage.module.css";
 
 // 8 = ~2 rows at the grid's primary 4-column desktop width (see
@@ -283,17 +284,17 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
               </button>
               <div className={styles.sortWrap}>
                 <label htmlFor="explore-sort">{ar ? "ترتيب" : "Sort"}</label>
-                <select
+                <CustomSelect
                   id="explore-sort"
-                  className={styles.sortSelect}
                   value={sort}
-                  onChange={(e) => setSort(e.target.value as SortOption)}
-                >
-                  <option value="rating">{ar ? "الأعلى تقييماً" : "Top rated"}</option>
-                  <option value="price_asc">{ar ? "الأرخص أولاً" : "Price: low to high"}</option>
-                  <option value="price_desc">{ar ? "الأعلى سعراً" : "Price: high to low"}</option>
-                  <option value="newest">{ar ? "الأحدث" : "Newest"}</option>
-                </select>
+                  onChange={(v) => setSort(v as SortOption)}
+                  options={[
+                    { value: "rating", label: ar ? "الأعلى تقييماً" : "Top rated" },
+                    { value: "price_asc", label: ar ? "الأرخص أولاً" : "Price: low to high" },
+                    { value: "price_desc", label: ar ? "الأعلى سعراً" : "Price: high to low" },
+                    { value: "newest", label: ar ? "الأحدث" : "Newest" },
+                  ]}
+                />
               </div>
             </div>
           </div>

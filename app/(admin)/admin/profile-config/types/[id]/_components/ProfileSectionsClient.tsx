@@ -13,6 +13,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { useSite } from "@/contexts/SiteContext";
 import {
   SECTION_RENDERER_KEYS,
@@ -453,28 +454,23 @@ export default function ProfileSectionsClient({ profileType, initialSections }: 
               <div className={styles.gridTwo}>
                 <div className={styles.field}>
                   <label>{tx.visibility}</label>
-                  <select
+                  <CustomSelect
                     value={form.visibility}
-                    onChange={(event) => setForm((current) => ({ ...current, visibility: event.target.value }))}
-                  >
-                    {SECTION_VISIBILITY.map((value) => (
-                      <option key={value} value={value}>{value}</option>
-                    ))}
-                  </select>
+                    onChange={(value) => setForm((current) => ({ ...current, visibility: value }))}
+                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                    options={SECTION_VISIBILITY.map((value) => ({ value, label: value }))}
+                  />
                 </div>
                 <div className={styles.field}>
                   <label>{tx.renderer}</label>
                   {/* Whitelist select, never free text — render_component is a key
                       into a compile-time React registry. */}
-                  <select
+                  <CustomSelect
                     value={form.render_component}
-                    onChange={(event) => setForm((current) => ({ ...current, render_component: event.target.value }))}
-                  >
-                    <option value="">{tx.none}</option>
-                    {SECTION_RENDERER_KEYS.map((value) => (
-                      <option key={value} value={value}>{value}</option>
-                    ))}
-                  </select>
+                    onChange={(value) => setForm((current) => ({ ...current, render_component: value }))}
+                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                    options={[{ value: "", label: tx.none }, ...SECTION_RENDERER_KEYS.map((value) => ({ value, label: value }))]}
+                  />
                 </div>
               </div>
 

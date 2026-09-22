@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { Save, ArrowLeft, Plus, Trash2, Eye } from "lucide-react";
 import TalentActionsPanel from "./TalentActionsPanel";
 import TalentBrandsPanel from "./TalentBrandsPanel";
@@ -532,11 +533,13 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
           </div>
           <div>
             {label(t.availability)}
-            <select style={{ ...inp }} value={form.availability} onChange={e => set("availability", e.target.value)}>
-              {Object.entries(t.availableOpts).map(([v, l]) => (
-                <option key={v} value={v}>{l}</option>
-              ))}
-            </select>
+            <CustomSelect
+              style={{ ...inp }}
+              value={form.availability}
+              onChange={(v) => set("availability", v)}
+              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+              options={Object.entries(t.availableOpts).map(([v, l]) => ({ value: v, label: l }))}
+            />
           </div>
         </div>
       ))}
@@ -600,11 +603,13 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
               </div>
               <div>
                 {label(t.packageIcon)}
-                <select style={inp} value={pkg.icon} onChange={e => updatePackage(pkg.id, { icon: e.target.value })}>
-                  {PACKAGE_ICON_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>{t.packageIconLabels[opt]}</option>
-                  ))}
-                </select>
+                <CustomSelect
+                  style={inp}
+                  value={pkg.icon}
+                  onChange={(v) => updatePackage(pkg.id, { icon: v })}
+                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                  options={PACKAGE_ICON_OPTIONS.map((opt) => ({ value: opt, label: t.packageIconLabels[opt] }))}
+                />
               </div>
               <div>
                 {label(t.packageFeatures)}

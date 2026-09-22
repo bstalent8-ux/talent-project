@@ -5,6 +5,7 @@ import { Check, Eye, Loader2, Send, Users, X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
 import EmptyState from "@/components/admin/EmptyState";
+import CustomSelect from "@/components/ui/CustomSelect";
 import {
   NOTIFICATION_PRIORITIES,
   NOTIFICATION_TYPES,
@@ -533,30 +534,27 @@ export default function AdminNotificationsClient() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, marginBottom: 14 }}>
             <div>
               <span style={label}>{t.type}</span>
-              <select
+              <CustomSelect
                 value={type}
-                onChange={(e) => setType(e.target.value as NotificationType)}
+                onChange={(v) => setType(v as NotificationType)}
                 style={field}
-              >
-                {NOTIFICATION_TYPES.map((code) => (
-                  <option key={code} value={code}>
-                    {TYPE_ICON[code]} {ar ? TYPE_LABEL[code].ar : TYPE_LABEL[code].en}
-                  </option>
-                ))}
-              </select>
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                options={NOTIFICATION_TYPES.map((code) => ({
+                  value: code,
+                  label: `${TYPE_ICON[code]} ${ar ? TYPE_LABEL[code].ar : TYPE_LABEL[code].en}`,
+                }))}
+              />
             </div>
 
             <div>
               <span style={label}>{t.priority}</span>
-              <select
+              <CustomSelect
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as NotificationPriority)}
+                onChange={(v) => setPriority(v as NotificationPriority)}
                 style={field}
-              >
-                {NOTIFICATION_PRIORITIES.map((p) => (
-                  <option key={p} value={p}>{t[p]}</option>
-                ))}
-              </select>
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                options={NOTIFICATION_PRIORITIES.map((p) => ({ value: p, label: t[p] }))}
+              />
             </div>
           </div>
 

@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { ADMIN_LIGHT } from "@/components/admin/adminLightTheme";
 import { slugify } from "@/lib/handle";
 import { BLOG_CATEGORIES, type BlogPostRow, type BlogCategory, type BlogLang } from "@/features/blog/types";
@@ -147,9 +148,12 @@ export default function BlogForm({ initialPost }: { initialPost?: BlogPostRow })
           </div>
           <div style={fieldWrap}>
             <label style={labelStyle}>{t.categoryLabel}</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value as BlogCategory)} style={{ ...inputStyle, cursor: "pointer" }}>
-              {BLOG_CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_LABEL[c][lang]}</option>)}
-            </select>
+            <CustomSelect
+              value={category}
+              onChange={(v) => setCategory(v as BlogCategory)}
+              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+              options={BLOG_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABEL[c][lang] }))}
+            />
           </div>
         </div>
 
@@ -167,10 +171,12 @@ export default function BlogForm({ initialPost }: { initialPost?: BlogPostRow })
           </div>
           <div style={fieldWrap}>
             <label style={labelStyle}>{t.langLabel}</label>
-            <select value={postLang} onChange={(e) => setPostLang(e.target.value as BlogLang)} style={{ ...inputStyle, cursor: "pointer" }}>
-              <option value="ar">العربية</option>
-              <option value="en">English</option>
-            </select>
+            <CustomSelect
+              value={postLang}
+              onChange={(v) => setPostLang(v as BlogLang)}
+              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+              options={[{ value: "ar", label: "العربية" }, { value: "en", label: "English" }]}
+            />
           </div>
         </div>
 
@@ -247,10 +253,13 @@ export default function BlogForm({ initialPost }: { initialPost?: BlogPostRow })
 
         <div style={fieldWrap}>
           <label style={labelStyle}>{t.statusLabel}</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value as "draft" | "published")} style={{ ...inputStyle, cursor: "pointer", maxWidth: 200 }}>
-            <option value="draft">{t.draft}</option>
-            <option value="published">{t.published}</option>
-          </select>
+          <CustomSelect
+            value={status}
+            onChange={(v) => setStatus(v as "draft" | "published")}
+            style={{ maxWidth: 200 }}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            options={[{ value: "draft", label: t.draft }, { value: "published", label: t.published }]}
+          />
         </div>
 
         {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}

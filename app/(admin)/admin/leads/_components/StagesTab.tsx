@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import { STAGE_FIELD_TYPES, type LeadStage, type StageFieldType } from "@/features/leads/types";
 
@@ -180,9 +181,13 @@ export default function StagesTab({ stages, onChanged }: { stages: LeadStage[]; 
                       onChange={(e) => setNewField((f) => ({ ...f, labelAr: e.target.value }))} />
                     <input required style={inputStyle} placeholder={t.questionLabelEnPh} value={newField.labelEn}
                       onChange={(e) => setNewField((f) => ({ ...f, labelEn: e.target.value }))} />
-                    <select value={newField.fieldType} onChange={(e) => setNewField((f) => ({ ...f, fieldType: e.target.value as StageFieldType }))} style={inputStyle}>
-                      {STAGE_FIELD_TYPES.map((ft) => <option key={ft} value={ft}>{t[FIELD_TYPE_LABEL_KEY[ft]]}</option>)}
-                    </select>
+                    <CustomSelect
+                      value={newField.fieldType}
+                      onChange={(v) => setNewField((f) => ({ ...f, fieldType: v as StageFieldType }))}
+                      style={inputStyle}
+                      colors={{ border: BORDER, card: dark ? "#0D1623" : "#FFFFFF", text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                      options={STAGE_FIELD_TYPES.map((ft) => ({ value: ft, label: t[FIELD_TYPE_LABEL_KEY[ft]] }))}
+                    />
                     {newField.fieldType === "select" && (
                       <input style={inputStyle} placeholder={t.optionsPh} value={newField.optionsRaw}
                         onChange={(e) => setNewField((f) => ({ ...f, optionsRaw: e.target.value }))} />

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import EmptyState from "@/components/admin/EmptyState";
 import AdminPagination from "@/components/admin/AdminPagination";
+import CustomSelect from "@/components/ui/CustomSelect";
 import type { AdminNotificationLogRow } from "@/features/admin/services/admin.service";
 import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 import { TYPE_LABEL, TYPE_ICON, readI18n } from "@/lib/notifications/templates";
@@ -78,19 +79,17 @@ export default function NotificationLogView({ notifications, total, page, pageSi
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
         <span style={{ color: MUTED, fontSize: 12 }}>{total} {t.total}</span>
-        <select
+        <CustomSelect
+          size="sm"
           value={type ?? ""}
-          onChange={(e) => onTypeChange(e.target.value)}
-          style={{
-            borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD,
-            color: TEXT, padding: "8px 10px", fontSize: 12.5, outline: "none", fontFamily: "inherit",
-          }}
-        >
-          <option value="">{t.allTypes}</option>
-          {NOTIFICATION_TYPES.map((nt) => (
-            <option key={nt} value={nt}>{TYPE_LABEL[nt]?.[lang] ?? nt}</option>
-          ))}
-        </select>
+          onChange={onTypeChange}
+          style={{ width: "auto", minWidth: 160 }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          options={[
+            { value: "", label: t.allTypes },
+            ...NOTIFICATION_TYPES.map((nt) => ({ value: nt, label: TYPE_LABEL[nt]?.[lang] ?? nt })),
+          ]}
+        />
       </div>
 
       <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>

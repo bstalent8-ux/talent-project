@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Mail, Phone, AtSign, AlertTriangle, Clock, Penci
 import { useSite } from "@/contexts/SiteContext";
 import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import CandidateMoveStageModal from "../../_components/CandidateMoveStageModal";
 import { LeadCallButton, LeadWhatsAppButton } from "../../../leads/_components/LeadContactActions";
 import LeadAssigneePicker from "../../../leads/_components/LeadAssigneePicker";
@@ -343,22 +344,27 @@ export default function CandidateDetailView({ candidate, stages, categories }: P
 
         <div style={cardStyle}>
           <span style={labelStyle}>{t.changeStatus}</span>
-          <select
+          <CustomSelect
             value={candidate.stage?.id ?? ""}
             disabled={busy}
-            onChange={(e) => changeStage(e.target.value)}
-            style={{ ...inputStyle, marginBottom: 14, cursor: "pointer" }}
-          >
-            {!candidate.stage && <option value="">{t.none}</option>}
-            {stages.map((s) => <option key={s.id} value={s.id}>{ar ? s.labelAr : s.labelEn}</option>)}
-          </select>
+            onChange={changeStage}
+            style={{ marginBottom: 14 }}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            options={[
+              ...(!candidate.stage ? [{ value: "", label: t.none }] : []),
+              ...stages.map((s) => ({ value: s.id, label: ar ? s.labelAr : s.labelEn })),
+            ]}
+          />
 
           <div style={{ marginBottom: 14 }}>
             <span style={labelStyle}>{t.category}</span>
-            <select value={candidate.category?.id ?? ""} disabled={busy} onChange={(e) => changeFields({ categoryId: e.target.value || null })} style={{ ...inputStyle, cursor: "pointer" }}>
-              <option value="">{t.unset}</option>
-              {categories.map((c) => <option key={c.id} value={c.id}>{ar ? c.labelAr : c.labelEn}</option>)}
-            </select>
+            <CustomSelect
+              value={candidate.category?.id ?? ""}
+              disabled={busy}
+              onChange={(v) => changeFields({ categoryId: v || null })}
+              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+              options={[{ value: "", label: t.unset }, ...categories.map((c) => ({ value: c.id, label: ar ? c.labelAr : c.labelEn }))]}
+            />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5 }}>
@@ -401,9 +407,12 @@ export default function CandidateDetailView({ candidate, stages, categories }: P
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
             <div>
               <span style={labelStyle}>{t.actionType}</span>
-              <select value={actionType} onChange={(e) => setActionType(e.target.value)} style={inputStyle}>
-                {CANDIDATE_ACTION_TYPES.map((a) => <option key={a} value={a}>{t[ACTION_LABEL_KEY[a]]}</option>)}
-              </select>
+              <CustomSelect
+                value={actionType}
+                onChange={setActionType}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                options={CANDIDATE_ACTION_TYPES.map((a) => ({ value: a, label: t[ACTION_LABEL_KEY[a]] }))}
+              />
             </div>
             <div>
               <span style={labelStyle}>{t.followUp} <span style={{ opacity: 0.7 }}>({t.followUpDefault})</span></span>

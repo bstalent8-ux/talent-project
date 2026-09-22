@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Columns3, List, Settings2 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import CandidateSettingsPanel from "./CandidateSettingsPanel";
 import CandidateMoveStageModal from "./CandidateMoveStageModal";
 import TodayDueButton from "../../leads/_components/TodayDueButton";
@@ -175,34 +176,43 @@ export default function AdminCandidatesShell({ stage, view, stages, categories, 
       </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-        <select
+        <CustomSelect
+          size="sm"
           value={assignedTo ?? ""}
-          onChange={(e) => router.push(hrefFor({ assignedTo: e.target.value || undefined }))}
-          style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: assignedTo ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
-        >
-          <option value="">{t.filterAssignee}</option>
-          {assignees.map((a) => <option key={a.id} value={a.id}>{a.fullName ?? a.handle}</option>)}
-        </select>
-        <select
+          onChange={(v) => router.push(hrefFor({ assignedTo: v || undefined }))}
+          style={{ width: "auto", minWidth: 150 }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          options={[
+            { value: "", label: t.filterAssignee },
+            ...assignees.map((a) => ({ value: a.id, label: a.fullName ?? a.handle })),
+          ]}
+        />
+        <CustomSelect
+          size="sm"
           value={category ?? ""}
-          onChange={(e) => router.push(hrefFor({ category: e.target.value || undefined }))}
-          style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: category ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
-        >
-          <option value="">{t.filterCategory}</option>
-          {categories.map((c) => <option key={c.id} value={c.key}>{lang === "ar" ? c.labelAr : c.labelEn}</option>)}
-        </select>
+          onChange={(v) => router.push(hrefFor({ category: v || undefined }))}
+          style={{ width: "auto", minWidth: 150 }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          options={[
+            { value: "", label: t.filterCategory },
+            ...categories.map((c) => ({ value: c.key, label: lang === "ar" ? c.labelAr : c.labelEn })),
+          ]}
+        />
 
         {/* Who logged an action + on what day — narrows the board/table to
          *  candidates with a matching candidate_actions row. Separate from
          *  the Assignee select above ("who owns the record"). */}
-        <select
+        <CustomSelect
+          size="sm"
           value={actionPersonId ?? ""}
-          onChange={(e) => router.push(hrefFor({ actionPersonId: e.target.value || undefined }))}
-          style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: actionPersonId ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
-        >
-          <option value="">{t.filterActionPerson}</option>
-          {assignees.map((a) => <option key={a.id} value={a.id}>{a.fullName ?? a.handle}</option>)}
-        </select>
+          onChange={(v) => router.push(hrefFor({ actionPersonId: v || undefined }))}
+          style={{ width: "auto", minWidth: 150 }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          options={[
+            { value: "", label: t.filterActionPerson },
+            ...assignees.map((a) => ({ value: a.id, label: a.fullName ?? a.handle })),
+          ]}
+        />
         <input
           type="date"
           value={actionDate ?? ""}

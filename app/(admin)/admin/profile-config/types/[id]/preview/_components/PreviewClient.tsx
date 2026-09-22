@@ -14,6 +14,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { useSite } from "@/contexts/SiteContext";
 import { DynamicProfileSections } from "@/components/profile/dynamic/DynamicSectionRenderer";
 import type { DynamicLang } from "@/components/profile/dynamic/registry";
@@ -116,22 +117,22 @@ export default function PreviewClient({
           <div className={styles.form}>
             <div className={styles.field}>
               <label>{tx.profileType}</label>
-              <select value={profileTypeId} onChange={(event) => switchType(event.target.value)}>
-                {types.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {(ar ? type.name_ar : type.name_en) ?? type.name} ({type.slug})
-                  </option>
-                ))}
-              </select>
+              <CustomSelect
+                value={profileTypeId}
+                onChange={switchType}
+                colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                options={types.map((type) => ({ value: type.id, label: `${(ar ? type.name_ar : type.name_en) ?? type.name} (${type.slug})` }))}
+              />
             </div>
 
             <div className={styles.field}>
               <label>{tx.variant}</label>
-              <select value={variant} onChange={(event) => switchVariant(event.target.value)}>
-                {LAYOUT_VARIANTS.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
+              <CustomSelect
+                value={variant}
+                onChange={switchVariant}
+                colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                options={LAYOUT_VARIANTS.map((item) => ({ value: item, label: item }))}
+              />
             </div>
 
             <div className={styles.field}>

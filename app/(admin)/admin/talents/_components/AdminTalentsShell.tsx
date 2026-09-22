@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import type { AdminTalentFilterOptions, TalentScoreOp } from "@/features/admin/services/admin.service";
 
 const STATUS_FILTERS = ["all", "pending", "approved", "rejected", "suspended"] as const;
@@ -134,44 +135,64 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
         </div>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <select
+          <CustomSelect
+            size="sm"
             value={category ?? ""}
-            onChange={(e) => router.push(hrefFor({ category: e.target.value || undefined }))}
-            style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: category ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
-          >
-            <option value="">{t.filterCategory}</option>
-            <option value="ugc">{t.categoryUgc}</option>
-            <option value="model">{t.categoryModel}</option>
-            <option value="others">{t.categoryOthers}</option>
-          </select>
-          <select
+            onChange={(v) => router.push(hrefFor({ category: v || undefined }))}
+            style={{ width: "auto", minWidth: 140 }}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            options={[
+              { value: "", label: t.filterCategory },
+              { value: "ugc", label: t.categoryUgc },
+              { value: "model", label: t.categoryModel },
+              { value: "others", label: t.categoryOthers },
+            ]}
+          />
+          <CustomSelect
+            size="sm"
             value={city ?? ""}
-            onChange={(e) => router.push(hrefFor({ city: e.target.value || undefined }))}
-            style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: CARD, color: city ? TEXT : MUTED, fontSize: 12.5, cursor: "pointer" }}
-          >
-            <option value="">{t.filterCity}</option>
-            {filterOptions.cities.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select
+            onChange={(v) => router.push(hrefFor({ city: v || undefined }))}
+            style={{ width: "auto", minWidth: 140 }}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            options={[
+              { value: "", label: t.filterCity },
+              ...filterOptions.cities.map((c) => ({ value: c, label: c })),
+            ]}
+          />
+          <CustomSelect
+            size="sm"
             value={duplicate}
-            onChange={(e) => router.push(hrefFor({ duplicate: e.target.value }))}
-            style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${duplicate !== "all" ? "#F4B740" : BORDER}`, backgroundColor: CARD, color: duplicate !== "all" ? "#F4B740" : MUTED, fontSize: 12.5, cursor: "pointer", fontWeight: duplicate !== "all" ? 700 : 400 }}
-          >
-            <option value="all">{t.duplicateAll}</option>
-            <option value="with">{t.duplicateWith}</option>
-            <option value="without">{t.duplicateWithout}</option>
-          </select>
+            onChange={(v) => router.push(hrefFor({ duplicate: v }))}
+            style={{ width: "auto", minWidth: 150 }}
+            colors={
+              duplicate !== "all"
+                ? { border: "#F4B740", card: CARD, text: "#F4B740", muted: MUTED, primary: "#F4B740", hover: dark ? "#131F2E" : "#F1F5F9" }
+                : { border: BORDER, card: CARD, text: MUTED, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }
+            }
+            options={[
+              { value: "all", label: t.duplicateAll },
+              { value: "with", label: t.duplicateWith },
+              { value: "without", label: t.duplicateWithout },
+            ]}
+          />
           <div style={{ display: "flex", gap: 4 }}>
-            <select
+            <CustomSelect
+              size="sm"
               value={opDraft}
-              onChange={(e) => onScoreOpChange(e.target.value)}
-              style={{ padding: "7px 10px", borderRadius: 8, border: `1px solid ${opDraft ? "#00D26A" : BORDER}`, backgroundColor: CARD, color: opDraft ? "#00D26A" : MUTED, fontSize: 12.5, cursor: "pointer", fontWeight: opDraft ? 700 : 400 }}
-            >
-              <option value="">{t.scoreAny}</option>
-              <option value="eq">{t.scoreEq}</option>
-              <option value="lte">{t.scoreLte}</option>
-              <option value="gte">{t.scoreGte}</option>
-            </select>
+              onChange={onScoreOpChange}
+              style={{ width: "auto", minWidth: 120 }}
+              colors={
+                opDraft
+                  ? { border: "#00D26A", card: CARD, text: "#00D26A", muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }
+                  : { border: BORDER, card: CARD, text: MUTED, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }
+              }
+              options={[
+                { value: "", label: t.scoreAny },
+                { value: "eq", label: t.scoreEq },
+                { value: "lte", label: t.scoreLte },
+                { value: "gte", label: t.scoreGte },
+              ]}
+            />
             {opDraft && (
               <input
                 value={scoreDraft}

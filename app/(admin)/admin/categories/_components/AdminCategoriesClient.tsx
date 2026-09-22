@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { useSite } from "@/contexts/SiteContext";
 import type { CategoryRoleType, MarketplaceCategory } from "@/features/categories/types";
 import styles from "../../packages/_components/AdminPackages.module.css";
@@ -194,13 +195,12 @@ export default function AdminCategoriesClient({ initialCategories }: { initialCa
               </div>
               <div className={styles.field}>
                 <label>{tx.role}</label>
-                <select
+                <CustomSelect
                   value={form.role_type}
-                  onChange={(event) => setForm((current) => ({ ...current, role_type: event.target.value as CategoryRoleType }))}
-                >
-                  <option value="talent">Talent</option>
-                  <option value="brand">Brand</option>
-                </select>
+                  onChange={(v) => setForm((current) => ({ ...current, role_type: v as CategoryRoleType }))}
+                  colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                  options={[{ value: "talent", label: "Talent" }, { value: "brand", label: "Brand" }]}
+                />
               </div>
             </div>
 

@@ -12,6 +12,7 @@ const PAGE_SIZE = 12;
 import type { JobPost } from "../page";
 import JobsGrid from "./JobsGrid";
 import JobsFilters from "./JobsFilters";
+import CustomSelect from "@/components/ui/CustomSelect";
 import styles from "./JobsPage.module.css";
 
 const CATEGORIES: { key: string; label_ar: string; label_en: string; icon: LucideIcon }[] = [
@@ -195,17 +196,17 @@ export default function JobsClient({ jobs }: Props) {
                   </button>
                   <div className={styles.sortWrap}>
                     <label htmlFor="jobs-sort">{ar ? "ترتيب" : "Sort"}</label>
-                    <select
+                    <CustomSelect
                       id="jobs-sort"
-                      className={styles.sortSelect}
                       value={sort}
-                      onChange={(e) => setSort(e.target.value as SortOption)}
-                    >
-                      <option value="newest">{ar ? "الأحدث" : "Newest"}</option>
-                      <option value="budget_desc">{ar ? "الأعلى ميزانية" : "Highest budget"}</option>
-                      <option value="budget_asc">{ar ? "الأقل ميزانية" : "Lowest budget"}</option>
-                      <option value="slots_desc">{ar ? "أكثر أماكن" : "Most slots"}</option>
-                    </select>
+                      onChange={(v) => setSort(v as SortOption)}
+                      options={[
+                        { value: "newest", label: ar ? "الأحدث" : "Newest" },
+                        { value: "budget_desc", label: ar ? "الأعلى ميزانية" : "Highest budget" },
+                        { value: "budget_asc", label: ar ? "الأقل ميزانية" : "Lowest budget" },
+                        { value: "slots_desc", label: ar ? "أكثر أماكن" : "Most slots" },
+                      ]}
+                    />
                   </div>
                 </div>
               </div>

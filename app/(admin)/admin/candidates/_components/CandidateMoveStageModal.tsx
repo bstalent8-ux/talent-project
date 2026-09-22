@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
+import CustomSelect from "@/components/ui/CustomSelect";
 import type { CandidateStage } from "@/features/candidates/types";
 
 const TX = {
@@ -76,10 +77,13 @@ export default function CandidateMoveStageModal({ candidateId, stage, onClose, o
                 <textarea rows={3} style={{ ...inputStyle, resize: "vertical" }} value={answers[f.fieldKey] ?? ""}
                   onChange={(e) => setAnswers((a) => ({ ...a, [f.fieldKey]: e.target.value }))} />
               ) : f.fieldType === "select" ? (
-                <select style={inputStyle} value={answers[f.fieldKey] ?? ""} onChange={(e) => setAnswers((a) => ({ ...a, [f.fieldKey]: e.target.value }))}>
-                  <option value="">—</option>
-                  {(f.options ?? []).map((opt) => <option key={opt.value} value={opt.value}>{lang === "ar" ? opt.labelAr : opt.labelEn}</option>)}
-                </select>
+                <CustomSelect
+                  style={inputStyle}
+                  value={answers[f.fieldKey] ?? ""}
+                  onChange={(v) => setAnswers((a) => ({ ...a, [f.fieldKey]: v }))}
+                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                  options={[{ value: "", label: "—" }, ...(f.options ?? []).map((opt) => ({ value: opt.value, label: lang === "ar" ? opt.labelAr : opt.labelEn }))]}
+                />
               ) : (
                 <input type={f.fieldType === "date" ? "date" : f.fieldType === "number" ? "number" : "text"} style={inputStyle} value={answers[f.fieldKey] ?? ""}
                   onChange={(e) => setAnswers((a) => ({ ...a, [f.fieldKey]: e.target.value }))} />
