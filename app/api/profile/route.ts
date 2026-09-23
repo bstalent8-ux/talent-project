@@ -8,6 +8,7 @@ import { normalizeCategoryId, setProfileCategories } from "@/features/categories
 import { invalidateBrand, invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 import { ProfileError, profileService } from "@/features/profiles";
 import { syncTalentBrands } from "@/lib/talent-brands-sync";
+import { hasRecentVerifiedRegisterOtp } from "@/lib/email-otp";
 import { profileDataSchema } from "./schema";
 
 // ─── Mass-assignment guards ──────────────────────────────────────────────────
@@ -78,10 +79,13 @@ export async function POST(req: NextRequest) {
       if (!ALLOWED_ROLES.includes(role)) {
         return NextResponse.json({ error: "role must be talent or brand" }, { status: 400, headers: privateNoStoreHeaders() });
       }
-      // Email-OTP gate removed per request — register/page.tsx no longer
-      // verifies a code before calling signUp(), so this no longer has
-      // anything to check. lib/email-otp.ts and /api/auth/otp/email/* are
-      // untouched if this needs to come back.
+      // Defense-in-depth: the real gate is the register page only calling
+      // signUp() after the email OTP verifies. This blocks a direct
+      // /api/profile call (skipping the UI) from completing a first-time
+      // profile without a recently-verified code for this account's email.
+      if (user.email && !(await hasRecentVerifiedRegisterOtp(user.email))) {
+        return NextResponse.json({ error: "email not verified" }, { status: 403, headers: privateNoStoreHeaders() });
+      }
       effectiveRole = role;
     }
 
