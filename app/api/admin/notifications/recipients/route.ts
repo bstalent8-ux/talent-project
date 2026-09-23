@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions";
+import { fuzzyProfileIds } from "@/lib/fuzzy-search-db";
 
 // GET /api/admin/notifications/recipients?q=ahmed
 // Feeds the composer's user picker (single / multiple modes) and its role +
@@ -25,10 +26,15 @@ export async function GET(req: NextRequest) {
     .limit(20);
 
   if (q) {
-    // Escape PostgREST's `or` delimiters so a comma or paren in the query
-    // cannot break out of the filter expression.
-    const safe = q.replace(/[(),]/g, " ").trim();
-    if (safe) usersQuery = usersQuery.or(`full_name.ilike.%${safe}%,handle.ilike.%${safe}%`);
+    const fuzzyIds = await fuzzyProfileIds(q, null);
+    if (fuzzyIds !== null) {
+      usersQuery = usersQuery.in("id", fuzzyIds.length ? fuzzyIds : ["00000000-0000-0000-0000-000000000000"]);
+    } else {
+      // Escape PostgREST's `or` delimiters so a comma or paren in the query
+      // cannot break out of the filter expression.
+      const safe = q.replace(/[(),]/g, " ").trim();
+      if (safe) usersQuery = usersQuery.or(`full_name.ilike.%${safe}%,handle.ilike.%${safe}%`);
+    }
   }
 
   const [{ data: users }, { data: categories }] = await Promise.all([

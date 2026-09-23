@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { canPerformAction } from "@/lib/permissions";
 import { invalidateCommunity, privateNoStoreHeaders, publicCacheHeaders } from "@/lib/cache";
+import { fuzzyCommunityQuestionIds } from "@/lib/fuzzy-search-db";
 
 // GET: Fetch all questions with optional filters
 export async function GET(request: NextRequest) {
@@ -59,15 +60,24 @@ export async function GET(request: NextRequest) {
       query = query.eq("status", status);
     }
 
-    // Apply search filter.
-    // The `or()` argument is a PostgREST filter expression, so raw user input
-    // could inject extra filters — strip the expression metacharacters first.
-    if (search) {
-      const safe = search.replace(/[,()"\\{}*%]/g, "").trim();
-      if (safe) {
-        query = query.or(
-          `title.ilike.%${safe}%,content.ilike.%${safe}%,tags.cs.{${safe}}`
-        );
+    // Apply search filter — typo-tolerant when the fuzzy-search migration is
+    // applied (lib/fuzzy-search-db.ts), plain ILIKE fallback otherwise.
+    if (search.trim()) {
+      const fuzzyIds = await fuzzyCommunityQuestionIds(supabase, search);
+      if (fuzzyIds !== null) {
+        if (fuzzyIds.length === 0) {
+          return NextResponse.json({ questions: [], total: 0, limit, offset }, { headers: publicCacheHeaders() });
+        }
+        query = query.in("id", fuzzyIds);
+      } else {
+        // The `or()` argument is a PostgREST filter expression, so raw user
+        // input could inject extra filters — strip the metacharacters first.
+        const safe = search.replace(/[,()"\\{}*%]/g, "").trim();
+        if (safe) {
+          query = query.or(
+            `title.ilike.%${safe}%,content.ilike.%${safe}%,tags.cs.{${safe}}`
+          );
+        }
       }
     }
 

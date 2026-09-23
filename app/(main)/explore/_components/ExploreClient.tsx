@@ -14,6 +14,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { categoryMatchRank, MATCH_RANK_NONE } from "@/features/categories/matching";
 import DirectBriefModal from "@/components/DirectBriefModal";
 import { trackEvent } from "@/lib/analytics/track";
+import { fuzzyMatch } from "@/lib/fuzzy-search";
 import CustomSelect from "@/components/ui/CustomSelect";
 import styles from "./ExplorePage.module.css";
 
@@ -174,10 +175,7 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
       // only ever surfaces ugc/model talents, even when "All" is selected.
       const category = (t.category ?? "").toLowerCase();
       if (category !== "ugc" && category !== "model") return false;
-      if (search) {
-        const q = search.toLowerCase();
-        if (!t.name.toLowerCase().includes(q) && !(t.category ?? "").toLowerCase().includes(q)) return false;
-      }
+      if (search && !fuzzyMatch(search, t.name, t.category)) return false;
       if (!matchesType(t, type)) return false;
       if (sex !== "all" && t.gender !== sex) return false;
       if (verified && !t.verified) return false;

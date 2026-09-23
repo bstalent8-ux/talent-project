@@ -5,6 +5,7 @@
 // to log it.
 
 import { adminClient } from "@/lib/supabase/admin";
+import { fuzzyProfileIds } from "@/lib/fuzzy-search-db";
 import { ADMIN_RESOURCE_KEYS, type AdminResourceKey } from "@/lib/auth/permissions";
 import type { AdminRole, AdminRoleAuditEntry, AdminSearchResult, RolePermissionRow } from "@/features/admin-roles/types";
 
@@ -235,9 +236,15 @@ export async function searchAdmins(query: string): Promise<AdminSearchResult[]> 
     .order("created_at", { ascending: false })
     .limit(20);
 
-  if (query) {
-    const safe = query.replace(/[(),]/g, " ").trim();
-    if (safe) q = q.or(`full_name.ilike.%${safe}%,handle.ilike.%${safe}%`);
+  if (query.trim()) {
+    const fuzzyIds = await fuzzyProfileIds(query, "admin");
+    if (fuzzyIds !== null) {
+      if (fuzzyIds.length === 0) return [];
+      q = q.in("id", fuzzyIds);
+    } else {
+      const safe = query.replace(/[(),]/g, " ").trim();
+      if (safe) q = q.or(`full_name.ilike.%${safe}%,handle.ilike.%${safe}%`);
+    }
   }
 
   const { data } = await q;

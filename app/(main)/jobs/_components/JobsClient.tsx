@@ -13,6 +13,7 @@ import type { JobPost } from "../page";
 import JobsGrid from "./JobsGrid";
 import JobsFilters from "./JobsFilters";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { fuzzyMatch } from "@/lib/fuzzy-search";
 import styles from "./JobsPage.module.css";
 
 const CATEGORIES: { key: string; label_ar: string; label_en: string; icon: LucideIcon }[] = [
@@ -47,12 +48,7 @@ export default function JobsClient({ jobs }: Props) {
 
   const filtered = useMemo(() => {
     let list = jobs.filter((j) => {
-      if (search) {
-        const q = search.toLowerCase();
-        if (!j.title.toLowerCase().includes(q)
-          && !(j.description ?? "").toLowerCase().includes(q)
-          && !(j.brand?.full_name ?? "").toLowerCase().includes(q)) return false;
-      }
+      if (search && !fuzzyMatch(search, j.title, j.description, j.brand?.full_name)) return false;
       if (category !== "all" && j.category !== category) return false;
       const mid = ((j.budget_min ?? 0) + (j.budget_max ?? j.budget_min ?? 0)) / 2;
       if (j.budget_min !== null && mid < minBudget) return false;

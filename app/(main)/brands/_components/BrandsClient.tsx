@@ -4,6 +4,7 @@ import { useSite } from "@/contexts/SiteContext";
 import type { BrandCard } from "../page";
 import BrandsGrid from "./BrandsGrid";
 import BrandsFilters from "./BrandsFilters";
+import { fuzzyMatch } from "@/lib/fuzzy-search";
 
 const INDUSTRIES = [
   { key: "all",     label_ar: "الكل",          label_en: "All" },
@@ -30,10 +31,7 @@ export default function BrandsClient({ brands }: Props) {
 
   const filtered = useMemo(() => {
     let list = brands.filter((b) => {
-      if (search) {
-        const q = search.toLowerCase();
-        if (!b.name.toLowerCase().includes(q) && !(b.city ?? "").toLowerCase().includes(q)) return false;
-      }
+      if (search && !fuzzyMatch(search, b.name, b.city)) return false;
       if (industry !== "all" && b.industry !== industry) return false;
       if (verified && !b.verified) return false;
       return true;

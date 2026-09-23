@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useSite } from "@/contexts/SiteContext";
 import BlogCard, { type BlogPost } from "@/components/blog/BlogCard";
+import { fuzzyMatch } from "@/lib/fuzzy-search";
 
 const TX = {
   ar: {
@@ -49,8 +50,7 @@ export default function BlogClient({ posts }: { posts: BlogPost[] }) {
 
   const filtered = posts.filter(p => {
     const matchesCat = activecat === "All" || p.category === activecat;
-    const matchesSearch = !search || p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.excerpt.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = !search || fuzzyMatch(search, p.title, p.excerpt);
     return matchesCat && matchesSearch;
   });
 

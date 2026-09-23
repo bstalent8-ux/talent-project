@@ -8,6 +8,7 @@
 
 import { adminClient } from "@/lib/supabase/admin";
 import { mediaReviewStatus, type MediaReviewStatus } from "@/lib/media-review";
+import { fuzzyProfileIds } from "@/lib/fuzzy-search-db";
 
 export type PendingMediaStatus = MediaReviewStatus | "all";
 export type PendingMediaType = "photo" | "video" | "all";
@@ -61,15 +62,22 @@ export async function fetchPendingMediaCounts(): Promise<PendingMediaCounts & { 
 
 /** Talent ids whose name / handle matches `q` (portfolio_items has no name of its own). */
 async function talentIdsMatching(q: string): Promise<string[]> {
-  const like = q.replace(/[%_,()]/g, " ").trim();
-  if (!like) return [];
-  const { data: people } = await adminClient
-    .from("profiles")
-    .select("id")
-    .eq("role", "talent")
-    .or(`full_name.ilike.%${like}%,handle.ilike.%${like}%`)
-    .limit(200);
-  const userIds = (people ?? []).map((p) => p.id as string);
+  if (!q.trim()) return [];
+  const fuzzyIds = await fuzzyProfileIds(q, "talent");
+  let userIds: string[];
+  if (fuzzyIds !== null) {
+    userIds = fuzzyIds;
+  } else {
+    const like = q.replace(/[%_,()]/g, " ").trim();
+    if (!like) return [];
+    const { data: people } = await adminClient
+      .from("profiles")
+      .select("id")
+      .eq("role", "talent")
+      .or(`full_name.ilike.%${like}%,handle.ilike.%${like}%`)
+      .limit(200);
+    userIds = (people ?? []).map((p) => p.id as string);
+  }
   if (userIds.length === 0) return [];
   const { data: tps } = await adminClient.from("talent_profiles").select("id").in("user_id", userIds);
   return (tps ?? []).map((t) => t.id as string);
@@ -181,8 +189,16 @@ export async function fetchAvatarReviewPage(opts: {
     .select("id, full_name, handle, avatar_url, pending_avatar_url, avatar_review_status, avatar_rejection_reason, avatar_submitted_at, avatar_reviewed_at", { count: "exact" })
     .eq("role", "talent");
   query = status === "all" ? query.in("avatar_review_status", ["pending", "rejected"]) : query.eq("avatar_review_status", status);
-  const like = (q ?? "").replace(/[%_,()]/g, " ").trim();
-  if (like) query = query.or(`full_name.ilike.%${like}%,handle.ilike.%${like}%`);
+  if ((q ?? "").trim()) {
+    const fuzzyIds = await fuzzyProfileIds(q!, "talent");
+    if (fuzzyIds !== null) {
+      if (fuzzyIds.length === 0) return { items: [], total: 0 };
+      query = query.in("id", fuzzyIds);
+    } else {
+      const like = (q ?? "").replace(/[%_,()]/g, " ").trim();
+      if (like) query = query.or(`full_name.ilike.%${like}%,handle.ilike.%${like}%`);
+    }
+  }
 
   const res = await query.order("avatar_submitted_at", { ascending: status === "pending", nullsFirst: false }).range(from, from + pageSize - 1);
   if (res.error) return { items: [], total: 0 };

@@ -4,6 +4,7 @@ import { clusterPageVisits, totalDurationByPage, type PageTotal, type Engagement
 import { calculateCompletion } from "@/lib/profile-completion";
 import { extractPhoneCandidates } from "./bio-phone-detection";
 import { toIntlDigits } from "@/lib/leads/phone-links";
+import { fuzzyProfileIds } from "@/lib/fuzzy-search-db";
 
 export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   // { count: "exact", head: true } returns just the row count — no rows are
@@ -104,15 +105,24 @@ function scoreMatches(score: number, op: TalentScoreOp, target: number): boolean
   }
 }
 
-/** `.or("full_name.ilike.%x%,phone_number.ilike.%x%")` — PostgREST's filter
- *  string treats "," and "()" as syntax, and "%"/"_" as ilike wildcards, so
- *  a search term containing any of those needs escaping/stripping before it
- *  reaches the query string, not just before display. */
-function applyTalentSearch<T extends { or: (s: string) => T }>(query: T, q: string | undefined): T {
-  const term = (q ?? "").trim().replace(/[,()]/g, "");
-  if (!term) return query;
-  const escaped = term.replace(/[%_]/g, (c) => `\\${c}`);
-  return query.or(`full_name.ilike.%${escaped}%,phone_number.ilike.%${escaped}%`);
+/** Ids of talent-role profiles whose full_name/phone_number fuzzy-match `q`
+ *  (typo-tolerant — see lib/fuzzy-search-db.ts). `null` = no search term, no
+ *  restriction. Falls back to a plain ILIKE lookup when the fuzzy-search
+ *  migration hasn't been pasted into Supabase yet, so this never regresses
+ *  the old behavior — it only improves it once the migration lands. */
+async function fuzzyTalentSearchIds(q: string | undefined): Promise<string[] | null> {
+  const term = (q ?? "").trim();
+  if (!term) return null;
+  const fuzzyIds = await fuzzyProfileIds(term, "talent");
+  if (fuzzyIds !== null) return fuzzyIds;
+  const escaped = term.replace(/[,()]/g, "").replace(/[%_]/g, (c) => `\\${c}`);
+  const { data } = await adminClient
+    .from("profiles")
+    .select("id")
+    .eq("role", "talent")
+    .or(`full_name.ilike.%${escaped}%,phone_number.ilike.%${escaped}%`)
+    .limit(500);
+  return (data ?? []).map((r) => r.id as string);
 }
 
 /** Feeds the Category/City filter selects with only values that actually
@@ -375,6 +385,9 @@ export async function fetchAdminTalentsPage({
       ? new Set(Array.from(duplicateInfo.entries()).filter(([, v]) => scoreMatches(v.score, scoreOp, score)).map(([id]) => id))
       : null;
 
+  // Fuzzy (typo-tolerant) search id restriction — null when no search term.
+  const searchIds = await fuzzyTalentSearchIds(q);
+
   const SELECT = `
     id, handle, full_name, avatar_url, city, bio, created_at, phone_number,
     is_approved, is_suspended, is_verified, balance,
@@ -392,16 +405,19 @@ export async function fetchAdminTalentsPage({
   // this fetches every matching row unpaginated and paginates in JS after
   // grouping, instead of the DB range() used below.
   if (duplicate === "with") {
-    const dupIds = Array.from(duplicateInfo.entries())
+    let dupIds = Array.from(duplicateInfo.entries())
       .filter(([id, v]) => v.isDuplicate && (!scoreIds || scoreIds.has(id)))
       .map(([id]) => id);
+    if (searchIds !== null) {
+      const searchSet = new Set(searchIds);
+      dupIds = dupIds.filter((id) => searchSet.has(id));
+    }
     if (dupIds.length === 0) return { talents: [], total: 0, duplicateTotal };
 
     let groupedQuery = adminClient.from("profiles").select(SELECT).eq("role", "talent").in("id", dupIds);
     if (status && status !== "all") groupedQuery = groupedQuery.eq("talent_profiles.status", status);
     if (category) groupedQuery = applyTalentCategory(groupedQuery, category);
     if (city) groupedQuery = groupedQuery.eq("city", city);
-    groupedQuery = applyTalentSearch(groupedQuery, q);
 
     const { data: groupedData, error: groupedError } = await groupedQuery;
     if (groupedError) return { talents: [], total: 0, duplicateTotal };
@@ -438,11 +454,18 @@ export async function fetchAdminTalentsPage({
 
   // Id allow-list from the duplicate ("without") and score filters, shared by
   // the paths below (null = no restriction).
-  const restrictIds: string[] | null = (duplicate === "without" || scoreIds)
+  // "without" keeps one representative per cluster (the best-completionScore
+  // member) instead of dropping the whole cluster — a talent who happens to
+  // have a duplicate account should still appear once, not vanish entirely.
+  let restrictIds: string[] | null = (duplicate === "without" || scoreIds)
     ? Array.from(duplicateInfo.entries())
-        .filter(([id, v]) => (duplicate !== "without" || !v.isDuplicate) && (!scoreIds || scoreIds.has(id)))
+        .filter(([id, v]) => (duplicate !== "without" || !v.isDuplicate || v.isBest) && (!scoreIds || scoreIds.has(id)))
         .map(([id]) => id)
     : null;
+  if (searchIds !== null) {
+    const searchSet = new Set(searchIds);
+    restrictIds = restrictIds === null ? searchIds : restrictIds.filter((id) => searchSet.has(id));
+  }
 
   // Sorting by score: completionScore is computed in JS, not a column, so a
   // DB .order() cannot do it. Same approach as the grouped duplicate view —
@@ -454,7 +477,6 @@ export async function fetchAdminTalentsPage({
     if (status && status !== "all") scoreQuery = scoreQuery.eq("talent_profiles.status", status);
     if (category) scoreQuery = applyTalentCategory(scoreQuery, category);
     if (city) scoreQuery = scoreQuery.eq("city", city);
-    scoreQuery = applyTalentSearch(scoreQuery, q);
     if (restrictIds) scoreQuery = scoreQuery.in("id", restrictIds);
 
     const { data: scoreData, error: scoreError } = await scoreQuery;
@@ -480,7 +502,6 @@ export async function fetchAdminTalentsPage({
   if (status && status !== "all") query = query.eq("talent_profiles.status", status);
   if (category) query = applyTalentCategory(query, category);
   if (city) query = query.eq("city", city);
-  query = applyTalentSearch(query, q);
 
   if (restrictIds) {
     if (restrictIds.length === 0) return { talents: [], total: 0, duplicateTotal };
