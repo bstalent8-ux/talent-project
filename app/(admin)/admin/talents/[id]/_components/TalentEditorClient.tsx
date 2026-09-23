@@ -23,6 +23,10 @@ const TX = {
     save: "حفظ التغييرات", saving: "جاري الحفظ...", back: "رجوع", viewProfile: "عرض البروفايل",
     registrationTitle: "بيانات التسجيل", email: "البريد الإلكتروني", phone: "رقم الهاتف",
     registeredAt: "تاريخ التسجيل", notProvided: "غير متوفر",
+    editEmail: "تعديل", cancelEmailEdit: "إلغاء", saveEmailBtn: "حفظ الإيميل",
+    emailChanged: "تم تغيير الإيميل ✓", emailInUse: "الإيميل ده مستخدم بالفعل في حساب تاني.",
+    emailInvalidMsg: "أدخل بريدًا إلكترونيًا صحيحًا.", emailSame: "ده نفس الإيميل الحالي.",
+    emailOverrideNote: "التغيير هنا فوري ومن غير رابط تأكيد — استخدمه لما الموهبة مقفول برا حسابه أو غلط في الإيميل الأساسي.",
     saved: "تم الحفظ بنجاح", error: "حدث خطأ",
     availableOpts: { available: "متاح", busy: "مشغول", unavailable: "غير متاح" },
     modelMetricsTitle: "مقاييس الموديل (يديرها الأدمن فقط)",
@@ -55,6 +59,10 @@ const TX = {
     save: "Save Changes", saving: "Saving...", back: "Back", viewProfile: "View profile",
     registrationTitle: "Registration Info", email: "Email", phone: "Phone Number",
     registeredAt: "Registered On", notProvided: "Not provided",
+    editEmail: "Edit", cancelEmailEdit: "Cancel", saveEmailBtn: "Save email",
+    emailChanged: "Email changed ✓", emailInUse: "That email is already used by another account.",
+    emailInvalidMsg: "Enter a valid email address.", emailSame: "That's the current email already.",
+    emailOverrideNote: "This change is immediate, no confirmation link — use it when the talent is locked out of their account or typo'd their email at signup.",
     saved: "Saved successfully", error: "An error occurred",
     availableOpts: { available: "Available", busy: "Busy", unavailable: "Unavailable" },
     modelMetricsTitle: "Model Metrics (admin-managed only)",
@@ -226,6 +234,15 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
   const [advancedJson, setAdvancedJson] = useState(() => JSON.stringify(extractAdvanced(initialData.social_links), null, 2));
   const [status, setStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [jsonErr, setJsonErr] = useState<string | null>(null);
+
+  // Admin email override — separate from the main form/handleSave above:
+  // its own endpoint, its own status, since it's a distinct sensitive action
+  // (immediate, no confirm link) rather than a field on the profile PATCH.
+  const [currentEmail, setCurrentEmail] = useState(registration.email);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailDraft, setEmailDraft] = useState("");
+  const [emailStatus, setEmailStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [emailErrMsg, setEmailErrMsg] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<ModelMetricsForm>(() => {
     const m = initialData.model_metrics ?? {};
     const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
@@ -371,6 +388,38 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
     }
   }
 
+  async function handleSaveEmail() {
+    const next = emailDraft.trim().toLowerCase();
+    setEmailErrMsg(null);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) {
+      setEmailErrMsg(t.emailInvalidMsg);
+      return;
+    }
+    if (next === (currentEmail ?? "").toLowerCase()) {
+      setEmailErrMsg(t.emailSame);
+      return;
+    }
+
+    setEmailStatus("saving");
+    const res = await fetch(`/api/admin/talents/${talentProfileId}/email`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: next }),
+    });
+
+    if (res.ok) {
+      setCurrentEmail(next);
+      setEditingEmail(false);
+      setEmailDraft("");
+      setEmailStatus("saved");
+    } else {
+      const body = await res.json().catch(() => ({}));
+      setEmailErrMsg(body.error === "email_in_use" ? t.emailInUse : t.error);
+      setEmailStatus("error");
+    }
+  }
+
   const label = (text: string, err?: boolean) => (
     <label style={{ color: err ? "#EF4444" : MUTED, fontSize: 13, display: "block", marginBottom: 6, fontWeight: 500 }}>
       {text}
@@ -477,16 +526,60 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
       <TalentActionsPanel talentProfileId={talentProfileId} initialActions={initialActions} />
       <TalentBrandsPanel talentProfileId={talentProfileId} initialBrands={initialBrands} />
 
-      {/* Registration info — read-only, from auth.users (email) and profiles
-          (created_at). Never editable here: email/phone changes go through
-          the talent's own account settings, not admin override. */}
+      {/* Registration info — mostly read-only, from auth.users (email) and
+          profiles (created_at). Email is the one admin-editable field here:
+          the talent's own /settings flow requires clicking a confirm link
+          sent to the NEW address, which doesn't help someone locked out of
+          their old inbox or who typo'd it at signup — this uses the
+          service-role admin API to change it immediately instead. */}
       {section(t.registrationTitle, (
         <div style={grid2}>
           <div>
             {label(t.email)}
-            <p style={{ color: TEXT, fontSize: 14, margin: 0, direction: "ltr", textAlign: ar ? "right" : "left" }}>
-              {registration.email ?? t.notProvided}
-            </p>
+            {editingEmail ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <input
+                  type="email"
+                  value={emailDraft}
+                  onChange={(e) => { setEmailDraft(e.target.value); setEmailErrMsg(null); }}
+                  style={{ ...inp, direction: "ltr", textAlign: "left" }}
+                  autoFocus
+                />
+                {emailErrMsg && <p style={{ color: "#EF4444", fontSize: 12.5, margin: 0 }}>{emailErrMsg}</p>}
+                <p style={{ color: MUTED, fontSize: 11.5, margin: 0, lineHeight: 1.6 }}>{t.emailOverrideNote}</p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={handleSaveEmail}
+                    disabled={emailStatus === "saving" || !emailDraft}
+                    style={{ padding: "6px 14px", borderRadius: 8, border: "none", backgroundColor: GREEN, color: "#000", fontSize: 12.5, fontWeight: 700, cursor: emailStatus === "saving" ? "wait" : "pointer", opacity: !emailDraft ? 0.6 : 1 }}
+                  >
+                    {emailStatus === "saving" ? t.saving : t.saveEmailBtn}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEditingEmail(false); setEmailDraft(""); setEmailErrMsg(null); }}
+                    style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    {t.cancelEmailEdit}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <p style={{ color: TEXT, fontSize: 14, margin: 0, direction: "ltr", textAlign: ar ? "right" : "left" }}>
+                  {currentEmail ?? t.notProvided}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setEditingEmail(true); setEmailDraft(currentEmail ?? ""); setEmailStatus("idle"); setEmailErrMsg(null); }}
+                  style={{ background: "none", border: "none", color: GREEN, fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
+                >
+                  {t.editEmail}
+                </button>
+                {emailStatus === "saved" && <span style={{ color: GREEN, fontSize: 12 }}>{t.emailChanged}</span>}
+              </div>
+            )}
           </div>
           <div>
             {label(t.registeredAt)}
