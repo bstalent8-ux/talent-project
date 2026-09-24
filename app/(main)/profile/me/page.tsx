@@ -1,6 +1,7 @@
 "use client";
 export const runtime = 'edge';
 
+import { useModalPresence } from "@/hooks/useModalClose";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -23,8 +24,8 @@ import { fromDbAvailability } from "@/lib/availability-status";
 import CustomSelect from "@/components/ui/CustomSelect";
 
 /* ─── colour helpers ─── */
-const GREEN = "#00D26A";
-const GOLD  = "#F4B740";
+const GREEN = "var(--color-primary-text)";
+const GOLD  = "var(--color-accent-strong)";
 
 const SOCIAL_ICONS: Record<string, React.ReactNode> = {
   instagram: (
@@ -206,13 +207,13 @@ export default function DashboardPage() {
 
   const t = TX[lang];
 
-  const CARD    = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER  = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT    = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED   = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
-  const BG      = dark ? "#050B12" : "#F1F5F9";
-  const INP     = dark ? "#0d1527" : "#f8fafc";
+  const CARD    = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER  = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT    = dark ? "#FFFFFF" : "#2B211D";
+  const MUTED   = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
+  const BG      = dark ? "#1B1310" : "#F1EAD3";
+  const INP     = dark ? "#0d1527" : "#F6F0DD";
 
   const [status,        setStatus]        = useState<"loading"|"ready"|"none">("loading");
   // Always true now — profile/me is directly editable the moment you land
@@ -238,10 +239,12 @@ export default function DashboardPage() {
   const [brands,        setBrands]        = useState<string[]>([]);
   const [newBrand,      setNewBrand]      = useState("");
   const [physicalModal, setPhysicalModal] = useState(false);
+  const { mounted: physicalModalMounted, closing: physicalModalClosing } = useModalPresence(physicalModal);
   const [physForm,      setPhysForm]      = useState<any>({});
   const [physSaving,    setPhysSaving]    = useState(false);
   const [completion,    setCompletion]    = useState<CompletionDTO | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const { mounted: showWelcomeModalMounted, closing: showWelcomeModalClosing } = useModalPresence(showWelcomeModal);
   const cameFromOnboardingRef = useRef(false);
 
   /**
@@ -520,7 +523,7 @@ export default function DashboardPage() {
         {/* Welcome banner */}
         <div style={{
           background: dark ? "linear-gradient(135deg,#1a2a0a 0%,#0d1a0a 100%)" : "linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%)",
-          border: `1px solid ${dark ? "#2d5a1b" : "#86efac"}`,
+          border: `1px solid ${dark ? "#2d5a1b" : "var(--color-success)"}`,
           borderRadius: 20, padding: "32px 28px", textAlign: "center", marginBottom: 20,
         }}>
           <div style={{ fontSize: 52, marginBottom: 16 }}>🎉</div>
@@ -549,7 +552,7 @@ export default function DashboardPage() {
             <span style={{ fontSize: 22 }}>{s.icon}</span>
             <span style={{ color: TEXT, fontSize: 14, fontWeight: 600, flex: 1 }}>{s.title}</span>
             <span style={{
-              background: `${GREEN}22`, color: GREEN,
+              background: `color-mix(in srgb, ${GREEN} 13%, transparent)`, color: GREEN,
               fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20,
             }}>+{s.pct}</span>
           </div>
@@ -560,7 +563,7 @@ export default function DashboardPage() {
           onClick={() => { setStatus("loading"); fetchProfile(); }}
           style={{
             width: "100%", padding: "15px 0", marginTop: 8,
-            background: "#FFB800", color: "#000",
+            background: "var(--color-accent)", color: "var(--color-on-accent)",
             border: "none", borderRadius: 12,
             fontSize: 16, fontWeight: 800, cursor: "pointer",
             fontFamily: "'IBM Plex Sans Arabic',sans-serif",
@@ -604,14 +607,14 @@ export default function DashboardPage() {
       <div
         style={isMobile ? {
           position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-          backgroundColor: dark ? "#0A121C" : "#fff",
+          backgroundColor: dark ? "#231A16" : "#FBF7EA",
           borderTop: `1px solid ${BORDER}`,
           boxShadow: "0 -4px 16px rgba(0,0,0,0.12)",
           padding: "10px 16px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
         } : {
           position: "sticky", top: 60, zIndex: 50,
-          backgroundColor: dark ? "#0A121C" : "#fff",
+          backgroundColor: dark ? "#231A16" : "#FBF7EA",
           borderBottom: `1px solid ${BORDER}`,
           padding: "10px 24px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
@@ -625,8 +628,8 @@ export default function DashboardPage() {
           style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             padding: isMobile ? "12px 0" : "8px 20px", width: isMobile ? "100%" : undefined,
-            backgroundColor: saveErr ? "#ef4444" : GREEN, border: "none", borderRadius: 8,
-            color: "#000", fontSize: 14, fontWeight: 800, cursor: saving ? "wait" : "pointer",
+            backgroundColor: saveErr ? "#ef4444" : "var(--color-primary)", border: "none", borderRadius: 8,
+            color: "var(--color-primary-ink)", fontSize: 14, fontWeight: 800, cursor: saving ? "wait" : "pointer",
             fontFamily: "'IBM Plex Sans Arabic',sans-serif",
           }}
         >
@@ -659,7 +662,7 @@ export default function DashboardPage() {
                     see is not what the public sees yet. */}
                 {(tp?.status === "pending" || tp?.status === "rejected") ? t.previewPublic : t.viewPublic}
                 {tp?.status === "pending" && (
-                  <span style={{ padding: "2px 8px", borderRadius: 999, backgroundColor: "rgba(244,183,64,0.15)", color: GOLD, fontSize: 11, fontWeight: 800 }}>
+                  <span style={{ padding: "2px 8px", borderRadius: 999, backgroundColor: "rgba(231,165,138,0.15)", color: GOLD, fontSize: 11, fontWeight: 800 }}>
                     {t.pendingApproval}
                   </span>
                 )}
@@ -679,17 +682,17 @@ export default function DashboardPage() {
 
             {/* Avatar */}
             <div style={{ position: "relative" }}>
-              <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 200, height: isMobile ? 220 : 260, borderRadius: 14, overflow: "hidden", background: dark ? "linear-gradient(160deg,#1e3a5f,#0d2137,#050B12)" : "linear-gradient(160deg,#dbeafe,#bfdbfe,#93c5fd)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 200, height: isMobile ? 220 : 260, borderRadius: 14, overflow: "hidden", background: dark ? "linear-gradient(160deg,#1e3a5f,#2B211D,#1B1310)" : "linear-gradient(160deg,#dbeafe,#bfdbfe,#93c5fd)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {(pendingAvatar ?? (edit ? form.avatar_url : profile.avatar_url)) ? (
                   <img src={pendingAvatar ?? (edit ? form.avatar_url : profile.avatar_url)} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <div style={{ width: 72, height: 72, borderRadius: "50%", backgroundColor: "rgba(0,210,106,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, fontWeight: 900, color: GREEN }}>
+                  <div style={{ width: 72, height: 72, borderRadius: "50%", backgroundColor: "rgba(8,127,131,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, fontWeight: 900, color: GREEN }}>
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
               {profile.avatar_review_status === "pending" && (
-                <span style={{ position: "absolute", top: 8, insetInlineStart: 8, insetInlineEnd: 8, textAlign: "center", padding: "3px 6px", borderRadius: 6, fontSize: 10.5, fontWeight: 800, backgroundColor: "rgba(244,183,64,0.95)", color: "#1a1206" }}>
+                <span style={{ position: "absolute", top: 8, insetInlineStart: 8, insetInlineEnd: 8, textAlign: "center", padding: "3px 6px", borderRadius: 6, fontSize: 10.5, fontWeight: 800, backgroundColor: "rgba(231,165,138,0.95)", color: "#1a1206" }}>
                   {lang === "ar" ? "قيد المراجعة — مش ظاهرة للعامة" : "Pending review — not public yet"}
                 </span>
               )}
@@ -701,7 +704,7 @@ export default function DashboardPage() {
               {edit && (
                 <>
                   <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) setCropFile(f); e.target.value = ""; }} />
-                  <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: GREEN, border: "none", borderRadius: 20, color: "#000", fontSize: 11, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                  <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: "var(--color-primary)", border: "none", borderRadius: 20, color: "var(--color-primary-ink)", fontSize: 11, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                     <Camera size={12} />{uploading ? t.uploading : t.changePhoto}
                   </button>
                 </>
@@ -756,7 +759,7 @@ export default function DashboardPage() {
                   {tags.length > 0 && (
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       {tags.map((tag: string) => (
-                        <span key={tag} style={{ backgroundColor: "rgba(0,210,106,0.08)", color: GREEN, border: "1px solid rgba(0,210,106,0.2)", borderRadius: 20, padding: "3px 12px", fontSize: 12 }}>{tag}</span>
+                        <span key={tag} style={{ backgroundColor: "rgba(8,127,131,0.08)", color: GREEN, border: "1px solid rgba(8,127,131,0.2)", borderRadius: 20, padding: "3px 12px", fontSize: 12 }}>{tag}</span>
                       ))}
                     </div>
                   )}
@@ -781,7 +784,7 @@ export default function DashboardPage() {
                   {badges.length > 0 && (
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       {badges.map(b => (
-                        <span key={b.label} style={{ display: "flex", alignItems: "center", gap: 5, backgroundColor: "rgba(0,210,106,0.08)", color: GREEN, border: "1px solid rgba(0,210,106,0.2)", borderRadius: 20, padding: "3px 12px", fontSize: 12 }}>
+                        <span key={b.label} style={{ display: "flex", alignItems: "center", gap: 5, backgroundColor: "rgba(8,127,131,0.08)", color: GREEN, border: "1px solid rgba(8,127,131,0.2)", borderRadius: 20, padding: "3px 12px", fontSize: 12 }}>
                           {b.icon}{b.label}
                         </span>
                       ))}
@@ -802,7 +805,7 @@ export default function DashboardPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {t.escrowSteps.map((step, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, backgroundColor: i === 0 ? GREEN : "rgba(0,210,106,0.1)", border: i === 0 ? "none" : "1px solid rgba(0,210,106,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: i === 0 ? "#000" : GREEN }}>
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, backgroundColor: i === 0 ? GREEN : "rgba(8,127,131,0.1)", border: i === 0 ? "none" : "1px solid rgba(8,127,131,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: i === 0 ? "#000" : GREEN }}>
                         {i + 1}
                       </div>
                       <span style={{ fontSize: 12, color: i === 0 ? TEXT : MUTED, fontWeight: i === 0 ? 700 : 400 }}>{step}</span>
@@ -828,7 +831,7 @@ export default function DashboardPage() {
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", minWidth: 0, maxWidth: "100%" }}>
                     <input value={caption} onChange={e => setCaption(e.target.value)} placeholder={t.captionPlaceholder} style={{ padding: "6px 10px", backgroundColor: INP, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 12, outline: "none", width: isMobile ? "100%" : 140, boxSizing: "border-box", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }} />
                     <input ref={photoRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => { handleMediaFilesUpload(e.target.files,"photo"); e.target.value=""; }} />
-                    <button onClick={() => photoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(0,210,106,0.1)", border: "1px solid rgba(0,210,106,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                    <button onClick={() => photoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(8,127,131,0.1)", border: "1px solid rgba(8,127,131,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Upload size={12} />{t.addPhoto}
                     </button>
                     <input ref={videoRef} type="file" accept="video/*" multiple style={{ display: "none" }} onChange={e => { handleMediaFilesUpload(e.target.files,"video"); e.target.value=""; }} />
@@ -921,7 +924,7 @@ export default function DashboardPage() {
                     {!["height","weight","age","hair_color","eye_color","shoe_size","languages","dialect"].some(k => form[k]) && (
                       <button
                         onClick={() => router.push("/profile/me/complete?step=physical")}
-                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: `1px dashed rgba(0,201,177,0.3)`, borderRadius: 10, color: "#00C9B1", fontSize: 13, fontWeight: 700, cursor: "pointer", background: "transparent", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: `1px dashed rgba(0,201,177,0.3)`, borderRadius: 10, color: "var(--color-primary-text)", fontSize: 13, fontWeight: 700, cursor: "pointer", background: "transparent", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
                       >
                         <span style={{ fontSize: 18 }}>📏</span>
                         {lang === "ar" ? "أضف بياناتك الشخصية" : "Add your personal details"}
@@ -938,7 +941,7 @@ export default function DashboardPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                   <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.packages}</h3>
                   {edit && (
-                    <button onClick={addPkg} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: "rgba(0,210,106,0.1)", border: "1px solid rgba(0,210,106,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                    <button onClick={addPkg} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: "rgba(8,127,131,0.1)", border: "1px solid rgba(8,127,131,0.25)", borderRadius: 8, color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Plus size={13} />{t.addPackage}
                     </button>
                   )}
@@ -984,7 +987,7 @@ export default function DashboardPage() {
                   <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "repeat(auto-fill,minmax(220px,1fr))", gap: 14 }}>
                     {packages.map(pkg => (
                       <div key={pkg.id} style={{ border: `1px solid ${pkg.popular ? GREEN : BORDER}`, borderRadius: 12, padding: 16, backgroundColor: SURFACE, position: "relative" }}>
-                        {pkg.popular && <span style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", backgroundColor: GREEN, color: "#000", fontSize: 10, fontWeight: 800, borderRadius: 20, padding: "2px 10px", whiteSpace: "nowrap" }}>{t.pkgPopular}</span>}
+                        {pkg.popular && <span style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)", fontSize: 10, fontWeight: 800, borderRadius: 20, padding: "2px 10px", whiteSpace: "nowrap" }}>{t.pkgPopular}</span>}
                         <p style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 4px" }}>{pkg.name}</p>
                         <p style={{ color: GREEN, fontSize: 20, fontWeight: 900, margin: "0 0 12px", direction: "ltr" }}>{pkg.price} <span style={{ fontSize: 11 }}>EGP</span></p>
                         <ul style={{ paddingInlineStart: 16, margin: 0 }}>
@@ -1073,7 +1076,7 @@ export default function DashboardPage() {
                 <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: "0 0 14px" }}>{lang === "ar" ? "التخصصات" : "Specialties"}</h3>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {tp.specialties.map((s: string, i: number) => (
-                    <span key={i} style={{ backgroundColor: "rgba(0,210,106,0.08)", color: GREEN, border: "1px solid rgba(0,210,106,0.2)", borderRadius: 20, padding: "3px 12px", fontSize: 12 }}>{s}</span>
+                    <span key={i} style={{ backgroundColor: "rgba(8,127,131,0.08)", color: GREEN, border: "1px solid rgba(8,127,131,0.2)", borderRadius: 20, padding: "3px 12px", fontSize: 12 }}>{s}</span>
                   ))}
                 </div>
               </div>
@@ -1098,7 +1101,7 @@ export default function DashboardPage() {
                   />
                   <button
                     onClick={() => { if (newBrand.trim()) { setBrands(bs => [...bs, newBrand.trim()]); setNewBrand(""); } }}
-                    style={{ padding: "0 16px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", flexShrink: 0 }}
+                    style={{ padding: "0 16px", backgroundColor: "var(--color-primary)", border: "none", borderRadius: 8, color: "var(--color-primary-ink)", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", flexShrink: 0 }}
                   >{t.addBrand}</button>
                 </div>
               )}
@@ -1130,7 +1133,7 @@ export default function DashboardPage() {
                   : ["Talent Identity Verification","Real Reviews from Real Brands","Admin-Moderated Reviews","Direct Chat Before You Book"]
                 ).map((f, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: "rgba(0,210,106,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: "rgba(8,127,131,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     </div>
                     <span style={{ color: MUTED, fontSize: 13 }}>{f}</span>
@@ -1143,10 +1146,10 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Physical Info Quick-Edit Modal ── */}
-      {showWelcomeModal && (
-        <div onClick={e => e.target === e.currentTarget && setShowWelcomeModal(false)} style={{ position:"fixed", inset:0, zIndex:10000, background:"rgba(0,0,0,0.7)", display:"flex", justifyContent:"center", padding:16, overflowY:"auto", overscrollBehavior:"contain" }}>
-          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:440, width:"100%", margin:"auto", boxSizing:"border-box", fontFamily:"'IBM Plex Sans Arabic',sans-serif", textAlign:"center" }} dir={lang === "ar" ? "rtl" : "ltr"}>
-            <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(0,210,106,0.12)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:26 }}>
+      {showWelcomeModalMounted && (
+        <div className="modal-backdrop" data-state={showWelcomeModalClosing ? "closing" : "open"} onClick={e => e.target === e.currentTarget && setShowWelcomeModal(false)} style={{ position:"fixed", inset:0, zIndex:10000, background:"rgba(27,19,16,0.7)", display:"flex", justifyContent:"center", padding:16, overflowY:"auto", overscrollBehavior:"contain" }}>
+          <div className="modal-card" style={{ background: dark ? "#2B211D" : "#FBF7EA", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:440, width:"100%", margin:"auto", boxSizing:"border-box", fontFamily:"'IBM Plex Sans Arabic',sans-serif", textAlign:"center" }} dir={lang === "ar" ? "rtl" : "ltr"}>
+            <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(8,127,131,0.12)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:26 }}>
               🚀
             </div>
             <h3 style={{ color:TEXT, fontSize:18, fontWeight:800, margin:"0 0 10px" }}>
@@ -1159,7 +1162,7 @@ export default function DashboardPage() {
             </p>
             <button
               onClick={() => { setShowWelcomeModal(false); router.push("/profile/me/complete"); }}
-              style={{ width:"100%", padding:"12px 0", background:"#00C9B1", border:"none", borderRadius:10, color:"#fff", fontSize:14.5, fontWeight:700, cursor:"pointer", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}
+              style={{ width:"100%", padding:"12px 0", background:"var(--color-primary)", border:"none", borderRadius:10, color:"#fff", fontSize:14.5, fontWeight:700, cursor:"pointer", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}
             >
               {lang === "ar" ? "كمّل دلوقتي ←" : "Complete now →"}
             </button>
@@ -1173,12 +1176,12 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {physicalModal && (
-        <div onClick={e => e.target === e.currentTarget && setPhysicalModal(false)} style={{ position:"fixed", inset:0, zIndex:10000, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
-          <div style={{ background: dark ? "#0d1a2e" : "#fff", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:480, width:"100%", maxHeight:"90vh", overflowY:"auto", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
+      {physicalModalMounted && (
+        <div className="modal-backdrop" data-state={physicalModalClosing ? "closing" : "open"} onClick={e => e.target === e.currentTarget && setPhysicalModal(false)} style={{ position:"fixed", inset:0, zIndex:10000, background:"rgba(27,19,16,0.7)", display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div className="modal-card" style={{ background: dark ? "#2B211D" : "#FBF7EA", border:`1px solid ${BORDER}`, borderRadius:18, padding:"28px 24px", maxWidth:480, width:"100%", maxHeight:"90vh", overflowY:"auto", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
               <h3 style={{ color:TEXT, fontSize:17, fontWeight:700, margin:0 }}>📏 {t.physicalInfo}</h3>
-              <button onClick={() => setPhysicalModal(false)} style={{ background: dark?"rgba(255,255,255,0.08)":"#f1f5f9", border:"none", borderRadius:8, width:32, height:32, cursor:"pointer", fontSize:16, color:MUTED, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+              <button onClick={() => setPhysicalModal(false)} style={{ background: dark?"rgba(245,238,219,0.08)":"#F1EAD3", border:"none", borderRadius:8, width:32, height:32, cursor:"pointer", fontSize:16, color:MUTED, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(2,minmax(0,1fr))", gap:12 }}>
               {([
@@ -1214,7 +1217,7 @@ export default function DashboardPage() {
             <button
               onClick={savePhysical}
               disabled={physSaving}
-              style={{ width:"100%", padding:"12px 0", marginTop:16, background: physSaving ? (dark?"rgba(255,255,255,0.06)":"#e2e8f0") : "#00C9B1", border:"none", borderRadius:10, color: physSaving ? MUTED : "#fff", fontSize:15, fontWeight:700, cursor: physSaving ? "not-allowed" : "pointer", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}
+              style={{ width:"100%", padding:"12px 0", marginTop:16, background: physSaving ? (dark?"rgba(255,255,255,0.06)":"#E6DCC3") : "var(--color-primary-text)", border:"none", borderRadius:10, color: physSaving ? MUTED : "#fff", fontSize:15, fontWeight:700, cursor: physSaving ? "not-allowed" : "pointer", fontFamily:"'IBM Plex Sans Arabic',sans-serif" }}
             >
               {physSaving ? (lang === "ar" ? "جاري الحفظ..." : "Saving...") : (lang === "ar" ? "حفظ" : "Save")}
             </button>

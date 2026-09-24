@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import styles from "../auth.module.css";
-import { useLangSwitch } from "./useLangSwitch";
+import { useLangSwitch } from "@/hooks/useLangSwitch";
 
 export type AuthVariant = "register" | "login" | "plain";
 

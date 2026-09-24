@@ -64,12 +64,12 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
   const dir = lang === "ar" ? "rtl" : "ltr";
   const router = useRouter();
 
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#e2e8f0";
-  const CARD   = dark ? "#0b1622" : "#ffffff";
-  const TEAL   = "#00C9B1";
-  const ORANGE = "#FF6B2B";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#E6DCC3";
+  const CARD   = dark ? "#1B1310" : "#FBF7EA";
+  const TEAL   = "var(--color-primary-text)";
+  const ORANGE = "var(--color-accent-strong)";
 
   const fallback = calculateCompletion(profile, talentProfile, portfolioItems);
   const score    = completion?.score ?? fallback.score;
@@ -79,20 +79,20 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
     return (
       <div style={{
         marginBottom: 28, fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-        background: dark ? "linear-gradient(135deg,#0a2a1e,#0d1f2d)" : "linear-gradient(135deg,#ecfdf5,#eff6ff)",
-        border: `1px solid ${dark ? "rgba(0,210,106,0.25)" : "rgba(0,210,106,0.3)"}`,
+        background: dark ? "linear-gradient(135deg,#2B211D,#2B211D)" : "linear-gradient(135deg,#EAF6F0,#EEF6F4)",
+        border: `1px solid ${dark ? "rgba(8,127,131,0.25)" : "rgba(8,127,131,0.3)"}`,
         borderRadius: 18, padding: "28px 24px", textAlign: "center",
       }} dir={dir}>
         <div style={{ fontSize: 52, marginBottom: 12 }}>🎉</div>
-        <h3 style={{ color: dark ? "#f1f5f9" : "#0f172a", fontSize: 20, fontWeight: 800, margin: "0 0 8px" }}>
+        <h3 style={{ color: dark ? "#F5EEDB" : "#2B211D", fontSize: 20, fontWeight: 800, margin: "0 0 8px" }}>
           {t.congrats.title}
         </h3>
-        <p style={{ color: dark ? "#94a3b8" : "#64748b", fontSize: 14, margin: "0 0 20px", lineHeight: 1.7 }}>
+        <p style={{ color: dark ? "#A99B8E" : "#6E5F55", fontSize: 14, margin: "0 0 20px", lineHeight: 1.7 }}>
           {t.congrats.body}
         </p>
         <a href={canonicalTalentPath(talentProfile?.category, profile?.handle)} style={{
           display: "inline-block", padding: "11px 28px",
-          background: "#00C9B1", color: "#fff", borderRadius: 10,
+          background: "var(--color-primary-text)", color: "#fff", borderRadius: 10,
           fontSize: 14, fontWeight: 700, textDecoration: "none",
           fontFamily: "'IBM Plex Sans Arabic', sans-serif",
         }}>
@@ -102,7 +102,7 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
     );
   }
 
-  const scoreColor = score >= 80 ? "#00D26A" : score >= 50 ? TEAL : score >= 25 ? "#FFB800" : ORANGE;
+  const scoreColor = score >= 80 ? "var(--color-primary-text)" : score >= 50 ? TEAL : score >= 25 ? "var(--color-accent-strong)" : ORANGE;
 
   return (
     <div style={{ marginBottom: 28, fontFamily: "'IBM Plex Sans Arabic', sans-serif" }} dir={dir}>
@@ -115,7 +115,7 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
           <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 700, margin: "0 0 6px" }}>{t.title}</h3>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ flex: 1, maxWidth: 220 }}>
-              <div style={{ height: 8, background: dark ? "rgba(255,255,255,0.06)" : "#f1f5f9", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: 8, background: dark ? "rgba(255,255,255,0.06)" : "#F1EAD3", borderRadius: 4, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${score}%`, background: scoreColor, borderRadius: 4, transition: "width 0.5s ease" }} />
               </div>
             </div>
@@ -146,8 +146,8 @@ export default function ProfileCompletionCard({ profile, talentProfile, portfoli
               <span key={f.key} style={{
                 display: "flex", alignItems: "center", gap: 4,
                 padding: "3px 10px", fontSize: 11,
-                background: dark ? "rgba(255,107,43,0.08)" : "rgba(255,107,43,0.06)",
-                border: "1px solid rgba(255,107,43,0.2)", borderRadius: 20, color: ORANGE,
+                background: dark ? "rgba(231,165,138,0.08)" : "rgba(231,165,138,0.06)",
+                border: "1px solid rgba(231,165,138,0.2)", borderRadius: 20, color: ORANGE,
               }}>
                 🔒 {f.label} · {t.unlockAt(f.n)}
               </span>

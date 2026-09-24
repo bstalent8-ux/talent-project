@@ -245,14 +245,14 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
       </div>
 
       {lead.possibleDuplicateOf && (
-        <div style={{ ...cardStyle, borderColor: "#F59E0B", backgroundColor: "rgba(245,158,11,0.08)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <AlertTriangle size={18} color="#F59E0B" style={{ flexShrink: 0 }} />
+        <div style={{ ...cardStyle, borderColor: "#C98A70", backgroundColor: "rgba(245,158,11,0.08)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <AlertTriangle size={18} color="#C98A70" style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, fontSize: 13.5, color: TEXT, minWidth: 200 }}>{t.duplicateBanner}</span>
           <Link href={`/admin/leads/${lead.possibleDuplicateOf}`} target="_blank" style={{ fontSize: 12.5, color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
             {t.viewOther}
           </Link>
           <button type="button" disabled={busy} onClick={() => resolveDuplicate("merge")}
-            style={{ padding: "6px 14px", borderRadius: 8, border: "none", backgroundColor: "#F59E0B", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+            style={{ padding: "6px 14px", borderRadius: 8, border: "none", backgroundColor: "#B9694C", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
             {t.merge}
           </button>
           <button type="button" disabled={busy} onClick={() => resolveDuplicate("dismiss")}
@@ -494,7 +494,7 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
                     </div>
                   )}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                    <Clock size={12} color={isPast && !action.notifiedAt ? "#F59E0B" : MUTED} />
+                    <Clock size={12} color={isPast && !action.notifiedAt ? "#C98A70" : MUTED} />
                     {isEditing ? (
                       <>
                         <input
@@ -510,7 +510,7 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
                       </>
                     ) : (
                       <>
-                        <span style={{ color: isPast && !action.notifiedAt ? "#F59E0B" : MUTED }}>
+                        <span style={{ color: isPast && !action.notifiedAt ? "#C98A70" : MUTED }}>
                           {action.followUpAt
                             ? new Date(action.followUpAt).toLocaleDateString(ar ? "ar-EG" : "en-US")
                             : t.none}

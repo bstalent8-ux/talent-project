@@ -546,6 +546,14 @@
   align-content: start;
 }
 
+/* The support trigger is a bare button; as a grid item it stretched the full
+   column and centred its label. Pin it to the start edge, under the first
+   social icon. */
+.footerHelp {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .footerTagline {
   max-width: 18rem;
   margin: 0;

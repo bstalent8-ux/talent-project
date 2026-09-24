@@ -1,4 +1,5 @@
 "use client";
+import { useHeldValue, useModalPresence } from "@/hooks/useModalClose";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
@@ -69,7 +70,9 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
   const ar = lang === "ar";
 
   const [selected, setSelected] = useState<AdminEmailLogRow | null>(null);
+  const { value: selectedHeld, closing: selectedClosing } = useHeldValue(selected);
   const [composing, setComposing] = useState(false);
+  const { mounted: composingMounted, closing: composingClosing } = useModalPresence(composing);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [form, setForm] = useState({ to: "", subject: "", html: "" });
   const [sending, setSending] = useState(false);
@@ -302,20 +305,20 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
 
       <AdminPagination page={page} totalPages={totalPages} buildHref={hrefFor} />
 
-      {selected && (
-        <div
+      {selectedHeld && (
+        <div className="modal-backdrop" data-state={selectedClosing ? "closing" : "open"}
           onClick={() => setSelected(null)}
-          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(27,19,16,0.62)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
-          <div
+          <div className="modal-card"
             onClick={(e) => e.stopPropagation()}
             style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, width: "min(560px, 100%)", maxHeight: "85vh", overflowY: "auto", padding: 20 }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
               <div>
-                <h2 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{selected.subject}</h2>
+                <h2 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{selectedHeld.subject}</h2>
                 <div style={{ color: MUTED, fontSize: 12.5, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                  <Mail size={12} />{selected.recipientEmail}
+                  <Mail size={12} />{selectedHeld.recipientEmail}
                 </div>
               </div>
               <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}>
@@ -323,10 +326,10 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
               </button>
             </div>
 
-            {selected.status === "failed" && selected.error && (
+            {selectedHeld.status === "failed" && selectedHeld.error && (
               <div style={{ marginBottom: 14, padding: 10, borderRadius: 8, backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
                 <p style={{ color: "#EF4444", fontSize: 11, fontWeight: 700, margin: "0 0 4px" }}>{t.error}</p>
-                <p style={{ color: TEXT, fontSize: 12, margin: 0 }}>{selected.error}</p>
+                <p style={{ color: TEXT, fontSize: 12, margin: 0 }}>{selectedHeld.error}</p>
               </div>
             )}
 
@@ -355,38 +358,38 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
                 So: template rows render as real HTML (readable, matches
                 what was actually sent); custom rows keep the escaped-text
                 fallback from the original fix. */}
-            {selected.template === "custom" ? (
+            {selectedHeld.template === "custom" ? (
               <div
                 style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#261C18" : "#F1E8D2", whiteSpace: "pre-wrap", wordBreak: "break-word", color: TEXT, fontSize: 13 }}
               >
-                {escapeHtml(selected.bodyHtml)}
+                {escapeHtml(selectedHeld.bodyHtml)}
               </div>
             ) : (
               <div
                 style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#261C18" : "#F1E8D2", color: TEXT, fontSize: 13 }}
-                dangerouslySetInnerHTML={{ __html: selected.bodyHtml }}
+                dangerouslySetInnerHTML={{ __html: selectedHeld.bodyHtml }}
               />
             )}
 
             <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
               <button
-                disabled={resendingId === selected.id}
-                onClick={() => resend(selected.id)}
+                disabled={resendingId === selectedHeld.id}
+                onClick={() => resend(selectedHeld.id)}
                 style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
               >
-                <RefreshCw size={13} />{resendingId === selected.id ? t.resending : t.resend}
+                <RefreshCw size={13} />{resendingId === selectedHeld.id ? t.resending : t.resend}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {composing && (
-        <div
+      {composingMounted && (
+        <div className="modal-backdrop" data-state={composingClosing ? "closing" : "open"}
           onClick={() => !sending && closeCompose()}
-          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(27,19,16,0.62)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
-          <div
+          <div className="modal-card"
             onClick={(e) => e.stopPropagation()}
             style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, width: "min(560px, 100%)", maxHeight: "85vh", overflowY: "auto", padding: 20 }}
           >

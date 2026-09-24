@@ -50,13 +50,13 @@ export default function NotificationItem({
   const router = useRouter();
   const isRTL  = lang === "ar";
 
-  const accent = TYPE_COLOR[n.type] ?? "#6B7280";
+  const accent = TYPE_COLOR[n.type] ?? "#8C7D71";
   const icon   = TYPE_ICON[n.type]  ?? "🔔";
   const time   = timeAgo(n.created_at, lang);
   const href   = n.action_url ?? fallbackActionUrl(n.type, n.metadata);
   const { title, message } = readI18n(n, lang);
 
-  const unreadBg = dark ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.05)";
+  const unreadBg = dark ? "rgba(79,167,163,0.12)" : "rgba(8,127,131,0.07)";
 
   function handleClick() {
     if (!n.is_read) onRead(n.id);
@@ -89,14 +89,14 @@ export default function NotificationItem({
         padding:      compact ? "12px 16px" : "16px 18px",
         cursor:       href ? "pointer" : "default",
         background:   n.is_read ? "transparent" : unreadBg,
-        borderBottom: dark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)",
+        borderBottom: "1px solid var(--border-subtle)",
         transition:   "background 0.15s",
         position:     "relative",
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.background = dark
-          ? "rgba(255,255,255,0.04)"
-          : "rgba(0,0,0,0.03)";
+          ? "rgba(245,238,219,0.05)"
+          : "rgba(43,33,29,0.04)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.background = n.is_read ? "transparent" : unreadBg;
@@ -119,8 +119,8 @@ export default function NotificationItem({
         width:          compact ? "36px" : "42px",
         height:         compact ? "36px" : "42px",
         borderRadius:   "50%",
-        background:     `${accent}20`,
-        border:         `1.5px solid ${accent}40`,
+        background:     `color-mix(in srgb, ${accent} 13%, transparent)`,
+        border:         `1.5px solid color-mix(in srgb, ${accent} 25%, transparent)`,
         display:        "flex",
         alignItems:     "center",
         justifyContent: "center",
@@ -135,7 +135,7 @@ export default function NotificationItem({
         <div style={{
           fontSize:     compact ? "13px" : "14px",
           fontWeight:   n.is_read ? 400 : 600,
-          color:        dark ? "#F1F5F9" : "#0F172A",
+          color:        "var(--text-primary)",
           whiteSpace:   "nowrap",
           overflow:     "hidden",
           textOverflow: "ellipsis",
@@ -144,7 +144,7 @@ export default function NotificationItem({
         </div>
         <div style={{
           fontSize:        compact ? "12px" : "13px",
-          color:           dark ? "#A8B3C2" : "#64748B",
+          color:           "var(--text-muted)",
           marginTop:       "2px",
           overflow:        "hidden",
           display:         "-webkit-box",
@@ -184,11 +184,11 @@ export default function NotificationItem({
               cursor:       "pointer",
               padding:      "4px",
               borderRadius: "6px",
-              color:        dark ? "#A8B3C2" : "#64748B",
+              color:        "var(--text-muted)",
               display:      "flex",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = dark ? "#A8B3C2" : "#64748B"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-error)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
           >
             <Trash2 size={15} />
           </button>

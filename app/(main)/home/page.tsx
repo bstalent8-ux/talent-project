@@ -10,23 +10,23 @@ export const metadata: Metadata = {
 };
 import { getCachedPublicTalentCards } from "@/features/talent-profile/services/public-talents.service";
 import {
-  getCachedApprovedTestimonials,
-  getCachedApprovedBrandMoments,
   getCachedCompletedProjectsCount,
+  getCachedPublicBrandCount,
+  getCachedCommunityHighlights,
+  getCachedFeaturedPackages,
 } from "@/features/landing/services/landing-content.service";
 import { CACHE_SECONDS } from "@/lib/cache";
 
 export default async function HomePage() {
   // Unlimited (was capped at 30) — categoryCounts/avgRating/totalTalents
   // need the real full count, not a truncated sample.
-  const [talents, testimonials, brandMoments, completedProjects] = await Promise.all([
+  const [talents, completedProjects, brandCount, community, packages] = await Promise.all([
     getCachedPublicTalentCards(undefined, CACHE_SECONDS.tenMinutes),
-    getCachedApprovedTestimonials(),
-    getCachedApprovedBrandMoments(),
     getCachedCompletedProjectsCount(),
+    getCachedPublicBrandCount(),
+    getCachedCommunityHighlights(),
+    getCachedFeaturedPackages(),
   ]);
-
-  const topTalents = [...talents].sort((a, b) => b.rating - a.rating).slice(0, 6);
 
   const categoryCounts = { ugc: 0, model: 0 };
   let ratingSum = 0;
@@ -43,13 +43,13 @@ export default async function HomePage() {
 
   return (
     <HomeClient
-      topTalents={topTalents}
       totalTalents={talents.length}
+      brandCount={brandCount}
       completedProjects={completedProjects}
       avgRating={avgRating}
       categoryCounts={categoryCounts}
-      testimonials={testimonials}
-      brandMoments={brandMoments}
+      community={community}
+      packages={packages}
     />
   );
 }

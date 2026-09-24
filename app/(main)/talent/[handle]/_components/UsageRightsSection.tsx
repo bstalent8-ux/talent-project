@@ -29,11 +29,11 @@ export default function UsageRightsSection({ selectedPackage, addons: addonsProp
   const ar = lang === "ar";
   const addons = addonsProp ?? [];
   const checked = checkedProp ?? checkedState;
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const GREEN = "#00D26A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const GREEN = "var(--color-primary-text)";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
 
   const toggle = (k: string) => (onToggle ? onToggle(k) : setCheckedState(p => ({ ...p, [k]: !p[k] })));
   const basePrice = selectedPackage ? parsePrice(selectedPackage.price) : 0;
@@ -48,16 +48,16 @@ export default function UsageRightsSection({ selectedPackage, addons: addonsProp
 
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24 }}>
-      <h2 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 18, fontWeight: 800, marginBottom: 20, margin: "0 0 20px" }}>{ar ? "حقوق الاستخدام والإضافات" : "Usage Rights & Add-ons"}</h2>
+      <h2 style={{ color: dark ? "#fff" : "#2B211D", fontSize: 18, fontWeight: 800, marginBottom: 20, margin: "0 0 20px" }}>{ar ? "حقوق الاستخدام والإضافات" : "Usage Rights & Add-ons"}</h2>
       {addons.length > 0 && <div style={{ display: "grid", gridTemplateColumns: isMobile || stacked ? "1fr" : "2fr 1fr", gap: 20 }}>
         {/* Add-ons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {addons.map(a => (
-            <label key={a.key} onClick={() => toggle(a.key)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", padding: "14px 16px", backgroundColor: checked[a.key] ? "rgba(0,210,106,0.06)" : SURFACE, border: `1px solid ${checked[a.key] ? GREEN : BORDER}`, borderRadius: 12, transition: "all 0.2s" }}>
-              <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${checked[a.key] ? GREEN : "rgba(168,179,194,0.4)"}`, backgroundColor: checked[a.key] ? GREEN : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
+            <label key={a.key} onClick={() => toggle(a.key)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", padding: "14px 16px", backgroundColor: checked[a.key] ? "rgba(8,127,131,0.06)" : SURFACE, border: `1px solid ${checked[a.key] ? GREEN : BORDER}`, borderRadius: 12, transition: "all 0.2s" }}>
+              <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${checked[a.key] ? GREEN : "rgba(169,155,142,0.4)"}`, backgroundColor: checked[a.key] ? GREEN : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
                 {checked[a.key] && <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
               </div>
-              <span style={{ flex: 1, color: dark ? "#fff" : "#0F172A", fontSize: 13, fontWeight: 600 }}>{a.label}</span>
+              <span style={{ flex: 1, color: dark ? "#fff" : "#2B211D", fontSize: 13, fontWeight: 600 }}>{a.label}</span>
               <span style={{ color: GREEN, fontSize: 13, fontWeight: 800, direction: "ltr" }}>+{fmt(a.price)} EGP</span>
             </label>
           ))}
@@ -71,7 +71,7 @@ export default function UsageRightsSection({ selectedPackage, addons: addonsProp
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: MUTED }}>
             <span>{ar ? "الباقة" : "Package"}</span>
-            <span style={{ color: dark ? "#fff" : "#0F172A", fontWeight: 600 }}>{basePrice > 0 ? `${fmt(basePrice)} EGP` : "—"}</span>
+            <span style={{ color: dark ? "#fff" : "#2B211D", fontWeight: 600 }}>{basePrice > 0 ? `${fmt(basePrice)} EGP` : "—"}</span>
           </div>
           {addons.filter(a => checked[a.key]).map(a => (
             <div key={a.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: MUTED }}>
@@ -80,11 +80,11 @@ export default function UsageRightsSection({ selectedPackage, addons: addonsProp
             </div>
           ))}
           <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12, display: "flex", justifyContent: "space-between" }}>
-            <span style={{ color: dark ? "#fff" : "#0F172A", fontWeight: 700, fontSize: 14 }}>{ar ? "الإجمالي" : "Total"}</span>
+            <span style={{ color: dark ? "#fff" : "#2B211D", fontWeight: 700, fontSize: 14 }}>{ar ? "الإجمالي" : "Total"}</span>
             <span style={{ color: GREEN, fontWeight: 900, fontSize: 18 }}>{fmt(total)} EGP</span>
           </div>
           {showBookButton && (
-            <motion.button whileHover={{ scale: 1.02 }} style={{ backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", width: "100%", fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", marginTop: 4 }}>
+            <motion.button whileHover={{ scale: 1.02 }} style={{ backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 10, padding: "12px 0", width: "100%", fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif", marginTop: 4 }}>
               {ar ? "احجز الآن" : "Book Now"}
             </motion.button>
           )}

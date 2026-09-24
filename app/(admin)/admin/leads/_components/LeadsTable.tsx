@@ -270,7 +270,7 @@ export default function LeadsTable({ leads, total, page, pageSize, stage, channe
                         <span style={{ fontWeight: 600 }}>{lead.fullName ?? t.unnamed}</span>
                         {lead.possibleDuplicateOf && (
                           <span title={t.possibleDuplicate} style={{ display: "flex" }}>
-                            <AlertTriangle size={13} color="#F59E0B" />
+                            <AlertTriangle size={13} color="#C98A70" />
                           </span>
                         )}
                       </div>

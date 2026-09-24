@@ -7,12 +7,12 @@ import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
 const COLORS = [
-  ["#1e3a5f", "#0d2137"],
-  ["#2a1a3a", "#1a0d2a"],
-  ["#1a2a1a", "#0d1a0d"],
-  ["#3a1a1a", "#2a0d0d"],
-  ["#1a1a3a", "#0d0d2a"],
-  ["#2a2a1a", "#1a1a0d"],
+  ["#2B211D", "#2B211D"],
+  ["#2B211D", "#1B1310"],
+  ["#2B211D", "#1B1310"],
+  ["#2B211D", "#1B1310"],
+  ["#2B211D", "#1B1310"],
+  ["#2B211D", "#1B1310"],
 ];
 
 interface Props {
@@ -26,11 +26,11 @@ export default function PortfolioSection({ portfolioItems, variant = "default" }
   const isMobile = useIsMobile();
   const { dark, lang } = useSite();
   const ar = lang === "ar";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const GREEN = "#00D26A";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const GREEN = "var(--color-primary-text)";
   const TEAL  = "var(--color-primary)";
-  const VIOLET = "#7C3AED";
+  const VIOLET = "var(--color-primary-text)";
   const hasReal = portfolioItems && portfolioItems.length > 0;
   const isModel = variant === "model";
 
@@ -64,7 +64,7 @@ export default function PortfolioSection({ portfolioItems, variant = "default" }
         style={{
           position: "absolute",
           inset: 0,
-          backgroundColor: isModel ? "color-mix(in srgb, var(--color-primary) 20%, transparent)" : "rgba(0,210,106,0.15)",
+          backgroundColor: isModel ? "color-mix(in srgb, var(--color-primary) 20%, transparent)" : "rgba(8,127,131,0.15)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -136,10 +136,10 @@ export default function PortfolioSection({ portfolioItems, variant = "default" }
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <h2 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 18, fontWeight: 800, margin: 0 }}>
+          <h2 style={{ color: dark ? "#fff" : "#2B211D", fontSize: 18, fontWeight: 800, margin: 0 }}>
             {isModel ? (ar ? "المعرض" : "Portfolio") : (ar ? "معرض الفيديوهات" : "Video Portfolio")}
           </h2>
-          <span style={{ backgroundColor: `${VIOLET}22`, color: VIOLET, fontSize: 12, fontWeight: 700, padding: "2px 9px", borderRadius: 999 }}>
+          <span style={{ backgroundColor: `color-mix(in srgb, ${VIOLET} 13%, transparent)`, color: VIOLET, fontSize: 12, fontWeight: 700, padding: "2px 9px", borderRadius: 999 }}>
             {portfolioItems!.length}
           </span>
         </div>

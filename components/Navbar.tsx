@@ -26,6 +26,7 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 import { useGuestGuard } from "@/contexts/GuestGuard";
 import { useSite } from "@/contexts/SiteContext";
+import { useLangSwitch } from "@/hooks/useLangSwitch";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { reset as resetMyProfileStore, useMyProfile } from "@/hooks/useMyProfile";
 import { resetNotificationStore } from "@/hooks/notifications";
@@ -113,7 +114,9 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const isMobile = useIsMobile(980);
-  const { lang, toggleLang, dark, toggleMode } = useSite();
+  const { lang, dark, toggleMode } = useSite();
+  // Wipe-out / type-in language switch, mirrored onto <html> (see globals.css).
+  const { phase: langPhase, switchLang } = useLangSwitch({ global: true });
   const { loading: authLoading, isGuest, user } = useGuestGuard();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -204,7 +207,7 @@ export default function Navbar() {
         </div>
 
         {!isMobile && (
-          <div className={styles.navLinks}>
+          <div className={styles.navLinks} data-lang-wipe>
             {links.map((item) => {
               const isActive = pathname === item.href;
               const link = (
@@ -226,7 +229,7 @@ export default function Navbar() {
         )}
 
         <div className={styles.navControls}>
-          <button className={styles.iconButton} onClick={toggleLang} type="button" aria-label="Toggle language">
+          <button className={styles.iconButton} onClick={switchLang} disabled={langPhase !== "idle"} type="button" aria-label="Toggle language">
             <Languages size={15} />
             {t.lang}
           </button>

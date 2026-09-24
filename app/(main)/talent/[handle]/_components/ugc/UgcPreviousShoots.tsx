@@ -16,6 +16,7 @@
 // is stored, so those lines read "No content" instead of being invented. An empty
 // card stays visible and says "No content".
 
+import { useHeldValue } from "@/hooks/useModalClose";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck, X } from "lucide-react";
@@ -23,8 +24,8 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { ExperienceItem, BrandItem } from "@/features/talent-profile/types";
 
-const PURPLE = "#6C4DFF";
-const VERIFIED_GREEN = "#3DB57C";
+const PURPLE = "var(--color-primary-text)";
+const VERIFIED_GREEN = "var(--color-success)";
 
 function findBrandLogo(name: string, brands: BrandItem[]): string | null {
   const match = brands.find((b) => b.logo_url && name.toLowerCase().includes(b.name.toLowerCase()));
@@ -48,17 +49,18 @@ export default function UgcPreviousShoots({ experience, brands, variant = "ugc" 
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const compact = useIsMobile(1024);
-  const CARD = model ? (dark ? "var(--bg-card)" : "#FFFFFF") : (dark ? "#0D1623" : "#FFFFFF");
-  const BORDER = model ? (dark ? "var(--border-subtle)" : "#E2E8F0") : (dark ? "rgba(255,255,255,0.10)" : "#E5E7EB");
-  const ACCENT = model ? "#d89b37" : PURPLE;
-  const TILE_BORDER = dark ? "rgba(255,255,255,0.10)" : "#E7EAF0";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const FAINT = dark ? "#7C8799" : "#94A3B8";
+  const CARD = model ? (dark ? "var(--bg-card)" : "#FBF7EA") : (dark ? "#2B211D" : "#FBF7EA");
+  const BORDER = model ? (dark ? "var(--border-subtle)" : "#E6DCC3") : (dark ? "rgba(255,255,255,0.10)" : "#E6DCC3");
+  const ACCENT = model ? "var(--color-accent-strong)" : PURPLE;
+  const TILE_BORDER = dark ? "rgba(255,255,255,0.10)" : "#E9E0CB";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const FAINT = dark ? "#8C7D71" : "#8C7D71";
   const noContent = ar ? "لا يوجد محتوى" : "No content";
   const [shootsOpen, setShootsOpen] = useState(false);
   const [verifiedOpen, setVerifiedOpen] = useState(false);
   const [openDetail, setOpenDetail] = useState<ExperienceItem | null>(null);
+  const { value: openDetailHeld, closing: openDetailClosing } = useHeldValue(openDetail);
 
   const shoots: Tile[] = (experience ?? []).map((p, i) => {
     const hasDetail = !!(p.description || p.duration || p.deliveredAt || p.deliverable);
@@ -111,7 +113,7 @@ export default function UgcPreviousShoots({ experience, brands, variant = "ugc" 
       <div style={{ color: t.subtitle ? MUTED : FAINT, fontSize: 12, marginTop: 6 }}>{t.subtitle ?? noContent}</div>
       <div style={{ color: FAINT, fontSize: 12, marginTop: 6 }}>{t.date ?? noContent}</div>
       {model && t.verified && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 10, color: "#22c55e", fontSize: 11, fontWeight: 800, letterSpacing: 0.3 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 10, color: "var(--color-success)", fontSize: 11, fontWeight: 800, letterSpacing: 0.3 }}>
           <ShieldCheck size={13} />{ar ? "موثّق" : "VERIFIED"}
         </div>
       )}
@@ -162,40 +164,40 @@ export default function UgcPreviousShoots({ experience, brands, variant = "ugc" 
         items: verified, cols: verifiedCols, open: verifiedOpen, toggle: () => setVerifiedOpen((o) => !o), tall: true,
       })}
 
-      {openDetail && (
-        <div
+      {openDetailHeld && (
+        <div className="modal-backdrop" data-state={openDetailClosing ? "closing" : "open"}
           onClick={(e) => e.target === e.currentTarget && setOpenDetail(null)}
-          style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(27,19,16,0.62)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
-          <div
+          <div className="modal-card"
             dir={ar ? "rtl" : "ltr"}
             style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, padding: 24, maxWidth: 440, width: "100%", maxHeight: "85vh", overflowY: "auto", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
           >
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
               <div style={{ minWidth: 0 }}>
-                {openDetail.verified && (
+                {openDetailHeld.verified && (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 8, backgroundColor: VERIFIED_GREEN, color: "#fff", borderRadius: 6, padding: "2px 7px", fontSize: 10, fontWeight: 800, letterSpacing: 0.3 }}>
                     <ShieldCheck size={10} />{ar ? "موثّق" : "VERIFIED"}
                   </span>
                 )}
-                <h3 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: 0, overflowWrap: "anywhere" }}>{openDetail.name}</h3>
+                <h3 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: 0, overflowWrap: "anywhere" }}>{openDetailHeld.name}</h3>
               </div>
-              <button onClick={() => setOpenDetail(null)} aria-label={ar ? "إغلاق" : "Close"} style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, border: "none", background: dark ? "rgba(255,255,255,0.08)" : "#f1f5f9", color: MUTED, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <button onClick={() => setOpenDetail(null)} aria-label={ar ? "إغلاق" : "Close"} style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 8, border: "none", background: dark ? "rgba(255,255,255,0.08)" : "#F1EAD3", color: MUTED, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <X size={16} />
               </button>
             </div>
 
-            {openDetail.description && (
-              <p style={{ color: TEXT, fontSize: 13.5, lineHeight: 1.7, margin: "0 0 16px" }}>{openDetail.description}</p>
+            {openDetailHeld.description && (
+              <p style={{ color: TEXT, fontSize: 13.5, lineHeight: 1.7, margin: "0 0 16px" }}>{openDetailHeld.description}</p>
             )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[
-                { label: ar ? "مدة التنفيذ" : "Execution duration", value: openDetail.duration },
-                { label: ar ? "تاريخ التسليم" : "Delivered", value: openDetail.deliveredAt },
-                { label: ar ? "اللي اتسلّم" : "Deliverable", value: openDetail.deliverable },
+                { label: ar ? "مدة التنفيذ" : "Execution duration", value: openDetailHeld.duration },
+                { label: ar ? "تاريخ التسليم" : "Delivered", value: openDetailHeld.deliveredAt },
+                { label: ar ? "اللي اتسلّم" : "Deliverable", value: openDetailHeld.deliverable },
               ].filter((row) => row.value).map((row) => (
-                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", gap: 12, borderTop: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "#EEF2F7"}`, paddingTop: 10 }}>
+                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", gap: 12, borderTop: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "#F3ECD6"}`, paddingTop: 10 }}>
                   <span style={{ color: MUTED, fontSize: 12.5, flexShrink: 0 }}>{row.label}</span>
                   <span style={{ color: TEXT, fontSize: 12.5, fontWeight: 700, textAlign: ar ? "left" : "right" }}>{row.value}</span>
                 </div>

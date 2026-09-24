@@ -6,6 +6,7 @@
 // ConfirmationModal pattern — this codebase doesn't use one anywhere today).
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { useModalPresence } from "@/hooks/useModalClose";
 import styles from "./Modal.module.css";
 
 export interface ModalProps {
@@ -36,13 +37,14 @@ export default function Modal({ open, onClose, title, description, children, act
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  const { mounted, closing } = useModalPresence(open);
+  if (!mounted) return null;
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
+    <div className={`${styles.backdrop} modal-backdrop`} data-state={closing ? "closing" : "open"} onClick={onClose}>
       <div
         ref={panelRef}
-        className={styles.panel}
+        className={`${styles.panel} modal-card`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "ui-modal-title" : undefined}

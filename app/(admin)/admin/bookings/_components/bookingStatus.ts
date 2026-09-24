@@ -17,7 +17,7 @@ export const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   brief_sent:       { bg: "rgba(79,167,163,0.15)",  text: "#4FA7A3" },
   accepted:         { bg: "rgba(201,138,112,0.15)", text: "#C98A70" },
   payment_pending:  { bg: "rgba(231,165,138,0.15)",  text: "#E7A58A" },
-  in_progress:      { bg: "rgba(251,146,60,0.15)",  text: "#fb923c" },
+  in_progress:      { bg: "rgba(251,146,60,0.15)",  text: "#C98A70" },
   completed:        { bg: "rgba(8,127,131,0.15)",   text: "#087F83" },
   paid:             { bg: "rgba(8,127,131,0.25)",   text: "#087F83" },
   rejected:         { bg: "rgba(239,68,68,0.15)",   text: "#EF4444" },

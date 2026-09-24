@@ -18,7 +18,7 @@ interface Props {
 
 export default function UgcVideoLightbox({ item, onClose }: Props) {
   const { dark } = useSite();
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
 
   return (
     <AnimatePresence>
@@ -26,10 +26,10 @@ export default function UgcVideoLightbox({ item, onClose }: Props) {
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={onClose}
-          style={{ position: "fixed", inset: 0, zIndex: 200, backgroundColor: "rgba(5,11,18,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, zIndex: 200, backgroundColor: "rgba(27,19,16,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
             style={{ position: "relative", maxWidth: 340, width: "100%", aspectRatio: "9 / 16", borderRadius: 20, overflow: "hidden", backgroundColor: "#000", border: `1px solid ${BORDER}` }}
           >

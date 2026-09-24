@@ -13,7 +13,7 @@ import { Star, MessageSquare, CheckCircle2, CalendarCheck, Eye, TrendingUp } fro
 import { useSite } from "@/contexts/SiteContext";
 import type { TalentData, BookingStats } from "@/features/talent-profile/types";
 
-const VIOLET = "#16a3a3"; // site --color-accent, was violet
+const VIOLET = "var(--color-primary-text)"; // site --color-accent, was violet
 
 interface Props {
   talent: TalentData;
@@ -23,21 +23,21 @@ interface Props {
 export default function UgcPerformanceMetrics({ talent, bookingStats }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const TILE = dark ? "#0A121C" : "#F8FAFC";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const TILE = dark ? "#231A16" : "#F6F0DD";
 
   const completedPct = bookingStats.total > 0 ? Math.round((bookingStats.completed / bookingStats.total) * 100) : 0;
 
   const cards = [
-    { icon: Star, label: ar ? "متوسط التقييم" : "Average Rating", value: talent.rating > 0 ? talent.rating.toFixed(1) : "—", color: "#F4B740" },
+    { icon: Star, label: ar ? "متوسط التقييم" : "Average Rating", value: talent.rating > 0 ? talent.rating.toFixed(1) : "—", color: "var(--color-accent-strong)" },
     { icon: MessageSquare, label: ar ? "عدد التقييمات" : "Total Reviews", value: String(talent.reviewCount), color: VIOLET },
-    { icon: CheckCircle2, label: ar ? "المشاريع المكتملة" : "Completed Projects", value: String(bookingStats.completed), color: "#10B981" },
-    { icon: CalendarCheck, label: ar ? "إجمالي الحجوزات" : "Total Bookings", value: String(bookingStats.total), color: "#3B82F6" },
-    { icon: Eye, label: ar ? "مشاهدات الملف" : "Profile Views", value: talent.views, color: "#06B6D4" },
-    { icon: TrendingUp, label: ar ? "نسبة الإنجاز" : "Completion Rate", value: `${completedPct}%`, color: "#059669" },
+    { icon: CheckCircle2, label: ar ? "المشاريع المكتملة" : "Completed Projects", value: String(bookingStats.completed), color: "var(--color-success)" },
+    { icon: CalendarCheck, label: ar ? "إجمالي الحجوزات" : "Total Bookings", value: String(bookingStats.total), color: "var(--color-secondary-alt)" },
+    { icon: Eye, label: ar ? "مشاهدات الملف" : "Profile Views", value: talent.views, color: "var(--color-secondary-alt)" },
+    { icon: TrendingUp, label: ar ? "نسبة الإنجاز" : "Completion Rate", value: `${completedPct}%`, color: "var(--color-success)" },
   ];
 
   const hasAny = talent.rating > 0 || talent.reviewCount > 0 || bookingStats.total > 0;

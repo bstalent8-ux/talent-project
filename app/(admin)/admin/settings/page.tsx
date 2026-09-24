@@ -321,7 +321,7 @@ export default function AdminSettingsPage() {
                 style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "11px 28px", borderRadius: 12, border: "none",
-                  backgroundColor: status === "saved" ? "#16a34a" : GREEN,
+                  backgroundColor: status === "saved" ? "#1EA672" : GREEN,
                   color: "#fff", fontWeight: 700, fontSize: 14,
                   cursor: status === "saving" ? "wait" : "pointer",
                   fontFamily: "inherit", transition: "background 0.2s",

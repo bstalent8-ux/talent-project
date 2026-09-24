@@ -1,5 +1,6 @@
 "use client";
 import { useSite } from "@/contexts/SiteContext";
+import { useModalPresence } from "@/hooks/useModalClose";
 
 interface Props {
   open: boolean;
@@ -25,7 +26,8 @@ export default function ConfirmationModal({
   children,
 }: Props) {
   const { lang } = useSite();
-  if (!open) return null;
+  const { mounted, closing } = useModalPresence(open);
+  if (!mounted) return null;
 
   const t = {
     confirm: confirmLabel ?? (lang === "ar" ? "تأكيد" : "Confirm"),
@@ -34,17 +36,20 @@ export default function ConfirmationModal({
 
   return (
     <div
+      className="modal-backdrop"
+      data-state={closing ? "closing" : "open"}
       style={{
         // Matches --z-modal in app/globals.css's z-index scale; zIndex's type
         // doesn't accept a css var() string, so the numeric value is mirrored here.
         position: "fixed", inset: 0, zIndex: 80,
-        backgroundColor: "rgba(0,0,0,0.6)",
+        backgroundColor: "color-mix(in srgb, #1b1310 62%, transparent)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 24,
       }}
       onClick={onCancel}
     >
       <div
+        className="modal-card"
         style={{
           backgroundColor: "var(--bg-card)", border: "1px solid var(--border-subtle)",
           borderRadius: "var(--radius-lg)", padding: 28, maxWidth: 420, width: "100%",

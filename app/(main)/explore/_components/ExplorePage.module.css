@@ -57,9 +57,9 @@
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(circle at 18% 15%, rgba(215, 168, 79, 0.24), transparent 24rem),
-    radial-gradient(circle at 86% 10%, rgba(22, 163, 163, 0.28), transparent 22rem),
-    linear-gradient(180deg, rgba(8, 14, 18, 0.88) 0%, rgba(8, 14, 18, 0.86) 55%, rgba(8, 14, 18, 0.94) 100%);
+    radial-gradient(circle at 18% 15%, rgba(231,165,138, 0.24), transparent 24rem),
+    radial-gradient(circle at 86% 10%, rgba(8,127,131, 0.28), transparent 22rem),
+    linear-gradient(180deg, rgba(27,19,16, 0.88) 0%, rgba(27,19,16, 0.86) 55%, rgba(27,19,16, 0.94) 100%);
 }
 
 .heroContent {
@@ -79,7 +79,7 @@
   padding: 0.45rem 0.85rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-pill);
-  background: rgba(8, 16, 22, 0.5);
+  background: rgba(27,19,16, 0.5);
   color: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(14px);
   font-size: var(--text-xs);
@@ -116,15 +116,15 @@
   padding: 0.55rem 0.6rem 0.55rem 1.1rem;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.95);
-  color: #111820;
+  background: rgba(251, 247, 234, 0.95);
+  color: #2B211D;
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(18px);
 }
 
 .searchBar svg {
   flex-shrink: 0;
-  color: #64717e;
+  color: #6E5F55;
 }
 
 .searchBar input {
@@ -133,21 +133,21 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: #111820;
+  color: #2B211D;
   font-family: inherit;
   font-size: var(--text-base);
   font-weight: 700;
 }
 
 .searchBar input::placeholder {
-  color: #6b7683;
+  color: #6E5F55;
   font-weight: 500;
 }
 
 .searchClear {
   border: 0;
   background: transparent;
-  color: #6b7683;
+  color: #6E5F55;
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
@@ -220,7 +220,7 @@
   padding: 0.4rem 0.8rem 0.4rem 0.4rem;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-pill);
-  background: rgba(8, 16, 22, 0.55);
+  background: rgba(27,19,16, 0.55);
   backdrop-filter: blur(10px);
   text-decoration: none;
   transition: border-color var(--duration-base) var(--ease-standard),
@@ -229,7 +229,7 @@
 
 .heroCarouselCard:hover {
   border-color: rgba(255, 255, 255, 0.36);
-  background: rgba(8, 16, 22, 0.75);
+  background: rgba(27,19,16, 0.75);
 }
 
 .heroCarouselAvatar {
@@ -727,7 +727,7 @@
   font-size: 2.4rem;
   font-weight: 900;
   color: rgba(255, 255, 255, 0.16);
-  background: linear-gradient(160deg, var(--color-primary), #081016);
+  background: linear-gradient(160deg, var(--color-primary), #160F0C);
 }
 
 .mediaBadges {
@@ -753,11 +753,11 @@
 
 .badgePremium {
   background: color-mix(in srgb, var(--color-accent) 92%, #fff);
-  color: #151109;
+  color: #2B211D;
 }
 
 .badgeFast {
-  background: rgba(5, 9, 12, 0.72);
+  background: rgba(27,19,16, 0.72);
   color: var(--color-accent);
   border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
@@ -772,7 +772,7 @@
   place-items: center;
   border-radius: 50%;
   border: none;
-  background: rgba(5, 9, 12, 0.6);
+  background: rgba(27,19,16, 0.6);
   color: #fff;
   cursor: pointer;
   z-index: 2;
@@ -781,7 +781,7 @@
 }
 
 .heartBtn:hover {
-  background: rgba(5, 9, 12, 0.8);
+  background: rgba(27,19,16, 0.8);
 }
 
 .heartBtn:disabled {
@@ -802,7 +802,7 @@
   gap: 0.25rem;
   padding: 0.2rem 0.45rem;
   border-radius: var(--radius-pill);
-  background: rgba(5, 9, 12, 0.75);
+  background: rgba(27,19,16, 0.75);
   color: #fff;
   font-size: 0.68rem;
   font-weight: 800;
@@ -1082,9 +1082,9 @@
   padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 2rem);
   color: #fff;
   background:
-    radial-gradient(circle at 15% 25%, rgba(215, 168, 79, 0.2), transparent 22rem),
-    radial-gradient(circle at 88% 30%, rgba(22, 163, 163, 0.24), transparent 22rem),
-    linear-gradient(135deg, #0b1f22, #081016);
+    radial-gradient(circle at 15% 25%, rgba(231,165,138, 0.2), transparent 22rem),
+    radial-gradient(circle at 88% 30%, rgba(8,127,131, 0.24), transparent 22rem),
+    linear-gradient(135deg, #241B17, #160F0C);
 }
 
 .finalCtaInner {
@@ -1143,8 +1143,8 @@
 
 .buttonPrimary {
   background: var(--color-accent);
-  color: #151109;
-  box-shadow: 0 14px 28px rgba(215, 168, 79, 0.18);
+  color: #2B211D;
+  box-shadow: 0 14px 28px rgba(231,165,138, 0.18);
 }
 
 .buttonGhost {
@@ -1159,7 +1159,7 @@
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(3, 8, 12, 0.55);
+  background: rgba(27,19,16, 0.55);
   backdrop-filter: blur(2px);
   display: none;
 }

@@ -42,10 +42,10 @@ export default function TabsNavigation({
 }) {
   const { dark, lang } = useSite();
   const TABS = tabs ?? (lang === "en" ? TABS_EN : TABS_AR);
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const GREEN = "#00D26A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const BG = dark ? "#0A121C" : "#FFFFFF";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const GREEN = "var(--color-primary-text)";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const BG = dark ? "#231A16" : "#FBF7EA";
   const [active, setActive] = useState("about");
   const [isSticky, setIsSticky] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -159,7 +159,7 @@ export default function TabsNavigation({
                   overflow: "hidden",
                   border: `2px solid ${GREEN}`,
                   flexShrink: 0,
-                  background: dark ? "#1a2535" : "#E2E8F0",
+                  background: dark ? "#2B211D" : "#E6DCC3",
                 }}
               >
                 {talent.avatarUrl ? (
@@ -188,7 +188,7 @@ export default function TabsNavigation({
               {/* Name */}
               <span
                 style={{
-                  color: dark ? "#fff" : "#0F172A",
+                  color: dark ? "#fff" : "#2B211D",
                   fontSize: 13,
                   fontWeight: 700,
                   whiteSpace: "nowrap",

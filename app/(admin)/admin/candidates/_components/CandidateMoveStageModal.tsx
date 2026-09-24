@@ -1,4 +1,5 @@
 "use client";
+import { useModalClose } from "@/hooks/useModalClose";
 import { useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -26,7 +27,8 @@ interface Props {
   onMoved: () => void;
 }
 
-export default function CandidateMoveStageModal({ candidateId, stage, onClose, onMoved }: Props) {
+export default function CandidateMoveStageModal({ candidateId, stage, onClose: onCloseProp, onMoved }: Props) {
+  const { closing, close: onClose } = useModalClose(onCloseProp);
   const { dark, lang } = useSite();
   const t = TX[lang];
   const CARD = dark ? "#2B211D" : "#FBF7EA";
@@ -64,8 +66,8 @@ export default function CandidateMoveStageModal({ candidateId, stage, onClose, o
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 90, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
-      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, width: "100%", maxWidth: 420, padding: 20 }} onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" data-state={closing ? "closing" : "open"} style={{ position: "fixed", inset: 0, zIndex: 90, backgroundColor: "rgba(27,19,16,0.62)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
+      <div className="modal-card" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, width: "100%", maxWidth: 420, padding: 20 }} onClick={(e) => e.stopPropagation()}>
         <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 700, color: TEXT }}>{t.title(lang === "ar" ? stage.labelAr : stage.labelEn)}</h3>
         <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {stage.fields.map((f) => (

@@ -12,24 +12,24 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { PackageItem } from "@/features/talent-profile/types";
 
-const PURPLE = "#6C4DFF";
+const PURPLE = "var(--color-primary-text)";
 
 // Admin-set `icon` keys (see PackageItem.icon); anything else gets the medal.
 const ICONS: Record<string, { Icon: typeof Medal; color: string; bg: string }> = {
-  sun:     { Icon: Sun,    color: "#F59E0B", bg: "#FEF3C7" },
-  diamond: { Icon: Gem,    color: "#38A9F5", bg: "#E1F1FE" },
-  gem:     { Icon: Gem,    color: "#38A9F5", bg: "#E1F1FE" },
-  crown:   { Icon: Crown,  color: "#D4A017", bg: "#FBF0CC" },
-  rocket:  { Icon: Rocket, color: PURPLE,    bg: "#ECE8FF" },
+  sun:     { Icon: Sun,    color: "var(--color-accent-strong)", bg: "#F8E4DA" },
+  diamond: { Icon: Gem,    color: "var(--color-secondary-alt)", bg: "#E4F1EF" },
+  gem:     { Icon: Gem,    color: "var(--color-secondary-alt)", bg: "#E4F1EF" },
+  crown:   { Icon: Crown,  color: "var(--color-accent-strong)", bg: "#F8E4DA" },
+  rocket:  { Icon: Rocket, color: PURPLE,    bg: "#E4F1EF" },
 };
-const DEFAULT_ICON = { Icon: Medal, color: "#B7791F", bg: "#FBEBD3" };
+const DEFAULT_ICON = { Icon: Medal, color: "var(--color-accent-strong)", bg: "#F8E4DA" };
 
 function formatPrice(price: string): string {
   const n = Number(String(price).replace(/[^\d.]/g, ""));
   return Number.isFinite(n) && n > 0 ? n.toLocaleString("en-US") : price;
 }
 
-const GOLD = "#d89b37";
+const GOLD = "var(--color-accent-strong)";
 
 interface Props {
   /** "model" restyles the same cards for the Model page: gold accent, green ticks, escrow note. */
@@ -45,12 +45,12 @@ export default function UgcPackages({ packages, selectedId, onSelectPackage, var
   const phone = useIsMobile(640);
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = model ? (dark ? "var(--bg-card)" : "#FFFFFF") : (dark ? "#0D1623" : "#FFFFFF");
-  const BORDER = model ? (dark ? "var(--border-subtle)" : "#E2E8F0") : (dark ? "rgba(255,255,255,0.10)" : "#E5E7EB");
-  const TILE_BORDER = dark ? "rgba(255,255,255,0.12)" : "#E3E7EE";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const POPULAR_BG = model ? (dark ? "rgba(216,155,55,0.07)" : "#FFF8EC") : (dark ? "rgba(108,77,255,0.12)" : "#F7F5FF");
+  const CARD = model ? (dark ? "var(--bg-card)" : "#FBF7EA") : (dark ? "#2B211D" : "#FBF7EA");
+  const BORDER = model ? (dark ? "var(--border-subtle)" : "#E6DCC3") : (dark ? "rgba(255,255,255,0.10)" : "#E6DCC3");
+  const TILE_BORDER = dark ? "rgba(255,255,255,0.12)" : "#E6DCC3";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const POPULAR_BG = model ? (dark ? "rgba(231,165,138,0.07)" : "#FBEDE6") : (dark ? "rgba(8,127,131,0.12)" : "#EEF6F4");
 
   const data = (packages ?? []).filter((p) => p.name && p.price);
   // Always three tracks: a lone package keeps the width it has when there are three
@@ -71,7 +71,7 @@ export default function UgcPackages({ packages, selectedId, onSelectPackage, var
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 14, alignItems: "stretch", paddingTop: 6 }}>
           {data.map((pkg) => {
-            const { Icon, color, bg } = ICONS[pkg.icon ?? ""] ?? (model ? { Icon: Sun, color: GOLD, bg: "rgba(216,155,55,0.14)" } : DEFAULT_ICON);
+            const { Icon, color, bg } = ICONS[pkg.icon ?? ""] ?? (model ? { Icon: Sun, color: GOLD, bg: "rgba(231,165,138,0.14)" } : DEFAULT_ICON);
             const selected = selectedId === pkg.id;
             const filled = pkg.popular || selected;
             return (
@@ -85,8 +85,8 @@ export default function UgcPackages({ packages, selectedId, onSelectPackage, var
               >
                 {pkg.popular && (
                   <span style={model
-                    ? { position: "absolute", top: -11, insetInlineEnd: 14, padding: "3px 12px", borderRadius: 8, backgroundColor: dark ? "#2a2113" : "#FFF3D9", border: `1px solid ${GOLD}`, color: GOLD, fontSize: 11, fontWeight: 800, whiteSpace: "nowrap" }
-                    : { position: "absolute", top: -11, left: "50%", transform: "translateX(-50%)", padding: "3px 14px", borderRadius: 8, backgroundColor: PURPLE, color: "#fff", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+                    ? { position: "absolute", top: -11, insetInlineEnd: 14, padding: "3px 12px", borderRadius: 8, backgroundColor: dark ? "#2B211D" : "#FBEAE0", border: `1px solid ${GOLD}`, color: GOLD, fontSize: 11, fontWeight: 800, whiteSpace: "nowrap" }
+                    : { position: "absolute", top: -11, left: "50%", transform: "translateX(-50%)", padding: "3px 14px", borderRadius: 8, backgroundColor: "var(--color-accent)", color: "var(--color-on-accent)", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
                     {ar ? "الأكثر طلباً" : "Most Popular"}
                   </span>
                 )}
@@ -110,7 +110,7 @@ export default function UgcPackages({ packages, selectedId, onSelectPackage, var
                   {pkg.features.map((f, i) => (
                     <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13, color: TEXT, lineHeight: 1.35 }}>
                       {model
-                        ? <Check size={14} color="#22c55e" strokeWidth={3} style={{ flexShrink: 0, marginTop: 2 }} />
+                        ? <Check size={14} color="var(--color-success)" strokeWidth={3} style={{ flexShrink: 0, marginTop: 2 }} />
                         : <span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: TEXT, flexShrink: 0, marginTop: 7 }} />}
                       <span>{f}</span>
                     </li>
@@ -123,8 +123,8 @@ export default function UgcPackages({ packages, selectedId, onSelectPackage, var
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 8, cursor: "pointer",
                     fontFamily: "'IBM Plex Sans Arabic',sans-serif", fontWeight: 700, fontSize: 13.5,
-                    border: `1.5px solid ${ACCENT}`, color: filled ? (model ? "#0b0d13" : "#fff") : ACCENT,
-                    ...(model && filled ? { background: "linear-gradient(135deg, #e5a93c, #c88924)" } : { backgroundColor: filled ? ACCENT : "transparent" }),
+                    border: `1.5px solid ${ACCENT}`, color: filled ? "var(--color-primary-ink)" : ACCENT,
+                    backgroundColor: filled ? "var(--color-primary)" : "transparent",
                   }}
                 >
                   {selected ? <><Check size={14} />{ar ? "تم الاختيار" : "Selected"}</> : (ar ? (model ? "اختر الباقة" : "اختيار الباقة") : "Select Package")}

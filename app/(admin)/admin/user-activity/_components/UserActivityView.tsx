@@ -187,7 +187,7 @@ export default function UserActivityView({
   const TREND_SERIES = [
     { key: "pageViews",          label: t.pageViewsLegend,     color: "#4FA7A3", data: dailyTraffic.map((d) => ({ date: d.date, value: d.pageViews })) },
     { key: "signups",            label: t.signupsLegend,       color: "var(--color-primary-text)", data: dailyTraffic.map((d) => ({ date: d.date, value: d.signups })) },
-    { key: "clicks",             label: t.clicksLegend,        color: "#F472B6", data: dailyTraffic.map((d) => ({ date: d.date, value: d.clicks })) },
+    { key: "clicks",             label: t.clicksLegend,        color: "#D98B7B", data: dailyTraffic.map((d) => ({ date: d.date, value: d.clicks })) },
     { key: "talentProfileViews", label: t.profileViewsLegend,  color: "#E7A58A", data: dailyTraffic.map((d) => ({ date: d.date, value: d.talentProfileViews })) },
   ];
 
@@ -258,7 +258,7 @@ export default function UserActivityView({
           ) : (
             <RankedBarList
               data={signupBreakdown.byCategory.map((c) => ({ label: c.category === "unknown" ? t.unknown : formatTalentTag(c.category, lang), value: c.count }))}
-              color="#F97316"
+              color="#C98A70"
               mutedColor={dark ? "#3A2E28" : "#E6DCC6"}
               textColor={TEXT}
               formatValue={(v) => String(v)}

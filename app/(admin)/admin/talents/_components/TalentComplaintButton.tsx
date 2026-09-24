@@ -7,6 +7,7 @@
 // files it in the same inbox /admin/support already shows and pings every
 // admin so whoever's on support triage sees it.
 
+import { useModalPresence } from "@/hooks/useModalClose";
 import { useRef, useState } from "react";
 import { AlertTriangle, Image as ImageIcon, X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
@@ -62,6 +63,7 @@ export default function TalentComplaintButton({ talentProfileId, fullName, phone
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [open, setOpen] = useState(false);
+  const { mounted: openMounted, closing: openClosing } = useModalPresence(open);
   const [name, setName] = useState(fullName ?? "");
   const [emailVal, setEmailVal] = useState(email ?? "");
   const [phoneVal, setPhoneVal] = useState(phone ?? "");
@@ -149,12 +151,12 @@ export default function TalentComplaintButton({ talentProfileId, fullName, phone
         <AlertTriangle size={size} />
       </button>
 
-      {open && (
-        <div
+      {openMounted && (
+        <div className="modal-backdrop" data-state={openClosing ? "closing" : "open"}
           onClick={(e) => { e.stopPropagation(); reset(); }}
-          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 90, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(27,19,16,0.62)", zIndex: 90, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
-          <div
+          <div className="modal-card"
             onClick={(e) => e.stopPropagation()}
             style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, width: "min(480px, 100%)", maxHeight: "88vh", overflowY: "auto", padding: 20 }}
           >

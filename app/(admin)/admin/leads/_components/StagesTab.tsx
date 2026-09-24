@@ -7,7 +7,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import { STAGE_FIELD_TYPES, type LeadStage, type StageFieldType } from "@/features/leads/types";
 
-const COLOR_SWATCHES = ["#087F83", "#0EA5E9", "#E7A58A", "#B9694C", "#EF4444", "#A99B8E", "#EC4899", "#10B981"];
+const COLOR_SWATCHES = ["#087F83", "#4FA7A3", "#E7A58A", "#B9694C", "#EF4444", "#A99B8E", "#D98B7B", "#1EA672"];
 
 const TX = {
   ar: {

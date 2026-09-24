@@ -18,6 +18,7 @@ import { parsePrice } from "@/lib/utils";
 import type { AddonItem, PackageItem } from "@/features/talent-profile/types";
 import type { AvailabilitySchedule } from "@/lib/availability-schedule";
 import styles from "./DirectBriefModal.module.css";
+import { useModalClose } from "@/hooks/useModalClose";
 
 interface Props {
   talentUserId: string;
@@ -90,12 +91,13 @@ export default function PackageBookingModal({
   addons,
   checkedAddons,
   availabilitySchedule,
-  onClose,
+  onClose: onCloseProp,
   onSuccess,
 }: Props) {
   const ar = lang === "ar";
   const t = TX[lang];
   const { user, requestAuth } = useGuestGuard();
+  const { closing, close: onClose } = useModalClose(onCloseProp);
 
   const chosenAddons = useMemo(
     () => addons.filter((a) => checkedAddons[a.key]),
@@ -177,12 +179,13 @@ export default function PackageBookingModal({
 
   return (
     <div
-      className={`${styles.overlay} ${dark ? styles.dark : styles.light}`}
+      className={`${styles.overlay} ${dark ? styles.dark : styles.light} modal-backdrop`}
+      data-state={closing ? "closing" : "open"}
       dir={ar ? "rtl" : "ltr"}
       role="presentation"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="package-booking-title">
+      <section className={`${styles.dialog} modal-card`} role="dialog" aria-modal="true" aria-labelledby="package-booking-title">
         <header className={styles.header}>
           <div className={styles.talentBlock}>
             <span className={styles.avatar}>
@@ -220,7 +223,7 @@ export default function PackageBookingModal({
                 <span style={{ fontFamily: "monospace" }}>{packagePrice.toLocaleString()} EGP</span>
               </div>
               {chosenAddons.map((a) => (
-                <div key={a.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "var(--text-muted, #64748b)", marginTop: 6 }}>
+                <div key={a.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "var(--text-muted)", marginTop: 6 }}>
                   <span>+ {a.label}</span>
                   <span style={{ fontFamily: "monospace" }}>{a.price.toLocaleString()} EGP</span>
                 </div>
@@ -264,7 +267,7 @@ export default function PackageBookingModal({
                 </>
               ) : (
                 <>
-                  <p style={{ fontSize: 12.5, color: "var(--text-muted, #64748b)", margin: "0 0 8px" }}>{t.noDates}</p>
+                  <p style={{ fontSize: 12.5, color: "var(--text-muted)", margin: "0 0 8px" }}>{t.noDates}</p>
                   <label className={styles.field}>
                     <span>{t.fallbackDate}</span>
                     <input type="date" value={fallbackDate} min={today} onChange={(e) => setFallbackDate(e.target.value)} />

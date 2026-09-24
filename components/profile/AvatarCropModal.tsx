@@ -9,6 +9,7 @@
 import { useRef, useState, useCallback, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { useSite } from "@/contexts/SiteContext";
 import { X, ZoomIn } from "lucide-react";
+import { useModalClose } from "@/hooks/useModalClose";
 
 const STAGE_SIZE = 280;
 const OUTPUT_SIZE = 640;
@@ -19,7 +20,8 @@ interface Props {
   onCropped: (file: File) => void;
 }
 
-export default function AvatarCropModal({ file, onCancel, onCropped }: Props) {
+export default function AvatarCropModal({ file, onCancel: onCancelProp, onCropped }: Props) {
+  const { closing, close: onCancel } = useModalClose(onCancelProp);
   const { dark, lang } = useSite();
   const ar = lang === "ar";
   const [imgUrl] = useState(() => URL.createObjectURL(file));
@@ -34,10 +36,10 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: Props) {
     en: { title: "Crop your photo", zoom: "Zoom", cancel: "Cancel", save: "Save" },
   }[lang];
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   // Base scale so the shorter image side exactly fills the square stage —
   // `zoom` (>=1) is then a multiplier on top of that fit scale.
@@ -111,10 +113,13 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: Props) {
 
   return (
     <div
+      className="modal-backdrop"
+      data-state={closing ? "closing" : "open"}
       onClick={onCancel}
-      style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+      style={{ position: "fixed", inset: 0, backgroundColor: "rgba(27,19,16,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
     >
       <div
+        className="modal-card"
         onClick={(e) => e.stopPropagation()}
         style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, width: "min(360px, 100%)" }}
       >
@@ -134,7 +139,7 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: Props) {
           style={{
             width: STAGE_SIZE, height: STAGE_SIZE, margin: "0 auto", position: "relative",
             overflow: "hidden", borderRadius: "50%", cursor: "grab",
-            backgroundColor: dark ? "#0a121c" : "#f1f5f9", touchAction: "none",
+            backgroundColor: dark ? "#231A16" : "#F1EAD3", touchAction: "none",
           }}
         >
           {naturalSize && (
@@ -177,7 +182,7 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: Props) {
           <button
             disabled={!naturalSize || saving}
             onClick={handleSave}
-            style={{ padding: "9px 20px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary, #0f766e)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: saving ? 0.7 : 1, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
+            style={{ padding: "9px 20px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary, var(--color-primary-text))", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: saving ? 0.7 : 1, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
           >
             {saving ? "…" : TX.save}
           </button>

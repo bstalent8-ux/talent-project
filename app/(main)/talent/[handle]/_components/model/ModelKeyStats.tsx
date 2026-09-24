@@ -12,7 +12,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 import type { TalentData, BookingStats } from "@/features/talent-profile/types";
 
-const GOLD = "#d89b37";
+const GOLD = "var(--color-accent-strong)";
 
 interface Props {
   talent: TalentData;
@@ -25,11 +25,11 @@ export default function ModelKeyStats({ talent, bookingStats, onOpenReviews }: P
   const compact = useIsMobile(1024);
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "var(--bg-surface)" : "#FFFFFF";
-  const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
-  const HAIR = dark ? "rgba(255,255,255,0.10)" : "#E2E8F0";
-  const TEXT = dark ? "var(--text-primary)" : "#0F172A";
-  const MUTED = dark ? "var(--text-muted)" : "#64748B";
+  const CARD = dark ? "var(--bg-surface)" : "#FBF7EA";
+  const BORDER = dark ? "var(--border-subtle)" : "#E6DCC3";
+  const HAIR = dark ? "rgba(255,255,255,0.10)" : "#E6DCC3";
+  const TEXT = dark ? "var(--text-primary)" : "#2B211D";
+  const MUTED = dark ? "var(--text-muted)" : "#6E5F55";
   const noContent = ar ? "لا يوجد محتوى" : "No content";
   const metrics = talent.modelMetrics;
 

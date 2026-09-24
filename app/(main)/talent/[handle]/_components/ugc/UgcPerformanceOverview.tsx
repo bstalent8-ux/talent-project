@@ -13,7 +13,7 @@ import { Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSite } from "@/contexts/SiteContext";
 
-const BLUE = "#3B82F6";
+const BLUE = "var(--color-secondary-alt)";
 
 interface Metric {
   label: { ar: string; en: string };
@@ -28,21 +28,21 @@ const EXCELLENT = { ar: "ممتاز", en: "Excellent" };
 const VERY_GOOD = { ar: "جيد جداً", en: "Very Good" };
 
 const METRICS: Metric[] = [
-  { label: { ar: "معدل الجذب", en: "Hook Rate" }, value: { ar: "72%", en: "72%" }, status: EXCELLENT, statusColor: "#16A34A", color: "#6C4DFF", points: [12, 18, 14, 22, 19, 27, 23, 30, 34] },
-  { label: { ar: "معدل المشاهدة", en: "Watch Rate" }, value: { ar: "68%", en: "68%" }, status: EXCELLENT, statusColor: "#16A34A", color: "#3B82F6", points: [10, 12, 20, 16, 23, 19, 26, 24, 33] },
-  { label: { ar: "نسبة النقر CTR", en: "CTR" }, value: { ar: "4.8%", en: "4.8%" }, status: VERY_GOOD, statusColor: "#22A05A", color: "#22C55E", points: [14, 17, 13, 21, 18, 24, 22, 28, 30] },
-  { label: { ar: "معدل التفاعل", en: "Engagement Rate" }, value: { ar: "8.2%", en: "8.2%" }, status: EXCELLENT, statusColor: "#16A34A", color: "#F59E0B", points: [8, 14, 11, 19, 15, 22, 18, 25, 34] },
-  { label: { ar: "معدل التحويل", en: "Conversion Rate" }, value: { ar: "3.1%", en: "3.1%" }, status: VERY_GOOD, statusColor: "#22A05A", color: "#14B8A6", points: [10, 15, 13, 19, 17, 23, 20, 27, 31] },
-  { label: { ar: "متوسط وقت التسليم", en: "Avg. Delivery Time" }, value: { ar: "2.1 يوم", en: "2.1 Days" }, status: EXCELLENT, statusColor: BLUE, color: "#6C4DFF", points: [16, 12, 20, 15, 22, 19, 24, 21, 30] },
+  { label: { ar: "معدل الجذب", en: "Hook Rate" }, value: { ar: "72%", en: "72%" }, status: EXCELLENT, statusColor: "var(--color-success)", color: "var(--color-primary-text)", points: [12, 18, 14, 22, 19, 27, 23, 30, 34] },
+  { label: { ar: "معدل المشاهدة", en: "Watch Rate" }, value: { ar: "68%", en: "68%" }, status: EXCELLENT, statusColor: "var(--color-success)", color: "var(--color-secondary-alt)", points: [10, 12, 20, 16, 23, 19, 26, 24, 33] },
+  { label: { ar: "نسبة النقر CTR", en: "CTR" }, value: { ar: "4.8%", en: "4.8%" }, status: VERY_GOOD, statusColor: "var(--color-success)", color: "var(--color-success)", points: [14, 17, 13, 21, 18, 24, 22, 28, 30] },
+  { label: { ar: "معدل التفاعل", en: "Engagement Rate" }, value: { ar: "8.2%", en: "8.2%" }, status: EXCELLENT, statusColor: "var(--color-success)", color: "var(--color-accent-strong)", points: [8, 14, 11, 19, 15, 22, 18, 25, 34] },
+  { label: { ar: "معدل التحويل", en: "Conversion Rate" }, value: { ar: "3.1%", en: "3.1%" }, status: VERY_GOOD, statusColor: "var(--color-success)", color: "var(--color-primary-text)", points: [10, 15, 13, 19, 17, 23, 20, 27, 31] },
+  { label: { ar: "متوسط وقت التسليم", en: "Avg. Delivery Time" }, value: { ar: "2.1 يوم", en: "2.1 Days" }, status: EXCELLENT, statusColor: BLUE, color: "var(--color-primary-text)", points: [16, 12, 20, 15, 22, 19, 24, 21, 30] },
 ];
 
 const SLICES = [
-  { name: { ar: "مراجعة المنتجات", en: "Product Review" }, pct: 42, color: "#6C4DFF", dot: "#6C4DFF" },
-  { name: { ar: "فتح الصناديق", en: "Unboxing" }, pct: 25, color: "#3B82F6", dot: "#3B82F6" },
-  { name: { ar: "الشروحات", en: "Tutorial" }, pct: 18, color: "#22C55E", dot: "#22C55E" },
-  { name: { ar: "لايف ستايل", en: "Lifestyle" }, pct: 10, color: "#F59E0B", dot: "#F59E0B" },
+  { name: { ar: "مراجعة المنتجات", en: "Product Review" }, pct: 42, color: "var(--color-primary-text)", dot: "var(--color-primary-text)" },
+  { name: { ar: "فتح الصناديق", en: "Unboxing" }, pct: 25, color: "var(--color-secondary-alt)", dot: "var(--color-secondary-alt)" },
+  { name: { ar: "الشروحات", en: "Tutorial" }, pct: 18, color: "var(--color-success)", dot: "var(--color-success)" },
+  { name: { ar: "لايف ستايل", en: "Lifestyle" }, pct: 10, color: "var(--color-accent-strong)", dot: "var(--color-accent-strong)" },
   // The reference draws this slice coral while its legend swatch is grey — kept as is.
-  { name: { ar: "أخرى", en: "Others" }, pct: 5, color: "#F0616D", dot: "#CBD5E1" },
+  { name: { ar: "أخرى", en: "Others" }, pct: 5, color: "#F0616D", dot: "#D9CFBB" },
 ];
 
 function Sparkline({ points, color, id }: { points: number[]; color: string; id: string }) {
@@ -76,11 +76,11 @@ export default function UgcPerformanceOverview() {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const L = ar ? "ar" : "en";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const TILE_BORDER = dark ? "rgba(255,255,255,0.10)" : "#E7EAF0";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E6DCC3";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const TILE_BORDER = dark ? "rgba(255,255,255,0.10)" : "#E9E0CB";
   const [hovered, setHovered] = useState<number | null>(null);
 
   // Donut: clockwise from 12 o'clock, thick ring, rounded slice ends with a small gap between slices.

@@ -17,11 +17,11 @@ export default function ExperienceSection({ experience, variant = "default" }: P
   const { dark, lang } = useSite();
   const ar = lang === "ar";
   const isModel = variant === "model";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const GREEN = "#00D26A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const GREEN = "var(--color-primary-text)";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
   const projects = experience ?? [];
   if (!projects.length) return null;
 
@@ -42,7 +42,7 @@ export default function ExperienceSection({ experience, variant = "default" }: P
           height: "100%",
         }}
       >
-        <h3 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
+        <h3 style={{ color: dark ? "#fff" : "#2B211D", fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
           {ar ? "التصويرات السابقة" : "Previous Shoots"}
         </h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -65,7 +65,7 @@ export default function ExperienceSection({ experience, variant = "default" }: P
               <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                 <Calendar size={14} color={MUTED} style={{ flexShrink: 0 }} />
                 <span style={{
-                  color: dark ? "#fff" : "#0F172A", fontSize: 13, fontWeight: 600,
+                  color: dark ? "#fff" : "#2B211D", fontSize: 13, fontWeight: 600,
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
                   {p.name}
@@ -101,7 +101,7 @@ export default function ExperienceSection({ experience, variant = "default" }: P
       >
         <h3
           style={{
-            color: dark ? "#fff" : "#0F172A",
+            color: dark ? "#fff" : "#2B211D",
             fontSize: 16,
             fontWeight: 800,
             marginBottom: 16,
@@ -129,10 +129,10 @@ export default function ExperienceSection({ experience, variant = "default" }: P
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Calendar size={14} color={MUTED} />
-                <span style={{ color: dark ? "#fff" : "#0F172A", fontSize: 13, fontWeight: 600 }}>{p.name}</span>
+                <span style={{ color: dark ? "#fff" : "#2B211D", fontSize: 13, fontWeight: 600 }}>{p.name}</span>
               </div>
               {p.verified && (
-                <CheckCircle size={15} color={GREEN} fill="rgba(0,210,106,0.15)" />
+                <CheckCircle size={15} color={GREEN} fill="rgba(8,127,131,0.15)" />
               )}
             </motion.div>
           ))}
@@ -150,7 +150,7 @@ export default function ExperienceSection({ experience, variant = "default" }: P
       >
         <h3
           style={{
-            color: dark ? "#fff" : "#0F172A",
+            color: dark ? "#fff" : "#2B211D",
             fontSize: 16,
             fontWeight: 800,
             marginBottom: 16,
@@ -175,8 +175,8 @@ export default function ExperienceSection({ experience, variant = "default" }: P
               width: 60,
               height: 60,
               borderRadius: "50%",
-              backgroundColor: "rgba(0,210,106,0.08)",
-              border: "1px solid rgba(0,210,106,0.2)",
+              backgroundColor: "rgba(8,127,131,0.08)",
+              border: "1px solid rgba(8,127,131,0.2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -191,8 +191,8 @@ export default function ExperienceSection({ experience, variant = "default" }: P
           <motion.button
             whileHover={{ scale: 1.02, translateY: -2 }}
             style={{
-              backgroundColor: GREEN,
-              color: "#000",
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-primary-ink)",
               border: "none",
               borderRadius: 10,
               padding: "10px 20px",

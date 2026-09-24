@@ -1,4 +1,5 @@
 "use client";
+import { useModalClose } from "@/hooks/useModalClose";
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
@@ -25,7 +26,8 @@ interface Props {
 // admin-managed taxonomies (real-world source channel, talent category).
 // Replaces the old standalone StageManagerPanel; its body now lives in
 // StagesTab so it can sit next to the other two.
-export default function LeadSettingsPanel({ stages, channels, categories, onClose, onChanged }: Props) {
+export default function LeadSettingsPanel({ stages, channels, categories, onClose: onCloseProp, onChanged }: Props) {
+  const { closing, close: onClose } = useModalClose(onCloseProp);
   const { dark, lang } = useSite();
   const t = TX[lang];
   const [tab, setTab] = useState<Tab>("stages");
@@ -42,11 +44,11 @@ export default function LeadSettingsPanel({ stages, channels, categories, onClos
   ];
 
   return (
-    <div
-      style={{ position: "fixed", inset: 0, zIndex: 80, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+    <div className="modal-backdrop" data-state={closing ? "closing" : "open"}
+      style={{ position: "fixed", inset: 0, zIndex: 80, backgroundColor: "rgba(27,19,16,0.62)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
       onClick={onClose}
     >
-      <div
+      <div className="modal-card"
         style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, width: "100%", maxWidth: 560, maxHeight: "85vh", overflowY: "auto" }}
         onClick={(e) => e.stopPropagation()}
       >

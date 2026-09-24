@@ -42,13 +42,13 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
   };
 
   const { isFavorited, error: favoriteError, toggle: toggleFavorite } = useFavoriteTalent(talent.id);
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const GREEN = "#00D26A";
-  const GOLD = "#F4B740";
-  const TEXT = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const GREEN = "var(--color-primary-text)";
+  const GOLD = "var(--color-accent-strong)";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
 
   const availabilitySummary = formatAvailabilitySummary(talent.availability, talent.availabilitySchedule, lang);
 
@@ -102,8 +102,8 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
               <div style={{
                 width: "100%", aspectRatio: "3 / 4", borderRadius: 14, overflow: "hidden",
                 background: dark
-                  ? "linear-gradient(160deg,#111C35,#0D1623,#050B12)"
-                  : "linear-gradient(160deg,#FFFFFF,#E2E8F0,#CBD5E1)",
+                  ? "linear-gradient(160deg,#2B211D,#2B211D,#1B1310)"
+                  : "linear-gradient(160deg,#FFFFFF,#E7DEC8,#D9CFBB)",
                 border: `1px solid ${MBORDER}`, position: "relative",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
@@ -127,7 +127,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
                   <span style={{
                     position: "absolute", top: 12, insetInlineStart: 12,
                     display: "flex", alignItems: "center", gap: 4,
-                    backgroundColor: "rgba(5,11,18,0.72)", color: "#fff",
+                    backgroundColor: "rgba(27,19,16,0.72)", color: "#fff",
                     border: `1px solid ${TEAL}`, borderRadius: 20,
                     padding: "4px 10px", fontSize: 11, fontWeight: 700,
                   }}>
@@ -172,7 +172,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
                   display: "flex", alignItems: "center", gap: 5,
                   backgroundColor: talent.availability === "available"
                     ? "color-mix(in srgb, var(--color-primary) 12%, transparent)"
-                    : "rgba(148,163,184,0.12)",
+                    : "rgba(169,155,142,0.12)",
                   color: talent.availability === "available" ? TEAL : MMUTED,
                   border: `1px solid ${talent.availability === "available" ? TEAL : MBORDER}`,
                   borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 600,
@@ -276,8 +276,8 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
             borderRadius: 14,
             overflow: "hidden",
             background: dark
-              ? "linear-gradient(160deg,#111C35,#0D1623,#050B12)"
-              : "linear-gradient(160deg,#FFFFFF,#E2E8F0,#CBD5E1)",
+              ? "linear-gradient(160deg,#2B211D,#2B211D,#1B1310)"
+              : "linear-gradient(160deg,#FFFFFF,#E7DEC8,#D9CFBB)",
             display: "flex", alignItems: "center", justifyContent: "center",
             position: "relative",
             border: `1px solid ${BORDER}`,
@@ -291,7 +291,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
             ) : (
               <div style={{
                 width: 72, height: 72, borderRadius: "50%",
-                backgroundColor: "rgba(0,210,106,0.2)",
+                backgroundColor: "rgba(8,127,131,0.2)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 36, fontWeight: 900, color: GREEN,
               }}>
@@ -317,8 +317,8 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
               {displayName}
             </h1>
             <span style={{
-              backgroundColor: "rgba(244,183,64,0.15)", color: GOLD,
-              border: "1px solid rgba(244,183,64,0.3)",
+              backgroundColor: "rgba(231,165,138,0.15)", color: GOLD,
+              border: "1px solid rgba(231,165,138,0.3)",
               borderRadius: 20, padding: "3px 12px",
               fontSize: 12, fontWeight: 700,
               display: "flex", alignItems: "center", gap: 4,
@@ -333,8 +333,8 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {tags.map(tag => (
                 <span key={tag} style={{
-                  backgroundColor: "rgba(0,210,106,0.08)", color: GREEN,
-                  border: "1px solid rgba(0,210,106,0.2)",
+                  backgroundColor: "rgba(8,127,131,0.08)", color: GREEN,
+                  border: "1px solid rgba(8,127,131,0.2)",
                   borderRadius: 20, padding: "3px 12px", fontSize: 12,
                   whiteSpace: "nowrap",
                 }}>
@@ -358,9 +358,9 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
               {availabilitySummary && (
                 <span style={{
                   display: "flex", alignItems: "center", gap: 5,
-                  backgroundColor: talent.availability === "available" ? "rgba(0,210,106,0.08)" : "rgba(148,163,184,0.12)",
+                  backgroundColor: talent.availability === "available" ? "rgba(8,127,131,0.08)" : "rgba(169,155,142,0.12)",
                   color: talent.availability === "available" ? GREEN : MUTED,
-                  border: `1px solid ${talent.availability === "available" ? "rgba(0,210,106,0.2)" : BORDER}`,
+                  border: `1px solid ${talent.availability === "available" ? "rgba(8,127,131,0.2)" : BORDER}`,
                   borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 600,
                 }}>
                   {availabilitySummary}
@@ -391,8 +391,8 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
               {badges.map(b => (
                 <span key={b.label} style={{
                   display: "flex", alignItems: "center", gap: 5,
-                  backgroundColor: "rgba(0,210,106,0.08)", color: GREEN,
-                  border: "1px solid rgba(0,210,106,0.2)",
+                  backgroundColor: "rgba(8,127,131,0.08)", color: GREEN,
+                  border: "1px solid rgba(8,127,131,0.2)",
                   borderRadius: 20, padding: "3px 12px", fontSize: 12,
                 }}>
                   {b.icon}{b.label}
@@ -422,7 +422,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
             <ProtectedAction action="create_booking">
               <motion.button onClick={() => setShowBooking(true)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{
                 ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                backgroundColor: GREEN, color: "#050B12",
+                backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)",
                 borderRadius: 12, padding: "11px 0",
                 fontSize: 13, fontWeight: 900,
               }}>
@@ -437,9 +437,9 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
                 ...btn, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                 backgroundColor: isFavorited ? "rgba(244,63,94,0.1)" : SURFACE,
                 border: `1px solid ${isFavorited ? "#f43f5e80" : BORDER}`,
-                color: isFavorited ? "#fb7185" : MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13,
+                color: isFavorited ? "var(--color-error)" : MUTED, borderRadius: 12, padding: "9px 0", fontSize: 13,
               }}>
-                <Heart size={13} fill={isFavorited ? "#fb7185" : "none"} />{isFavorited ? t.favorited : t.favorite}
+                <Heart size={13} fill={isFavorited ? "var(--color-error)" : "none"} />{isFavorited ? t.favorited : t.favorite}
               </motion.button>
             </ProtectedAction>
             <motion.button whileHover={{ scale: 1.02 }} style={{
@@ -452,7 +452,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
           </div>
 
           {favoriteError && (
-            <p style={{ margin: 0, fontSize: 11, color: "#fb7185" }}>{t.favoriteError}</p>
+            <p style={{ margin: 0, fontSize: 11, color: "var(--color-error)" }}>{t.favoriteError}</p>
           )}
 
           {/* Escrow flow */}
@@ -471,11 +471,11 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{
                     width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                    backgroundColor: i === 0 ? GREEN : "rgba(0,210,106,0.1)",
-                    border: i === 0 ? "none" : "1px solid rgba(0,210,106,0.3)",
+                    backgroundColor: i === 0 ? GREEN : "rgba(8,127,131,0.1)",
+                    border: i === 0 ? "none" : "1px solid rgba(8,127,131,0.3)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 11, fontWeight: 700,
-                    color: i === 0 ? "#050B12" : GREEN,
+                    color: i === 0 ? "#1B1310" : GREEN,
                   }}>
                     {i + 1}
                   </div>

@@ -26,8 +26,8 @@ import { formatCity, formatLocation } from "@/lib/format-location";
 import { PlatformMark, displayHandle, toHref } from "../ugc/UgcHero";
 import type { TalentData, PortfolioItem } from "@/features/talent-profile/types";
 
-const GOLD = "#d89b37";
-const GREEN = "#00D26A";
+const GOLD = "var(--color-accent-strong)";
+const GREEN = "var(--color-primary-text)";
 const SERIF = "'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,'Times New Roman',serif";
 
 const PLATFORM_LABEL: Record<string, string> = {
@@ -74,12 +74,12 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
   const ar = lang !== "en";
   const [why, setWhy] = useState(false);
 
-  const CARD = dark ? "var(--bg-card)" : "#FFFFFF";
-  const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
-  const TEXT = dark ? "var(--text-primary)" : "#0F172A";
-  const MUTED = dark ? "var(--text-muted)" : "#64748B";
-  const SURFACE = dark ? "var(--bg-card-muted)" : "#F8FAFC";
-  const HAIR = dark ? "rgba(255,255,255,0.12)" : "#E2E8F0";
+  const CARD = dark ? "var(--bg-card)" : "#FBF7EA";
+  const BORDER = dark ? "var(--border-subtle)" : "#E6DCC3";
+  const TEXT = dark ? "var(--text-primary)" : "#2B211D";
+  const MUTED = dark ? "var(--text-muted)" : "#6E5F55";
+  const SURFACE = dark ? "var(--bg-card-muted)" : "#F6F0DD";
+  const HAIR = dark ? "rgba(255,255,255,0.12)" : "#E6DCC3";
 
   // The adapter falls back to the raw category id ("model") when the talent never wrote
   // a headline — show a real title instead of that internal key.
@@ -117,7 +117,7 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
   // ─── Match gauge: 270° arc, open at the bottom ────────────────────────────
   const G = 168, stroke = 11, r = (G - stroke) / 2, c = G / 2, circ = 2 * Math.PI * r;
   const arc = circ * 0.75;
-  const trackColor = dark ? "rgba(255,255,255,0.10)" : "#E2E8F0";
+  const trackColor = dark ? "rgba(255,255,255,0.10)" : "#E6DCC3";
 
   const photo = (
     <div style={{ position: "relative", aspectRatio: "4 / 5", borderRadius: 16, overflow: "hidden", backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}>
@@ -130,7 +130,7 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
       )}
       {/* Always shown for the layout — see DEMO_* note above. */}
       {true && (
-        <span style={{ position: "absolute", top: 12, insetInlineStart: 12, backgroundColor: GOLD, color: "#0b0d13", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 800, letterSpacing: 0.3 }}>
+        <span style={{ position: "absolute", top: 12, insetInlineStart: 12, backgroundColor: "var(--color-accent)", color: "var(--color-on-accent)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 800, letterSpacing: 0.3 }}>
           TOP RATED
         </span>
       )}
@@ -140,7 +140,7 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
           onClick={onOpenGallery}
           style={{
             position: "absolute", bottom: 12, insetInlineStart: 12, display: "flex", alignItems: "center", gap: 10,
-            backgroundColor: "rgba(10,13,20,0.78)", color: "#e2e8f0", border: "1px solid rgba(255,255,255,0.16)", borderRadius: 10,
+            backgroundColor: "rgba(27,19,16,0.78)", color: "#E7DEC8", border: "1px solid rgba(255,255,255,0.16)", borderRadius: 10,
             padding: "9px 14px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", backdropFilter: "blur(6px)", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
           }}
         >
@@ -154,19 +154,19 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
     <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         {talent.verified && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px 0 12px", borderRadius: 10, color: dark ? "#3ddc97" : "#059669", border: `1px solid ${dark ? "rgba(61,220,151,0.42)" : "rgba(5,150,105,0.45)"}`, backgroundColor: dark ? "rgba(61,220,151,0.09)" : "rgba(5,150,105,0.08)", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px 0 12px", borderRadius: 10, color: dark ? "var(--color-success)" : "var(--color-success)", border: `1px solid ${dark ? "rgba(79,167,163,0.42)" : "rgba(30,166,114,0.45)"}`, backgroundColor: dark ? "rgba(79,167,163,0.09)" : "rgba(30,166,114,0.08)", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
               <circle cx="12" cy="12" r="11" fill="currentColor" />
-              <path d="M7.2 12.4l3.2 3.1 6.4-6.6" fill="none" stroke={dark ? "#0b1f17" : "#ffffff"} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M7.2 12.4l3.2 3.1 6.4-6.6" fill="none" stroke={dark ? "#1B1310" : "#FBF7EA"} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             {ar ? "موثّق" : "VERIFIED"}
           </span>
         )}
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px 0 12px", borderRadius: 10, color: GOLD, border: `1px solid ${GOLD}80`, backgroundColor: "rgba(216,155,55,0.10)", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px 0 12px", borderRadius: 10, color: GOLD, border: `1px solid color-mix(in srgb, ${GOLD} 50%, transparent)`, backgroundColor: "rgba(231,165,138,0.10)", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
             <circle cx="12" cy="12" r="11" fill="currentColor" />
-            <circle cx="12" cy="12" r="6.4" fill="none" stroke={dark ? "#1d1405" : "#ffffff"} strokeWidth="2" />
-            <circle cx="12" cy="12" r="2.2" fill={dark ? "#1d1405" : "#ffffff"} />
+            <circle cx="12" cy="12" r="6.4" fill="none" stroke={dark ? "#1B1310" : "#FBF7EA"} strokeWidth="2" />
+            <circle cx="12" cy="12" r="2.2" fill={dark ? "#1B1310" : "#FBF7EA"} />
           </svg>
           {tierLabel}
         </span>
@@ -191,7 +191,7 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
 
         <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.85, margin: 0, maxWidth: 560, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{bio}</p>
 
-      <div style={{ border: `1px solid ${GOLD}99`, borderRadius: 14, padding: "14px 18px", marginTop: 4 }}>
+      <div style={{ border: `1px solid color-mix(in srgb, ${GOLD} 60%, transparent)`, borderRadius: 14, padding: "14px 18px", marginTop: 4 }}>
         <div style={{ color: TEXT, fontSize: 13, fontWeight: 800, marginBottom: 12 }}>{ar ? "الحسابات الاجتماعية" : "Social Profiles"}</div>
         <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 14 }}>
           {slots.map((slot, i) => {
@@ -245,8 +245,8 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
       <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
         {factorNames.map((name, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
-            <span style={{ width: 17, height: 17, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <Check size={11} color="#04150c" strokeWidth={3.5} />
+            <span style={{ width: 17, height: 17, borderRadius: "50%", backgroundColor: "var(--color-primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Check size={11} color="var(--color-primary-ink)" strokeWidth={3.5} />
             </span>
             <span style={{ flex: 1, minWidth: 0, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
             <span style={{ color: GREEN, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>+{FACTOR_WEIGHTS[i]}%</span>
@@ -275,7 +275,7 @@ export default function ModelHero({ talent, presenceLinks, firstPortfolioItem, o
 
   return (
     <div style={{ position: "relative", width: "100%", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: -60, insetInlineEnd: "8%", width: 380, height: 380, borderRadius: "50%", background: "radial-gradient(circle, rgba(216,155,55,0.12), transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: -60, insetInlineEnd: "8%", width: 380, height: 380, borderRadius: "50%", background: "radial-gradient(circle, rgba(231,165,138,0.12), transparent 70%)", pointerEvents: "none" }} />
       <div style={{
         position: "relative", display: "grid", gap: phone ? 20 : 28, alignItems: "start",
         gridTemplateColumns: compact ? "minmax(0,1fr)" : "minmax(0,27fr) minmax(0,43fr) minmax(0,28fr)",

@@ -230,6 +230,11 @@ interface Props {
 
 export const SIDEBAR_W_OPEN = 240;
 export const SIDEBAR_W_COLLAPSED = 64;
+// Width / seam / chevron all share this curve so the rail, the floating edge
+// button and the seam glow move as one. RAIL_FADE_MS: labels fade out this
+// long before the content flips to the icon-only column.
+const RAIL_EASE = "0.35s cubic-bezier(0.4, 0, 0.2, 1)";
+const RAIL_FADE_MS = 160;
 
 const MODE_OPTIONS: { mode: SidebarMode }[] = [
   { mode: "expanded" },
@@ -288,6 +293,26 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
   // the rail — expanded/collapsed modes ignore hover entirely.
   const collapsed = mode === "hover" ? !isHovering : mode === "collapsed";
 
+  const [animate, setAnimate] = useState(false);
+  const [lag, setLag] = useState(collapsed);
+  const [closing, setClosing] = useState(false);
+  useEffect(() => {
+    if (!animate) { setLag(collapsed); return; }
+    if (collapsed) {
+      setClosing(true);
+      const id = setTimeout(() => { setLag(true); setClosing(false); }, RAIL_FADE_MS);
+      return () => clearTimeout(id);
+    }
+    setClosing(false);
+    setLag(false);
+  }, [collapsed, animate]);
+  const rail = animate ? lag : collapsed;
+
+  function changeMode(next: SidebarMode) {
+    setAnimate(true);
+    onModeChange(next);
+  }
+
   // Rendered through a portal (below) so it isn't clipped by the sidebar's
   // own overflow-x:hidden — a collapsed 64px rail can't contain a menu wide
   // enough to show the three mode labels. Position is computed from the
@@ -336,7 +361,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
   const width = collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W_OPEN;
 
   // Shared by top-level items and grouped ones — `indent` only applies when
-  // expanded (a collapsed rail flattens everything to one icon column, see
+  // expanded (a rail rail flattens everything to one icon column, see
   // flattenNavItems, so there's nothing to indent under there).
   function renderNavLink(item: NavItemDef, indent: boolean) {
     const { key, href, icon: Icon } = item;
@@ -348,14 +373,14 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
         key={key}
         href={href}
         onClick={onClose}
-        title={collapsed ? label : undefined}
+        title={rail ? label : undefined}
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: collapsed ? "center" : "flex-start",
-          gap: collapsed ? 0 : 12,
-          padding: collapsed ? "10px 0" : "10px 12px",
-          marginInlineStart: !collapsed && indent ? 14 : 0,
+          justifyContent: rail ? "center" : "flex-start",
+          gap: rail ? 0 : 12,
+          padding: rail ? "10px 0" : "10px 12px",
+          marginInlineStart: !rail && indent ? 14 : 0,
           borderRadius: 10,
           color: active ? ACTIVE : MUTED,
           backgroundColor: active ? ACTIVE_TINT : "transparent",
@@ -393,7 +418,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
         }}
       >
         <Icon size={18} style={{ flexShrink: 0 }} />
-        {!collapsed && <span style={{ opacity: 1, transition: "opacity 0.2s" }}>{label}</span>}
+        {!rail && <span className="admin-rail-label">{label}</span>}
       </Link>
     );
   }
@@ -423,8 +448,9 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
       )}
 
       <aside
-        className={`admin-sidebar${open ? " admin-sidebar-open" : ""}`}
-        onMouseEnter={() => mode === "hover" && setIsHovering(true)}
+        className={`admin-sidebar${open ? " admin-sidebar-open" : ""}${animate ? " admin-rail-animate" : ""}`}
+        data-rail={closing ? "closing" : "idle"}
+        onMouseEnter={() => { if (mode === "hover") { setAnimate(true); setIsHovering(true); } }}
         onMouseLeave={() => mode === "hover" && setIsHovering(false)}
         style={{
           width,
@@ -443,16 +469,16 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           position: "sticky",
           top: 0,
           flexShrink: 0,
-          transition: mode === "hover" ? "width 0.15s ease-out, transform 0.2s ease-out" : "transform 0.2s ease-out",
+          transition: animate ? `width ${RAIL_EASE}, transform 0.2s ease-out` : "transform 0.2s ease-out",
           zIndex: 40,
           overflowX: "hidden",
           overflowY: "auto",
         }}
       >
         {/* Brand mark — the cream wordmark variant, since the rail is Dark
-            Chocolate in both themes. Hidden on the collapsed icon rail. */}
-        {!collapsed && (
-          <Link href="/admin" onClick={onClose} aria-label="Talents" style={{ display: "flex", padding: "0 20px 22px" }}>
+            Chocolate in both themes. Hidden on the rail icon rail. */}
+        {!rail && (
+          <Link href="/admin" onClick={onClose} aria-label="Talents" className="admin-rail-label" style={{ display: "flex", padding: "0 20px 22px" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/talents-logo-dark.png" alt="Talents" style={{ height: 34, width: "auto" }} />
           </Link>
@@ -460,9 +486,9 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
 
         <div
           style={{
-            padding: collapsed ? "0 12px 28px" : "0 16px 28px",
+            padding: rail ? "0 12px 28px" : "0 16px 28px",
             display: "flex",
-            justifyContent: collapsed ? "center" : "space-between",
+            justifyContent: rail ? "center" : "space-between",
             alignItems: "center",
           }}
         >
@@ -525,8 +551,9 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
             )}
           </div>
 
-          {!collapsed && (
+          {!rail && (
             <div
+              className="admin-rail-label"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -554,7 +581,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
             </div>
           )}
 
-          {!collapsed && (
+          {!rail && (
             <button
               className="admin-close-btn"
               onClick={onClose}
@@ -567,7 +594,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
         </div>
 
         <nav style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 8px" }}>
-          {collapsed
+          {rail
             ? flattenNavItems(visibleNavStructure).map((item) => renderNavLink(item, false))
             : visibleNavStructure.map((entry) => {
                 if (entry.type === "item") return renderNavLink(entry.item, false);
@@ -615,7 +642,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
                       }}
                     >
                       <GroupIcon size={18} style={{ flexShrink: 0 }} />
-                      <span style={{ flex: 1, textAlign: "start" }}>{groupLabel}</span>
+                      <span className="admin-rail-label" style={{ flex: 1, textAlign: "start" }}>{groupLabel}</span>
                       <ChevronDown
                         size={14}
                         style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
@@ -635,14 +662,14 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           <button
             type="button"
             onClick={handleLogout}
-            title={collapsed ? t.logout : undefined}
+            title={rail ? t.logout : undefined}
             style={{
               width: "100%",
               display: "flex",
               alignItems: "center",
-              justifyContent: collapsed ? "center" : "flex-start",
-              gap: collapsed ? 0 : 12,
-              padding: collapsed ? "10px 0" : "10px 12px",
+              justifyContent: rail ? "center" : "flex-start",
+              gap: rail ? 0 : 12,
+              padding: rail ? "10px 0" : "10px 12px",
               borderRadius: 10,
               background: "none",
               border: "none",
@@ -662,7 +689,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
             }}
           >
             <LogOut size={18} style={{ flexShrink: 0 }} />
-            {!collapsed && t.logout}
+            {!rail && <span className="admin-rail-label">{t.logout}</span>}
           </button>
         </div>
 
@@ -696,7 +723,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
               }
             }}
           >
-            {collapsed
+            {rail
               ? (ar ? <ChevronLeft size={16} /> : <ChevronRight size={16} />)
               : (ar ? <ChevronRight size={16} /> : <ChevronLeft size={16} />)}
           </button>
@@ -721,7 +748,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
             background: `linear-gradient(90deg, ${ADMIN_LIGHT.sidebarBg} 0%, transparent 100%)`,
             pointerEvents: "none",
             zIndex: 20,
-            transition: "left 0.15s ease-out",
+            transition: animate ? `left ${RAIL_EASE}` : "none",
           }}
         />
       )}
@@ -743,7 +770,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
             opacity: edgeHover ? 1 : 0,
             pointerEvents: "none",
             zIndex: 22,
-            transition: "left 0.15s ease-out, opacity 0.25s ease",
+            transition: animate ? `left ${RAIL_EASE}, opacity 0.25s ease` : "opacity 0.25s ease",
           }}
         />
       )}
@@ -761,7 +788,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
       <button
         type="button"
         className="admin-edge-toggle"
-        onClick={() => onModeChange(mode === "collapsed" ? "expanded" : "collapsed")}
+        onClick={() => changeMode(mode === "collapsed" ? "expanded" : "collapsed")}
         onMouseEnter={() => setEdgeHover(true)}
         onMouseLeave={() => setEdgeHover(false)}
         title={ar ? "طي/فتح الشريط الجانبي" : "Collapse/expand sidebar"}
@@ -781,12 +808,14 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           justifyContent: "center",
           cursor: "pointer",
           boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-          transition: "left 0.15s ease-out",
+          transition: animate ? `left ${RAIL_EASE}` : "none",
         }}
       >
-        {collapsed
-          ? (ar ? <ChevronLeft size={15} /> : <ChevronRight size={15} />)
-          : (ar ? <ChevronRight size={15} /> : <ChevronLeft size={15} />)}
+        {/* One chevron that turns over, instead of swapping icons. */}
+        <ChevronLeft
+          size={15}
+          style={{ transform: collapsed !== ar ? "rotate(180deg)" : "none", transition: animate ? `transform ${RAIL_EASE}` : "none" }}
+        />
       </button>
 
       {/* Portaled to <body> — the sidebar's own overflow-x:hidden would
@@ -816,7 +845,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
               <button
                 key={m}
                 type="button"
-                onClick={() => { onModeChange(m); setMenuOpen(false); }}
+                onClick={() => { changeMode(m); setMenuOpen(false); }}
                 style={{
                   width: "100%",
                   display: "flex",
@@ -846,6 +875,29 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
 
       <style>{`
         .admin-collapse-btn { display: flex !important; }
+
+        /* Rail toggle: labels fade out just before the rail closes and fade
+           back in just after it starts opening (only once the admin has
+           actually toggled it — see \`animate\` in AdminSidebar). */
+        .admin-sidebar .admin-rail-label { transition: opacity 0.16s ease; }
+        .admin-sidebar[data-rail="closing"] .admin-rail-label { opacity: 0; }
+        .admin-sidebar.admin-rail-animate .admin-rail-label { animation: adminRailLabelIn 0.3s ease 0.12s both; }
+        @keyframes adminRailLabelIn {
+          from { opacity: 0; transform: translateX(-6px); }
+          to   { opacity: 1; transform: none; }
+        }
+        [dir="rtl"] .admin-sidebar.admin-rail-animate .admin-rail-label { animation-name: adminRailLabelInRtl; }
+        @keyframes adminRailLabelInRtl {
+          from { opacity: 0; transform: translateX(6px); }
+          to   { opacity: 1; transform: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .admin-sidebar,
+          .admin-edge-toggle,
+          .admin-edge-toggle svg,
+          .admin-seam-glow,
+          .admin-sidebar .admin-rail-label { transition: none !important; animation: none !important; }
+        }
 
         @media (max-width: 900px) {
           .admin-sidebar {

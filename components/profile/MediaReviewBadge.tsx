@@ -27,8 +27,8 @@ export default function MediaReviewBadge({ item, lang }: Props) {
       style={{
         position: "absolute", bottom: 6, insetInlineStart: 6, insetInlineEnd: 6, textAlign: "center",
         padding: "3px 6px", borderRadius: 6, fontSize: 10.5, fontWeight: 800, lineHeight: 1.3,
-        backgroundColor: rejected ? "rgba(220,38,38,0.92)" : "rgba(244,183,64,0.95)",
-        color: rejected ? "#fff" : "#1a1206",
+        backgroundColor: rejected ? "rgba(220,38,38,0.92)" : "rgba(231,165,138,0.95)",
+        color: rejected ? "#fff" : "#1B1310",
       }}
     >
       {TX[lang][status]}

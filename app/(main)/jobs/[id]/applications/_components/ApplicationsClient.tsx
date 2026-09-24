@@ -1,4 +1,5 @@
 "use client";
+import { useHeldValue } from "@/hooks/useModalClose";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -93,10 +94,10 @@ const TX = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  pending:   "#FFB800",
-  accepted:  "#00D26A",
+  pending:   "var(--color-accent-strong)",
+  accepted:  "var(--color-primary-text)",
   rejected:  "#EF4444",
-  withdrawn: "#64748B",
+  withdrawn: "#6E5F55",
 };
 
 export default function ApplicationsClient({
@@ -107,17 +108,18 @@ export default function ApplicationsClient({
   const t  = TX[lang];
   const ar = lang === "ar";
 
-  const GREEN  = "#00D26A";
-  const GOLD   = "#FFB800";
-  const BG     = dark ? "#050B12" : "#F1F5F9";
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.12)" : "#E2E8F0";
-  const TEXT   = dark ? "#F1F5F9" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
+  const BG     = dark ? "#1B1310" : "#F1EAD3";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.12)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
 
   const [apps, setApps]               = useState<Application[]>(applications);
   const [loadingId, setLoadingId]     = useState<string | null>(null);
   const [rejectModal, setRejectModal] = useState<string | null>(null);
+  const { value: rejectModalHeld, closing: rejectModalClosing } = useHeldValue(rejectModal);
   const [rejectReason, setRejectReason] = useState("");
 
   function fmtBudget() {
@@ -240,7 +242,7 @@ export default function ApplicationsClient({
                     {/* Talent row */}
                     <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
                       {/* Avatar */}
-                      <div style={{ width: 50, height: 50, borderRadius: "50%", flexShrink: 0, overflow: "hidden", backgroundColor: dark ? "#1e293b" : "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, color: MUTED }}>
+                      <div style={{ width: 50, height: 50, borderRadius: "50%", flexShrink: 0, overflow: "hidden", backgroundColor: dark ? "#3A2E28" : "#E6DCC3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, color: MUTED }}>
                         {talent?.avatar_url
                           ? <img src={talent.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           : (talent?.full_name ?? "?")[0].toUpperCase()}
@@ -252,11 +254,11 @@ export default function ApplicationsClient({
                             {talent?.full_name ?? "—"}
                           </span>
                           {talent?.is_verified && (
-                            <span style={{ display: "flex", alignItems: "center", gap: 3, backgroundColor: "rgba(0,210,106,0.1)", color: GREEN, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6, border: "1px solid rgba(0,210,106,0.2)" }}>
+                            <span style={{ display: "flex", alignItems: "center", gap: 3, backgroundColor: "rgba(8,127,131,0.1)", color: GREEN, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6, border: "1px solid rgba(8,127,131,0.2)" }}>
                               <BadgeCheck size={10} /> {t.verified}
                             </span>
                           )}
-                          <span style={{ backgroundColor: statusColor + "22", color: statusColor, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, border: `1px solid ${statusColor}44` }}>
+                          <span style={{ backgroundColor: statusColor + "22", color: statusColor, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, border: `1px solid color-mix(in srgb, ${statusColor} 27%, transparent)` }}>
                             {t[app.status as keyof typeof t] ?? app.status}
                           </span>
                         </div>
@@ -292,7 +294,7 @@ export default function ApplicationsClient({
 
                     {/* Proposal message */}
                     {app.message && (
-                      <div style={{ backgroundColor: dark ? "#060d18" : "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+                      <div style={{ backgroundColor: dark ? "#060d18" : "#F6F0DD", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
                         <p style={{ color: MUTED, fontSize: 11, fontWeight: 700, margin: "0 0 4px", display: "flex", alignItems: "center", gap: 4 }}>
                           <Users size={10} /> {t.message}
                         </p>
@@ -309,7 +311,7 @@ export default function ApplicationsClient({
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                           {app.portfolio_links.map((link, i) => (
                             <a key={i} href={link} target="_blank" rel="noopener noreferrer"
-                              style={{ display: "flex", alignItems: "center", gap: 4, color: GREEN, fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 8, backgroundColor: "rgba(0,210,106,0.07)", border: "1px solid rgba(0,210,106,0.2)", textDecoration: "none" }}>
+                              style={{ display: "flex", alignItems: "center", gap: 4, color: GREEN, fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 8, backgroundColor: "rgba(8,127,131,0.07)", border: "1px solid rgba(8,127,131,0.2)", textDecoration: "none" }}>
                               <ExternalLink size={11} /> {t.portfolio} {i + 1}
                             </a>
                           ))}
@@ -322,7 +324,7 @@ export default function ApplicationsClient({
                       {/* Accept */}
                       {isPending && (
                         <button onClick={() => handleAccept(app.id)} disabled={!!loadingId}
-                          style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: isAccepting ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 800, cursor: loadingId ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                          style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: isAccepting ? "rgba(8,127,131,0.5)" : "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 800, cursor: loadingId ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                           <CheckCircle2 size={14} /> {isAccepting ? t.accepting : t.accept}
                         </button>
                       )}
@@ -358,18 +360,18 @@ export default function ApplicationsClient({
       </div>
 
       {/* Reject modal */}
-      {rejectModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, backgroundColor: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+      {rejectModalHeld && (
+        <div className="modal-backdrop" data-state={rejectModalClosing ? "closing" : "open"} style={{ position: "fixed", inset: 0, zIndex: 1000, backgroundColor: "rgba(27,19,16,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
           onClick={(e) => { if (e.target === e.currentTarget) setRejectModal(null); }}>
-          <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: "100%", maxWidth: 420 }}>
+          <div className="modal-card" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: "100%", maxWidth: 420 }}>
             <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>{t.reject}</h3>
             <textarea
               value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
               placeholder={t.rejectReason} rows={3}
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#F8FAFC", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", resize: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#F6F0DD", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", resize: "none", boxSizing: "border-box" }}
             />
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-              <button onClick={() => handleReject(rejectModal)} disabled={!!loadingId}
+              <button onClick={() => handleReject(rejectModalHeld)} disabled={!!loadingId}
                 style={{ flex: 1, backgroundColor: "#EF4444", color: "#fff", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 {loadingId ? t.rejecting : t.confirmRej}
               </button>

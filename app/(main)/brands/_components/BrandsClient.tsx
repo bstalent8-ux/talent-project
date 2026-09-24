@@ -49,26 +49,26 @@ export default function BrandsClient({ brands }: Props) {
   return (
     <div style={{
       minHeight: "100vh",
-      backgroundColor: dark ? "#050B12" : "#F1F5F9",
+      backgroundColor: dark ? "#1B1310" : "#F1EAD3",
       fontFamily: "'IBM Plex Sans Arabic', sans-serif",
       direction: ar ? "rtl" : "ltr",
     }}>
       {/* ── Hero / search bar ── */}
       <div style={{
         background: dark
-          ? "linear-gradient(135deg,#0D1623 0%,#060d18 100%)"
-          : "linear-gradient(135deg,#f0fdf4 0%,#e0f2fe 100%)",
-        borderBottom: `1px solid ${dark ? "rgba(0,255,163,0.1)" : "#e2e8f0"}`,
+          ? "linear-gradient(135deg,#2B211D 0%,#1B1310 100%)"
+          : "linear-gradient(135deg,#E1F3EA 0%,#E4F1EF 100%)",
+        borderBottom: `1px solid ${dark ? "rgba(79,167,163,0.1)" : "#E6DCC3"}`,
         padding: "40px 24px 28px",
       }}>
         <div style={{ maxWidth: 1440, margin: "0 auto" }}>
           <h1 style={{
-            color: dark ? "#fff" : "#0f172a",
+            color: dark ? "#fff" : "#2B211D",
             fontSize: 28, fontWeight: 900, margin: "0 0 4px",
           }}>
             {ar ? "استكشف البراندات 🏢" : "Explore Brands 🏢"}
           </h1>
-          <p style={{ color: dark ? "#64748b" : "#64748b", fontSize: 14, margin: "0 0 20px" }}>
+          <p style={{ color: dark ? "#8F8175" : "#6E5F55", fontSize: 14, margin: "0 0 20px" }}>
             {ar
               ? `${brands.length} براند يبحثون عن مواهب للتعاون`
               : `${brands.length} brands looking for talent collaborations`}
@@ -82,9 +82,9 @@ export default function BrandsClient({ brands }: Props) {
               placeholder={ar ? "ابحث باسم البراند أو المدينة…" : "Search by name or city…"}
               style={{
                 width: "100%", padding: "12px 16px 12px 44px",
-                backgroundColor: dark ? "#0D1623" : "#fff",
-                border: `1px solid ${dark ? "rgba(0,255,163,0.2)" : "#e2e8f0"}`,
-                borderRadius: 12, color: dark ? "#f1f5f9" : "#0f172a",
+                backgroundColor: dark ? "#2B211D" : "#fff",
+                border: `1px solid ${dark ? "rgba(79,167,163,0.2)" : "#E6DCC3"}`,
+                borderRadius: 12, color: dark ? "#F5EEDB" : "#2B211D",
                 fontSize: 14, outline: "none", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                 boxSizing: "border-box",
                 direction: ar ? "rtl" : "ltr",
@@ -93,7 +93,7 @@ export default function BrandsClient({ brands }: Props) {
             <span style={{
               position: "absolute", top: "50%", transform: "translateY(-50%)",
               ...(ar ? { right: 14 } : { left: 14 }),
-              color: "#64748b", pointerEvents: "none", fontSize: 16,
+              color: "#6E5F55", pointerEvents: "none", fontSize: 16,
             }}>🔍</span>
           </div>
 
@@ -107,9 +107,9 @@ export default function BrandsClient({ brands }: Props) {
                   onClick={() => setIndustry(ind.key)}
                   style={{
                     padding: "6px 16px", borderRadius: 20,
-                    border: `1px solid ${active ? "#00D26A" : (dark ? "rgba(255,255,255,0.1)" : "#e2e8f0")}`,
-                    backgroundColor: active ? "rgba(0,210,106,0.12)" : "transparent",
-                    color: active ? "#00D26A" : (dark ? "#94a3b8" : "#64748b"),
+                    border: `1px solid ${active ? "var(--color-primary-text)" : (dark ? "rgba(255,255,255,0.1)" : "#E6DCC3")}`,
+                    backgroundColor: active ? "rgba(8,127,131,0.12)" : "transparent",
+                    color: active ? "var(--color-primary-text)" : (dark ? "#A99B8E" : "#6E5F55"),
                     fontSize: 13, fontWeight: active ? 700 : 400,
                     cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                     transition: "all 0.15s",

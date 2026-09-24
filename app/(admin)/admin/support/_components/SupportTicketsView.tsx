@@ -1,4 +1,5 @@
 "use client";
+import { useHeldValue } from "@/hooks/useModalClose";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
@@ -100,6 +101,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
   const ar = lang === "ar";
 
   const [selected, setSelected] = useState<AdminSupportTicket | null>(null);
+  const { value: selectedHeld, closing: selectedClosing } = useHeldValue(selected);
   const [reply, setReply] = useState("");
   const [assignedDraft, setAssignedDraft] = useState("");
   const [noteDraft, setNoteDraft] = useState("");
@@ -276,28 +278,28 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
 
       <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status)} />
 
-      {selected && (
-        <div
+      {selectedHeld && (
+        <div className="modal-backdrop" data-state={selectedClosing ? "closing" : "open"}
           onClick={() => setSelected(null)}
-          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(27,19,16,0.62)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
-          <div
+          <div className="modal-card"
             onClick={(e) => e.stopPropagation()}
             style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, width: "min(560px, 100%)", maxHeight: "85vh", overflowY: "auto", padding: 20 }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
               <div>
-                <h2 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{selected.subject}</h2>
+                <h2 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{selectedHeld.subject}</h2>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                  <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: (STATUS_COLOR[selected.status] ?? STATUS_COLOR.new).bg, color: (STATUS_COLOR[selected.status] ?? STATUS_COLOR.new).text, display: "inline-block" }}>
-                    {t[selected.status as keyof typeof t] as string}
+                  <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: (STATUS_COLOR[selectedHeld.status] ?? STATUS_COLOR.new).bg, color: (STATUS_COLOR[selectedHeld.status] ?? STATUS_COLOR.new).text, display: "inline-block" }}>
+                    {t[selectedHeld.status as keyof typeof t] as string}
                   </span>
                   <span style={{
                     padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, display: "inline-block",
-                    backgroundColor: selected.context?.submittedBy?.type === "admin" ? "rgba(231,165,138,0.15)" : "rgba(79,167,163,0.15)",
-                    color: selected.context?.submittedBy?.type === "admin" ? "#E7A58A" : "#4FA7A3",
+                    backgroundColor: selectedHeld.context?.submittedBy?.type === "admin" ? "rgba(231,165,138,0.15)" : "rgba(79,167,163,0.15)",
+                    color: selectedHeld.context?.submittedBy?.type === "admin" ? "#E7A58A" : "#4FA7A3",
                   }}>
-                    {submittedByLabel(selected, t)}
+                    {submittedByLabel(selectedHeld, t)}
                   </span>
                 </div>
               </div>
@@ -307,17 +309,17 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14, fontSize: 13, color: TEXT }}>
-              {selected.name && (
+              {selectedHeld.name && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
                   <User size={13} color={MUTED} />
-                  {selected.name}
+                  {selectedHeld.name}
                 </div>
               )}
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Mail size={13} color={MUTED} />
-                {selected.email}
+                {selectedHeld.email}
                 <button
-                  onClick={() => copyEmail(selected.email)}
+                  onClick={() => copyEmail(selectedHeld.email)}
                   title={t.copyEmail}
                   style={{ background: "none", border: "none", cursor: "pointer", color: copied ? "#087F83" : MUTED, display: "flex", padding: 2 }}
                 >
@@ -325,38 +327,38 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                 </button>
                 {copied && <span style={{ color: "var(--color-primary-text)", fontSize: 11 }}>{t.copied}</span>}
               </div>
-              {selected.phone && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Phone size={13} color={MUTED} />{selected.phone}</div>}
-              {selected.context?.page && (
+              {selectedHeld.phone && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Phone size={13} color={MUTED} />{selectedHeld.phone}</div>}
+              {selectedHeld.context?.page && (
                 <div style={{ color: MUTED, fontSize: 12 }}>
-                  {t.source}: {(PAGE_LABEL[selected.context.page]?.[lang]) ?? selected.context.page}
+                  {t.source}: {(PAGE_LABEL[selectedHeld.context.page]?.[lang]) ?? selectedHeld.context.page}
                 </div>
               )}
               <div style={{ color: MUTED, fontSize: 12 }}>
-                {t.submitted}: {new Date(selected.createdAt).toLocaleString(ar ? "ar-EG" : "en-US")}
+                {t.submitted}: {new Date(selectedHeld.createdAt).toLocaleString(ar ? "ar-EG" : "en-US")}
               </div>
             </div>
 
             <div style={{ marginBottom: 14 }}>
               <p style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>{t.message}</p>
-              <p style={{ color: TEXT, fontSize: 14, margin: 0, whiteSpace: "pre-wrap" }}>{selected.message}</p>
+              <p style={{ color: TEXT, fontSize: 14, margin: 0, whiteSpace: "pre-wrap" }}>{selectedHeld.message}</p>
             </div>
 
-            {selected.attachmentUrl && (
+            {selectedHeld.attachmentUrl && (
               <div style={{ marginBottom: 14 }}>
                 <p style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>
-                  {selected.attachmentType === "video" ? t.attachmentVideo : t.attachment}
+                  {selectedHeld.attachmentType === "video" ? t.attachmentVideo : t.attachment}
                 </p>
-                {selected.attachmentType === "video" ? (
+                {selectedHeld.attachmentType === "video" ? (
                   <video
-                    src={selected.attachmentUrl}
+                    src={selectedHeld.attachmentUrl}
                     controls
                     style={{ maxWidth: "100%", maxHeight: 260, borderRadius: 8, border: `1px solid ${BORDER}`, display: "block" }}
                   />
                 ) : (
-                  <a href={selected.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={selectedHeld.attachmentUrl} target="_blank" rel="noopener noreferrer">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={selected.attachmentUrl}
+                      src={selectedHeld.attachmentUrl}
                       alt=""
                       style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 8, border: `1px solid ${BORDER}`, display: "block" }}
                     />
@@ -365,19 +367,19 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
               </div>
             )}
 
-            {selected.context?.pageError && (
+            {selectedHeld.context?.pageError && (
               <div style={{ marginBottom: 14, padding: 10, borderRadius: 8, backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
                 <p style={{ color: "#EF4444", fontSize: 11, fontWeight: 700, margin: "0 0 4px" }}>{t.errorSeen}</p>
-                <p style={{ color: TEXT, fontSize: 12, margin: 0 }}>{selected.context.pageError}</p>
+                <p style={{ color: TEXT, fontSize: 12, margin: 0 }}>{selectedHeld.context.pageError}</p>
               </div>
             )}
 
-            {selected.adminReply && (
+            {selectedHeld.adminReply && (
               <div style={{ marginBottom: 14 }}>
                 <p style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>
-                  {t.previousReply}{selected.repliedAt ? ` — ${t.repliedAt} ${new Date(selected.repliedAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}` : ""}
+                  {t.previousReply}{selectedHeld.repliedAt ? ` — ${t.repliedAt} ${new Date(selectedHeld.repliedAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}` : ""}
                 </p>
-                <p style={{ color: TEXT, fontSize: 13, margin: 0, whiteSpace: "pre-wrap" }}>{selected.adminReply}</p>
+                <p style={{ color: TEXT, fontSize: 13, margin: 0, whiteSpace: "pre-wrap" }}>{selectedHeld.adminReply}</p>
               </div>
             )}
 
@@ -389,7 +391,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
               <div style={{ flex: "1 1 160px" }}>
                 <label style={{ color: MUTED, fontSize: 12, display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                   {t.assignedAdmin}
-                  {!selected.assignedAdmin && (
+                  {!selectedHeld.assignedAdmin && (
                     <span style={{ padding: "2px 7px", borderRadius: 20, fontSize: 10, fontWeight: 700, backgroundColor: "rgba(239,68,68,0.1)", color: "#EF4444" }}>
                       {t.unassigned}
                     </span>
@@ -407,12 +409,12 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                     }}
                   />
                   <button
-                    disabled={savingTriage || assignedDraft === (selected.assignedAdmin ?? "")}
-                    onClick={() => saveTriage(selected.id, { assignedAdmin: assignedDraft })}
+                    disabled={savingTriage || assignedDraft === (selectedHeld.assignedAdmin ?? "")}
+                    onClick={() => saveTriage(selectedHeld.id, { assignedAdmin: assignedDraft })}
                     style={{
                       padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent",
                       color: TEXT, fontSize: 12.5, cursor: "pointer",
-                      opacity: savingTriage || assignedDraft === (selected.assignedAdmin ?? "") ? 0.5 : 1,
+                      opacity: savingTriage || assignedDraft === (selectedHeld.assignedAdmin ?? "") ? 0.5 : 1,
                     }}
                   >
                     {t.save}
@@ -436,12 +438,12 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                 }}
               />
               <button
-                disabled={savingTriage || noteDraft === (selected.adminNote ?? "")}
-                onClick={() => saveTriage(selected.id, { adminNote: noteDraft })}
+                disabled={savingTriage || noteDraft === (selectedHeld.adminNote ?? "")}
+                onClick={() => saveTriage(selectedHeld.id, { adminNote: noteDraft })}
                 style={{
                   marginTop: 6, padding: "6px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent",
                   color: TEXT, fontSize: 12, cursor: "pointer",
-                  opacity: savingTriage || noteDraft === (selected.adminNote ?? "") ? 0.5 : 1,
+                  opacity: savingTriage || noteDraft === (selectedHeld.adminNote ?? "") ? 0.5 : 1,
                 }}
               >
                 {t.save}
@@ -471,28 +473,28 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
             </div>
 
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {selected.status !== "seen" && (
+              {selectedHeld.status !== "seen" && (
                 <button
                   disabled={saving}
-                  onClick={() => patch(selected.id, { status: "seen" })}
+                  onClick={() => patch(selectedHeld.id, { status: "seen" })}
                   style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #C98A70", backgroundColor: "rgba(201,138,112,0.1)", color: "#C98A70", fontSize: 12.5, cursor: "pointer" }}
                 >
                   {t.markSeen}
                 </button>
               )}
-              {selected.status !== "process" && (
+              {selectedHeld.status !== "process" && (
                 <button
                   disabled={saving}
-                  onClick={() => patch(selected.id, { status: "process" })}
+                  onClick={() => patch(selectedHeld.id, { status: "process" })}
                   style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 12.5, cursor: "pointer" }}
                 >
                   {t.markProcess}
                 </button>
               )}
-              {selected.status !== "done" && (
+              {selectedHeld.status !== "done" && (
                 <button
                   disabled={saving}
-                  onClick={() => patch(selected.id, { status: "done" })}
+                  onClick={() => patch(selectedHeld.id, { status: "done" })}
                   style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #087F83", backgroundColor: "rgba(8,127,131,0.1)", color: "var(--color-primary-text)", fontSize: 12.5, cursor: "pointer" }}
                 >
                   {t.markDone}
@@ -500,14 +502,14 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
               )}
               <button
                 disabled={saving || !reply.trim()}
-                onClick={() => patch(selected.id, { reply })}
+                onClick={() => patch(selectedHeld.id, { reply })}
                 style={{ padding: "8px 16px", borderRadius: 8, border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: reply.trim() ? "pointer" : "not-allowed", opacity: reply.trim() ? 1 : 0.5 }}
               >
                 {t.send}
               </button>
-              {selected.talentId && (
+              {selectedHeld.talentId && (
                 <Link
-                  href={`/admin/talents/${selected.talentId}`}
+                  href={`/admin/talents/${selectedHeld.talentId}`}
                   title={t.viewProfile}
                   aria-label={t.viewProfile}
                   style={{ marginInlineStart: canDelete ? undefined : "auto", padding: "8px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, display: "flex", cursor: "pointer" }}
@@ -518,7 +520,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
               {canDelete && (
                 <button
                   disabled={saving}
-                  onClick={() => setPendingDelete(selected)}
+                  onClick={() => setPendingDelete(selectedHeld)}
                   title={t.delete}
                   aria-label={t.delete}
                   style={{ marginInlineStart: "auto", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--color-error)", backgroundColor: "transparent", color: "var(--color-error)", display: "flex", cursor: "pointer" }}

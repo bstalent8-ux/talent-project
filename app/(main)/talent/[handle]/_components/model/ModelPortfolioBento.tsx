@@ -11,7 +11,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
-const GOLD = "#d89b37";
+const GOLD = "var(--color-accent-strong)";
 const ROW1_COUNT = 2;
 const ROW2_COUNT = 4;
 
@@ -46,10 +46,10 @@ function cloudinaryVideoPoster(url: string | null): string | undefined {
 export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "var(--bg-surface)" : "#FFFFFF";
-  const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
-  const TEXT = dark ? "var(--text-primary)" : "#0F172A";
-  const TILE_BG = dark ? "var(--bg-page-subtle)" : "#F1F5F9";
+  const CARD = dark ? "var(--bg-surface)" : "#FBF7EA";
+  const BORDER = dark ? "var(--border-subtle)" : "#E6DCC3";
+  const TEXT = dark ? "var(--text-primary)" : "#2B211D";
+  const TILE_BG = dark ? "var(--bg-page-subtle)" : "#F1EAD3";
   const [expanded, setExpanded] = useState(false);
 
   if (portfolioItems.length === 0) return null;
@@ -109,13 +109,13 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
           </span>
         )}
         {item.caption && (
-          <div style={{ position: "absolute", bottom: 10, insetInlineStart: 10, display: "flex", alignItems: "center", gap: 5, backgroundColor: "rgba(10,13,20,0.85)", border: "1px solid rgba(255,255,255,0.14)", color: "#fff", fontSize: 11.5, fontWeight: 700, padding: "4px 10px", borderRadius: 6, maxWidth: "calc(100% - 52px)" }}>
+          <div style={{ position: "absolute", bottom: 10, insetInlineStart: 10, display: "flex", alignItems: "center", gap: 5, backgroundColor: "rgba(27,19,16,0.85)", border: "1px solid rgba(255,255,255,0.14)", color: "#fff", fontSize: 11.5, fontWeight: 700, padding: "4px 10px", borderRadius: 6, maxWidth: "calc(100% - 52px)" }}>
             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.caption}</span>
             {index === 0 && <Plus size={12} color={GOLD} />}
           </div>
         )}
         <div style={{ position: "absolute", bottom: 10, insetInlineEnd: 10 }}>
-          <span style={{ width: 26, height: 26, borderRadius: "50%", backgroundColor: "rgba(10,13,20,0.72)", border: `1px solid ${GOLD}66`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ width: 26, height: 26, borderRadius: "50%", backgroundColor: "rgba(27,19,16,0.72)", border: `1px solid color-mix(in srgb, ${GOLD} 40%, transparent)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             {video ? <Play size={12} color={GOLD} fill={GOLD} /> : <Star size={13} color={GOLD} fill={GOLD} />}
           </span>
         </div>
@@ -128,7 +128,7 @@ export default function ModelPortfolioBento({ portfolioItems, onOpenGallery }: P
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <h2 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: 0 }}>Portfolio</h2>
-          <span style={{ backgroundColor: dark ? "var(--bg-card-muted)" : "#F1F5F9", color: GOLD, border: `1px solid ${GOLD}4d`, fontSize: 12, fontWeight: 700, padding: "2px 8px", borderRadius: 6 }}>{portfolioItems.length}</span>
+          <span style={{ backgroundColor: dark ? "var(--bg-card-muted)" : "#F1EAD3", color: GOLD, border: `1px solid color-mix(in srgb, ${GOLD} 30%, transparent)`, fontSize: 12, fontWeight: 700, padding: "2px 8px", borderRadius: 6 }}>{portfolioItems.length}</span>
         </div>
         {moreItems.length > 0 && (
           <button

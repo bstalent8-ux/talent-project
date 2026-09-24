@@ -73,15 +73,15 @@ export default function TodayDueButton({ module }: Props) {
         onClick={() => setOpen((o) => !o)}
         style={{
           display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10,
-          border: `1px solid ${count > 0 ? "#F59E0B" : BORDER}`,
+          border: `1px solid ${count > 0 ? "#C98A70" : BORDER}`,
           backgroundColor: count > 0 ? "rgba(245,158,11,0.1)" : "transparent",
-          color: count > 0 ? "#F59E0B" : MUTED,
+          color: count > 0 ? "#C98A70" : MUTED,
           fontSize: 12.5, fontWeight: 600, cursor: "pointer",
         }}
       >
         <Calendar size={14} />{t.today}
         {due !== null && count > 0 && (
-          <span style={{ backgroundColor: "#F59E0B", color: "#fff", borderRadius: 10, fontSize: 10.5, fontWeight: 700, padding: "1px 6px" }}>
+          <span style={{ backgroundColor: "#B9694C", color: "#fff", borderRadius: 10, fontSize: 10.5, fontWeight: 700, padding: "1px 6px" }}>
             {count}
           </span>
         )}

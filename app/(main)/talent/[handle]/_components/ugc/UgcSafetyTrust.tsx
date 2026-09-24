@@ -12,8 +12,8 @@ import { ShieldCheck, CheckCircle2, FileCheck2, MessageSquare, Send } from "luci
 import { useSite } from "@/contexts/SiteContext";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 
-const EMERALD = "#10B981";
-const VIOLET = "#16a3a3"; // site --color-accent, was violet
+const EMERALD = "var(--color-success)";
+const VIOLET = "var(--color-primary-text)"; // site --color-accent, was violet
 
 interface Props {
   talentUserId: string;
@@ -31,10 +31,10 @@ interface Props {
 export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar, onOpenBrief, horizontal = false, joined = false, stackJoined = false }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   const bullets = ar
     ? ["توثيق هوية المواهب", "مراجعة إدارية لكل طلب", "تواصل مباشر قبل الحجز"]
@@ -49,7 +49,7 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
     }));
   }
 
-  const HAIR = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
+  const HAIR = dark ? "rgba(255,255,255,0.10)" : "#E6DCC3";
   const cols = joined && !stackJoined;
   // Joined: no per-block card chrome — the parent card frames all three, hairlines split them.
   const block = (i: number, extra: React.CSSProperties = {}): React.CSSProperties => joined
@@ -71,7 +71,7 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
         </div>
       </div>
 
-      <div style={joined ? block(1, { display: "flex", flexDirection: "column", gap: 12 }) : { backgroundColor: `${EMERALD}0d`, border: `1px solid ${EMERALD}44`, borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={joined ? block(1, { display: "flex", flexDirection: "column", gap: 12 }) : { backgroundColor: `color-mix(in srgb, ${EMERALD} 5%, transparent)`, border: `1px solid color-mix(in srgb, ${EMERALD} 27%, transparent)`, borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: EMERALD, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <FileCheck2 size={16} color="#fff" />
@@ -91,7 +91,7 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
 
       <div style={joined ? block(2, { display: "flex", flexDirection: "column", gap: 12 }) : { backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: `${VIOLET}22`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: `color-mix(in srgb, ${VIOLET} 13%, transparent)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <MessageSquare size={16} color={VIOLET} />
           </div>
           <div>
@@ -101,7 +101,7 @@ export default function UgcSafetyTrust({ talentUserId, talentName, talentAvatar,
         </div>
         <ProtectedAction action="start_conversation">
           <motion.button onClick={askQuestion} whileHover={{ scale: 1.02 }}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 12, border: "none", backgroundColor: "#0F172A", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0", borderRadius: 12, border: "none", backgroundColor: "#2B211D", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <Send size={13} />{ar ? "إرسال سؤال" : "Send Question"}
           </motion.button>
         </ProtectedAction>

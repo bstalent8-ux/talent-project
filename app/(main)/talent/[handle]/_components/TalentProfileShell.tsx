@@ -100,7 +100,7 @@ export default function TalentProfileShell({ profile }: { profile: PublicProfile
       dir={lang === "en" ? "ltr" : "rtl"}
       style={{
         fontFamily:      "'IBM Plex Sans Arabic', sans-serif",
-        backgroundColor: dark ? "#050B12" : "#F1F5F9",
+        backgroundColor: dark ? "#1B1310" : "#F1EAD3",
         minHeight:       "100vh",
         paddingBottom:   110,
       }}

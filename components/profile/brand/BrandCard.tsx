@@ -17,11 +17,11 @@ export function useBrandPalette() {
   return {
     ar:     lang === "ar",
     dark,
-    CARD:   dark ? "#0D1623" : "#FFFFFF",
-    BORDER: dark ? "rgba(0,255,163,0.15)" : "#E2E8F0",
-    TEXT:   dark ? "#F8FAFC" : "#0F172A",
-    MUTED:  dark ? "#A8B3C2" : "#64748B",
-    GREEN:  "#00D26A",
+    CARD:   dark ? "#2B211D" : "#FBF7EA",
+    BORDER: dark ? "rgba(79,167,163,0.15)" : "#E6DCC3",
+    TEXT:   dark ? "#F5EEDB" : "#2B211D",
+    MUTED:  dark ? "#A99B8E" : "#6E5F55",
+    GREEN:  "var(--color-primary-text)",
   };
 }
 

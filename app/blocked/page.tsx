@@ -16,11 +16,11 @@ export default function BlockedPage() {
     setDark(stored === "dark");
   }, []);
 
-  const BG     = dark ? "#050B12" : "#F1F5F9";
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
+  const BG     = dark ? "#1B1310" : "#F5EEDB";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
   const RED    = "#EF4444";
 
   async function handleLogout() {
@@ -79,7 +79,7 @@ export default function BlockedPage() {
           href="mailto:support@talents-platform.com"
           style={{
             display: "inline-block", marginTop: 20,
-            color: "#60A5FA", fontSize: 13, textDecoration: "underline",
+            color: "var(--color-primary-text)", fontSize: 13, textDecoration: "underline",
           }}
         >
           support@talents-platform.com

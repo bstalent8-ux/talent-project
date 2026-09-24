@@ -18,11 +18,11 @@ import type { BrandItem } from "@/features/talent-profile/types";
 export default function ModelVerifiedBrands({ brands }: { brands: BrandItem[] }) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const GREEN = "#00D26A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const GREEN = "var(--color-primary-text)";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
 
   const rows = brands
     .filter((b) => b.verified)
@@ -32,7 +32,7 @@ export default function ModelVerifiedBrands({ brands }: { brands: BrandItem[] })
 
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, height: "100%" }}>
-      <h3 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
+      <h3 style={{ color: dark ? "#fff" : "#2B211D", fontSize: 16, fontWeight: 800, margin: "0 0 16px" }}>
         {ar ? "موثّق عبر Talents" : "Verified Through Talents"}
       </h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -46,7 +46,7 @@ export default function ModelVerifiedBrands({ brands }: { brands: BrandItem[] })
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
               <span style={{
-                color: dark ? "#fff" : "#0F172A", fontSize: 13, fontWeight: 700,
+                color: dark ? "#fff" : "#2B211D", fontSize: 13, fontWeight: 700,
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               }}>
                 {r.name}
@@ -55,7 +55,7 @@ export default function ModelVerifiedBrands({ brands }: { brands: BrandItem[] })
             </div>
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0,
-              backgroundColor: "rgba(0,210,106,0.12)", color: GREEN, border: `1px solid ${GREEN}55`,
+              backgroundColor: "rgba(8,127,131,0.12)", color: GREEN, border: `1px solid color-mix(in srgb, ${GREEN} 33%, transparent)`,
               borderRadius: 999, padding: "3px 9px", fontSize: 10.5, fontWeight: 800,
             }}>
               <CheckCircle size={11} />{ar ? "موثّق" : "VERIFIED"}

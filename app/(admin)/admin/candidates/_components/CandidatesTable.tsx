@@ -274,7 +274,7 @@ export default function CandidatesTable({ candidates, total, page, pageSize, sta
                         <span style={{ fontWeight: 600 }}>{candidate.fullName ?? t.unnamed}</span>
                         {candidate.possibleDuplicateOf && (
                           <span title={t.possibleDuplicate} style={{ display: "flex" }}>
-                            <AlertTriangle size={13} color="#F59E0B" />
+                            <AlertTriangle size={13} color="#C98A70" />
                           </span>
                         )}
                       </div>

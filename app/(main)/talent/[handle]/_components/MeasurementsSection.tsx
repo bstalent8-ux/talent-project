@@ -40,11 +40,11 @@ export default function MeasurementsSection({ measurements, languages }: Props) 
   const { dark, lang } = useSite();
   const ar = lang === "ar";
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const GOLD   = "#F4B740";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const GOLD   = "var(--color-accent-strong)";
 
   // Chest/waist/hip render as one combined "90/60/90" line when all three
   // are filled — the individual fields still exist and still count toward

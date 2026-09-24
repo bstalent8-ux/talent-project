@@ -19,7 +19,7 @@ const PLATFORMS: Array<{ key: string; label: string; base: string; color: string
   { key: "youtube",   label: "YouTube",   base: "https://youtube.com/@",    color: "#FF0000" },
   { key: "linkedin",  label: "LinkedIn",  base: "https://linkedin.com/in/", color: "#0A66C2" },
   { key: "facebook",  label: "Facebook",  base: "https://facebook.com/",    color: "#1877F2" },
-  { key: "x",         label: "X",         base: "https://x.com/",           color: "#0F1419" },
+  { key: "x",         label: "X",         base: "https://x.com/",           color: "#1B1310" },
 ];
 
 /** A stored value may be a full URL or a bare handle. Both must resolve. */
@@ -57,7 +57,7 @@ export default function BrandSocialCard({ socialLinks }: { socialLinks: Record<s
               display: "flex", alignItems: "center", gap: 10,
               padding: "10px 12px", borderRadius: 10,
               border: `1px solid ${BORDER}`,
-              backgroundColor: dark ? "rgba(255,255,255,0.02)" : "#F8FAFC",
+              backgroundColor: dark ? "rgba(255,255,255,0.02)" : "#F6F0DD",
               color: TEXT, fontSize: 13, fontWeight: 700, textDecoration: "none",
             }}
           >

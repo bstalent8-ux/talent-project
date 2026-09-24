@@ -62,7 +62,7 @@ export default function ProfileClient({ profile, isOwner = false }: ProfileClien
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setEditing(true)}
-          className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-[#00D26A] hover:bg-[#00E676] text-black font-bold text-sm rounded-xl px-4 py-2 transition-colors"
+          className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-[var(--color-primary-text)] hover:bg-[var(--color-primary-text)] text-black font-bold text-sm rounded-xl px-4 py-2 transition-colors"
         >
           <Edit3 size={16} />
           تعديل البروفايل
@@ -99,11 +99,11 @@ export default function ProfileClient({ profile, isOwner = false }: ProfileClien
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg bg-[#0D1623] border border-[rgba(0,255,163,.15)] rounded-2xl p-6"
+              className="w-full max-w-lg bg-[#2B211D] border border-[rgba(79,167,163,.15)] rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-white text-lg font-bold">تعديل البروفايل</h2>
-                <button onClick={() => setEditing(false)} className="text-[#A8B3C2] hover:text-white transition-colors">
+                <button onClick={() => setEditing(false)} className="text-[#A99B8E] hover:text-white transition-colors">
                   <X size={20} />
                 </button>
               </div>
@@ -111,16 +111,16 @@ export default function ProfileClient({ profile, isOwner = false }: ProfileClien
               <div className="space-y-4">
                 {/* Avatar */}
                 <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-16 rounded-full overflow-hidden bg-[#0A121C] border-2 border-[rgba(0,255,163,.15)]">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden bg-[#231A16] border-2 border-[rgba(79,167,163,.15)]">
                     {form.avatar_url ? (
                       <img src={form.avatar_url} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#A8B3C2]">
+                      <div className="w-full h-full flex items-center justify-center text-[#A99B8E]">
                         <User size={24} />
                       </div>
                     )}
                   </div>
-                  <button className="flex items-center gap-2 text-sm text-[#00D26A] hover:text-[#00E676] transition-colors">
+                  <button className="flex items-center gap-2 text-sm text-[var(--color-primary-text)] hover:text-[var(--color-primary-text)] transition-colors">
                     <Camera size={16} />
                     تغيير الصورة
                   </button>
@@ -128,35 +128,35 @@ export default function ProfileClient({ profile, isOwner = false }: ProfileClien
 
                 {/* Full Name */}
                 <div>
-                  <label className="block text-[#A8B3C2] text-xs mb-1.5">الاسم الكامل</label>
+                  <label className="block text-[#A99B8E] text-xs mb-1.5">الاسم الكامل</label>
                   <input
                     value={form.full_name}
                     onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
-                    className="w-full bg-[#0A121C] border border-[rgba(0,255,163,.12)] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#00D26A]/50 transition-colors"
+                    className="w-full bg-[#231A16] border border-[rgba(79,167,163,.12)] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[var(--color-primary-text)]/50 transition-colors"
                   />
                 </div>
 
                 {/* City */}
                 <div>
-                  <label className="block text-[#A8B3C2] text-xs mb-1.5">المدينة</label>
+                  <label className="block text-[#A99B8E] text-xs mb-1.5">المدينة</label>
                   <div className="relative">
-                    <MapPin size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A8B3C2]" />
+                    <MapPin size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A99B8E]" />
                     <input
                       value={form.city}
                       onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                      className="w-full bg-[#0A121C] border border-[rgba(0,255,163,.12)] rounded-xl pr-10 pl-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#00D26A]/50 transition-colors"
+                      className="w-full bg-[#231A16] border border-[rgba(79,167,163,.12)] rounded-xl pr-10 pl-4 py-2.5 text-white text-sm focus:outline-none focus:border-[var(--color-primary-text)]/50 transition-colors"
                     />
                   </div>
                 </div>
 
                 {/* Bio */}
                 <div>
-                  <label className="block text-[#A8B3C2] text-xs mb-1.5">النبذة</label>
+                  <label className="block text-[#A99B8E] text-xs mb-1.5">النبذة</label>
                   <textarea
                     value={form.bio}
                     onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
                     rows={3}
-                    className="w-full bg-[#0A121C] border border-[rgba(0,255,163,.12)] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#00D26A]/50 transition-colors resize-none"
+                    className="w-full bg-[#231A16] border border-[rgba(79,167,163,.12)] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[var(--color-primary-text)]/50 transition-colors resize-none"
                   />
                 </div>
               </div>
@@ -164,13 +164,13 @@ export default function ProfileClient({ profile, isOwner = false }: ProfileClien
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setEditing(false)}
-                  className="flex-1 bg-white/5 hover:bg-white/10 text-[#A8B3C2] border border-white/10 rounded-xl py-2.5 text-sm font-medium transition-colors"
+                  className="flex-1 bg-white/5 hover:bg-white/10 text-[#A99B8E] border border-white/10 rounded-xl py-2.5 text-sm font-medium transition-colors"
                 >
                   إلغاء
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex-2 bg-[#00D26A] hover:bg-[#00E676] text-black font-bold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
+                  className="flex-2 bg-[var(--color-primary-text)] hover:bg-[var(--color-primary-text)] text-black font-bold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
                 >
                   <Save size={16} />
                   حفظ التغييرات

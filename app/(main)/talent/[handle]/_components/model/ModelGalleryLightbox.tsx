@@ -36,7 +36,7 @@ function cloudinaryVideoPoster(url: string | null): string | undefined {
 
 export default function ModelGalleryLightbox({ items, index, onClose, onNavigate }: Props) {
   const { dark } = useSite();
-  const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
+  const BORDER = dark ? "var(--border-subtle)" : "#E6DCC3";
   const item = index !== null ? items[index] : null;
 
   return (
@@ -45,10 +45,10 @@ export default function ModelGalleryLightbox({ items, index, onClose, onNavigate
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={onClose}
-          style={{ position: "fixed", inset: 0, zIndex: 200, backgroundColor: "rgba(5,8,14,0.9)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, zIndex: 200, backgroundColor: "rgba(20,14,11,0.9)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
           <motion.div
-            initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
             style={{ position: "relative", maxWidth: 760, width: "100%", maxHeight: "85vh", borderRadius: 14, overflow: "hidden", backgroundColor: "#000", border: `1px solid ${BORDER}` }}
           >

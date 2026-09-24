@@ -12,21 +12,21 @@ import { PieChart } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 
 const SLICES = [
-  { name: { ar: "مراجعة المنتجات", en: "Product Review" }, pct: 42, color: "#16a3a3" },
-  { name: { ar: "فتح الصناديق", en: "Unboxing" }, pct: 25, color: "#3B82F6" },
-  { name: { ar: "الشروحات التعليمية", en: "Tutorial & How-To" }, pct: 18, color: "#10B981" },
-  { name: { ar: "لايف ستايل", en: "Lifestyle & Vlogs" }, pct: 10, color: "#F4B740" },
-  { name: { ar: "محتوى آخر", en: "Others & Memes" }, pct: 5, color: "#94A3B8" },
+  { name: { ar: "مراجعة المنتجات", en: "Product Review" }, pct: 42, color: "var(--color-primary-text)" },
+  { name: { ar: "فتح الصناديق", en: "Unboxing" }, pct: 25, color: "var(--color-secondary-alt)" },
+  { name: { ar: "الشروحات التعليمية", en: "Tutorial & How-To" }, pct: 18, color: "var(--color-success)" },
+  { name: { ar: "لايف ستايل", en: "Lifestyle & Vlogs" }, pct: 10, color: "var(--color-accent-strong)" },
+  { name: { ar: "محتوى آخر", en: "Others & Memes" }, pct: 5, color: "#A99B8E" },
 ];
 
 export default function UgcContentChart({ hasPortfolio }: { hasPortfolio: boolean }) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
   const [hovered, setHovered] = useState<number | null>(null);
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   if (!hasPortfolio) return null;
 
@@ -47,7 +47,7 @@ export default function UgcContentChart({ hasPortfolio }: { hasPortfolio: boolea
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 20 }}>
       <h3 style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 14px", display: "flex", alignItems: "center", gap: 8 }}>
-        <PieChart size={15} color="#16a3a3" />{ar ? "أنواع المحتوى الأكثر إنتاجاً" : "Top Content Types"}
+        <PieChart size={15} color="var(--color-primary-text)" />{ar ? "أنواع المحتوى الأكثر إنتاجاً" : "Top Content Types"}
       </h3>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
@@ -85,7 +85,7 @@ export default function UgcContentChart({ hasPortfolio }: { hasPortfolio: boolea
               key={i}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11.5, padding: "4px 6px", borderRadius: 8, backgroundColor: hovered === i ? (dark ? "rgba(148,163,184,0.08)" : "#F8FAFC") : "transparent" }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11.5, padding: "4px 6px", borderRadius: 8, backgroundColor: hovered === i ? (dark ? "rgba(169,155,142,0.08)" : "#F6F0DD") : "transparent" }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: 6, color: MUTED, minWidth: 0 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: s.color, flexShrink: 0 }} />

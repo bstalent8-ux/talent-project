@@ -18,9 +18,9 @@ import { Check, X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import { DAY_KEYS, DAY_LABELS, type AvailabilitySchedule } from "@/lib/availability-schedule";
 
-const GREEN = "#10b981";
-const RED = "#f43f5e";
-const GOLD = "#d89b37";
+const GREEN = "var(--color-primary-text)";
+const RED = "var(--color-error)";
+const GOLD = "var(--color-accent-strong)";
 const EXTRA_WEEKS = 3;
 
 function pad2(n: number): string {
@@ -49,11 +49,11 @@ interface Props {
 export default function ModelWeeklyAvailability({ availability, schedule }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "var(--bg-card)" : "#FFFFFF";
-  const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
-  const TEXT = dark ? "var(--text-primary)" : "#0F172A";
-  const MUTED = dark ? "var(--text-muted)" : "#64748B";
-  const HAIR = dark ? "rgba(255,255,255,0.10)" : "#E2E8F0";
+  const CARD = dark ? "var(--bg-card)" : "#FBF7EA";
+  const BORDER = dark ? "var(--border-subtle)" : "#E6DCC3";
+  const TEXT = dark ? "var(--text-primary)" : "#2B211D";
+  const MUTED = dark ? "var(--text-muted)" : "#6E5F55";
+  const HAIR = dark ? "rgba(255,255,255,0.10)" : "#E6DCC3";
   const [full, setFull] = useState(false);
 
   if (!availability) return null;

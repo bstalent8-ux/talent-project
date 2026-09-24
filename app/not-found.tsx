@@ -31,12 +31,12 @@ export default function NotFound() {
   const ar = lang === "ar";
   const t = TX[lang];
 
-  const BG     = dark ? "#050B12" : "#F1F5F9";
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const GREEN  = "#00D26A";
+  const BG     = dark ? "#1B1310" : "#F5EEDB";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const GREEN  = "var(--color-primary-text)";
 
   return (
     <div
@@ -58,7 +58,7 @@ export default function NotFound() {
         <Link
           href="/home"
           style={{
-            display: "inline-block", backgroundColor: GREEN, color: "var(--text-inverse)",
+            display: "inline-block", backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)",
             borderRadius: 10, padding: "10px 28px", fontSize: 14, fontWeight: 700,
             textDecoration: "none",
           }}

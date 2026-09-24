@@ -1,0 +1,1282 @@
+/* ─── Home page ──────────────────────────────────────────────────────────────
+   Six sections on the site's design tokens (globals.css): light/dark come from
+   the tokens, RTL from logical properties. The only direction-dependent bit is
+   the tilt of the collage photos, which flips through --flip. */
+
+.page {
+  /* The drop shadow for hovered hero cards: light, tight, a touch stronger than
+     --shadow-lg so the lift actually reads. */
+  --hover-shadow: 0 18px 36px rgba(43, 33, 29, 0.2);
+  overflow-x: clip;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+:global(:root:not([data-theme="light"])) .page {
+  --hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
+}
+
+.container {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 2rem);
+}
+
+.section {
+  padding-block: clamp(2.25rem, 4vw, 3.5rem);
+}
+
+/* ─── Type ────────────────────────────────────────────────────────────────── */
+
+.eyebrow {
+  margin: 0 0 var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+:global([dir="rtl"]) .eyebrow {
+  letter-spacing: 0;
+}
+
+.h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: clamp(1.3rem, 2vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.accentText {
+  color: var(--color-primary-text);
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+}
+
+.lead {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  line-height: 1.7;
+}
+
+/* ─── Buttons and small controls ──────────────────────────────────────────── */
+
+.btnPrimary,
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 50px;
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    transform var(--duration-base) var(--ease-emphasis),
+    box-shadow var(--duration-base) var(--ease-standard),
+    background var(--duration-base) var(--ease-standard);
+}
+
+.btnPrimary {
+  border: 1.5px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-ink);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 26%, transparent);
+}
+
+.btnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--color-primary) 34%, transparent);
+}
+
+.btnOutline {
+  border: 1.5px solid var(--color-primary-text);
+  background: transparent;
+  color: var(--color-primary-text);
+}
+
+.btnOutline:hover {
+  transform: translateY(-2px);
+  background: var(--color-primary-soft);
+}
+
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-primary-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.textLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.roundArrow {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+  transition: transform var(--duration-base) var(--ease-emphasis), background var(--duration-base) var(--ease-standard);
+}
+
+a:hover > .roundArrow {
+  transform: translateX(3px);
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
+:global([dir="rtl"]) a:hover > .roundArrow {
+  transform: translateX(-3px);
+}
+
+.btnPrimary:focus-visible,
+.btnOutline:focus-visible,
+.textLink:focus-visible,
+.floatCard:focus-visible,
+.catCard:focus-visible,
+.post:focus-visible,
+.pkgCard:focus-visible,
+.invite:focus-visible,
+.storyAvatar:focus-visible,
+.storyJoin:focus-visible,
+.statArrow:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+/* ─── 1 · Hero ────────────────────────────────────────────────────────────── */
+
+.hero {
+  padding-block: clamp(1.5rem, 3vw, 2.5rem) clamp(2.5rem, 4vw, 3.5rem);
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: center;
+}
+
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.heroCopy .eyebrow {
+  margin: 0;
+}
+
+.heroTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: clamp(2.15rem, 4.4vw, 3.75rem);
+  font-weight: 700;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.trustRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trustItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.trustItem svg {
+  color: var(--color-primary-text);
+}
+
+/* Collage — photos are absolutely placed in percentages so it scales as one. */
+
+.collage {
+  --flip: 1;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 0.98;
+  min-height: 340px;
+}
+
+:global([dir="rtl"]) .collage {
+  --flip: -1;
+}
+
+.shot {
+  position: absolute;
+  overflow: hidden;
+  border: 5px solid var(--bg-card);
+  border-radius: 24px;
+  background: var(--bg-card-muted);
+  box-shadow: var(--shadow-md);
+  z-index: 1;
+  transform: rotate(calc(var(--rot) * var(--flip) * 1deg));
+  animation: shotIn 640ms var(--ease-out-quint) backwards;
+  transition:
+    scale 320ms var(--ease-out-quint),
+    transform 320ms var(--ease-out-quint),
+    box-shadow 320ms var(--ease-out-quint);
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shotA { --rot: 4;  inset-inline-end: 21%; top: 2%;  width: 35%; height: 52%; animation-delay: 60ms; }
+.shotB { --rot: -4; inset-inline-start: 2%; top: 31%; width: 29%; height: 29%; animation-delay: 140ms; }
+.shotC { --rot: -3; inset-inline-start: 25%; top: 38%; width: 35%; height: 44%; animation-delay: 220ms; }
+.shotD { --rot: 3;  inset-inline-end: 6%;  top: 45%; width: 30%; height: 32%; animation-delay: 300ms; }
+
+.blob {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+}
+
+.blobPeach {
+  inset-inline-end: 12%;
+  top: 8%;
+  width: 46%;
+  height: 46%;
+  background: var(--color-accent-soft);
+}
+
+.blobTeal {
+  inset-inline-start: 12%;
+  bottom: 6%;
+  width: 22%;
+  height: 22%;
+  border: 14px solid color-mix(in srgb, var(--color-secondary-alt) 55%, transparent);
+  background: transparent;
+}
+
+.dot {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.dotOne   { inset-inline-start: 6%;   top: 62%; width: 12px; height: 12px; background: var(--color-accent); }
+.dotTwo   { inset-inline-end: 0;       top: 20%; width: 16px; height: 16px; background: var(--color-secondary-alt); }
+.dotThree { inset-inline-end: 4%;      bottom: 2%; width: 20px; height: 20px; background: var(--color-accent); }
+
+.floatCard {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--bg-card) 94%, transparent);
+  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  animation: floatBob 6s ease-in-out infinite;
+  transition: scale 320ms var(--ease-out-quint), box-shadow 320ms var(--ease-out-quint);
+}
+
+.floatBrands  { inset-inline-start: 0; top: 2%;  width: min(300px, 50%); }
+.floatTalents { inset-inline-end: 0;   bottom: 0; width: min(310px, 52%); animation-delay: -3s; }
+
+.floatIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+}
+
+.floatBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.floatBody strong {
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.floatBody small {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.script {
+  position: absolute;
+  z-index: 2;
+  inset-inline-end: 0;
+  top: 5%;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  color: var(--text-primary);
+  font-family: 'Caveat', var(--font-display), cursive;
+  font-size: clamp(1.15rem, 1.9vw, 1.65rem);
+  line-height: 1.1;
+  text-align: start;
+  transform: rotate(calc(-8deg * var(--flip)));
+  pointer-events: none;
+}
+
+:global([dir="rtl"]) .script {
+  font-family: 'Aref Ruqaa', var(--font-display), serif;
+}
+
+:global([dir="rtl"]) .script {
+  font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+}
+
+.script span:nth-child(2) { padding-inline-start: 0.6em; }
+.script span:nth-child(3) { padding-inline-start: 1.2em; color: var(--color-primary-text); }
+
+/* Hover: a photo or float card grows a touch, the photo straightens a little and
+   the drop shadow deepens. `scale` (not transform) so it composes with the tilt
+   and with the float-card bob, which animate other properties. Hover-capable
+   pointers only; on touch there is nothing to hover. */
+@media (hover: hover) {
+  .shot:hover {
+    z-index: 4;
+    scale: 1.06;
+    transform: rotate(calc(var(--rot) * var(--flip) * 0.35deg));
+    box-shadow: var(--hover-shadow);
+  }
+
+  .floatCard:hover {
+    scale: 1.04;
+    box-shadow: var(--hover-shadow);
+  }
+
+  .pkgCard:hover {
+    z-index: 2;
+    scale: 1.04;
+    box-shadow: var(--hover-shadow);
+  }
+
+  /* Every remaining card gets the same lift: the audience cards, number tiles,
+     the invite pill and the community posts. */
+  .audienceCard:hover,
+  .stat:hover,
+  .invite:hover,
+  .post:hover {
+    z-index: 2;
+    scale: 1.03;
+    box-shadow: var(--hover-shadow);
+  }
+
+  /* Same lift for the live category cards (the "Soon" ones are not links). */
+  a.catCard:hover {
+    z-index: 2;
+    scale: 1.04;
+    box-shadow: var(--hover-shadow);
+  }
+}
+
+/* ─── 2 · What Talents does for you ───────────────────────────────────────── */
+
+.band {
+  padding-block: clamp(2.5rem, 4vw, 3.75rem);
+  border-start-start-radius: 56px;
+  border-start-end-radius: 56px;
+  background: var(--bg-surface);
+}
+
+.centerHead {
+  margin-bottom: var(--space-8);
+  text-align: center;
+}
+
+.centerHead .eyebrow {
+  margin-bottom: var(--space-2);
+}
+
+.audienceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.audienceCard {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.3fr) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  transition: scale 320ms var(--ease-out-quint), box-shadow 320ms var(--ease-out-quint);
+}
+
+.audiencePhoto {
+  position: relative;
+  min-height: 220px;
+  background: var(--bg-card-muted);
+}
+
+.audiencePhoto img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.audiencePhotoPeach {
+  background: var(--color-accent-soft);
+}
+
+.audiencePhotoPeach img {
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.audienceBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-6);
+}
+
+.itemGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.itemIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+/* ─── 3 · Discover ────────────────────────────────────────────────────────── */
+
+.splitHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.splitHead .eyebrow {
+  margin-bottom: var(--space-2);
+}
+
+.headAside {
+  max-width: 26rem;
+  text-align: end;
+}
+
+.catGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-4);
+}
+
+.catCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-xs);
+  color: inherit;
+  text-decoration: none;
+  transition: scale 320ms var(--ease-out-quint), box-shadow 320ms var(--ease-out-quint);
+}
+
+.catPhoto {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--bg-card-muted);
+}
+
+.catPhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 600ms var(--ease-out-quint);
+}
+
+a.catCard:hover .catPhoto img {
+  transform: scale(1.05);
+}
+
+.catCardSoon .catPhoto img {
+  filter: saturate(0.6);
+}
+
+.ribbon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  top: var(--space-3);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.catBody {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-4) var(--space-4);
+}
+
+.catTitle {
+  margin: 0 0 2px;
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.catText {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+/* ─── 4 · Numbers ─────────────────────────────────────────────────────────── */
+
+/* Flex-wrap (not auto-fit grid): with 3–6 real tiles the last row stretches to
+   the full width instead of leaving a gap. */
+.statGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stat {
+  position: relative;
+  flex: 1 1 170px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  transition: scale 320ms var(--ease-out-quint), box-shadow 320ms var(--ease-out-quint);
+}
+
+.statFeatured {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-ink);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--color-primary) 26%, transparent);
+}
+
+.statIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+.statFeatured .statIcon {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--color-primary-ink);
+}
+
+.statText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.statText strong {
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.statText small {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
+.statFeatured .statText small {
+  color: color-mix(in srgb, var(--color-primary-ink) 82%, transparent);
+}
+
+.statArrow {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-inline-start: auto;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--color-primary-ink);
+  transition: transform var(--duration-base) var(--ease-emphasis);
+}
+
+.statArrow:hover {
+  transform: scale(1.1);
+}
+
+/* ─── 5 · Community ───────────────────────────────────────────────────────── */
+
+.communityTop {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.15fr) minmax(0, 0.9fr);
+  gap: var(--space-6);
+  align-items: end;
+  margin-bottom: var(--space-6);
+}
+
+.communityIntro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.communityIntro .eyebrow {
+  margin: 0;
+}
+
+.storiesBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.storiesTitle {
+  margin: 0;
+  color: var(--color-primary-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.storiesRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.storyAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  padding: 3px;
+  overflow: hidden;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  transition: transform var(--duration-base) var(--ease-emphasis);
+}
+
+.storyAvatar:hover {
+  transform: translateY(-3px) scale(1.04);
+}
+
+.storyAvatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.storyJoin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 64px;
+  color: var(--color-primary-text);
+  text-align: center;
+  text-decoration: none;
+}
+
+.storyJoin span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1.5px dashed var(--color-primary-text);
+  border-radius: 50%;
+}
+
+.storyJoin small {
+  font-size: 10.5px;
+  line-height: 1.25;
+}
+
+.invite {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: var(--color-accent-soft);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: scale 320ms var(--ease-out-quint), box-shadow 320ms var(--ease-out-quint);
+}
+
+.inviteIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.inviteBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inviteBody strong {
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  line-height: 1.25;
+}
+
+.inviteBody small {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.postGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.post {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-xs);
+  color: inherit;
+  text-decoration: none;
+  transition: scale 320ms var(--ease-out-quint), box-shadow 320ms var(--ease-out-quint);
+}
+
+.postHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.postAvatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--bg-card-muted);
+  color: var(--text-muted);
+}
+
+.postAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.postWho {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.postWho strong {
+  overflow: hidden;
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.postWho small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.postBadge {
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.postMedia {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--bg-card-muted);
+}
+
+.postMedia img,
+.postMedia video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.postMediaText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+}
+
+.postText {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.postPrice {
+  margin: 0;
+  color: var(--color-primary-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.postInvite {
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  border-style: dashed;
+  color: var(--color-primary-text);
+  text-align: center;
+}
+
+.postInvite p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ─── 6 · Packages ────────────────────────────────────────────────────────── */
+
+.packagesSection {
+  padding-block: clamp(1.5rem, 3vw, 2.5rem) clamp(2.5rem, 4vw, 3.5rem);
+}
+
+.packagesBand {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.6fr);
+  gap: var(--space-6);
+  align-items: center;
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-accent) 34%, var(--bg-surface));
+}
+
+/* At 34% peach the band turns muddy brown on the dark surface — keep it a
+   quiet terracotta tint there instead. */
+:global(:root:not([data-theme="light"])) .packagesBand {
+  background: color-mix(in srgb, var(--color-accent) 17%, var(--bg-surface));
+}
+
+.packagesCopy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.packagesCopy .eyebrow {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.packagesCopy .muted {
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.packageCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: stretch;
+}
+
+.pkgCard {
+  container-type: inline-size;
+  flex: 1 1 210px;
+  min-width: 0; /* else the clamped title's max-content pushes the row to wrap early */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: scale 320ms var(--ease-out-quint), box-shadow 320ms var(--ease-out-quint);
+}
+
+/* A ~220px card can't fit thumb + title + price + arrow: drop the arrow (the whole
+   card is the link) so the price keeps its room. */
+@container (max-width: 260px) {
+  .pkgArrow {
+    display: none;
+  }
+}
+
+.pkgThumb {
+  flex: none;
+  width: 68px;
+  height: 68px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--bg-card-muted);
+}
+
+.pkgThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pkgBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pkgBody strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  line-height: 1.25;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.pkgBody small {
+  color: var(--color-primary-text);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pkgBody em {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  /* Five category cards: 3 + 2 wide ones instead of 3 + an empty slot. */
+  .catGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .catCard {
+    grid-column: span 2;
+  }
+
+  .catCard:nth-child(n + 4) {
+    grid-column: span 3;
+  }
+
+  .postGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .communityTop {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .invite {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Below 1100px the collage beside the copy gets too tight (float cards
+   collide with the photos), so hero and audience cards stack. */
+@media (max-width: 1100px) {
+  .heroGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .collage {
+    max-width: 640px;
+    margin-inline: auto;
+  }
+
+  .audienceGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Stacked cards are wide again: let the items pick their own column count. */
+  .itemGrid {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .headAside {
+    text-align: start;
+  }
+
+  .packagesBand {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .communityTop {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .headAside {
+    text-align: start;
+  }
+
+  .band {
+    border-start-start-radius: 32px;
+    border-start-end-radius: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .catGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .catCard,
+  .catCard:nth-child(n + 4) {
+    grid-column: auto;
+  }
+
+  .catCard:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .postGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .collage {
+    aspect-ratio: 1 / 1.25;
+  }
+
+  .script {
+    display: none;
+  }
+
+  .floatCard {
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  }
+
+  .floatBody small {
+    display: none;
+  }
+
+  .floatBrands  { width: 62%; }
+  .floatTalents { width: 56%; }
+
+  .audienceCard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .audiencePhoto {
+    min-height: 200px;
+  }
+
+  .packagesBand {
+    padding: var(--space-5);
+  }
+}
+
+/* ─── Motion ──────────────────────────────────────────────────────────────── */
+
+.heroCopy > * {
+  animation: copyIn 620ms var(--ease-out-quint) backwards;
+}
+
+.heroCopy > *:nth-child(2) { animation-delay: 70ms; }
+.heroCopy > *:nth-child(3) { animation-delay: 140ms; }
+.heroCopy > *:nth-child(4) { animation-delay: 210ms; }
+.heroCopy > *:nth-child(5) { animation-delay: 280ms; }
+
+@keyframes copyIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes shotIn {
+  from { opacity: 0; scale: 0.9; translate: 0 18px; }
+  to   { opacity: 1; scale: 1; translate: 0 0; }
+}
+
+@keyframes floatBob {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroCopy > *,
+  .shot,
+  .floatCard {
+    animation: none;
+    transition: none;
+  }
+
+  .audienceCard,
+  .stat,
+  .post,
+  .catCard,
+  .catPhoto img,
+  .roundArrow,
+  .post,
+  .catCard,
+  .pkgCard,
+  .invite,
+  .storyAvatar,
+  .btnPrimary,
+  .btnOutline {
+    transition: none;
+  }
+}

@@ -65,12 +65,12 @@ export default function ProfessionalPresenceSection({ links }: Props) {
   // Compact sidebar card now (moved out of the main column — see
   // talent-layout.ts) — a dense list of rows rather than the roomier
   // 2-column grid of large buttons a main-content section could afford.
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE= dark ? "#0A121C" : "#F8FAFC";
-  const TEAL   = "#00D26A";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE= dark ? "#231A16" : "#F6F0DD";
+  const TEAL   = "var(--color-primary-text)";
 
   const entries = PLATFORM_ORDER.filter((key) => links[key]);
   if (!entries.length) return null;

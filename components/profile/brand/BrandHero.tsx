@@ -74,7 +74,7 @@ export default function BrandHero({
           style={{
             width: isMobile ? 72 : 92, height: isMobile ? 72 : 92,
             borderRadius: 16, overflow: "hidden", flexShrink: 0,
-            backgroundColor: dark ? "#0A121C" : "#F1F5F9",
+            backgroundColor: dark ? "#231A16" : "#F1EAD3",
             border: `1px solid ${BORDER}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             color: GREEN, fontSize: 34, fontWeight: 900,
@@ -123,8 +123,8 @@ export default function BrandHero({
               padding: "11px 22px", borderRadius: 10,
               // Same pairing as the existing green CTAs (JobsGrid.tsx:228):
               // the base background colour on green, not white — white on
-              // #00D26A is under 2:1.
-              backgroundColor: GREEN, color: "#050B12",
+              // var(--color-primary-text) is under 2:1.
+              backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)",
               fontSize: 14, fontWeight: 800, textDecoration: "none",
               flexShrink: 0, alignSelf: isMobile ? "stretch" : "center",
               justifyContent: "center",

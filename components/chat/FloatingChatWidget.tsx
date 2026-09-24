@@ -1,4 +1,5 @@
 "use client";
+import { useModalPresence } from "@/hooks/useModalClose";
 import {
   useState, useEffect, useRef, useCallback,
   type KeyboardEvent,
@@ -40,6 +41,7 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
 
   // ─── widget state ────────────────────────────────────────────────────────
   const [open, setOpen]             = useState(false);
+  const { mounted: panelMounted, closing: panelClosing } = useModalPresence(open);
   const [view, setView]             = useState<"list" | "chat">("list");
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [activeOther, setActiveOther]   = useState<Conversation["other_user"] | null>(null);
@@ -64,16 +66,16 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
   const activeConvRef = useRef<string | null>(null);
 
   // ─── colours ─────────────────────────────────────────────────────────────
-  const GOLD   = "#FFB800";
-  const GREEN  = "#00D26A";
-  const BG     = dark ? "#0D1623" : "#FFFFFF";
-  const BG2    = dark ? "#060d18" : "#F8FAFC";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const INPUT  = dark ? "#0a121c" : "#F8FAFC";
-  const myBg   = dark ? "#1a3a5c" : "#FFF3CC";
-  const thBg   = dark ? "#0f1e2e" : "#F1F5F9";
+  const GOLD   = "var(--color-accent)";
+  const GREEN  = "var(--color-success)";
+  const BG     = dark ? "#2B211D" : "#FBF7EA";
+  const BG2    = dark ? "#1B1310" : "#F5EEDB";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const INPUT  = dark ? "#231A16" : "#F3ECD6";
+  const myBg   = dark ? "#1F4A4B" : "#DCEDEA";
+  const thBg   = dark ? "#352A22" : "#F1EAD3";
 
   // myId now comes from GlobalChat's prop (GuestGuard's already-resolved
   // user) — no independent auth.getUser() call here anymore.
@@ -324,18 +326,18 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
 
   return (
     <>
-      <style>{`@keyframes fw-spin{to{transform:rotate(360deg)}} @keyframes fw-pop{from{opacity:0;transform:translateY(12px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}`}</style>
+      <style>{`@keyframes fw-spin{to{transform:rotate(360deg)}} @keyframes fw-pop{from{opacity:0;transform:translateY(12px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}} @keyframes fw-pop-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(10px) scale(0.96)}} @media (prefers-reduced-motion: reduce){[data-fw-panel]{animation-duration:1ms !important}}`}</style>
 
       {/* Panel */}
-      {open && (
-        <div style={{
+      {panelMounted && (
+        <div data-fw-panel style={{
           position: "fixed", bottom: fabBottom + 60, insetInlineEnd: isMobile ? 16 : 24, zIndex: 9998,
           width: panelW, height: panelH,
           backgroundColor: BG, border: `1px solid ${BORDER}`,
           borderRadius: 18,
-          boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
+          boxShadow: "0 24px 64px rgba(27,19,16,0.4)",
           display: "flex", flexDirection: "column", overflow: "hidden",
-          animation: "fw-pop 0.22s ease",
+          animation: panelClosing ? "fw-pop-out 0.2s ease-in both" : "fw-pop 0.24s cubic-bezier(0.16, 1, 0.3, 1) both",
           direction: ar ? "rtl" : "ltr",
         }}>
 
@@ -357,7 +359,7 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
               <>
                 <div style={{
                   width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
-                  backgroundColor: dark ? "#1e293b" : "#e2e8f0",
+                  backgroundColor: dark ? "#3A2E28" : "#E6DCC3",
                   overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 13, fontWeight: 700, color: MUTED,
                 }}>
@@ -386,8 +388,8 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
             // Conversation list
             <div style={{ flex: 1, overflowY: "auto" }}>
               {apiError && (
-                <div style={{ padding: "10px 16px", backgroundColor: "rgba(239,68,68,0.1)", borderBottom: `1px solid ${BORDER}` }}>
-                  <p style={{ margin: 0, fontSize: 12, color: "#EF4444" }}>❌ {apiError}</p>
+                <div style={{ padding: "10px 16px", backgroundColor: "color-mix(in srgb, var(--color-error) 12%, transparent)", borderBottom: `1px solid ${BORDER}` }}>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--color-error)" }}>❌ {apiError}</p>
                 </div>
               )}
 
@@ -413,7 +415,7 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
                     >
                       <div style={{
                         width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-                        backgroundColor: dark ? "#1e293b" : "#e2e8f0",
+                        backgroundColor: dark ? "#3A2E28" : "#E6DCC3",
                         overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
                         fontSize: 14, fontWeight: 700, color: MUTED,
                         border: hasUnread ? `2px solid ${GOLD}` : "2px solid transparent",
@@ -436,7 +438,7 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
                           {hasUnread && (
                             <span style={{
                               minWidth: 16, height: 16, borderRadius: 8, backgroundColor: GOLD,
-                              color: "#000", fontSize: 10, fontWeight: 700,
+                              color: "var(--color-on-accent)", fontSize: 10, fontWeight: 700,
                               display: "flex", alignItems: "center", justifyContent: "center",
                               padding: "0 4px", flexShrink: 0,
                             }}>
@@ -471,7 +473,7 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
                           maxWidth: "78%", padding: "8px 12px",
                           borderRadius: isMine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
                           backgroundColor: isMine ? myBg : thBg,
-                          border: isMine ? `1px solid ${GOLD}33` : `1px solid ${BORDER}`,
+                          border: isMine ? `1px solid color-mix(in srgb, ${GOLD} 40%, transparent)` : `1px solid ${BORDER}`,
                         }}>
                           <p style={{ margin: 0, fontSize: 13, color: TEXT, lineHeight: 1.5, wordBreak: "break-word" }}>{msg.content}</p>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3, marginTop: 3 }}>
@@ -488,8 +490,8 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
 
               {/* Input */}
               {apiError && (
-                <div style={{ padding: "8px 12px", backgroundColor: "rgba(239,68,68,0.1)", borderTop: `1px solid ${BORDER}`, flexShrink: 0, direction: ar ? "rtl" : "ltr" }}>
-                  <p style={{ margin: 0, fontSize: 11.5, color: "#EF4444" }}>❌ {apiError}</p>
+                <div style={{ padding: "8px 12px", backgroundColor: "color-mix(in srgb, var(--color-error) 12%, transparent)", borderTop: `1px solid ${BORDER}`, flexShrink: 0, direction: ar ? "rtl" : "ltr" }}>
+                  <p style={{ margin: 0, fontSize: 11.5, color: "var(--color-error)" }}>❌ {apiError}</p>
                 </div>
               )}
               <div style={{ borderTop: `1px solid ${BORDER}`, padding: "10px 12px", display: "flex", alignItems: "flex-end", gap: 8, flexShrink: 0, backgroundColor: BG, direction: ar ? "rtl" : "ltr" }}>
@@ -519,15 +521,15 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
                   disabled={!text.trim() || sending}
                   style={{
                     width: 36, height: 36, borderRadius: "50%", border: "none", flexShrink: 0,
-                    backgroundColor: text.trim() && !sending ? GOLD : (dark ? "#1e293b" : "#e2e8f0"),
-                    color: text.trim() && !sending ? "#000" : MUTED,
+                    backgroundColor: text.trim() && !sending ? GOLD : (dark ? "#3A2E28" : "#E6DCC3"),
+                    color: text.trim() && !sending ? "var(--color-on-accent)" : MUTED,
                     cursor: text.trim() && !sending ? "pointer" : "default",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 16, transition: "background 0.2s",
                   }}
                 >
                   {sending
-                    ? <div style={{ width: 14, height: 14, borderRadius: "50%", border: `2px solid #00000033`, borderTopColor: "#000", animation: "fw-spin 0.7s linear infinite" }} />
+                    ? <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid color-mix(in srgb, var(--color-on-accent) 25%, transparent)", borderTopColor: "var(--color-on-accent)", animation: "fw-spin 0.7s linear infinite" }} />
                     : (ar ? "←" : "→")}
                 </button>
               </div>
@@ -543,18 +545,18 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
           position: "fixed", bottom: fabBottom, insetInlineEnd: isMobile ? 16 : 24, zIndex: 9999,
           width: 56, height: 56, borderRadius: "50%", border: "none",
           backgroundColor: GOLD, cursor: "pointer", overflow: "visible",
-          boxShadow: "0 8px 24px rgba(255,184,0,0.45)",
+          boxShadow: "0 8px 24px rgba(231,165,138,0.5)",
           display: "flex", alignItems: "center", justifyContent: "center",
           transition: "transform 0.2s, box-shadow 0.2s",
           fontSize: 22,
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = "scale(1.1)";
-          e.currentTarget.style.boxShadow = "0 12px 32px rgba(255,184,0,0.55)";
+          e.currentTarget.style.boxShadow = "0 12px 32px rgba(231,165,138,0.6)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.boxShadow = "0 8px 24px rgba(255,184,0,0.45)";
+          e.currentTarget.style.boxShadow = "0 8px 24px rgba(231,165,138,0.5)";
         }}
         title={ar ? "فتح المحادثات" : "Open Messages"}
       >
@@ -563,11 +565,11 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
           <span style={{
             position: "absolute", top: -4, right: -4,
             minWidth: 18, height: 18, borderRadius: 9,
-            backgroundColor: "#EF4444", color: "#fff",
+            backgroundColor: "var(--color-error)", color: "#fff",
             fontSize: 10, fontWeight: 800,
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: "0 4px",
-            border: "2px solid " + (dark ? "#0D1623" : "#fff"),
+            border: "2px solid " + (dark ? "#2B211D" : "#FBF7EA"),
           }}>
             {totalUnread > 99 ? "99+" : totalUnread}
           </span>

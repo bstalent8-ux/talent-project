@@ -28,11 +28,11 @@ interface Props {
 export default function ModelStickyBar({ selectedPackage, addonsTotal = 0, avgProjectValue = null, identityVerified, onContinueToBrief }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
-  const BG = dark ? "rgba(9,13,21,0.96)" : "rgba(255,255,255,0.96)";
-  const TEXT = dark ? "var(--text-primary)" : "#0F172A";
-  const MUTED = dark ? "var(--text-muted)" : "#64748B";
-  const GOLD = "#d89b37";
+  const BORDER = dark ? "var(--border-subtle)" : "#E6DCC3";
+  const BG = dark ? "rgba(27,19,16,0.96)" : "rgba(251,247,234,0.96)";
+  const TEXT = dark ? "var(--text-primary)" : "#2B211D";
+  const MUTED = dark ? "var(--text-muted)" : "#6E5F55";
+  const GOLD = "var(--color-accent-strong)";
 
   const price = selectedPackage ? parsePrice(selectedPackage.price) + addonsTotal : avgProjectValue;
   const caption = selectedPackage
@@ -77,7 +77,7 @@ export default function ModelStickyBar({ selectedPackage, addonsTotal = 0, avgPr
             onClick={onContinueToBrief}
             style={{
               display: "flex", alignItems: "center", gap: 14, padding: "10px 26px", borderRadius: 12, border: "none",
-              background: "linear-gradient(135deg, #e5a93c, #c88924)", color: "#0b0d13", cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
+              background: "var(--color-primary)", color: "var(--color-primary-ink)", cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}
           >
             <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.25 }}>

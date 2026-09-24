@@ -20,7 +20,7 @@ export default function BrandAboutCard({ bio }: { bio: string | null }) {
   if (!bio || !bio.trim()) return null;
 
   return (
-    <BrandCard icon={<FileText size={18} color="#00D26A" />} title={tx.title}>
+    <BrandCard icon={<FileText size={18} color="var(--color-primary-text)" />} title={tx.title}>
       <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.9, margin: 0, whiteSpace: "pre-wrap" }}>
         {bio}
       </p>

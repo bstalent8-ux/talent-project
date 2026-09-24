@@ -1,4 +1,5 @@
 "use client";
+import { useHeldValue } from "@/hooks/useModalClose";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -89,10 +90,12 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<Pending>(null);
+  const { value: modalHeld, closing: modalClosing } = useHeldValue(modal);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<AdminPendingMedia | null>(null);
+  const { value: previewHeld, closing: previewClosing } = useHeldValue(preview);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const allSelected = items.length > 0 && items.every((i) => selected.has(i.id));
@@ -241,12 +244,12 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
       <AdminPagination page={page} totalPages={totalPages} buildHref={hrefFor} />
 
       {/* Approve / reject confirmation */}
-      {modal && (
-        <div onClick={(e) => e.target === e.currentTarget && !busy && setModal(null)} style={{ position: "fixed", inset: 0, zIndex: 300, backgroundColor: "rgba(27,19,16,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div role="dialog" aria-modal="true" style={{ width: "100%", maxWidth: 460, backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
-            <h3 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: "0 0 6px" }}>{modal.action === "approve" ? t.approveTitle : t.rejectTitle}</h3>
-            {modal.action === "approve" ? (
-              <p style={{ color: MUTED, fontSize: 13.5, lineHeight: 1.7, margin: "0 0 16px" }}>{t.approveText(modal.ids.length)}</p>
+      {modalHeld && (
+        <div className="modal-backdrop" data-state={modalClosing ? "closing" : "open"} onClick={(e) => e.target === e.currentTarget && !busy && setModal(null)} style={{ position: "fixed", inset: 0, zIndex: 300, backgroundColor: "rgba(27,19,16,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div className="modal-card" role="dialog" aria-modalHeld="true" style={{ width: "100%", maxWidth: 460, backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
+            <h3 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: "0 0 6px" }}>{modalHeld.action === "approve" ? t.approveTitle : t.rejectTitle}</h3>
+            {modalHeld.action === "approve" ? (
+              <p style={{ color: MUTED, fontSize: 13.5, lineHeight: 1.7, margin: "0 0 16px" }}>{t.approveText(modalHeld.ids.length)}</p>
             ) : (
               <>
                 <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.7, margin: "0 0 10px" }}>{t.rejectHint}</p>
@@ -268,9 +271,9 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
             {error && <p role="alert" style={{ color: "#EF4444", fontSize: 12.5, margin: "0 0 12px" }}>{error}</p>}
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" disabled={busy} onClick={() => setModal(null)} style={{ padding: "9px 16px", borderRadius: 10, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t.cancel}</button>
-              <button type="button" disabled={busy} onClick={submit} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 10, border: "none", backgroundColor: modal.action === "approve" ? "#087F83" : "#EF4444", color: "#fff", fontSize: 13, fontWeight: 800, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.7 : 1 }}>
-                {busy ? <Loader2 size={14} className="spin" /> : modal.action === "approve" ? <Check size={14} /> : <X size={14} />}
-                {modal.action === "approve" ? t.confirmApprove : t.confirmReject}
+              <button type="button" disabled={busy} onClick={submit} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 10, border: "none", backgroundColor: modalHeld.action === "approve" ? "#087F83" : "#EF4444", color: "#fff", fontSize: 13, fontWeight: 800, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.7 : 1 }}>
+                {busy ? <Loader2 size={14} className="spin" /> : modalHeld.action === "approve" ? <Check size={14} /> : <X size={14} />}
+                {modalHeld.action === "approve" ? t.confirmApprove : t.confirmReject}
               </button>
             </div>
           </div>
@@ -278,30 +281,30 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
       )}
 
       {/* Full-size preview */}
-      {preview && (
-        <div onClick={(e) => e.target === e.currentTarget && setPreview(null)} style={{ position: "fixed", inset: 0, zIndex: 290, backgroundColor: "rgba(27,19,16,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ width: "100%", maxWidth: 900, maxHeight: "92vh", display: "flex", flexDirection: "column", gap: 12 }}>
+      {previewHeld && (
+        <div className="modal-backdrop" data-state={previewClosing ? "closing" : "open"} onClick={(e) => e.target === e.currentTarget && setPreview(null)} style={{ position: "fixed", inset: 0, zIndex: 290, backgroundColor: "rgba(27,19,16,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div className="modal-card" style={{ width: "100%", maxWidth: 900, maxHeight: "92vh", display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, color: "#fff" }}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 15 }}>{preview.talent.name} <span style={{ opacity: 0.6, fontWeight: 500, fontSize: 12.5 }}>@{preview.talent.handle ?? "—"}</span></div>
-                {preview.caption && <div style={{ opacity: 0.8, fontSize: 12.5, marginTop: 2 }}>{preview.caption}</div>}
+                <div style={{ fontWeight: 800, fontSize: 15 }}>{previewHeld.talent.name} <span style={{ opacity: 0.6, fontWeight: 500, fontSize: 12.5 }}>@{previewHeld.talent.handle ?? "—"}</span></div>
+                {previewHeld.caption && <div style={{ opacity: 0.8, fontSize: 12.5, marginTop: 2 }}>{previewHeld.caption}</div>}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <Link href={`/admin/talents/${preview.talent.talentId}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", color: "#fff", fontSize: 12.5, textDecoration: "none" }}><ExternalLink size={13} />{t.openProfile}</Link>
+                <Link href={`/admin/talents/${previewHeld.talent.talentId}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", color: "#fff", fontSize: 12.5, textDecoration: "none" }}><ExternalLink size={13} />{t.openProfile}</Link>
                 <button type="button" onClick={() => setPreview(null)} style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", backgroundColor: "transparent", color: "#fff", fontSize: 12.5, cursor: "pointer" }}>{t.close}</button>
               </div>
             </div>
             <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 14, overflow: "hidden", backgroundColor: "#000" }}>
-              {preview.mediaType === "video" ? (
-                <video src={preview.url} controls autoPlay playsInline style={{ maxWidth: "100%", maxHeight: "72vh" }} />
+              {previewHeld.mediaType === "video" ? (
+                <video src={previewHeld.url} controls autoPlay playsInline style={{ maxWidth: "100%", maxHeight: "72vh" }} />
               ) : (
-                <img src={cdnImage(preview.url, 1400, "limit")} alt="" style={{ maxWidth: "100%", maxHeight: "72vh", objectFit: "contain" }} />
+                <img src={cdnImage(previewHeld.url, 1400, "limit")} alt="" style={{ maxWidth: "100%", maxHeight: "72vh", objectFit: "contain" }} />
               )}
             </div>
             {canUpdate && (
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                {preview.status !== "approved" && <button type="button" onClick={() => open([preview.id], "approve")} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 22px", borderRadius: 10, border: "none", backgroundColor: "#087F83", color: "#fff", fontSize: 13.5, fontWeight: 800, cursor: "pointer" }}><Check size={15} />{t.approve}</button>}
-                {preview.status !== "rejected" && <button type="button" onClick={() => open([preview.id], "reject")} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 22px", borderRadius: 10, border: "1px solid #EF4444", backgroundColor: "transparent", color: "#fca5a5", fontSize: 13.5, fontWeight: 800, cursor: "pointer" }}><X size={15} />{preview.status === "approved" ? t.takeDown : t.reject}</button>}
+                {previewHeld.status !== "approved" && <button type="button" onClick={() => open([previewHeld.id], "approve")} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 22px", borderRadius: 10, border: "none", backgroundColor: "#087F83", color: "#fff", fontSize: 13.5, fontWeight: 800, cursor: "pointer" }}><Check size={15} />{t.approve}</button>}
+                {previewHeld.status !== "rejected" && <button type="button" onClick={() => open([previewHeld.id], "reject")} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 22px", borderRadius: 10, border: "1px solid #EF4444", backgroundColor: "transparent", color: "#fca5a5", fontSize: 13.5, fontWeight: 800, cursor: "pointer" }}><X size={15} />{previewHeld.status === "approved" ? t.takeDown : t.reject}</button>}
               </div>
             )}
           </div>

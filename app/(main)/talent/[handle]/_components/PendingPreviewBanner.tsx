@@ -26,9 +26,9 @@ export default function PendingPreviewBanner({
   const isRejected = status === "rejected";
   const isAdmin = audience === "admin";
 
-  const BG     = isRejected ? "rgba(239,68,68,0.12)" : "rgba(244,183,64,0.12)";
-  const BORDER = isRejected ? "rgba(239,68,68,0.35)" : "rgba(244,183,64,0.35)";
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
+  const BG     = isRejected ? "rgba(239,68,68,0.12)" : "rgba(231,165,138,0.12)";
+  const BORDER = isRejected ? "rgba(239,68,68,0.35)" : "rgba(231,165,138,0.35)";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
 
   // Exact spec copy for "pending" — status text carries its own "Preview —"
   // prefix already, so the rejected variant (not in the original spec) uses

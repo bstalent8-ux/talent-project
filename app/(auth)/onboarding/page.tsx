@@ -25,7 +25,7 @@ import {
 import { useSite } from "@/contexts/SiteContext";
 import authStyles from "../auth.module.css";
 import styles from "./onboarding.module.css";
-import { useLangSwitch } from "../_components/useLangSwitch";
+import { useLangSwitch } from "@/hooks/useLangSwitch";
 
 const TX = {
   ar: {

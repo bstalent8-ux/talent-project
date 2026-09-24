@@ -1,4 +1,5 @@
 "use client";
+import { useHeldValue } from "@/hooks/useModalClose";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
@@ -52,6 +53,7 @@ export default function NotificationLogView({ notifications, total, page, pageSi
   const ar = lang === "ar";
 
   const [selected, setSelected] = useState<AdminNotificationLogRow | null>(null);
+  const { value: selectedHeld, closing: selectedClosing } = useHeldValue(selected);
 
   const CARD = dark ? "#2B211D" : "#FBF7EA";
   const BORDER = dark ? "#3A2E28" : "#E6DCC6";
@@ -143,20 +145,20 @@ export default function NotificationLogView({ notifications, total, page, pageSi
 
       <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, type)} />
 
-      {selected && (
-        <div
+      {selectedHeld && (
+        <div className="modal-backdrop" data-state={selectedClosing ? "closing" : "open"}
           onClick={() => setSelected(null)}
-          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(27,19,16,0.62)", zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
-          <div
+          <div className="modal-card"
             onClick={(e) => e.stopPropagation()}
             style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, width: "min(480px, 100%)", maxHeight: "85vh", overflowY: "auto", padding: 20 }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
               <div>
-                <h2 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{contentFor(selected).title}</h2>
+                <h2 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{contentFor(selectedHeld).title}</h2>
                 <div style={{ color: MUTED, fontSize: 12.5, marginTop: 4 }}>
-                  {selected.recipientName ?? selected.recipientHandle ?? selected.recipientId}
+                  {selectedHeld.recipientName ?? selectedHeld.recipientHandle ?? selectedHeld.recipientId}
                 </div>
               </div>
               <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}>
@@ -164,18 +166,18 @@ export default function NotificationLogView({ notifications, total, page, pageSi
               </button>
             </div>
 
-            <p style={{ color: TEXT, fontSize: 13.5, lineHeight: 1.7, margin: 0 }}>{contentFor(selected).message}</p>
+            <p style={{ color: TEXT, fontSize: 13.5, lineHeight: 1.7, margin: 0 }}>{contentFor(selectedHeld).message}</p>
 
             <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
               <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: "rgba(8,127,131,0.14)", color: "var(--color-primary-text)" }}>
-                {labelFor(selected)}
+                {labelFor(selectedHeld)}
               </span>
               <span style={{
                 padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-                backgroundColor: selected.isRead ? "rgba(8,127,131,0.15)" : "rgba(169,155,142,0.15)",
-                color: selected.isRead ? "#087F83" : MUTED,
+                backgroundColor: selectedHeld.isRead ? "rgba(8,127,131,0.15)" : "rgba(169,155,142,0.15)",
+                color: selectedHeld.isRead ? "#087F83" : MUTED,
               }}>
-                {selected.isRead ? t.read : t.unread}
+                {selectedHeld.isRead ? t.read : t.unread}
               </span>
             </div>
           </div>

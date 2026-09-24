@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
 
-const GOLD = "#d89b37";
+const GOLD = "var(--color-accent-strong)";
 
 const TIPS = {
   ar: [
@@ -26,7 +26,7 @@ const TIPS = {
 
 function AiMark({ size }: { size: number }) {
   return (
-    <span style={{ width: size, height: size, borderRadius: "50%", border: `1.5px solid ${GOLD}`, backgroundColor: "rgba(216,155,55,0.12)", color: GOLD, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.38, fontWeight: 800, flexShrink: 0, letterSpacing: 0.2 }}>
+    <span style={{ width: size, height: size, borderRadius: "50%", border: `1.5px solid ${GOLD}`, backgroundColor: "rgba(231,165,138,0.12)", color: GOLD, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.38, fontWeight: 800, flexShrink: 0, letterSpacing: 0.2 }}>
       AI
     </span>
   );
@@ -35,10 +35,10 @@ function AiMark({ size }: { size: number }) {
 export default function ModelAiInsights() {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "var(--bg-card)" : "#FFFFFF";
-  const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
-  const TEXT = dark ? "var(--text-primary)" : "#0F172A";
-  const MUTED = dark ? "var(--text-muted)" : "#64748B";
+  const CARD = dark ? "var(--bg-card)" : "#FBF7EA";
+  const BORDER = dark ? "var(--border-subtle)" : "#E6DCC3";
+  const TEXT = dark ? "var(--text-primary)" : "#2B211D";
+  const MUTED = dark ? "var(--text-muted)" : "#6E5F55";
   const [note, setNote] = useState(false);
 
   return (

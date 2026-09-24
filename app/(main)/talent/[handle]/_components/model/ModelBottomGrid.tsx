@@ -12,8 +12,8 @@ import { useSite } from "@/contexts/SiteContext";
 import type { BookingStats, BrandItem, ExperienceItem, ModelMetrics, Review } from "@/features/talent-profile/types";
 import ModelCareerTimeline from "./ModelCareerTimeline";
 
-const GOLD = "#d89b37";
-const ORANGE = "#f26b3a";
+const GOLD = "var(--color-accent-strong)";
+const ORANGE = "var(--color-accent-strong)";
 
 interface Props {
   reviews: Review[];
@@ -30,10 +30,10 @@ export default function ModelBottomGrid({ reviews, reviewCount, bookingStats, mo
   const phone = useIsMobile(700);
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "var(--bg-card)" : "#FFFFFF";
-  const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
-  const TEXT = dark ? "var(--text-primary)" : "#0F172A";
-  const MUTED = dark ? "var(--text-muted)" : "#64748B";
+  const CARD = dark ? "var(--bg-card)" : "#FBF7EA";
+  const BORDER = dark ? "var(--border-subtle)" : "#E6DCC3";
+  const TEXT = dark ? "var(--text-primary)" : "#2B211D";
+  const MUTED = dark ? "var(--text-muted)" : "#6E5F55";
   const noContent = ar ? "لا يوجد محتوى" : "No content";
   const [open, setOpen] = useState(false);
 
@@ -77,7 +77,7 @@ export default function ModelBottomGrid({ reviews, reviewCount, bookingStats, mo
                 <div key={review.id}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-                      <span style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: "#0A0E1A", color: "#fff", fontSize: 16, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: `1px solid ${BORDER}` }}>
+                      <span style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: "#1B1310", color: "#fff", fontSize: 16, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: `1px solid ${BORDER}` }}>
                         {(name || "?").trim().charAt(0).toUpperCase()}
                       </span>
                       <div style={{ minWidth: 0 }}>

@@ -235,9 +235,9 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
   // shared screen by default.
   function completionBarColor(score: number): string {
     if (score >= 80) return "#087F83";
-    if (score >= 50) return "#00C9B1";
+    if (score >= 50) return "#4FA7A3";
     if (score >= 25) return "#E7A58A";
-    return "#FF6B2B";
+    return "#C98A70";
   }
 
   const confirmConfig = modal ? {

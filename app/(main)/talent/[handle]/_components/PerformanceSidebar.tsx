@@ -15,9 +15,9 @@ export default function PerformanceSidebar({ talent, bookingStats }: Props) {
   const { dark, lang } = useSite();
   const ar = lang === "ar";
 
-  const CARD  = dark ? "#0D1623"          : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const MUTED = dark ? "#A8B3C2"          : "#64748B";
+  const CARD  = dark ? "#2B211D"          : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const MUTED = dark ? "#A99B8E"          : "#6E5F55";
 
   const stats = bookingStats ?? { total: 0, completed: 0, pending: 0, cancelled: 0 };
   const completedPct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
@@ -28,22 +28,22 @@ export default function PerformanceSidebar({ talent, bookingStats }: Props) {
       label: ar ? "متوسط التقييم" : "Average Rating",
       value: talent.rating > 0 ? `${talent.rating.toFixed(1)} / 5` : ar ? "—" : "—",
       bar:   ratingPct,
-      color: "#F4B740",
+      color: "var(--color-accent-strong)",
     },
     {
       label: ar ? "عدد التقييمات" : "Total Reviews",
       value: String(talent.reviewCount),
-      color: "#00D26A",
+      color: "var(--color-primary-text)",
     },
     {
       label: ar ? "المشاريع المكتملة" : "Completed Projects",
       value: String(stats.completed),
-      color: "#00D26A",
+      color: "var(--color-primary-text)",
     },
     {
       label: ar ? "إجمالي الحجوزات" : "Total Bookings",
       value: String(stats.total),
-      color: "#60A5FA",
+      color: "var(--color-secondary-alt)",
     },
   ];
 
@@ -58,7 +58,7 @@ export default function PerformanceSidebar({ talent, bookingStats }: Props) {
     >
       <h3
         style={{
-          color: dark ? "#fff" : "#0F172A",
+          color: dark ? "#fff" : "#2B211D",
           fontSize: 16,
           fontWeight: 800,
           margin: "0 0 18px",
@@ -91,7 +91,7 @@ export default function PerformanceSidebar({ talent, bookingStats }: Props) {
                 <div
                   style={{
                     height: 6,
-                    backgroundColor: dark ? "#0A121C" : "#F8FAFC",
+                    backgroundColor: dark ? "#231A16" : "#F6F0DD",
                     borderRadius: 4,
                     overflow: "hidden",
                   }}

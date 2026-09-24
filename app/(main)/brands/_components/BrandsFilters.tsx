@@ -29,13 +29,13 @@ export default function BrandsFilters({
   industry, onIndustry, industries, resultCount, onReset,
 }: Props) {
   const ar     = lang === "ar";
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
-  const GREEN  = "#00D26A";
-  const GOLD   = "#F4B740";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT   = dark ? "#FFFFFF" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
 
   const sectionTitle = (label: string) => (
     <p style={{ color: MUTED, fontSize: 10, fontWeight: 700, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" as const }}>
@@ -65,8 +65,8 @@ export default function BrandsFilters({
 
       {/* Result count */}
       <div style={{
-        backgroundColor: dark ? "rgba(0,210,106,0.06)" : "rgba(0,210,106,0.04)",
-        border: `1px solid rgba(0,210,106,0.15)`,
+        backgroundColor: dark ? "rgba(8,127,131,0.06)" : "rgba(8,127,131,0.04)",
+        border: `1px solid rgba(8,127,131,0.15)`,
         borderRadius: 8, padding: "6px 10px", marginBottom: 14, textAlign: "center",
       }}>
         <span style={{ color: GREEN, fontSize: 13, fontWeight: 700 }}>
@@ -84,7 +84,7 @@ export default function BrandsFilters({
               display: "flex", alignItems: "center", gap: 10,
               padding: "7px 10px", borderRadius: 8,
               border: `1px solid ${active ? GREEN : "transparent"}`,
-              backgroundColor: active ? (dark ? "rgba(0,210,106,0.1)" : "rgba(0,210,106,0.06)") : SURFACE,
+              backgroundColor: active ? (dark ? "rgba(8,127,131,0.1)" : "rgba(8,127,131,0.06)") : SURFACE,
               color: active ? GREEN : MUTED,
               fontSize: 13, fontWeight: active ? 700 : 400,
               cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
@@ -116,7 +116,7 @@ export default function BrandsFilters({
               display: "flex", alignItems: "center", gap: 10,
               padding: "7px 10px", borderRadius: 8,
               border: `1px solid ${active ? GOLD : "transparent"}`,
-              backgroundColor: active ? (dark ? "rgba(244,183,64,0.1)" : "rgba(244,183,64,0.06)") : SURFACE,
+              backgroundColor: active ? (dark ? "rgba(231,165,138,0.1)" : "rgba(231,165,138,0.06)") : SURFACE,
               color: active ? GOLD : MUTED,
               fontSize: 13, fontWeight: active ? 700 : 400,
               cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
@@ -139,7 +139,7 @@ export default function BrandsFilters({
         display: "flex", alignItems: "center", gap: 10, width: "100%",
         padding: "9px 12px", borderRadius: 8,
         border: `1px solid ${verified ? GREEN : BORDER}`,
-        backgroundColor: verified ? (dark ? "rgba(0,210,106,0.1)" : "rgba(0,210,106,0.06)") : "transparent",
+        backgroundColor: verified ? (dark ? "rgba(8,127,131,0.1)" : "rgba(8,127,131,0.06)") : "transparent",
         cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif",
       }}>
         <BadgeCheck size={18} color={verified ? GREEN : MUTED} />

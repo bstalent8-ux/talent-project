@@ -9,17 +9,17 @@ import { useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
 import type { BrandItem } from "@/features/talent-profile/types";
 
-const PURPLE = "#6C4DFF";
+const PURPLE = "var(--color-primary-text)";
 const VISIBLE = 14;
 
 export default function UgcBrands({ brands, bare = false }: { brands: BrandItem[]; bare?: boolean }) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
-  const PILL_BORDER = dark ? "rgba(255,255,255,0.14)" : "#DDE2EA";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E6DCC3";
+  const PILL_BORDER = dark ? "rgba(255,255,255,0.14)" : "#DDD1B7";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
   const [expanded, setExpanded] = useState(false);
 
   const hasMore = brands.length > VISIBLE;

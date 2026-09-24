@@ -161,7 +161,7 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
       dir={ar ? "rtl" : "ltr"}
       style={{
         fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-        backgroundColor: dark ? "#050B12" : "#F1F5F9",
+        backgroundColor: dark ? "#1B1310" : "#F1EAD3",
         minHeight: "100vh",
         paddingBottom: 90,
       }}
@@ -214,9 +214,9 @@ export default function UgcProfileShell({ profile }: { profile: PublicProfileDTO
         </div>
 
         {/* One card: brands worked with, then trust / booking / ask actions. */}
-        <section style={{ backgroundColor: dark ? "#0D1623" : "#FFFFFF", border: `1px solid ${dark ? "rgba(255,255,255,0.10)" : "#E5E7EB"}`, borderRadius: 18, padding: compact ? 16 : 22, marginBottom: 20, minWidth: 0 }}>
+        <section style={{ backgroundColor: dark ? "#2B211D" : "#FBF7EA", border: `1px solid ${dark ? "rgba(255,255,255,0.10)" : "#E6DCC3"}`, borderRadius: 18, padding: compact ? 16 : 22, marginBottom: 20, minWidth: 0 }}>
           <UgcBrands brands={brands} bare />
-          <div style={{ height: 1, backgroundColor: dark ? "rgba(255,255,255,0.10)" : "#E5E7EB", margin: "22px 0" }} />
+          <div style={{ height: 1, backgroundColor: dark ? "rgba(255,255,255,0.10)" : "#E6DCC3", margin: "22px 0" }} />
           <UgcSafetyTrust
             joined
             stackJoined={compact}

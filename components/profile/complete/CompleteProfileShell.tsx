@@ -807,7 +807,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                 <input id="cp-avatar-input" type="file" accept="image/*" style={{ display: "none" }}
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) setCropFile(f); e.target.value = ""; }} />
                 {profile?.avatar_review_status === "pending" && (
-                  <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "#b7791f" }}>
+                  <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--color-accent-strong)" }}>
                     {lang === "ar" ? "صورتك الجديدة قيد المراجعة — هتظهر للعامة بعد موافقة الأدمن." : "Your new photo is pending review — it goes public once an admin approves it."}
                   </p>
                 )}

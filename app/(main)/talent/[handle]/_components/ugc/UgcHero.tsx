@@ -37,14 +37,17 @@ import { formatLocation } from "@/lib/format-location";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 import type { TalentData, BookingStats, PortfolioItem } from "@/features/talent-profile/types";
 
-const PURPLE = "#6C4DFF";
-const PURPLE_SOFT = "#8B74FF";
-const EMERALD = "#10B981";
-const AMBER = "#F4B740";
-const VIOLET = "#16a3a3"; // matches UgcPerformanceMetrics's site --color-accent
-const BAND = "#0A0E1A";
+// The hero band is dark in BOTH themes, so its accents are fixed light tints of the
+// brand teal / peach — the theme-aware --color-*-text tokens go dark in light mode
+// and would vanish on the band.
+const PURPLE = "#4FA7A3";
+const PURPLE_SOFT = "#7CC4C0";
+const EMERALD = "var(--color-success)";
+const AMBER = "#F0B9A2";
+const VIOLET = "#4FA7A3"; // matches UgcPerformanceMetrics's site --color-accent
+const BAND = "#1B1310";
 const LINE = "rgba(255,255,255,0.14)";
-const MUTED = "#9AA4B5";
+const MUTED = "#A99B8E";
 const FONT = "'IBM Plex Sans Arabic',sans-serif";
 
 const PRIMARY_SOCIALS = ["instagram", "tiktok", "facebook", "youtube", "linkedin", "telegram"];
@@ -113,7 +116,7 @@ export function PlatformMark({ kind }: { kind: string }) {
         <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
           <defs>
             <linearGradient id="ugc-ig" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0" stopColor="#FEDA75" /><stop offset="0.35" stopColor="#FA7E1E" />
+              <stop offset="0" stopColor="#FEDA75" /><stop offset="0.35" stopColor="var(--color-accent-strong)" />
               <stop offset="0.6" stopColor="#D62976" /><stop offset="1" stopColor="#4F5BD5" />
             </linearGradient>
           </defs>
@@ -162,7 +165,7 @@ export function PlatformMark({ kind }: { kind: string }) {
       );
     default:
       return (
-        <span style={{ width: size, height: size, borderRadius: "50%", border: `1.5px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "center", color: "#E2E8F0", flexShrink: 0 }}>
+        <span style={{ width: size, height: size, borderRadius: "50%", border: `1.5px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "center", color: "#E7DEC8", flexShrink: 0 }}>
           <Link2 size={18} />
         </span>
       );
@@ -256,14 +259,14 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenVideo(item); } }}
         style={{
           position: "relative", aspectRatio: compact ? "3 / 4" : "8 / 7", borderRadius: 14, overflow: "hidden", cursor: "pointer",
-          border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#141A2B",
+          border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#2B211D",
           backgroundImage: src ? `url(${src})` : undefined, backgroundSize: "cover", backgroundPosition: "center",
           transform: opts.tilt && !compact ? `perspective(520px) rotateY(${ar ? -9 : 9}deg)` : undefined,
           WebkitMaskImage: opts.fade && !compact ? `linear-gradient(${fadeDir}, #000 55%, transparent 100%)` : undefined,
           maskImage: opts.fade && !compact ? `linear-gradient(${fadeDir}, #000 55%, transparent 100%)` : undefined,
         }}
       >
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(2,6,23,0.55), transparent 55%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(27,19,16,0.55), transparent 55%)" }} />
         {video && (
           <span style={{ position: "absolute", bottom: 8, insetInlineEnd: 8, width: 22, height: 22, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.22)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Play size={10} color="#fff" fill="#fff" />
@@ -281,7 +284,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
       minHeight: compact ? 96 : undefined, aspectRatio: compact ? undefined : "8 / 7",
       gridColumn: phone ? undefined : undefined,
     }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#E2E8F0" }}>{ar ? "نسبة التطابق الذكي" : "AI Match Score"}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: "#E7DEC8" }}>{ar ? "نسبة التطابق الذكي" : "AI Match Score"}</div>
       <div style={{ fontSize: 30, fontWeight: 800, color: PURPLE_SOFT, lineHeight: 1.1 }}>{ar ? "قريباً" : "Soon"}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: PURPLE_SOFT }}>
         <Sparkles size={12} />{ar ? "الميزة جاية قريب" : "Coming soon"}
@@ -296,7 +299,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           width: phone ? 96 : compact ? 150 : "clamp(160px, 15vw, 214px)", aspectRatio: "1 / 1", borderRadius: "50%", padding: 3,
           background: "rgba(255,255,255,0.88)", boxShadow: "0 0 0 6px rgba(255,255,255,0.05), 0 18px 40px rgba(0,0,0,0.45)",
         }}>
-          <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", backgroundColor: "#1a2535", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", backgroundColor: "#2B211D", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {talent.avatarUrl ? (
               <img src={cdnImage(talent.avatarUrl, 480)} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
@@ -321,8 +324,8 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           <span style={{
             position: "absolute", bottom: phone ? -6 : -8, left: "50%", transform: "translateX(-50%)",
             display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
-            backgroundColor: "rgba(10,14,26,0.92)", border: `1px solid ${EMERALD}`, borderRadius: 20,
-            padding: phone ? "2px 8px" : "4px 12px", fontSize: phone ? 10 : 12, fontWeight: 700, color: "#D1FAE5",
+            backgroundColor: "rgba(27,19,16,0.92)", border: `1px solid ${EMERALD}`, borderRadius: 20,
+            padding: phone ? "2px 8px" : "4px 12px", fontSize: phone ? 10 : 12, fontWeight: 700, color: "#E1F3EA",
           }}>
             <Gem size={phone ? 10 : 12} color={EMERALD} fill={EMERALD} />{ar ? "متصل" : "Online"}
           </span>
@@ -334,15 +337,15 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           <h1 style={{ fontSize: phone ? 22 : compact ? 28 : 32, fontWeight: 800, margin: 0, lineHeight: 1.15, overflowWrap: "anywhere" }}>{displayName}</h1>
           {talent.verified && <BadgeCheck size={phone ? 22 : 28} color="#fff" fill="#1D9BF0" strokeWidth={1.8} style={{ flexShrink: 0 }} />}
         </div>
-        <p style={{ color: "#E2E8F0", fontSize: phone ? 13 : 15.5, fontWeight: 600, margin: 0 }}>{headline}</p>
+        <p style={{ color: "#E7DEC8", fontSize: phone ? 13 : 15.5, fontWeight: 600, margin: 0 }}>{headline}</p>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 18, color: "#CBD5E1", fontSize: 13.5, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 18, color: "#D9CFBB", fontSize: 13.5, flexWrap: "wrap" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin size={15} />{formatLocation(talent.location, lang)}</span>
           {talent.languages && <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Globe size={15} />{talent.languages}</span>}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 2 }}>
-          <motion.span whileHover={liftSmall} transition={liftSpring} style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 12, backgroundColor: `${AMBER}14`, border: `1px solid ${AMBER}66`, color: "#fff", fontSize: 13, fontWeight: 700 }}>
+          <motion.span whileHover={liftSmall} transition={liftSpring} style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 12, backgroundColor: `color-mix(in srgb, ${AMBER} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${AMBER} 40%, transparent)`, color: "#fff", fontSize: 13, fontWeight: 700 }}>
             <Shield size={18} color={AMBER} fill={AMBER} />{ar ? "منشئ ذهبي" : "Gold Creator"}
           </motion.span>
           {talent.rating > 0 && (
@@ -391,8 +394,8 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           style={{
             width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, padding: "10px 16px",
-            borderRadius: 14, border: "none", background: `linear-gradient(180deg, ${PURPLE_SOFT}, ${PURPLE})`, color: "#fff", cursor: "pointer", fontFamily: FONT,
-            boxShadow: "0 10px 28px rgba(108,77,255,0.35)",
+            borderRadius: 14, border: "none", background: "var(--color-primary)", color: "var(--color-primary-ink)", cursor: "pointer", fontFamily: FONT,
+            boxShadow: "0 10px 28px rgba(8,127,131,0.35)",
           }}
         >
           <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 17, fontWeight: 800 }}><Lock size={16} />{ar ? "وظّف الآن" : "Hire Now"}</span>
@@ -429,7 +432,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
 
   const stat = (icon: React.ReactNode, value: string, label: string, key: string) => (
     <div key={key} style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-      <span style={{ color: "#E2E8F0", display: "flex", flexShrink: 0 }}>{icon}</span>
+      <span style={{ color: "#E7DEC8", display: "flex", flexShrink: 0 }}>{icon}</span>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}>{value}</div>
         <div style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>{label}</div>
@@ -449,7 +452,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
     const yes = talent.availability === "available";
     stats.push(
       <div key="avail" style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-        <span style={{ width: 9, height: 9, borderRadius: "50%", backgroundColor: yes ? EMERALD : "#64748B", flexShrink: 0, boxShadow: yes ? `0 0 8px ${EMERALD}` : undefined }} />
+        <span style={{ width: 9, height: 9, borderRadius: "50%", backgroundColor: yes ? EMERALD : "#6E5F55", flexShrink: 0, boxShadow: yes ? `0 0 8px ${EMERALD}` : undefined }} />
         <div>
           <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.2, color: yes ? "#fff" : MUTED }}>{yes ? (ar ? "متاح" : "Available") : (ar ? "غير متاح" : "Unavailable")}</div>
           <div style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>{ar ? "استقبال طلبات" : "Accepting Projects"}</div>
@@ -507,7 +510,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
         {moreOpen && (
           <div style={{
             position: "absolute", bottom: "calc(100% + 12px)", insetInlineEnd: 0, zIndex: 20, minWidth: 220,
-            backgroundColor: "#111726", border: `1px solid ${LINE}`, borderRadius: 14, padding: 6, boxShadow: "0 18px 40px rgba(0,0,0,0.5)",
+            backgroundColor: "#2B211D", border: `1px solid ${LINE}`, borderRadius: 14, padding: 6, boxShadow: "0 18px 40px rgba(0,0,0,0.5)",
           }}>
             {overflow.map((key) => {
               const handle = displayHandle(presenceLinks[key]);
@@ -517,7 +520,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
                   href={toHref(key, presenceLinks[key])}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 10, textDecoration: "none", color: "#E2E8F0", fontSize: 13.5 }}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 10, textDecoration: "none", color: "#E7DEC8", fontSize: 13.5 }}
                 >
                   <span style={{ display: "flex", transform: "scale(0.75)", transformOrigin: "center", width: 30, height: 30, alignItems: "center", justifyContent: "center", flexShrink: 0 }}><PlatformMark kind={key} /></span>
                   <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{PLATFORM_LABEL[key]}{handle ? ` · ${handle}` : ""}</span>
@@ -559,8 +562,8 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
     { Icon: Star,          value: talent.rating > 0 ? talent.rating.toFixed(1) : "—", color: AMBER,      label: ar ? "متوسط التقييم" : "Average Rating" },
     { Icon: MessageSquare, value: String(talent.reviewCount),                          color: VIOLET,     label: ar ? "عدد التقييمات" : "Total Reviews" },
     { Icon: CheckCircle2,  value: String(bookingStats.completed),                      color: EMERALD,    label: ar ? "المشاريع المكتملة" : "Completed Projects" },
-    { Icon: CalendarCheck, value: String(bookingStats.total),                          color: "#3B82F6",  label: ar ? "إجمالي الحجوزات" : "Total Bookings" },
-    { Icon: Eye,           value: talent.views,                                        color: "#06B6D4",  label: ar ? "مشاهدات الملف" : "Profile Views" },
+    { Icon: CalendarCheck, value: String(bookingStats.total),                          color: "var(--color-secondary-alt)",  label: ar ? "إجمالي الحجوزات" : "Total Bookings" },
+    { Icon: Eye,           value: talent.views,                                        color: "var(--color-secondary-alt)",  label: ar ? "مشاهدات الملف" : "Profile Views" },
     { Icon: TrendingUp,    value: `${completedPct ?? 0}%`,                              color: EMERALD,    label: ar ? "نسبة الإنجاز" : "Completion Rate" },
   ] : [];
 
@@ -586,18 +589,18 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           title={isFavorited ? (ar ? "في المفضلة" : "Favorited") : (ar ? "إضافة للمفضلة" : "Favorite")}
           style={{
             width: 42, height: 42, borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            border: isFavorited ? "1px solid #F43F5E" : `1px solid ${LINE}`, backgroundColor: isFavorited ? "rgba(244,63,94,0.12)" : "transparent",
-            color: isFavorited ? "#FB7185" : "#CBD5E1",
+            border: isFavorited ? "1px solid var(--color-error)" : `1px solid ${LINE}`, backgroundColor: isFavorited ? "rgba(244,63,94,0.12)" : "transparent",
+            color: isFavorited ? "var(--color-error)" : "#D9CFBB",
           }}
         >
-          <Heart size={17} fill={isFavorited ? "#FB7185" : "none"} />
+          <Heart size={17} fill={isFavorited ? "var(--color-error)" : "none"} />
         </button>
       </ProtectedAction>
       <button
         onClick={handleShare}
         aria-label={ar ? "مشاركة" : "Share"}
         title={copied ? (ar ? "تم النسخ" : "Copied!") : (ar ? "مشاركة" : "Share")}
-        style={{ width: 42, height: 42, borderRadius: "50%", border: `1px solid ${LINE}`, backgroundColor: "transparent", color: copied ? EMERALD : "#CBD5E1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+        style={{ width: 42, height: 42, borderRadius: "50%", border: `1px solid ${LINE}`, backgroundColor: "transparent", color: copied ? EMERALD : "#D9CFBB", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
       >
         <Share2 size={17} />
       </button>
@@ -610,7 +613,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
     // Full-bleed band — NOT inside the shell's centered container, so the dark
     // background spans the page. The inner div carries the shared max-width.
     <div style={{ width: "100%", backgroundColor: BAND, color: "#fff", position: "relative", overflow: "hidden", fontFamily: FONT }}>
-      <div style={{ position: "absolute", top: -80, insetInlineStart: "38%", width: 420, height: 420, borderRadius: "50%", background: `radial-gradient(circle, ${PURPLE}26, transparent 70%)`, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: -80, insetInlineStart: "38%", width: 420, height: 420, borderRadius: "50%", background: `radial-gradient(circle, color-mix(in srgb, ${PURPLE} 15%, transparent), transparent 70%)`, pointerEvents: "none" }} />
 
       <div style={{ position: "relative", width: "min(1760px, 100%)", margin: "0 auto", padding: `${compact ? 20 : 30}px ${padX}`, boxSizing: "border-box" }}>
         {compact ? (
@@ -649,7 +652,7 @@ export default function UgcHero({ talent, presenceLinks, portfolioItems, booking
           </div>
         )}
         {favoriteError && (
-          <p style={{ margin: "10px 0 0", fontSize: 11, color: "#FB7185" }}>
+          <p style={{ margin: "10px 0 0", fontSize: 11, color: "var(--color-error)" }}>
             {ar ? "تعذر تحديث المفضلة، حاول مرة أخرى" : "Couldn't update favorites, try again"}
           </p>
         )}

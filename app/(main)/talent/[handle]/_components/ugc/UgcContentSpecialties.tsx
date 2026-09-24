@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 
-const PURPLE = "#6C4DFF";
+const PURPLE = "var(--color-primary-text)";
 const INITIAL_COUNT = 12;
 
 // Shown when the talent hasn't listed specialties of their own, so the card matches
@@ -25,24 +25,24 @@ type IconSpec = { Icon: ComponentType<{ size?: number; color?: string }>; color:
 // First matching keyword wins; matched against the lower-cased specialty, so
 // both English names and the common Arabic spellings resolve.
 const ICON_RULES: Array<[RegExp, IconSpec]> = [
-  [/unbox|فتح|أنبوكس|انبوكس/, { Icon: Package, color: "#7C5CFF" }],
-  [/review|ريفيو|مراجع|تقييم/, { Icon: BadgeCheck, color: "#EC4899" }],
-  [/tutorial|شرح|تعليم|how.?to/, { Icon: GraduationCap, color: "#3B82F6" }],
-  [/compar|مقارن/, { Icon: GitCompare, color: "#8B5CF6" }],
-  [/life|لايف|أسلوب|اسلوب/, { Icon: Heart, color: "#F472B6" }],
-  [/beauty|makeup|skin|جمال|مكياج|بشرة/, { Icon: Sparkles, color: "#EC4899" }],
-  [/food|cook|recipe|أكل|اكل|طعام|طبخ/, { Icon: Utensils, color: "#F97316" }],
-  [/tech|gadget|تقني|تكنولوج/, { Icon: Cpu, color: "#10B981" }],
+  [/unbox|فتح|أنبوكس|انبوكس/, { Icon: Package, color: "var(--color-primary-text)" }],
+  [/review|ريفيو|مراجع|تقييم/, { Icon: BadgeCheck, color: "#D98B7B" }],
+  [/tutorial|شرح|تعليم|how.?to/, { Icon: GraduationCap, color: "var(--color-secondary-alt)" }],
+  [/compar|مقارن/, { Icon: GitCompare, color: "var(--color-primary-text)" }],
+  [/life|لايف|أسلوب|اسلوب/, { Icon: Heart, color: "#D98B7B" }],
+  [/beauty|makeup|skin|جمال|مكياج|بشرة/, { Icon: Sparkles, color: "#D98B7B" }],
+  [/food|cook|recipe|أكل|اكل|طعام|طبخ/, { Icon: Utensils, color: "var(--color-accent-strong)" }],
+  [/tech|gadget|تقني|تكنولوج/, { Icon: Cpu, color: "var(--color-success)" }],
   [/reel|ريلز|ريل/, { Icon: Film, color: "#EF4444" }],
-  [/tiktok|تيك/, { Icon: Music2, color: "#0F172A" }],
-  [/amazon|shop|ecom|متجر|تسوق/, { Icon: ShoppingCart, color: "#F59E0B" }],
-  [/ad|إعلان|اعلان|creative|حملة|campaign/, { Icon: Megaphone, color: "#7C5CFF" }],
-  [/fashion|style|ملابس|موضة|أزياء|ازياء/, { Icon: Shirt, color: "#EC4899" }],
-  [/travel|سفر|سياحة/, { Icon: Plane, color: "#0EA5E9" }],
-  [/fit|sport|gym|رياضة|لياقة/, { Icon: Dumbbell, color: "#14B8A6" }],
-  [/home|منزل|ديكور|decor/, { Icon: Home, color: "#A16207" }],
-  [/game|gaming|جيمنج|ألعاب|العاب/, { Icon: Gamepad2, color: "#6366F1" }],
-  [/photo|تصوير|vlog|فلوج/, { Icon: Camera, color: "#0EA5E9" }],
+  [/tiktok|تيك/, { Icon: Music2, color: "var(--text-primary)" }],
+  [/amazon|shop|ecom|متجر|تسوق/, { Icon: ShoppingCart, color: "var(--color-accent-strong)" }],
+  [/ad|إعلان|اعلان|creative|حملة|campaign/, { Icon: Megaphone, color: "var(--color-primary-text)" }],
+  [/fashion|style|ملابس|موضة|أزياء|ازياء/, { Icon: Shirt, color: "#D98B7B" }],
+  [/travel|سفر|سياحة/, { Icon: Plane, color: "var(--color-secondary-alt)" }],
+  [/fit|sport|gym|رياضة|لياقة/, { Icon: Dumbbell, color: "var(--color-primary-text)" }],
+  [/home|منزل|ديكور|decor/, { Icon: Home, color: "var(--color-accent-strong)" }],
+  [/game|gaming|جيمنج|ألعاب|العاب/, { Icon: Gamepad2, color: "var(--color-primary-text)" }],
+  [/photo|تصوير|vlog|فلوج/, { Icon: Camera, color: "var(--color-secondary-alt)" }],
 ];
 
 function iconFor(name: string): IconSpec {
@@ -55,12 +55,12 @@ export default function UgcContentSpecialties({ specialties: own }: { specialtie
   const specialties = own.length > 0 ? own : DEFAULT_TYPES;
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const PILL_BG = dark ? "rgba(124,92,255,0.14)" : "#F3F0FF";
-  const PILL_BORDER = dark ? "rgba(124,92,255,0.30)" : "#E4DDFF";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E6DCC3";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const PILL_BG = dark ? "rgba(8,127,131,0.14)" : "#E9F3F1";
+  const PILL_BORDER = dark ? "rgba(8,127,131,0.30)" : "#CFE6E3";
   const [expanded, setExpanded] = useState(false);
 
   const canExpand = specialties.length > INITIAL_COUNT;

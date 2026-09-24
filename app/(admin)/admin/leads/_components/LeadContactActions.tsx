@@ -1,4 +1,5 @@
 "use client";
+import { useModalPresence } from "@/hooks/useModalClose";
 import { useState } from "react";
 import { Phone, X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
@@ -55,6 +56,7 @@ export function LeadCallButton({ phone, size = 15 }: { phone: string; size?: num
   const t = TX[lang];
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const { mounted: openMounted, closing: openClosing } = useModalPresence(open);
 
   const CARD = dark ? "#2B211D" : "#FBF7EA";
   const BORDER = dark ? "#3A2E28" : "#E6DCC6";
@@ -82,12 +84,12 @@ export function LeadCallButton({ phone, size = 15 }: { phone: string; size?: num
         <Phone size={size} />
       </button>
 
-      {open && (
-        <div
-          style={{ position: "fixed", inset: 0, zIndex: 100, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+      {openMounted && (
+        <div className="modal-backdrop" data-state={openClosing ? "closing" : "open"}
+          style={{ position: "fixed", inset: 0, zIndex: 100, backgroundColor: "rgba(27,19,16,0.62)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
           onClick={() => setOpen(false)}
         >
-          <div
+          <div className="modal-card"
             style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, width: "100%", maxWidth: 360, padding: 24, textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}
           >

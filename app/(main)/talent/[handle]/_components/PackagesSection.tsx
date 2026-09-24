@@ -37,12 +37,12 @@ export default function PackagesSection({ onSelect, packages, variant = "default
   const isModel = variant === "model";
   const data = packages ?? [];
 
-  const card = dark ? "#0D1623" : "#FFFFFF";
-  const border = dark ? "rgba(0,201,177,0.16)" : "#E2E8F0";
-  const muted = dark ? "#A8B3C2" : "#64748B";
-  const teal = "#00C9B1";
-  const orange = "#FF6B2B";
-  const purple = "#8B2FC9";
+  const card = dark ? "#2B211D" : "#FBF7EA";
+  const border = dark ? "rgba(8,127,131,0.16)" : "#E6DCC3";
+  const muted = dark ? "#A99B8E" : "#6E5F55";
+  const teal = "var(--color-primary-text)";
+  const orange = "var(--color-accent-strong)";
+  const purple = "var(--color-primary-text)";
   const selectedPackageId = selectedId ?? data.find((pkg) => pkg.popular)?.id ?? null;
 
   const handleSelect = (pkg: Package) => {
@@ -161,8 +161,8 @@ export default function PackagesSection({ onSelect, packages, variant = "default
     <section
       style={{
         background: dark
-          ? `linear-gradient(145deg, ${card} 0%, #101A2C 52%, #111728 100%)`
-          : "linear-gradient(145deg, #FFFFFF 0%, #FFF7F2 48%, #F0F7FF 100%)",
+          ? `linear-gradient(145deg, ${card} 0%, #2B211D 52%, #2B211D 100%)`
+          : "linear-gradient(145deg, #FFFFFF 0%, #FBEDE6 48%, #EEF6F4 100%)",
         border: `1px solid ${border}`,
         borderRadius: 18,
         padding: isMobile ? 18 : 26,
@@ -182,7 +182,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
         <div>
           <h2
             style={{
-              color: dark ? "#FFFFFF" : "#0F172A",
+              color: dark ? "#F5EEDB" : "#2B211D",
               fontSize: 24,
               fontWeight: 900,
               lineHeight: 1.2,
@@ -205,14 +205,14 @@ export default function PackagesSection({ onSelect, packages, variant = "default
             gap: 4,
             padding: 4,
             borderRadius: 999,
-            backgroundColor: dark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.06)",
+            backgroundColor: dark ? "rgba(255,255,255,0.08)" : "rgba(43,33,29,0.06)",
           }}
         >
           <span
             style={{
               padding: "6px 14px",
               borderRadius: 999,
-              backgroundColor: purple,
+              backgroundColor: "var(--color-primary)",
               color: "#FFFFFF",
               fontSize: 11,
               fontWeight: 900,
@@ -258,14 +258,14 @@ export default function PackagesSection({ onSelect, packages, variant = "default
               whileHover={{ y: -4 }}
               style={{
                 background: selected
-                  ? `linear-gradient(160deg, #21164F 0%, ${purple} 62%, ${orange} 130%)`
+                  ? `linear-gradient(160deg, #2B211D 0%, ${purple} 62%, ${orange} 130%)`
                   : "rgba(255,255,255,0.9)",
-                color: selected ? "#FFFFFF" : "#231846",
-                border: `1px solid ${selected ? "rgba(255,255,255,0.18)" : "rgba(35,24,70,0.08)"}`,
+                color: selected ? "#FFFFFF" : "#2B211D",
+                border: `1px solid ${selected ? "rgba(255,255,255,0.18)" : "rgba(43,33,29,0.08)"}`,
                 borderRadius: 16,
                 boxShadow: selected
                   ? "0 10px 8px rgba(0,0,0,0.18)"
-                  : "0 6px 8px rgba(15,23,42,0.06)",
+                  : "0 6px 8px rgba(43,33,29,0.06)",
                 padding: selected ? 24 : 22,
                 minHeight: selected ? 300 : 274,
                 position: "relative",
@@ -283,7 +283,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                     position: "absolute",
                     top: 12,
                     insetInlineEnd: 12,
-                    backgroundColor: selected ? "rgba(255,255,255,0.16)" : "rgba(139,47,201,0.12)",
+                    backgroundColor: selected ? "rgba(255,255,255,0.16)" : "rgba(8,127,131,0.12)",
                     color: selected ? "#FFFFFF" : purple,
                     fontSize: 10,
                     fontWeight: 900,
@@ -299,7 +299,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
               <div>
                 <p
                   style={{
-                    color: selected ? "rgba(255,255,255,0.8)" : "#6B5F83",
+                    color: selected ? "rgba(255,255,255,0.8)" : "#8C7D71",
                     fontSize: 13,
                     fontWeight: 800,
                     margin: "0 0 8px",
@@ -309,7 +309,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                 </p>
                 <p
                   style={{
-                    color: selected ? "#FFFFFF" : "#241447",
+                    color: selected ? "#FFFFFF" : "#2B211D",
                     fontSize: selected ? 32 : 29,
                     lineHeight: 1,
                     fontWeight: 950,
@@ -319,7 +319,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                   {pkg.price}
                   <span
                     style={{
-                      color: selected ? "rgba(255,255,255,0.76)" : "#7B7191",
+                      color: selected ? "rgba(255,255,255,0.76)" : "#8C7D71",
                       fontSize: 12,
                       fontWeight: 800,
                     }}
@@ -341,7 +341,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                         width: 18,
                         height: 18,
                         borderRadius: 999,
-                        backgroundColor: selected ? "rgba(255,255,255,0.14)" : `${accent}22`,
+                        backgroundColor: selected ? "rgba(255,255,255,0.14)" : `color-mix(in srgb, ${accent} 13%, transparent)`,
                         flex: "0 0 auto",
                       }}
                     >
@@ -349,7 +349,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                     </span>
                     <span
                       style={{
-                        color: selected ? "rgba(255,255,255,0.86)" : "#5A506F",
+                        color: selected ? "rgba(255,255,255,0.86)" : "#6E5F55",
                         fontSize: 12,
                         fontWeight: 700,
                       }}
@@ -368,7 +368,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                 }}
                 whileHover={{ translateY: -2 }}
                 style={{
-                  background: selected ? `linear-gradient(90deg, ${teal}, ${orange})` : "rgba(36,20,71,0.68)",
+                  background: selected ? `linear-gradient(90deg, ${teal}, ${orange})` : "rgba(43,33,29,0.68)",
                   color: "#FFFFFF",
                   border: 0,
                   borderRadius: 10,

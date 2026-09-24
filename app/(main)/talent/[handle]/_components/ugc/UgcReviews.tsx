@@ -14,8 +14,8 @@ import { Star } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import type { Review, BrandItem } from "@/features/talent-profile/types";
 
-const PURPLE = "#6C4DFF";
-const GOLD = "#F5B301";
+const PURPLE = "var(--color-primary-text)";
+const GOLD = "var(--color-accent-strong)";
 const VISIBLE = 2;
 
 function findLogo(names: string[], brands: BrandItem[]): string | null {
@@ -26,10 +26,10 @@ function findLogo(names: string[], brands: BrandItem[]): string | null {
 export default function UgcReviews({ reviews, brands = [] }: { reviews: Review[]; rating?: number; brands?: BrandItem[] }) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E6DCC3";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
   const noContent = ar ? "لا يوجد محتوى" : "No content";
   const [open, setOpen] = useState(false);
 
@@ -63,7 +63,7 @@ export default function UgcReviews({ reviews, brands = [] }: { reviews: Review[]
             const initial = (r.author || r.brand || "?").trim().charAt(0).toUpperCase();
             return (
               <div key={r.id} style={{ display: "flex", gap: 14, padding: "16px 0", borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, paddingTop: i === 0 ? 0 : 16 }}>
-                <div style={{ width: 54, height: 54, borderRadius: "50%", backgroundColor: "#0A0E1A", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 54, height: 54, borderRadius: "50%", backgroundColor: "#1B1310", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {logo ? (
                     <img src={logo} alt={r.author} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
@@ -92,7 +92,7 @@ export default function UgcReviews({ reviews, brands = [] }: { reviews: Review[]
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10, marginTop: 10 }}>
                     <span style={{ color: MUTED, fontSize: 12 }}>{r.date}</span>
                     {r.rating >= 4 && (
-                      <span style={{ padding: "3px 10px", borderRadius: 6, backgroundColor: dark ? "rgba(34,197,94,0.16)" : "#DCFCE7", color: dark ? "#86EFAC" : "#15803D", fontSize: 11.5, fontWeight: 700 }}>
+                      <span style={{ padding: "3px 10px", borderRadius: 6, backgroundColor: dark ? "rgba(30,166,114,0.16)" : "#E1F3EA", color: dark ? "var(--color-success)" : "var(--color-success)", fontSize: 11.5, fontWeight: 700 }}>
                         {ar ? "موصى به" : "Recommended"}
                       </span>
                     )}

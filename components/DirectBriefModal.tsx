@@ -7,6 +7,7 @@ import { cdnImage } from "@/lib/images";
 import { useGuestGuard } from "@/contexts/GuestGuard";
 import { canCreateBooking } from "@/lib/permissions";
 import styles from "./DirectBriefModal.module.css";
+import { useModalClose } from "@/hooks/useModalClose";
 
 type ServiceType = "hourly" | "daily" | "fixed_project";
 
@@ -119,12 +120,13 @@ export default function DirectBriefModal({
   talentCategory,
   dark,
   lang,
-  onClose,
+  onClose: onCloseProp,
   onSuccess,
 }: Props) {
   const ar = lang === "ar";
   const t = TX[lang];
   const { user, requestAuth } = useGuestGuard();
+  const { closing, close: onClose } = useModalClose(onCloseProp);
 
   const MIN_BUDGET = 500;
 
@@ -209,14 +211,15 @@ export default function DirectBriefModal({
 
   return (
     <div
-      className={`${styles.overlay} ${dark ? styles.dark : styles.light}`}
+      className={`${styles.overlay} ${dark ? styles.dark : styles.light} modal-backdrop`}
+      data-state={closing ? "closing" : "open"}
       dir={ar ? "rtl" : "ltr"}
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="booking-request-title">
+      <section className={`${styles.dialog} modal-card`} role="dialog" aria-modal="true" aria-labelledby="booking-request-title">
         <header className={styles.header}>
           <div className={styles.talentBlock}>
             <span className={styles.avatar}>

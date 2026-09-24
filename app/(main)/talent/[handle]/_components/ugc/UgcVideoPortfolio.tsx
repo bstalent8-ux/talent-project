@@ -17,7 +17,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { cdnImage } from "@/lib/images";
 import type { PortfolioItem } from "@/features/talent-profile/types";
 
-const PURPLE = "#6C4DFF";
+const PURPLE = "var(--color-primary-text)";
 
 function videoPoster(url: string | null): string | undefined {
   if (!url || !url.includes("res.cloudinary.com") || !url.includes("/video/upload/")) return undefined;
@@ -62,7 +62,7 @@ function Tile({ item, index, onSelect, TEXT, MUTED, noContent }: {
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(item); } }}
         style={{
           position: "relative", aspectRatio: "3 / 4", borderRadius: 14, overflow: "hidden", cursor: "pointer",
-          backgroundColor: "#141A2B", backgroundImage: src ? `url(${src})` : undefined, backgroundSize: "cover", backgroundPosition: "center",
+          backgroundColor: "#2B211D", backgroundImage: src ? `url(${src})` : undefined, backgroundSize: "cover", backgroundPosition: "center",
         }}
       >
         {video && item.url && (
@@ -75,7 +75,7 @@ function Tile({ item, index, onSelect, TEXT, MUTED, noContent }: {
             style={{ display: "none" }}
           />
         )}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(2,6,23,0.35), transparent 50%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(27,19,16,0.35), transparent 50%)" }} />
         <span style={{
           position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 34, height: 34, borderRadius: "50%",
           backgroundColor: "rgba(255,255,255,0.28)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center",
@@ -83,7 +83,7 @@ function Tile({ item, index, onSelect, TEXT, MUTED, noContent }: {
           {video ? <Play size={14} color="#fff" fill="#fff" /> : <ImageIcon size={14} color="#fff" />}
         </span>
         {video && duration !== null && (
-          <span style={{ position: "absolute", bottom: 8, insetInlineEnd: 8, padding: "2px 7px", borderRadius: 8, backgroundColor: "rgba(10,14,26,0.72)", color: "#fff", fontSize: 11, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+          <span style={{ position: "absolute", bottom: 8, insetInlineEnd: 8, padding: "2px 7px", borderRadius: 8, backgroundColor: "rgba(27,19,16,0.72)", color: "#fff", fontSize: 11, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
             {formatDuration(duration)}
           </span>
         )}
@@ -100,10 +100,10 @@ export default function UgcVideoPortfolio({ portfolioItems, onSelectVideo }: Pro
   const compact = useIsMobile(1024);
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E5E7EB";
-  const TEXT = dark ? "#fff" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(255,255,255,0.10)" : "#E6DCC3";
+  const TEXT = dark ? "#fff" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
   const [expanded, setExpanded] = useState(false);
 
   const cols = phone ? 2 : compact ? 3 : 5;

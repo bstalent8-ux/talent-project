@@ -146,7 +146,9 @@ export default function Footer() {
               </div>
             </div>
 
-            <SupportTicketModal page="footer" />
+            <div className={styles.footerHelp}>
+              <SupportTicketModal page="footer" />
+            </div>
           </div>
 
           <LinkColumn title={t.sections.platform} links={PLATFORM_LINKS(t.links, !loading && !isGuest)} />

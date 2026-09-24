@@ -71,7 +71,7 @@ export const viewport: Viewport = {
 // A stylesheet <link> inserted from script is not render-blocking, and
 // display=swap paints text in the fallback face until the real one arrives.
 // The preconnects (below) start the two TLS handshakes during HTML parse.
-const FONTS_URL = "https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Caveat:wght@600&family=Aref+Ruqaa:wght@700&display=swap";
+const FONTS_URL = "https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Caveat:wght@600&family=Aref+Ruqaa:wght@700&display=swap";
 const FONTS_SCRIPT = `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='${FONTS_URL}';document.head.appendChild(l)})()`;
 
 const INIT_SCRIPT = `(function(){try{

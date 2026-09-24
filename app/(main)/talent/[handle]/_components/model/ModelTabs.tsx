@@ -6,7 +6,7 @@
 
 import { useSite } from "@/contexts/SiteContext";
 
-const GOLD = "#d89b37";
+const GOLD = "var(--color-accent-strong)";
 
 export interface ModelTab {
   key: string;
@@ -28,9 +28,9 @@ export default function ModelTabs({ tabs, active, onChange }: Props) {
   return (
     <div style={{
       position: "sticky", top: 62, zIndex: 30,
-      backgroundColor: dark ? "rgba(13,22,35,0.95)" : "rgba(255,255,255,0.95)",
+      backgroundColor: dark ? "rgba(43,33,29,0.95)" : "rgba(255,255,255,0.95)",
       backdropFilter: "blur(10px)",
-      border: `1px solid ${dark ? "var(--border-subtle)" : "#E2E8F0"}`,
+      border: `1px solid ${dark ? "var(--border-subtle)" : "#E6DCC3"}`,
       borderRadius: 14, padding: "6px 8px",
       display: "flex", alignItems: "center", gap: 4, overflowX: "auto",
     }}>
@@ -49,8 +49,8 @@ export default function ModelTabs({ tabs, active, onChange }: Props) {
             }}
             style={{
               padding: "8px 14px", borderRadius: 10, border: "none", whiteSpace: "nowrap",
-              backgroundColor: isActive ? `${GOLD}1a` : "transparent",
-              color: isActive ? GOLD : dark ? "var(--text-muted)" : "#64748B",
+              backgroundColor: isActive ? `color-mix(in srgb, ${GOLD} 10%, transparent)` : "transparent",
+              color: isActive ? GOLD : dark ? "var(--text-muted)" : "#6E5F55",
               fontWeight: isActive ? 800 : 600, fontSize: 13, cursor: "pointer",
               fontFamily: "'IBM Plex Sans Arabic',sans-serif",
             }}

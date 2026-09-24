@@ -336,7 +336,7 @@ export default function LeadImportPanel({ channels, categories }: { channels: Le
             <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 10, fontSize: 12.5, color: MUTED }}>
               {summary.created > 0 && <span style={{ color: "var(--color-primary-text)" }}>{t.resultCreated(summary.created)}</span>}
               {summary.merged > 0 && <span>{t.resultMerged(summary.merged)}</span>}
-              {summary.flaggedDuplicate > 0 && <span style={{ color: "#F59E0B" }}>{t.resultFlagged(summary.flaggedDuplicate)}</span>}
+              {summary.flaggedDuplicate > 0 && <span style={{ color: "var(--color-accent-strong)" }}>{t.resultFlagged(summary.flaggedDuplicate)}</span>}
               {summary.failed > 0 && <span style={{ color: "#EF4444" }}>{t.resultFailed(summary.failed)}</span>}
             </div>
           )}

@@ -124,7 +124,7 @@ interface Broadcast {
 
 const PRIORITY_TONE: Record<NotificationPriority, string> = {
   low:    "#A99B8E",
-  normal: "#0EA5E9",
+  normal: "#4FA7A3",
   high:   "#E7A58A",
   urgent: "#EF4444",
 };

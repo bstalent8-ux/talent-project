@@ -10,7 +10,7 @@
 import { useSite } from "@/contexts/SiteContext";
 import type { BrandItem, ExperienceItem } from "@/features/talent-profile/types";
 
-const GOLD = "#d89b37";
+const GOLD = "var(--color-accent-strong)";
 
 interface TimelineEntry {
   key: string;
@@ -28,10 +28,10 @@ interface Props {
 export default function ModelCareerTimeline({ registeredAt, brands, experience }: Props) {
   const { dark, lang } = useSite();
   const ar = lang !== "en";
-  const CARD = dark ? "var(--bg-card)" : "#FFFFFF";
-  const BORDER = dark ? "var(--border-subtle)" : "#E2E8F0";
-  const TEXT = dark ? "var(--text-primary)" : "#0F172A";
-  const MUTED = dark ? "var(--text-muted)" : "#64748B";
+  const CARD = dark ? "var(--bg-card)" : "#FBF7EA";
+  const BORDER = dark ? "var(--border-subtle)" : "#E6DCC3";
+  const TEXT = dark ? "var(--text-primary)" : "#2B211D";
+  const MUTED = dark ? "var(--text-muted)" : "#6E5F55";
   const noContent = ar ? "لا يوجد محتوى" : "No content";
 
   const yearSort = (year: string) => {
@@ -76,7 +76,7 @@ export default function ModelCareerTimeline({ registeredAt, brands, experience }
           {entries.map((entry, i) => (
             <div key={entry.key} style={{ display: "flex", alignItems: "flex-start", gap: 12, position: "relative", paddingBottom: i === entries.length - 1 ? 0 : 18 }}>
               {i < entries.length - 1 && (
-                <span aria-hidden="true" style={{ position: "absolute", insetInlineStart: 6, top: 16, bottom: 0, width: 1, backgroundColor: dark ? "rgba(216,155,55,0.35)" : "#E8D3A8" }} />
+                <span aria-hidden="true" style={{ position: "absolute", insetInlineStart: 6, top: 16, bottom: 0, width: 1, backgroundColor: dark ? "rgba(231,165,138,0.35)" : "#E7A58A" }} />
               )}
               <span style={{ width: 13, height: 13, borderRadius: "50%", border: `2px solid ${GOLD}`, backgroundColor: CARD, flexShrink: 0, marginTop: 3, position: "relative", zIndex: 1 }} />
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flex: 1, minWidth: 0, flexWrap: "wrap" }}>

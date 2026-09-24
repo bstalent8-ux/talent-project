@@ -104,13 +104,13 @@ export default function PendingDataShell({ kind, avatarCounts, status, type, q, 
       <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.7, margin: "0 0 16px", maxWidth: 760 }}>{isAvatar ? t.avatarIntro : t.intro}</p>
 
       {isAvatar && !avatarCounts.migrated && (
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(231,165,138,0.12)", border: "1px solid rgba(231,165,138,0.4)", color: dark ? "#fcd34d" : "#92400e", fontSize: 12.5, lineHeight: 1.6 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(231,165,138,0.12)", border: "1px solid rgba(231,165,138,0.4)", color: dark ? "#E7A58A" : "#7A3B26", fontSize: 12.5, lineHeight: 1.6 }}>
           <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />{t.avatarMigration}
         </div>
       )}
 
       {!isAvatar && !counts.migrated && (
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(231,165,138,0.12)", border: "1px solid rgba(231,165,138,0.4)", color: dark ? "#fcd34d" : "#92400e", fontSize: 12.5, lineHeight: 1.6 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(231,165,138,0.12)", border: "1px solid rgba(231,165,138,0.4)", color: dark ? "#E7A58A" : "#7A3B26", fontSize: 12.5, lineHeight: 1.6 }}>
           <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />{t.migration}
         </div>
       )}

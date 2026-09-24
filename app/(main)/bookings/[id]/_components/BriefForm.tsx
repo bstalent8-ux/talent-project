@@ -1,4 +1,5 @@
 "use client";
+import { useModalClose } from "@/hooks/useModalClose";
 import { useState } from "react";
 import { X, FileText, Calendar, Send } from "lucide-react";
 
@@ -45,16 +46,17 @@ const TX = {
   },
 };
 
-export default function BriefForm({ bookingId, dark, lang, onClose, onSuccess }: Props) {
+export default function BriefForm({ bookingId, dark, lang, onClose: onCloseProp, onSuccess }: Props) {
+  const { closing, close: onClose } = useModalClose(onCloseProp);
   const t  = TX[lang];
   const ar = lang === "ar";
-  const BG     = dark ? "#0d1623" : "#ffffff";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const INPUT  = dark ? "#060d18" : "#f8fafc";
-  const INBDR  = dark ? "#1e293b" : "#cbd5e1";
-  const GREEN  = "#00D26A";
+  const BG     = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const INPUT  = dark ? "#1B1310" : "#F6F0DD";
+  const INBDR  = dark ? "#3A2E28" : "#D9CDB1";
+  const GREEN  = "var(--color-primary-text)";
 
   const [title,    setTitle]    = useState("");
   const [desc,     setDesc]     = useState("");
@@ -93,9 +95,9 @@ export default function BriefForm({ bookingId, dark, lang, onClose, onSuccess }:
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1000, backgroundColor: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
+    <div className="modal-backdrop" data-state={closing ? "closing" : "open"} style={{ position: "fixed", inset: 0, zIndex: 1000, backgroundColor: "rgba(27,19,16,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ backgroundColor: BG, borderRadius: 20, width: "100%", maxWidth: 580, border: `1px solid ${BORDER}`, maxHeight: "92vh", overflowY: "auto", direction: ar ? "rtl" : "ltr" }}>
+      <div className="modal-card" style={{ backgroundColor: BG, borderRadius: 20, width: "100%", maxWidth: 580, border: `1px solid ${BORDER}`, maxHeight: "92vh", overflowY: "auto", direction: ar ? "rtl" : "ltr" }}>
         <div style={{ padding: "20px 24px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <FileText size={20} color={GREEN} />
@@ -134,7 +136,7 @@ export default function BriefForm({ bookingId, dark, lang, onClose, onSuccess }:
           {error && <div style={{ padding: "8px 12px", borderRadius: 8, backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171", fontSize: 12 }}>{error}</div>}
 
           <div style={{ display: "flex", gap: 10 }}>
-            <button type="submit" disabled={sending} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: sending ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 12, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: sending ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+            <button type="submit" disabled={sending} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: sending ? "rgba(8,127,131,0.5)" : "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 12, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: sending ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
               <Send size={14} /> {sending ? t.sending : t.send}
             </button>
             <button type="button" onClick={onClose} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 12, padding: "12px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>

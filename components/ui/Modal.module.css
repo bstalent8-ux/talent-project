@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal-backdrop);
-  background: rgba(0, 0, 0, 0.6);
+  background: color-mix(in srgb, #1b1310 62%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;

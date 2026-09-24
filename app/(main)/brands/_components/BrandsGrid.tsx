@@ -5,12 +5,12 @@ import type { BrandCard } from "../page";
 import ProtectedAction from "@/components/auth/ProtectedAction";
 
 const GRAD_COLORS = [
-  ["#1e3a5f", "#0d2137"],
-  ["#2a1a3a", "#1a0d2a"],
-  ["#3a2a1a", "#2a1a0d"],
-  ["#1a3a2a", "#0d2a1a"],
-  ["#2a1a3a", "#1a0d2a"],
-  ["#1a2a3a", "#0d1a2a"],
+  ["#2B211D", "#2B211D"],
+  ["#2B211D", "#1B1310"],
+  ["#2B211D", "#1B1310"],
+  ["#2B211D", "#1B1310"],
+  ["#2B211D", "#1B1310"],
+  ["#2B211D", "#1B1310"],
 ];
 
 const INDUSTRY_ICONS: Record<string, string> = {
@@ -30,13 +30,13 @@ interface Props {
 
 function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: boolean; lang: "ar" | "en"; index: number }) {
   const ar     = lang === "ar";
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
-  const GREEN  = "#00D26A";
-  const GOLD   = "#F4B740";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT   = dark ? "#FFFFFF" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
 
   const [g0, g1] = GRAD_COLORS[index % GRAD_COLORS.length];
   const initial  = brand.name.charAt(0).toUpperCase();
@@ -60,7 +60,7 @@ function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: b
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.3 }}
-      whileHover={{ y: -4, boxShadow: dark ? "0 8px 32px rgba(0,210,106,0.12)" : "0 8px 24px rgba(0,210,106,0.08)" }}
+      whileHover={{ y: -4, boxShadow: dark ? "0 8px 32px rgba(8,127,131,0.12)" : "0 8px 24px rgba(8,127,131,0.08)" }}
       style={{
         backgroundColor: CARD,
         border: `1px solid ${BORDER}`,
@@ -101,7 +101,7 @@ function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: b
             position: "absolute", top: 10,
             ...(ar ? { right: 10 } : { left: 10 }),
             display: "flex", alignItems: "center", gap: 4,
-            backgroundColor: "rgba(0,210,106,0.9)", color: "#050B12",
+            backgroundColor: "rgba(8,127,131,0.9)", color: "#1B1310",
             fontSize: 10, fontWeight: 800, padding: "3px 8px",
             borderRadius: 6,
           }}>
@@ -205,8 +205,8 @@ function BrandCardItem({ brand, dark, lang, index }: { brand: BrandCard; dark: b
 
 export default function BrandsGrid({ dark, lang, brands }: Props) {
   const ar    = lang === "ar";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const GREEN = "#00D26A";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const GREEN = "var(--color-primary-text)";
 
   if (brands.length === 0) {
     return (

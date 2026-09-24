@@ -21,12 +21,12 @@ export default function ReviewsCard({ reviews, rating = 0, variant = "default" }
   const isMobile = useIsMobile();
   const ar = lang === "ar";
   const isModel = variant === "model";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const GREEN = "#00D26A";
-  const GOLD = "#F4B740";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const GREEN = "var(--color-primary-text)";
+  const GOLD = "var(--color-accent-strong)";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
   const [idx, setIdx] = useState(0);
   const review = reviews[idx];
 
@@ -106,7 +106,7 @@ export default function ReviewsCard({ reviews, rating = 0, variant = "default" }
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
-          <h3 style={{ color: dark ? "#fff" : "#0F172A", fontSize: 16, fontWeight: 800, margin: "0 0 2px" }}>
+          <h3 style={{ color: dark ? "#fff" : "#2B211D", fontSize: 16, fontWeight: 800, margin: "0 0 2px" }}>
             {ar ? "التقييمات" : "Reviews"}
           </h3>
           <span style={{ color: MUTED, fontSize: 12 }}>
@@ -155,8 +155,8 @@ export default function ReviewsCard({ reviews, rating = 0, variant = "default" }
                 width: 36,
                 height: 36,
                 borderRadius: "50%",
-                backgroundColor: "rgba(0,210,106,0.15)",
-                border: "1px solid rgba(0,210,106,0.3)",
+                backgroundColor: "rgba(8,127,131,0.15)",
+                border: "1px solid rgba(8,127,131,0.3)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -168,7 +168,7 @@ export default function ReviewsCard({ reviews, rating = 0, variant = "default" }
               {review.author[0]}
             </div>
             <div>
-              <p style={{ color: dark ? "#fff" : "#0F172A", fontSize: 13, fontWeight: 700, margin: 0 }}>
+              <p style={{ color: dark ? "#fff" : "#2B211D", fontSize: 13, fontWeight: 700, margin: 0 }}>
                 {review.author}
               </p>
               <p style={{ color: MUTED, fontSize: 11, margin: 0 }}>
@@ -225,7 +225,7 @@ export default function ReviewsCard({ reviews, rating = 0, variant = "default" }
                 width: i === idx ? 20 : 8,
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: i === idx ? GREEN : "rgba(168,179,194,0.3)",
+                backgroundColor: i === idx ? GREEN : "rgba(169,155,142,0.3)",
                 border: "none",
                 cursor: "pointer",
                 transition: "all 0.2s",

@@ -396,8 +396,8 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
                   </div>
                   {action.note && <p style={{ margin: "6px 0 0", color: TEXT }}>{action.note}</p>}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                    <Clock size={12} color={isPast && !action.notifiedAt ? "#F59E0B" : MUTED} />
-                    <span style={{ color: isPast && !action.notifiedAt ? "#F59E0B" : MUTED }}>
+                    <Clock size={12} color={isPast && !action.notifiedAt ? "#C98A70" : MUTED} />
+                    <span style={{ color: isPast && !action.notifiedAt ? "#C98A70" : MUTED }}>
                       {action.followUpAt ? new Date(action.followUpAt).toLocaleDateString(ar ? "ar-EG" : "en-US") : t.none}
                     </span>
                   </div>
@@ -426,7 +426,7 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {logEntries.map((entry) => {
                 const LogIcon = entry.action === "created" ? PlusCircle : entry.action === "deleted" ? MinusCircle : Pencil;
-                const logColor = entry.action === "created" ? "#087F83" : entry.action === "deleted" ? "#EF4444" : "#F59E0B";
+                const logColor = entry.action === "created" ? "#087F83" : entry.action === "deleted" ? "#EF4444" : "#C98A70";
                 const label = entry.action === "created" ? t.logCreated : entry.action === "deleted" ? t.logDeleted : t.logUpdated;
 
                 const changedFields = (["action_type", "note", "follow_up_at"] as const).filter((key) => {

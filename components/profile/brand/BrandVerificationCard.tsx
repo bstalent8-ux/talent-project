@@ -37,8 +37,8 @@ export default function BrandVerificationCard({ isApproved }: { isApproved: bool
           display: "inline-flex", alignItems: "center", gap: 6,
           padding: "5px 14px", borderRadius: 20, marginBottom: 14,
           fontSize: 12, fontWeight: 800, color: GREEN,
-          backgroundColor: dark ? "rgba(0,210,106,0.12)" : "rgba(0,210,106,0.08)",
-          border: "1px solid rgba(0,210,106,0.25)",
+          backgroundColor: dark ? "rgba(8,127,131,0.12)" : "rgba(8,127,131,0.08)",
+          border: "1px solid rgba(8,127,131,0.25)",
         }}
       >
         <ShieldCheck size={13} color={GREEN} />
@@ -53,7 +53,7 @@ export default function BrandVerificationCard({ isApproved }: { isApproved: bool
             <div
               style={{
                 width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                backgroundColor: "rgba(0,210,106,0.12)",
+                backgroundColor: "rgba(8,127,131,0.12)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >

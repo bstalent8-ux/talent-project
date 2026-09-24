@@ -5,6 +5,7 @@ import { Bell } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import { useNotifications } from "@/hooks/notifications";
 import NotificationDropdown from "./NotificationDropdown";
+import { useModalPresence } from "@/hooks/useModalClose";
 import styles from "@/components/SiteChrome.module.css";
 
 interface Props {
@@ -29,6 +30,7 @@ export default function NotificationBell({ viewAllHref, align = "auto" }: Props)
   } = useNotifications();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { mounted, closing } = useModalPresence(open);
 
   const badgeCount = unreadCount > 99 ? "99+" : unreadCount;
   const label = lang === "ar" ? "الإشعارات" : "Notifications";
@@ -72,8 +74,9 @@ export default function NotificationBell({ viewAllHref, align = "auto" }: Props)
         )}
       </button>
 
-      {open && (
+      {mounted && (
         <NotificationDropdown
+          closing={closing}
           notifications={notifications}
           unreadCount={unreadCount}
           loading={loading}

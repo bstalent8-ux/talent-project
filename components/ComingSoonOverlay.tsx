@@ -29,11 +29,11 @@ export default function ComingSoonOverlay({ children }: { children: React.ReactN
   const { dark, lang } = useSite();
   const t = TX[lang];
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(255,255,255,0.12)" : "rgba(16,24,32,0.1)";
-  const TEXT   = dark ? "#f7fafc" : "#101820";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const BACKDROP = dark ? "rgba(7,11,16,0.55)" : "rgba(247,248,248,0.6)";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const BACKDROP = dark ? "rgba(27,19,16,0.6)" : "rgba(245,238,219,0.65)";
 
   return (
     <div style={{ position: "relative", minHeight: "70vh" }}>
@@ -106,7 +106,7 @@ export default function ComingSoonOverlay({ children }: { children: React.ReactN
             style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               minHeight: "2.6rem", padding: "0 1.25rem", borderRadius: 8,
-              background: "var(--color-primary)", color: "#fff",
+              background: "var(--color-primary)", color: "var(--color-primary-ink)",
               fontWeight: 800, fontSize: 14, textDecoration: "none",
             }}
           >

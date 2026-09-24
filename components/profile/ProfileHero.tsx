@@ -61,7 +61,7 @@ export default function ProfileHero({
     <section
       dir="rtl"
       className={cn(
-        "relative w-full rounded-2xl border border-[rgba(0,255,163,.15)] bg-[#0D1623] p-6",
+        "relative w-full rounded-2xl border border-[rgba(79,167,163,.15)] bg-[#2B211D] p-6",
         className
       )}
     >
@@ -94,16 +94,16 @@ export default function ProfileHero({
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl font-bold text-white">{name}</h1>
               {isPremium && (
-                <span className="flex items-center gap-1 bg-[#F4B740]/15 text-[#F4B740] border border-[#F4B740]/30 rounded-lg px-2.5 py-0.5 text-xs font-bold">
+                <span className="flex items-center gap-1 bg-[var(--color-accent-strong)]/15 text-[var(--color-accent-strong)] border border-[var(--color-accent-strong)]/30 rounded-lg px-2.5 py-0.5 text-xs font-bold">
                   <Crown size={14} />
                   Gold Model
                 </span>
               )}
             </div>
 
-            <p className="text-[#A8B3C2] text-sm mb-3">{profession}</p>
+            <p className="text-[#A99B8E] text-sm mb-3">{profession}</p>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#A8B3C2] mb-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#A99B8E] mb-3">
               <span className="flex items-center gap-1.5">
                 <MapPin size={13} />
                 {location}
@@ -120,26 +120,26 @@ export default function ProfileHero({
 
             <div className="flex items-center gap-4 mb-3">
               <div className="flex items-center gap-1.5">
-                <Star size={16} className="fill-[#F4B740] text-[#F4B740]" />
+                <Star size={16} className="fill-[var(--color-accent-strong)] text-[var(--color-accent-strong)]" />
                 <span className="text-white font-bold text-sm">{rating.toFixed(1)}</span>
-                <span className="text-[#A8B3C2] text-xs">({reviewsCount} تقييم)</span>
+                <span className="text-[#A99B8E] text-xs">({reviewsCount} تقييم)</span>
               </div>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
               {isVerified && (
-                <span className="flex items-center gap-1 text-[#00D26A] text-xs font-medium bg-[#00D26A]/10 border border-[#00D26A]/20 rounded-lg px-2.5 py-1">
+                <span className="flex items-center gap-1 text-[var(--color-primary-text)] text-xs font-medium bg-[var(--color-primary-text)]/10 border border-[var(--color-primary-text)]/20 rounded-lg px-2.5 py-1">
                   <BadgeCheck size={14} />
                   Verified
                 </span>
               )}
               {responseTime && (
-                <span className="flex items-center gap-1 text-[#A8B3C2] text-xs bg-white/5 border border-white/10 rounded-lg px-2.5 py-1">
+                <span className="flex items-center gap-1 text-[#A99B8E] text-xs bg-white/5 border border-white/10 rounded-lg px-2.5 py-1">
                   <Clock size={14} />
                   الرد خلال {responseTime}
                 </span>
               )}
-              <span className="flex items-center gap-1 text-[#00D26A] text-xs font-medium bg-[#00D26A]/10 border border-[#00D26A]/20 rounded-lg px-2.5 py-1">
+              <span className="flex items-center gap-1 text-[var(--color-primary-text)] text-xs font-medium bg-[var(--color-primary-text)]/10 border border-[var(--color-primary-text)]/20 rounded-lg px-2.5 py-1">
                 <BadgeCheck size={14} />
                 سريع الرد
               </span>
@@ -153,7 +153,7 @@ export default function ProfileHero({
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 bg-[#00D26A] hover:bg-[#00E676] text-black font-bold text-sm rounded-xl py-2.5 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-[var(--color-primary-text)] hover:bg-[var(--color-primary-text)] text-black font-bold text-sm rounded-xl py-2.5 transition-colors flex items-center justify-center gap-2"
             >
               <MessageCircle size={16} />
               Message
@@ -168,33 +168,33 @@ export default function ProfileHero({
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white/5 hover:bg-white/10 text-[#A8B3C2] border border-white/10 rounded-xl p-2.5 transition-colors"
+              className="bg-white/5 hover:bg-white/10 text-[#A99B8E] border border-white/10 rounded-xl p-2.5 transition-colors"
             >
               <Heart size={18} />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white/5 hover:bg-white/10 text-[#A8B3C2] border border-white/10 rounded-xl p-2.5 transition-colors"
+              className="bg-white/5 hover:bg-white/10 text-[#A99B8E] border border-white/10 rounded-xl p-2.5 transition-colors"
             >
               <Share2 size={18} />
             </motion.button>
           </div>
 
           {/* Escrow Card */}
-          <div className="bg-[#0A121C] border border-[rgba(0,255,163,.12)] rounded-xl p-4 flex-1">
+          <div className="bg-[#231A16] border border-[rgba(79,167,163,.12)] rounded-xl p-4 flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck size={16} className="text-[#00D26A]" />
+              <ShieldCheck size={16} className="text-[var(--color-primary-text)]" />
               <span className="text-white text-xs font-bold">الدفع عبر الضمان</span>
             </div>
             <div className="flex items-center gap-1.5">
               {["الدفع محجوز", "تم التوصيل", "تم الموافقة", "صرف المبلغ"].map((step, i) => (
                 <div key={step} className="flex items-center gap-1.5 flex-1">
-                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#00D26A]/15 border border-[#00D26A]/30">
-                    <span className="text-[#00D26A] text-[10px] font-bold">{i + 1}</span>
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--color-primary-text)]/15 border border-[var(--color-primary-text)]/30">
+                    <span className="text-[var(--color-primary-text)] text-[10px] font-bold">{i + 1}</span>
                   </div>
-                  <span className="text-[#A8B3C2] text-[10px] leading-tight">{step}</span>
-                  {i < 3 && <div className="flex-1 h-px bg-[rgba(0,255,163,.12)]" />}
+                  <span className="text-[#A99B8E] text-[10px] leading-tight">{step}</span>
+                  {i < 3 && <div className="flex-1 h-px bg-[rgba(79,167,163,.12)]" />}
                 </div>
               ))}
             </div>

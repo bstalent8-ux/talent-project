@@ -18,6 +18,8 @@ interface Props {
   onReadAll:     () => void;
   onDelete:      (id: string) => void;
   onClose:       () => void;
+  /** Set by the bell for MODAL_CLOSE_MS after it closes so the exit plays. */
+  closing?:      boolean;
   /** Where "View all notifications" goes — the admin topbar points this at
    * its own full-history page instead of the public /notifications page,
    * which middleware.ts bounces an admin session away from. */
@@ -58,6 +60,7 @@ export default function NotificationDropdown({
   onReadAll,
   onDelete,
   onClose,
+  closing = false,
   viewAllHref = "/notifications",
   anchorEl,
   align = "auto",
@@ -88,14 +91,14 @@ export default function NotificationDropdown({
     left = window.innerWidth - PANEL_WIDTH - VIEWPORT_MARGIN;
   }
 
-  const surface = dark ? "#1E293B" : "#FFFFFF";
-  const border  = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
-  const text    = dark ? "#F1F5F9" : "#0F172A";
-  const muted   = dark ? "#A8B3C2" : "#64748B";
-  const green   = "#00D26A";
+  const surface = "var(--bg-card)";
+  const border  = "var(--border-subtle)";
+  const text    = "var(--text-primary)";
+  const muted   = "var(--text-muted)";
+  const green   = "var(--color-primary-text)";
   const shadow  = dark
-    ? "0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)"
-    : "0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)";
+    ? "0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(245,238,219,0.06)"
+    : "0 20px 60px rgba(43,33,29,0.18), 0 0 0 1px rgba(43,33,29,0.06)";
 
   // The dropdown is a peek at the top of the feed — the full history lives on
   // /notifications, so it never renders more than 10 rows.
@@ -112,6 +115,8 @@ export default function NotificationDropdown({
           can never clip or bury it. */}
       <div
         dir={isRTL ? "rtl" : "ltr"}
+        className="popover-panel"
+        data-state={closing ? "closing" : "open"}
         style={{
           position:      "fixed",
           top,
@@ -148,8 +153,8 @@ export default function NotificationDropdown({
             </span>
             {unreadCount > 0 && (
               <span style={{
-                background:   green,
-                color:        "#0D1623",
+                background:   "var(--color-primary)",
+                color:        "var(--color-primary-ink)",
                 fontSize:     "11px",
                 fontWeight:   700,
                 padding:      "2px 7px",
@@ -223,7 +228,7 @@ export default function NotificationDropdown({
               display:        "block",
               width:          "100%",
               padding:        "8px",
-              background:     dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+              background:     dark ? "rgba(245,238,219,0.06)" : "rgba(43,33,29,0.05)",
               border:         `1px solid ${border}`,
               borderRadius:   "10px",
               fontSize:       "13px",

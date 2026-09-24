@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -22,6 +23,7 @@ import {
 import { setNotificationAuthUser } from "@/hooks/notifications";
 import { setAuthUser as setMyProfileAuthUser } from "@/hooks/useMyProfile";
 import { useSite } from "./SiteContext";
+import { MODAL_CLOSE_MS } from "@/hooks/useModalClose";
 
 interface GuestGuardValue {
   loading: boolean;
@@ -38,6 +40,8 @@ interface GuestGuardValue {
   requestAuth: (action: PermissionAction, message?: string, nextPathOverride?: string) => void;
   closeAuthModal: () => void;
 }
+
+const CLOSE_MS = MODAL_CLOSE_MS;
 
 const GuestGuardContext = createContext<GuestGuardValue | null>(null);
 
@@ -87,6 +91,20 @@ export function GuestGuard({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<PermissionUser | null>(null);
   const [modal, setModal] = useState<{ action: PermissionAction; message?: string; nextPathOverride?: string } | null>(null);
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Plays the exit animation, then unmounts. Every close path goes through here.
+  const dismiss = useCallback(() => {
+    if (closeTimer.current) return;
+    setClosing(true);
+    closeTimer.current = setTimeout(() => {
+      closeTimer.current = null;
+      setModal(null);
+      setClosing(false);
+    }, CLOSE_MS);
+  }, []);
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
 
   const loadUser = useCallback(async () => {
     setLoading(true);
@@ -146,20 +164,23 @@ export function GuestGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!modal) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setModal(null);
+      if (event.key === "Escape") dismiss();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [modal]);
+  }, [modal, dismiss]);
 
   const value = useMemo<GuestGuardValue>(() => ({
     loading,
     user,
     isGuest: !user?.id,
     can: (action) => canPerformAction(action, user).allowed,
-    requestAuth: (action, message, nextPathOverride) => setModal({ action, message, nextPathOverride }),
-    closeAuthModal: () => setModal(null),
-  }), [loading, user]);
+    requestAuth: (action, message, nextPathOverride) => {
+      if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; setClosing(false); }
+      setModal({ action, message, nextPathOverride });
+    },
+    closeAuthModal: dismiss,
+  }), [loading, user, dismiss]);
 
   const isGuestNow = !user?.id;
   // Already-authenticated-but-blocked (role/approval/inactive) gets its own
@@ -170,11 +191,12 @@ export function GuestGuard({ children }: { children: ReactNode }) {
     ? modal.message
       ?? (blockedReason && blockedReason !== "guest" ? BLOCKED_TX[lang][blockedReason] : getAuthModalMessage(modal.action, lang))
     : "";
-  const surface = dark ? "#0D1623" : "#FFFFFF";
-  const border = dark ? "rgba(0,255,163,0.18)" : "#E2E8F0";
-  const text = dark ? "#F8FAFC" : "#0F172A";
-  const muted = dark ? "#A8B3C2" : "#64748B";
-  const green = "#00D26A";
+  // Brand tokens (globals.css) — theme-aware, so no dark/light branching here.
+  const surface = "var(--bg-card)";
+  const border = "var(--border-subtle)";
+  const text = "var(--text-primary)";
+  const muted = "var(--text-muted)";
+  const primary = "var(--color-primary)";
 
   /**
    * Guests navigating to login/register lose all page context otherwise —
@@ -188,7 +210,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
   function go(path: string) {
     const pendingAction = modal?.action;
     const override = modal?.nextPathOverride;
-    setModal(null);
+    dismiss();
     if (typeof window === "undefined") { router.push(path); return; }
 
     // An override IS the fulfilled action (e.g. "view this profile") — no
@@ -207,12 +229,14 @@ export function GuestGuard({ children }: { children: ReactNode }) {
       {modal && (
         <div
           role="presentation"
-          onClick={() => setModal(null)}
+          className="modal-backdrop"
+          data-state={closing ? "closing" : "open"}
+          onClick={dismiss}
           style={{
             position: "fixed",
             inset: 0,
             zIndex: 10000,
-            backgroundColor: "rgba(2,6,23,0.68)",
+            backgroundColor: "rgba(27,19,16,0.62)",
             backdropFilter: "blur(8px)",
             display: "flex",
             alignItems: "center",
@@ -226,13 +250,14 @@ export function GuestGuard({ children }: { children: ReactNode }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="guest-auth-title"
+            className="modal-card"
             onClick={(e) => e.stopPropagation()}
             style={{
               width: "min(100%, 420px)",
               backgroundColor: surface,
               border: `1px solid ${border}`,
               borderRadius: 14,
-              boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+              boxShadow: "0 24px 80px rgba(27,19,16,0.4)",
               padding: 22,
             }}
           >
@@ -248,13 +273,13 @@ export function GuestGuard({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 aria-label={t.close}
-                onClick={() => setModal(null)}
+                onClick={dismiss}
                 style={{
                   width: 36,
                   height: 36,
                   borderRadius: 10,
                   border: `1px solid ${border}`,
-                  backgroundColor: dark ? "#0A121C" : "#F8FAFC",
+                  backgroundColor: "var(--bg-surface)",
                   color: muted,
                   display: "flex",
                   alignItems: "center",
@@ -270,13 +295,14 @@ export function GuestGuard({ children }: { children: ReactNode }) {
               {!isGuestNow && (
                 <button
                   type="button"
-                  onClick={() => setModal(null)}
+                  className="modal-item"
+                  onClick={dismiss}
                   style={{
                     height: 44,
                     borderRadius: 10,
                     border: "none",
-                    backgroundColor: green,
-                    color: "#050B12",
+                    backgroundColor: primary,
+                    color: "var(--color-primary-ink)",
                     fontWeight: 900,
                     fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                     cursor: "pointer",
@@ -289,13 +315,15 @@ export function GuestGuard({ children }: { children: ReactNode }) {
               <>
               <button
                 type="button"
+                className="modal-item"
                 onClick={() => go("/register?role=talent")}
                 style={{
+                  ["--i" as string]: 0,
                   height: 44,
                   borderRadius: 10,
                   border: "none",
-                  backgroundColor: green,
-                  color: "#050B12",
+                  backgroundColor: primary,
+                  color: "var(--color-primary-ink)",
                   fontWeight: 900,
                   fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                   cursor: "pointer",
@@ -310,13 +338,15 @@ export function GuestGuard({ children }: { children: ReactNode }) {
               </button>
               <button
                 type="button"
+                className="modal-item"
                 onClick={() => go("/register?role=brand")}
                 style={{
+                  ["--i" as string]: 1,
                   height: 44,
                   borderRadius: 10,
-                  border: `1px solid ${green}`,
-                  backgroundColor: dark ? "rgba(0,210,106,0.08)" : "#ECFDF5",
-                  color: green,
+                  border: "1px solid var(--color-accent)",
+                  backgroundColor: "color-mix(in srgb, var(--color-accent) 16%, transparent)",
+                  color: "var(--color-accent-strong)",
                   fontWeight: 900,
                   fontFamily: "'IBM Plex Sans Arabic',sans-serif",
                   cursor: "pointer",
@@ -331,8 +361,10 @@ export function GuestGuard({ children }: { children: ReactNode }) {
               </button>
               <button
                 type="button"
+                className="modal-item"
                 onClick={() => go("/login")}
                 style={{
+                  ["--i" as string]: 2,
                   height: 42,
                   borderRadius: 10,
                   border: `1px solid ${border}`,

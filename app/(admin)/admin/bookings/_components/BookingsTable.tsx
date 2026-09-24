@@ -1,4 +1,5 @@
 "use client";
+import { useHeldValue } from "@/hooks/useModalClose";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSite } from "@/contexts/SiteContext";
@@ -48,6 +49,7 @@ export default function BookingsTable({ bookings, total, page, pageSize, status,
 
   const [loading, setLoading] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<AdminBooking | null>(null);
+  const { value: reviewingHeld, closing: reviewingClosing } = useHeldValue(reviewing);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
 
   async function confirmPayment(booking: AdminBooking) {
@@ -202,16 +204,16 @@ export default function BookingsTable({ bookings, total, page, pageSize, status,
 
       <AdminPagination page={page} totalPages={totalPages} buildHref={(p) => hrefFor(p, status, sort, dir)} />
 
-      {reviewing && (
-        <div
+      {reviewingHeld && (
+        <div className="modal-backdrop" data-state={reviewingClosing ? "closing" : "open"}
           onClick={() => setReviewing(null)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(27,19,16,0.62)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, maxWidth: 480, width: "100%" }}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, maxWidth: 480, width: "100%" }}>
             <h3 style={{ color: TEXT, fontSize: 15, fontWeight: 800, margin: "0 0 14px" }}>{t.reviewPayment}</h3>
-            {reviewing.payment?.proof_url ? (
-              <a href={reviewing.payment.proof_url} target="_blank" rel="noreferrer" style={{ display: "block", marginBottom: 16 }}>
-                <img src={reviewing.payment.proof_url} alt="" style={{ maxWidth: "100%", maxHeight: 400, borderRadius: 10, border: `1px solid ${BORDER}` }} />
+            {reviewingHeld.payment?.proof_url ? (
+              <a href={reviewingHeld.payment.proof_url} target="_blank" rel="noreferrer" style={{ display: "block", marginBottom: 16 }}>
+                <img src={reviewingHeld.payment.proof_url} alt="" style={{ maxWidth: "100%", maxHeight: 400, borderRadius: 10, border: `1px solid ${BORDER}` }} />
               </a>
             ) : (
               <p style={{ color: MUTED, fontSize: 13, margin: "0 0 16px" }}>—</p>
@@ -224,7 +226,7 @@ export default function BookingsTable({ bookings, total, page, pageSize, status,
                 {t.close}
               </button>
               <button
-                onClick={() => confirmPayment(reviewing)}
+                onClick={() => confirmPayment(reviewingHeld)}
                 disabled={confirmingPayment}
                 style={{ background: confirmingPayment ? "rgba(8,127,131,0.5)" : "#087F83", border: "none", borderRadius: 8, padding: "9px 18px", cursor: confirmingPayment ? "default" : "pointer", color: "#1B1310", fontSize: 13, fontWeight: 800 }}
               >

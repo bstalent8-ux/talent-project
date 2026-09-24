@@ -24,12 +24,12 @@ export default function CampaignBanner({ campaignStats, featuredCampaign }: Prop
     watch: ar ? "مشاهدة" : "Watch",
     caseStudy: ar ? "دراسة الحالة" : "Case Study",
   };
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const GREEN = "#00D26A";
-  const GOLD = "#F4B740";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const GREEN = "var(--color-primary-text)";
+  const GOLD = "var(--color-accent-strong)";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
   if (!campaignStats && !featuredCampaign) return null;
   const stats = campaignStats;
   const campaign = featuredCampaign;
@@ -109,15 +109,15 @@ export default function CampaignBanner({ campaignStats, featuredCampaign }: Prop
             justifyContent: "space-between",
           }}
         >
-          <span style={{ color: dark ? "#fff" : "#0F172A", fontSize: 14, fontWeight: 700 }}>{t.featuredCampaign}</span>
+          <span style={{ color: dark ? "#fff" : "#2B211D", fontSize: 14, fontWeight: 700 }}>{t.featuredCampaign}</span>
           <span
             style={{
-              backgroundColor: "rgba(244,183,64,0.15)",
+              backgroundColor: "rgba(231,165,138,0.15)",
               color: GOLD,
               fontSize: 11,
               padding: "3px 10px",
               borderRadius: 20,
-              border: "1px solid rgba(244,183,64,0.25)",
+              border: "1px solid rgba(231,165,138,0.25)",
             }}
           >
             {t.featured}
@@ -136,7 +136,7 @@ export default function CampaignBanner({ campaignStats, featuredCampaign }: Prop
               width: 56,
               height: 56,
               borderRadius: 10,
-              background: "linear-gradient(135deg,#1e3a5f,#0a1520)",
+              background: "linear-gradient(135deg,#2B211D,#1B1310)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -155,7 +155,7 @@ export default function CampaignBanner({ campaignStats, featuredCampaign }: Prop
               }}
             >
               <span style={{ color: MUTED }}>
-                {t.ctrBefore} <strong style={{ color: dark ? "#fff" : "#0F172A" }}>{campaign.ctr_before}</strong>
+                {t.ctrBefore} <strong style={{ color: dark ? "#fff" : "#2B211D" }}>{campaign.ctr_before}</strong>
               </span>
               <span style={{ color: MUTED }}>
                 {t.after} <strong style={{ color: GREEN }}>{campaign.ctr_after}</strong>
@@ -182,9 +182,9 @@ export default function CampaignBanner({ campaignStats, featuredCampaign }: Prop
               display: "flex",
               alignItems: "center",
               gap: 4,
-              backgroundColor: "rgba(0,210,106,0.1)",
+              backgroundColor: "rgba(8,127,131,0.1)",
               color: GREEN,
-              border: "1px solid rgba(0,210,106,0.2)",
+              border: "1px solid rgba(8,127,131,0.2)",
               borderRadius: 8,
               padding: "6px 12px",
               fontSize: 12,

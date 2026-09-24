@@ -41,8 +41,8 @@ export default function BrandIndustryCard({
               fontSize: 13,
               fontWeight: 700,
               color: GREEN,
-              backgroundColor: dark ? "rgba(0,210,106,0.12)" : "rgba(0,210,106,0.08)",
-              border: "1px solid rgba(0,210,106,0.25)",
+              backgroundColor: dark ? "rgba(8,127,131,0.12)" : "rgba(8,127,131,0.08)",
+              border: "1px solid rgba(8,127,131,0.25)",
             }}
           >
             {chip}
