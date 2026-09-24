@@ -26,7 +26,7 @@
 }
 
 .tab:focus-visible {
-  outline: 2px solid var(--color-secondary);
+  outline: 2px solid var(--color-accent);
   outline-offset: -2px;
 }
 
@@ -41,6 +41,6 @@
   inset-inline: var(--space-3);
   bottom: -1px;
   height: 2px;
-  background: var(--color-secondary);
+  background: var(--color-accent);
   border-radius: var(--radius-pill);
 }

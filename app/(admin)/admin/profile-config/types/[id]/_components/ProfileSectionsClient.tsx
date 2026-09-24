@@ -457,7 +457,7 @@ export default function ProfileSectionsClient({ profileType, initialSections }: 
                   <CustomSelect
                     value={form.visibility}
                     onChange={(value) => setForm((current) => ({ ...current, visibility: value }))}
-                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-accent)", hover: "var(--bg-card-muted)" }}
                     options={SECTION_VISIBILITY.map((value) => ({ value, label: value }))}
                   />
                 </div>
@@ -468,7 +468,7 @@ export default function ProfileSectionsClient({ profileType, initialSections }: 
                   <CustomSelect
                     value={form.render_component}
                     onChange={(value) => setForm((current) => ({ ...current, render_component: value }))}
-                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-accent)", hover: "var(--bg-card-muted)" }}
                     options={[{ value: "", label: tx.none }, ...SECTION_RENDERER_KEYS.map((value) => ({ value, label: value }))]}
                   />
                 </div>

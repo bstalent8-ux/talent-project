@@ -8,7 +8,8 @@
 // visitor only types email + message, with an optional screenshot. Public,
 // no auth required — see app/api/support/tickets/route.ts.
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Image as ImageIcon, X } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 import Honeypot from "@/components/forms/Honeypot";
@@ -69,6 +70,8 @@ const TX = {
   },
 };
 
+const CLOSE_MS = 200;
+
 interface Props {
   page: "register" | "login" | "footer" | "settings";
   pageError?: string | null;
@@ -80,6 +83,8 @@ export default function SupportTicketModal({ page, pageError }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
@@ -97,6 +102,17 @@ export default function SupportTicketModal({ page, pageError }: Props) {
     setHp(""); setTurnstileToken("");
     clearFile();
   }
+
+  // Play the exit animation, then actually reset. Keep CLOSE_MS in step with
+  // `backdropOut` / `modalOut` in the stylesheet.
+  function close() {
+    if (closing) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { reset(); return; }
+    setClosing(true);
+    closeTimer.current = setTimeout(() => { setClosing(false); reset(); }, CLOSE_MS);
+  }
+
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
 
   function clearFile() {
     setFile(null);
@@ -149,10 +165,13 @@ export default function SupportTicketModal({ page, pageError }: Props) {
         {t.trigger}
       </button>
 
-      {open && (
-        <div className={styles.backdrop} onClick={reset}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <button type="button" className={styles.closeBtn} onClick={reset} aria-label={t.close}>
+      {/* Portaled to <body>: an ancestor with a transform (the auth form's
+          slide-in) would otherwise become the fixed backdrop's containing block
+          and trap the modal inside the form card. */}
+      {open && createPortal(
+        <div className={`${styles.backdrop} ${closing ? styles.backdropClosing : ""}`} onClick={close}>
+          <div className={`${styles.modal} ${closing ? styles.modalClosing : ""}`} onClick={(e) => e.stopPropagation()}>
+            <button type="button" className={styles.closeBtn} onClick={close} aria-label={t.close}>
               <X size={18} />
             </button>
 
@@ -242,7 +261,8 @@ export default function SupportTicketModal({ page, pageError }: Props) {
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

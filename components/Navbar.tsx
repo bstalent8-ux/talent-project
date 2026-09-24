@@ -27,32 +27,30 @@ import ProtectedAction from "@/components/auth/ProtectedAction";
 import { useGuestGuard } from "@/contexts/GuestGuard";
 import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { reset as resetMyProfileStore, useMyProfile } from "@/hooks/useMyProfile";
 import { resetNotificationStore } from "@/hooks/notifications";
 import { cdnImage } from "@/lib/images";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./SiteChrome.module.css";
 
-// `soon` — these 3 pages are live and data-backed but fully blurred/blocked
-// behind a "coming soon" overlay (see components/ComingSoonOverlay.tsx and
-// each page.tsx) — the nav tag just gives a heads-up before the click.
-const NAV_LINKS = {
+// Rebrand nav (2026-09): About · Discover Talents · Community · Packages ·
+// Contact. Home is the logo link; "Projects" (/bookings) and "Brands" left the
+// bar and stay reachable from the account menu / their own routes. `soon`
+// still renders a "Soon" tag when set — none are flagged right now.
+const NAV_LINKS: Record<"ar" | "en", { label: string; href: string; soon?: boolean }[]> = {
   ar: [
-    { label: "الرئيسية", href: "/home" },
-    { label: "استكشاف", href: "/explore" },
-    { label: "المجتمع", href: "/community", soon: true },
-    { label: "وظائف", href: "/jobs", soon: true },
-    { label: "للشركات", href: "/brands", soon: true },
+    { label: "عن المنصة", href: "/about" },
+    { label: "اكتشف المواهب", href: "/explore" },
+    { label: "المجتمع", href: "/community" },
     { label: "الباقات", href: "/packages" },
-    { label: "مشاريعي", href: "/bookings" },
+    { label: "تواصل معنا", href: "/contact" },
   ],
   en: [
-    { label: "Home", href: "/home" },
-    { label: "Explore", href: "/explore" },
-    { label: "Community", href: "/community", soon: true },
-    { label: "Jobs", href: "/jobs", soon: true },
-    { label: "Brands", href: "/brands", soon: true },
+    { label: "About", href: "/about" },
+    { label: "Discover Talents", href: "/explore" },
+    { label: "Community", href: "/community" },
     { label: "Packages", href: "/packages" },
-    { label: "Projects", href: "/bookings" },
+    { label: "Contact", href: "/contact" },
   ],
 };
 
@@ -68,7 +66,7 @@ const TX = {
     dashboardBrand: "لوحة تحكم البراند",
     logout: "تسجيل الخروج",
     login: "دخول",
-    register: "حساب جديد",
+    register: "إنشاء حساب",
     lang: "Ar",
     menu: "فتح القائمة",
     close: "إغلاق القائمة",
@@ -86,7 +84,7 @@ const TX = {
     dashboardBrand: "Brand Dashboard",
     logout: "Log Out",
     login: "Login",
-    register: "Register",
+    register: "Sign Up",
     lang: "En",
     menu: "Open menu",
     close: "Close menu",
@@ -119,8 +117,9 @@ export default function Navbar() {
   const { loading: authLoading, isGuest, user } = useGuestGuard();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [fullName, setFullName] = useState<string | null>(null);
+  const { profile: myProfile, loading: profileLoading } = useMyProfile();
+  const avatarUrl = myProfile?.avatar_url ?? null;
+  const fullName = myProfile?.full_name ?? null;
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -158,37 +157,14 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
 
-  // Fetches only once auth has actually resolved to a real logged-in user —
-  // guests and the loading state skip this entirely, so a guest page load no
-  // longer fires a wasted /api/me round trip.
+  // avatarUrl/fullName now come from the shared useMyProfile() store (one
+  // fetch for the whole tab — see hooks/useMyProfile.ts). This just reveals
+  // the fallback icon once that store has resolved and there's no photo to
+  // wait on; when there IS a photo, the <img>'s own onLoad/onError below
+  // flips avatarLoaded instead, so the spinner holds until pixels are ready.
   useEffect(() => {
-    if (authLoading || isGuest) return;
-
-    let cancelled = false;
-
-    async function loadProfile() {
-      try {
-        const res = await fetch("/api/me");
-        if (!res.ok) {
-          if (!cancelled) setAvatarLoaded(true);
-          return;
-        }
-
-        const { profile } = await res.json();
-        if (cancelled) return;
-        if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
-        if (profile?.full_name) setFullName(profile.full_name);
-        setAvatarLoaded(true);
-      } catch {
-        if (!cancelled) setAvatarLoaded(true);
-      }
-    }
-
-    loadProfile();
-    return () => {
-      cancelled = true;
-    };
-  }, [authLoading, isGuest]);
+    if (!profileLoading && !avatarUrl) setAvatarLoaded(true);
+  }, [profileLoading, avatarUrl]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -197,6 +173,7 @@ export default function Navbar() {
 
   async function handleLogout() {
     resetNotificationStore();
+    resetMyProfileStore();
     await createClient().auth.signOut();
     // Hard navigation, not router.push: drops every bit of client-side
     // state (React tree, router cache) and — combined with the auth
@@ -216,11 +193,11 @@ export default function Navbar() {
         <div className={styles.brandWrap}>
           <Link className={styles.logoLink} href="/home" aria-label="Talents">
             <Image
-              src={dark ? "/assets/logo-dark.png" : "/assets/logo-light.png"}
+              src={dark ? "/assets/talents-logo-dark.png" : "/assets/talents-logo-light.png"}
               alt="Talents"
-              width={110}
-              height={32}
-              style={{ objectFit: "contain", width: "auto", height: 32 }}
+              width={108}
+              height={34}
+              style={{ objectFit: "contain", width: "auto", height: 34 }}
               priority
             />
           </Link>

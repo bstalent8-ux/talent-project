@@ -264,7 +264,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   // Theme-aware tokens — the current Home Page design system, not the neon
   // green/teal this page's older sibling (ProfileCompletionCard modal) used.
   const TEAL   = "var(--color-primary)";
-  const GOLD   = "var(--color-secondary)";
+  const GOLD   = "var(--color-accent)";
   const GREEN  = "var(--color-success)";
   const RED    = "var(--color-error)";
   const TEXT   = "var(--text-primary)";
@@ -987,7 +987,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                   <label htmlFor="cp-portfolio-video" style={{
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
                     padding: "18px 12px", border: `2px dashed ${GOLD}`, borderRadius: "var(--radius-md)",
-                    cursor: portfolioUploading ? "not-allowed" : "pointer", background: "var(--color-secondary-soft)",
+                    cursor: portfolioUploading ? "not-allowed" : "pointer", background: "var(--color-accent-soft)",
                     opacity: portfolioUploading ? 0.6 : 1,
                   }}>
                     <Play size={22} color={GOLD} />

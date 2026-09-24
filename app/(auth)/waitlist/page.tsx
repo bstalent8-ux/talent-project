@@ -31,7 +31,7 @@ const TX = {
 };
 
 export default function WaitlistPage() {
-  const { lang, dark } = useSite();
+  const { lang } = useSite();
   const tx = TX[lang];
 
   // Read-only display of what the user just typed, carried via sessionStorage
@@ -42,34 +42,32 @@ export default function WaitlistPage() {
   }, []);
 
   return (
-    <div className={styles.authPage}>
-      <div className={`${styles.formPane} ${styles.formPaneWide}`} style={{ margin: "0 auto", float: "none" }}>
-        <div className={styles.formInner} style={{ textAlign: "center", alignItems: "center" }}>
-          <div
-            style={{
-              width: 56, height: 56, borderRadius: "50%",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              background: dark ? "rgba(0,210,106,0.12)" : "rgba(0,210,106,0.10)",
-              margin: "0 auto 16px",
-            }}
-          >
-            <Clock3 size={26} color="#00D26A" aria-hidden="true" />
-          </div>
-          <p className={styles.eyebrow}>{tx.eyebrow}</p>
-          <h1 className={styles.heading}>{tx.heading}</h1>
-          <p className={styles.subheading}>{tx.body}</p>
-
-          {otherTypeText && (
-            <p className={styles.subheading} style={{ marginTop: 4 }}>
-              {tx.typeLabel} <strong>{otherTypeText}</strong>
-            </p>
-          )}
-
-          <Link href="/profile/me" className={styles.submitButton} style={{ display: "inline-flex", marginTop: 20, textDecoration: "none" }}>
-            {tx.cta}
-          </Link>
+    <>
+      <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: 56, height: 56, borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "var(--color-primary-soft)",
+            margin: "0 auto 16px",
+          }}
+        >
+          <Clock3 size={26} color="var(--color-primary)" aria-hidden="true" />
         </div>
+        <p className={styles.eyebrow}>{tx.eyebrow}</p>
+        <h1 className={styles.heading}>{tx.heading}</h1>
+        <p className={styles.subheading}>{tx.body}</p>
+
+        {otherTypeText && (
+          <p className={styles.subheading} style={{ marginTop: 4 }}>
+            {tx.typeLabel} <strong>{otherTypeText}</strong>
+          </p>
+        )}
+
+        <Link href="/profile/me" className={styles.submitButton} style={{ marginTop: 20, textDecoration: "none" }}>
+          {tx.cta}
+        </Link>
       </div>
-    </div>
+    </>
   );
 }

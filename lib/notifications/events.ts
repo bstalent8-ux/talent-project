@@ -169,6 +169,134 @@ export async function notifyApplicationRejected(input: {
   });
 }
 
+// ─── Community offers ──────────────────────────────────────────────────────
+// The reverse of a job: a talent posts a limited-time offer, brands apply.
+// Reuses the job notification types (JOB_CREATED etc.) with offer-specific
+// copy/URLs rather than adding new notification_types rows — same "reuse an
+// existing type" convention as BRAND_MOMENT_SUBMITTED elsewhere in this file.
+
+export async function notifyOfferCreated(input: {
+  postId:      string;
+  title:       string;
+  talentId:    string;
+  talentName?: string | null;
+}): Promise<number> {
+  const content: NotificationContent = {
+    type:      "JOB_CREATED",
+    senderId:  input.talentId,
+    actionUrl: `/community/offers/${input.postId}`,
+    ...withI18n(
+      {
+        title: {
+          ar: "عرض جديد من موهبة",
+          en: "A new talent offer",
+        },
+        message: {
+          ar: `نشر ${input.talentName || "أحد المواهب"} عرض: ${snip(input.title, 70)}`,
+          en: `${input.talentName || "A talent"} posted an offer: ${snip(input.title, 70)}`,
+        },
+      },
+      { community_post_id: input.postId, talent_id: input.talentId }
+    ),
+  };
+  return notifyRole(["brand"], content);
+}
+
+export async function notifyOfferApplicationReceived(input: {
+  postId:        string;
+  title?:        string | null;
+  applicationId: string;
+  talentId:      string;
+  brandId:       string;
+  brandName?:    string | null;
+}): Promise<void> {
+  await createNotification({
+    recipientId: input.talentId,
+    type:        "JOB_APPLICATION_RECEIVED",
+    senderId:    input.brandId,
+    actionUrl:   `/community/offers/${input.postId}/applications`,
+    ...withI18n(
+      {
+        title: {
+          ar: "طلب تقديم جديد على عرضك",
+          en: "New application to your offer",
+        },
+        message: {
+          ar: `تقدّم ${input.brandName || "أحد البراندات"} على ${input.title ? `عرض «${snip(input.title, 50)}»` : "عرضك"}`,
+          en: `${input.brandName || "A brand"} applied to ${input.title ? `"${snip(input.title, 50)}"` : "your offer"}`,
+        },
+      },
+      { community_post_id: input.postId, application_id: input.applicationId, brand_id: input.brandId }
+    ),
+  });
+}
+
+export async function notifyOfferApplicationAccepted(input: {
+  postId:        string;
+  title?:        string | null;
+  applicationId: string;
+  talentId:      string;
+  brandId:       string;
+  bookingId?:    string | null;
+}): Promise<void> {
+  await createNotification({
+    recipientId: input.brandId,
+    type:        "APPLICATION_ACCEPTED",
+    senderId:    input.talentId,
+    actionUrl:   input.bookingId ? `/bookings/${input.bookingId}` : `/community/offers/${input.postId}`,
+    ...withI18n(
+      {
+        title: {
+          ar: "تم قبول طلبك 🎉",
+          en: "Your application was accepted 🎉",
+        },
+        message: {
+          ar: `تم قبولك في ${input.title ? `عرض «${snip(input.title, 50)}»` : "العرض"}`,
+          en: `You were accepted for ${input.title ? `"${snip(input.title, 50)}"` : "the offer"}`,
+        },
+      },
+      {
+        community_post_id: input.postId,
+        application_id:    input.applicationId,
+        ...(input.bookingId ? { booking_id: input.bookingId } : {}),
+      }
+    ),
+  });
+}
+
+export async function notifyOfferApplicationRejected(input: {
+  postId:        string;
+  title?:        string | null;
+  applicationId: string;
+  talentId:      string;
+  brandId:       string;
+  reason?:       string | null;
+}): Promise<void> {
+  await createNotification({
+    recipientId: input.brandId,
+    type:        "APPLICATION_REJECTED",
+    senderId:    input.talentId,
+    actionUrl:   `/community/offers/${input.postId}`,
+    ...withI18n(
+      {
+        title: {
+          ar: "لم يتم قبول طلبك",
+          en: "Application not accepted",
+        },
+        message: {
+          ar: input.reason
+            ? snip(input.reason, 120)
+            : `لم يتم قبول طلبك على ${input.title ? `عرض «${snip(input.title, 50)}»` : "العرض"} هذه المرة`,
+          en: input.reason
+            ? snip(input.reason, 120)
+            : `Your application for ${input.title ? `"${snip(input.title, 50)}"` : "the offer"} wasn't selected this time`,
+        },
+      },
+      { community_post_id: input.postId, application_id: input.applicationId }
+    ),
+  });
+}
+
 // ─── Bookings ────────────────────────────────────────────────────────────────
 
 export async function notifyBookingRequest(input: {

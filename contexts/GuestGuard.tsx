@@ -20,6 +20,7 @@ import {
   type PermissionUser,
 } from "@/lib/permissions";
 import { setNotificationAuthUser } from "@/hooks/notifications";
+import { setAuthUser as setMyProfileAuthUser } from "@/hooks/useMyProfile";
 import { useSite } from "./SiteContext";
 
 interface GuestGuardValue {
@@ -95,6 +96,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
       if (!session) {
         setUser(null);
         setNotificationAuthUser(null);
+        setMyProfileAuthUser(null);
         return;
       }
 
@@ -102,6 +104,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
       if (!authUser) {
         setUser(null);
         setNotificationAuthUser(null);
+        setMyProfileAuthUser(null);
         return;
       }
 
@@ -109,6 +112,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
       if (!res.ok) {
         setUser({ id: authUser.id });
         setNotificationAuthUser(authUser.id);
+        setMyProfileAuthUser(authUser.id);
         return;
       }
 
@@ -122,6 +126,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
         is_suspended:   profile.is_suspended ?? null,
       });
       setNotificationAuthUser(authUser.id);
+      setMyProfileAuthUser(authUser.id);
     } finally {
       setLoading(false);
     }

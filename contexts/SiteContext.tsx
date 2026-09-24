@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 
 export type Lang = "ar" | "en";
 export type Mode = "dark" | "light";
@@ -64,11 +65,38 @@ export function SiteProvider({ children, initialLang = "en", initialMode = "ligh
     document.documentElement.setAttribute("dir", l === "ar" ? "rtl" : "ltr");
   }
 
-  function setMode(m: Mode) {
+  function applyMode(m: Mode) {
     setModeState(m);
     localStorage.setItem("site_theme", m);
     setCookie("site_theme", m);
     document.documentElement.setAttribute("data-theme", m);
+  }
+
+  // The new theme rises over the old one from the bottom of the screen (see the
+  // ::view-transition rules in globals.css). Many components colour themselves
+  // from `dark` in inline styles, so React must commit inside the transition
+  // callback — hence flushSync. Browsers without the View Transitions API, and
+  // visitors who ask for reduced motion, just switch instantly.
+  function setMode(m: Mode) {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<unknown>; updateCallbackDone: Promise<unknown>; finished: Promise<unknown> } };
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const root = document.documentElement;
+    // A second click mid-animation just switches — starting another transition
+    // would abort the running one.
+    if (!doc.startViewTransition || reduce || m === mode || root.classList.contains("theme-switching")) {
+      applyMode(m);
+      return;
+    }
+    // Colour transitions on individual elements would make the incoming snapshot
+    // start from the old colours, so they're switched off while it runs.
+    root.classList.add("theme-switching");
+    const t = doc.startViewTransition(() => flushSync(() => applyMode(m)));
+    const done = () => root.classList.remove("theme-switching");
+    // An aborted transition (tab hidden, page navigating) rejects all three
+    // promises; the theme itself is already applied, so just swallow it.
+    t.ready.catch(() => {});
+    t.updateCallbackDone.catch(() => {});
+    t.finished.then(done, done);
   }
 
   return (

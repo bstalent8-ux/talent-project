@@ -41,7 +41,7 @@
 }
 
 .control:focus-visible {
-  border-color: var(--color-secondary);
+  border-color: var(--color-accent);
   box-shadow: var(--shadow-focus);
 }
 

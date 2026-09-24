@@ -1,7 +1,9 @@
 export const runtime = 'edge';
 
 import CommunityClient from "./_components/CommunityClient";
-import ComingSoonOverlay from "@/components/ComingSoonOverlay";
+// ComingSoonOverlay temporarily removed for local review of the Jobs->
+// Community restructure — re-add before this ships/launches.
+// import ComingSoonOverlay from "@/components/ComingSoonOverlay";
 
 export const metadata = {
   title: "المجتمع - أسئلة وأجوبة",
@@ -10,12 +12,10 @@ export const metadata = {
 
 export default function CommunityPage() {
   return (
-    <ComingSoonOverlay>
-      <div id="talents-app-root" className="min-h-screen flex flex-col">
-        <main className="grow">
-          <CommunityClient />
-        </main>
-      </div>
-    </ComingSoonOverlay>
+    <div id="talents-app-root" className="min-h-screen flex flex-col">
+      <main className="grow">
+        <CommunityClient />
+      </main>
+    </div>
   );
 }

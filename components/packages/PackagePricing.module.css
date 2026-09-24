@@ -31,14 +31,14 @@
 .typeTab:hover,
 .durationTab:hover {
   color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--color-secondary) 42%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--color-accent) 42%, var(--border-subtle));
   transform: translateY(-1px);
 }
 
 .tabActive {
-  background: var(--color-secondary-soft);
-  color: var(--color-secondary);
-  border-color: color-mix(in srgb, var(--color-secondary) 68%, var(--border-subtle));
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 68%, var(--border-subtle));
 }
 
 .packageGrid {
@@ -134,7 +134,7 @@
   padding: 0.28rem 0.55rem;
   border-radius: var(--radius-pill);
   background: var(--color-primary-soft);
-  color: var(--color-accent);
+  color: var(--color-secondary-alt);
   font-size: var(--text-xs);
   font-weight: 900;
 }

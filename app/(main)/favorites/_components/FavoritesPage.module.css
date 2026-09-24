@@ -239,7 +239,7 @@
   backdrop-filter: blur(8px);
 }
 
-.ratingChip svg { color: var(--color-secondary); }
+.ratingChip svg { color: var(--color-accent); }
 
 .ratingCount { color: rgba(255, 255, 255, 0.65); font-weight: 700; }
 
@@ -284,9 +284,9 @@
 .specialtyTag {
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-pill);
-  background: var(--color-secondary-soft);
-  color: var(--color-secondary-strong);
-  border: 1px solid color-mix(in srgb, var(--color-secondary) 22%, transparent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
   font-size: 0.68rem;
   font-weight: 800;
 }

@@ -5,12 +5,22 @@
   color: var(--text-muted);
   font-size: 12.5px;
   text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
   font-family: inherit;
+  transition:
+    color var(--duration-base, 200ms) ease,
+    text-underline-offset var(--duration-base, 200ms) ease,
+    transform 160ms var(--ease-out-quint, ease-out);
 }
 
 .trigger:hover {
   color: var(--color-primary);
+  text-underline-offset: 5px;
+}
+
+.trigger:active {
+  transform: scale(0.94);
 }
 
 .backdrop {
@@ -22,6 +32,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
+  animation: backdropIn 260ms ease-out both;
 }
 
 .modal {
@@ -34,6 +45,8 @@
   width: min(420px, 100%);
   max-height: 85vh;
   overflow-y: auto;
+  box-shadow: var(--shadow-lg, 0 24px 60px rgba(0, 0, 0, 0.28));
+  animation: modalIn 380ms var(--ease-out-quint, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }
 
 .closeBtn {
@@ -158,4 +171,89 @@
 .successState {
   text-align: center;
   padding: 12px 0;
+  animation: successPop 460ms var(--ease-out-quint, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+/* ─── Motion ──────────────────────────────────────────────────────────────── */
+
+/* The modal's contents rise in one after another once the card has landed. */
+.modal > *:not(.closeBtn) {
+  animation: itemIn 420ms var(--ease-out-quint, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+.modal > *:nth-child(2) { animation-delay: 90ms; }
+.modal > *:nth-child(3) { animation-delay: 130ms; }
+.modal > *:nth-child(4) { animation-delay: 170ms; }
+.modal > *:nth-child(5) { animation-delay: 210ms; }
+.modal > *:nth-child(6) { animation-delay: 250ms; }
+.modal > *:nth-child(n + 7) { animation-delay: 290ms; }
+
+.modal > .errorText {
+  animation: errorIn 320ms var(--ease-out-quint, ease-out) both;
+}
+
+.backdropClosing {
+  animation: backdropOut 200ms ease-in both;
+  pointer-events: none;
+}
+
+.modalClosing {
+  animation: modalOut 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.modalClosing > * {
+  animation: none;
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; backdrop-filter: blur(0); }
+  to   { opacity: 1; backdrop-filter: blur(4px); }
+}
+
+@keyframes backdropOut {
+  from { opacity: 1; backdrop-filter: blur(4px); }
+  to   { opacity: 0; backdrop-filter: blur(0); }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(28px) scale(0.95); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes modalOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(16px) scale(0.97); }
+}
+
+@keyframes itemIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes errorIn {
+  0%   { opacity: 0; transform: translateX(-6px); }
+  40%  { opacity: 1; transform: translateX(5px); }
+  70%  { transform: translateX(-3px); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes successPop {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .modal,
+  .modal > *,
+  .successState,
+  .modal > .errorText,
+  .backdropClosing,
+  .modalClosing {
+    animation: none;
+  }
+
+  .trigger {
+    transition: none;
+  }
 }

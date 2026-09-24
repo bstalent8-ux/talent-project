@@ -592,16 +592,16 @@ function Talent500Section({ lang, authState }: { lang: LandingLang; authState: A
             borderRadius: 24,
             padding: "40px 32px",
             textAlign: "center",
-            background: "linear-gradient(135deg, color-mix(in srgb, var(--text-muted) 30%, transparent) 0%, color-mix(in srgb, var(--color-secondary) 26%, transparent) 100%)",
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--text-muted) 30%, transparent) 0%, color-mix(in srgb, var(--color-accent) 26%, transparent) 100%)",
             color: "var(--text-primary)",
           }}
         >
           <span
             style={{
               display: "inline-flex", alignItems: "center", gap: 8,
-              backgroundColor: "color-mix(in srgb, var(--color-secondary) 20%, transparent)",
-              border: "1px solid color-mix(in srgb, var(--color-secondary) 45%, transparent)",
-              color: "var(--color-secondary)",
+              backgroundColor: "color-mix(in srgb, var(--color-accent) 20%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--color-accent) 45%, transparent)",
+              color: "var(--color-accent)",
               borderRadius: 999, padding: "6px 16px", fontSize: 13, fontWeight: 700, marginBottom: 18,
             }}
           >
@@ -634,11 +634,11 @@ function Talent500Section({ lang, authState }: { lang: LandingLang; authState: A
                   key={perk.title.en}
                   style={{
                     backgroundColor: "color-mix(in srgb, var(--bg-card) 55%, transparent)",
-                    border: "1px solid color-mix(in srgb, var(--color-secondary) 22%, var(--border-subtle))",
+                    border: "1px solid color-mix(in srgb, var(--color-accent) 22%, var(--border-subtle))",
                     borderRadius: 14, padding: 16,
                   }}
                 >
-                  <Icon size={20} color="var(--color-secondary)" style={{ marginBottom: 10 }} />
+                  <Icon size={20} color="var(--color-accent)" style={{ marginBottom: 10 }} />
                   <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: "var(--text-primary)" }}>{localize(perk.title, lang)}</div>
                   <div style={{ fontSize: 12.5, color: "var(--text-muted)" }}>{localize(perk.description, lang)}</div>
                 </div>
@@ -1132,7 +1132,7 @@ function TestimonialsSection({ lang, items }: { lang: LandingLang; items: Public
           <div className={styles.testimonialGrid}>
             {items.map((testimonial) => (
               <article className={styles.testimonialCard} key={testimonial.id}>
-                <QuoteIcon size={24} color="var(--color-secondary)" />
+                <QuoteIcon size={24} color="var(--color-accent)" />
                 <p>{testimonial.quote}</p>
                 <div className={styles.testimonialAuthor}>
                   <div className={styles.talentMediaInitial} style={{ width: 40, height: 40, borderRadius: "50%", fontSize: "1rem" }} aria-hidden="true">

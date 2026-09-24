@@ -47,7 +47,7 @@ export default function TrustVerificationCard({ verified, identityVerified, comp
         : `${completedProjects} completed project${completedProjects === 1 ? "" : "s"} via Talents`,
     },
     reviewCount > 0 && {
-      icon: <Star size={15} color="var(--color-secondary)" fill="var(--color-secondary)" />,
+      icon: <Star size={15} color="var(--color-accent)" fill="var(--color-accent)" />,
       label: ar
         ? `تقييمات من ${reviewCount} عمل مكتمل`
         : `Reviews from ${reviewCount} completed work${reviewCount === 1 ? "" : "s"}`,

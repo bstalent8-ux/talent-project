@@ -35,7 +35,7 @@ export default function ReviewsCard({ reviews, rating = 0, variant = "default" }
 
   if (isModel) {
     const TEAL = "var(--color-primary)";
-    const MGOLD = "var(--color-secondary)";
+    const MGOLD = "var(--color-accent)";
     const MCARD = "var(--bg-card)";
     const MBORDER = "var(--border-subtle)";
     const MTEXT = "var(--text-primary)";

@@ -22,7 +22,6 @@ const TX = {
       become: "كن موهوباً",
       brands: "للشركات",
       community: "المجتمع",
-      jobs: "وظائف",
       about: "من نحن",
       contact: "تواصل معنا",
       blog: "المدونة",
@@ -47,7 +46,6 @@ const TX = {
       become: "Become a Talent",
       brands: "For Brands",
       community: "Community",
-      jobs: "Jobs",
       about: "About Us",
       contact: "Contact",
       blog: "Blog",
@@ -70,7 +68,6 @@ const PLATFORM_LINKS = (t: LinksMap, signedIn: boolean) => [
   ...(signedIn ? [] : [{ label: t.become, href: "/become-talent" }]),
   { label: t.brands, href: "/brands" },
   { label: t.community, href: "/community" },
-  { label: t.jobs, href: "/jobs" },
 ];
 
 const COMPANY_LINKS = (t: LinksMap) => [
@@ -121,11 +118,11 @@ export default function Footer() {
           <div className={styles.footerBrand}>
             <Link className={styles.logoLink} href="/home" aria-label="Talents">
               <Image
-                src={dark ? "/assets/logo-dark.png" : "/assets/logo-light.png"}
+                src={dark ? "/assets/talents-logo-dark.png" : "/assets/talents-logo-light.png"}
                 alt="Talents"
-                width={118}
-                height={34}
-                style={{ objectFit: "contain", width: "auto", height: 34 }}
+                width={120}
+                height={38}
+                style={{ objectFit: "contain", width: "auto", height: 38 }}
               />
             </Link>
 

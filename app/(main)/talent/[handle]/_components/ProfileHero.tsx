@@ -71,14 +71,14 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
   const isModel = talent.category === "model";
 
   // ─── Model hero — large 3:4 portrait + identity, current design-system
-  // tokens (var(--color-primary) teal / var(--color-secondary) gold), not
+  // tokens (var(--color-primary) teal / var(--color-accent) gold), not
   // this file's legacy hardcoded GREEN/GOLD which the UGC branch below keeps
   // using untouched. Reuses every value computed above; renders none of its
   // own new data. Booking modal is shared with the UGC branch (same
   // `showBooking` state, same DirectBriefModal render below).
   if (isModel) {
     const TEAL   = "var(--color-primary)";
-    const MGOLD  = "var(--color-secondary)";
+    const MGOLD  = "var(--color-accent)";
     const MCARD  = "var(--bg-card)";
     const MBORDER= "var(--border-subtle)";
     const MTEXT  = "var(--text-primary)";
@@ -209,7 +209,7 @@ export default function ProfileHero({ talent }: { talent: TalentData }) {
                           }}
                         >
                           <span style={{ color: MMUTED, fontSize: 12 }}>{ar ? meta.ar : meta.en}</span>
-                          <span style={{ color: "var(--color-secondary)", fontSize: 13, fontWeight: 800 }} dir="ltr">
+                          <span style={{ color: "var(--color-accent)", fontSize: 13, fontWeight: 800 }} dir="ltr">
                             {talent.measurements![key]}{meta.unit ? ` ${meta.unit}` : ""}
                           </span>
                         </div>

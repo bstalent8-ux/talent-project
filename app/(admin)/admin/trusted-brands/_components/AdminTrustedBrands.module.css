@@ -65,7 +65,7 @@
 .brandRow:hover,
 .brandRowActive {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--color-secondary) 48%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--color-accent) 48%, var(--border-subtle));
 }
 
 .brandRow:active {
@@ -126,7 +126,7 @@
 
 .pillActive {
   background: var(--color-primary-soft);
-  color: var(--color-accent);
+  color: var(--color-secondary-alt);
   border-color: color-mix(in srgb, var(--color-primary) 36%, var(--border-subtle));
 }
 
@@ -200,7 +200,7 @@
 }
 
 .field input:focus {
-  border-color: var(--color-secondary);
+  border-color: var(--color-accent);
   box-shadow: var(--shadow-focus);
 }
 

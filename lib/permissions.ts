@@ -12,6 +12,9 @@ export type PermissionAction =
   | "submit_review"
   | "create_community_question"
   | "create_community_answer"
+  | "create_offer"
+  | "apply_offer"
+  | "create_story"
   | "subscribe"
   | "access_dashboard"
   | "access_profile_management"
@@ -116,6 +119,23 @@ export function canCreateBooking(user: PermissionUser | null | undefined): Permi
   return allowBrand(user, true);
 }
 
+// Community "offer" — the reverse of a job: a talent posts a limited-time
+// package, a brand applies to it. Same approval bar as the job pair
+// (canApplyJob/canCreateJob) with the roles swapped.
+export function canCreateOffer(user: PermissionUser | null | undefined): PermissionResult {
+  return allowTalent(user, true);
+}
+
+export function canApplyOffer(user: PermissionUser | null | undefined): PermissionResult {
+  return allowBrand(user, true);
+}
+
+// Stories — either role can post one (no approval gate, same posture as
+// community Q&A) since it's ephemeral, low-stakes content.
+export function canCreateStory(user: PermissionUser | null | undefined): PermissionResult {
+  return allowIfAuthenticated(user);
+}
+
 export function canSendMessage(user: PermissionUser | null | undefined): PermissionResult {
   return allowIfAuthenticated(user);
 }
@@ -154,6 +174,12 @@ export function canPerformAction(
     case "start_conversation":
     case "create_community_question":
     case "create_community_answer":
+    case "create_story":
+      return allowIfAuthenticated(user);
+    case "create_offer":
+      return canCreateOffer(user);
+    case "apply_offer":
+      return canApplyOffer(user);
     case "subscribe":
     case "access_dashboard":
     case "access_notifications":
@@ -211,6 +237,18 @@ export const AUTH_MODAL_COPY: Record<PermissionAction, { ar: string; en: string 
   create_community_answer: {
     ar: "سجل الدخول لإضافة تعليق.",
     en: "Sign in to add a comment.",
+  },
+  create_offer: {
+    ar: "تحتاج إلى حساب موهبة لنشر عرض.",
+    en: "You need a Talent account to post an offer.",
+  },
+  apply_offer: {
+    ar: "تحتاج إلى حساب براند للتقديم على عرض.",
+    en: "You need a Brand account to apply to an offer.",
+  },
+  create_story: {
+    ar: "سجل الدخول لنشر story.",
+    en: "Sign in to post a story.",
   },
   subscribe: {
     ar: "أنشئ حساباً لتفعيل الاشتراك.",

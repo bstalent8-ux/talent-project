@@ -308,7 +308,7 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
                     disabled={saving}
                     value={entry.width}
                     onChange={(v) => setEntryWidth(slot, index, v as LayoutWidth)}
-                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-accent)", hover: "var(--bg-card-muted)" }}
                     options={LAYOUT_WIDTHS.map((width) => ({ value: width, label: tx.widthLabel[width] }))}
                   />
                 ) : null}
@@ -386,7 +386,7 @@ export default function LayoutEditorClient({ profileType, sections, initialLayou
               <CustomSelect
                 value={variant}
                 onChange={(v) => switchVariant(v as LayoutVariant)}
-                colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-accent)", hover: "var(--bg-card-muted)" }}
                 options={LAYOUT_VARIANTS.map((item) => ({ value: item, label: item }))}
               />
             </div>

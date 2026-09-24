@@ -41,13 +41,18 @@ export const metadata: Metadata = {
   // other file under public/ (all served fine). "favicon" appears to be a
   // reserved name regardless of directory. site-icon.png has no special
   // meaning to Next at all, sidestepping that entirely.
-  icons: { icon: "/site-icon.png" },
+  // The browser fetches this on every first visit, so it is a 3 KB 64px copy
+  // rather than the 544px master (still used for the og:image above).
+  icons: {
+    icon: [{ url: "/site-icon-64.png", sizes: "64x64", type: "image/png" }],
+    apple: [{ url: "/site-icon-180.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#070b10",
+  themeColor: "#f5eedb", // Vanilla Cream — the default (light) page ground
 };
 
 // Blocking script runs before React hydrates to prevent flash of wrong theme/lang.
@@ -60,6 +65,15 @@ export const viewport: Viewport = {
 // below reads those cookies on the SERVER so the very first HTML byte
 // already carries the right lang/theme, instead of always "en"/"light" and
 // flipping client-side after mount (see contexts/SiteContext.tsx).
+// Google Fonts used to be an @import at the top of globals.css: the browser had
+// to download and parse that stylesheet before it even discovered the fonts
+// CSS, and the fonts CSS then blocked first paint (~0.9 s on a slow phone).
+// A stylesheet <link> inserted from script is not render-blocking, and
+// display=swap paints text in the fallback face until the real one arrives.
+// The preconnects (below) start the two TLS handshakes during HTML parse.
+const FONTS_URL = "https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Caveat:wght@600&family=Aref+Ruqaa:wght@700&display=swap";
+const FONTS_SCRIPT = `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='${FONTS_URL}';document.head.appendChild(l)})()`;
+
 const INIT_SCRIPT = `(function(){try{
 
   var l=localStorage.getItem('site_language')||'en';
@@ -98,6 +112,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} data-theme={mode} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <script dangerouslySetInnerHTML={{ __html: FONTS_SCRIPT }} />
+        <noscript>
+          <link rel="stylesheet" href={FONTS_URL} />
+        </noscript>
         {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
         <script dangerouslySetInnerHTML={{ __html: INIT_SCRIPT }} />
       </head>

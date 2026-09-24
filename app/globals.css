@@ -1,54 +1,74 @@
-@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
   color-scheme: dark;
-  --color-primary: #0f766e;
-  --color-primary-strong: #0b5f59;
-  --color-primary-soft: rgba(15, 118, 110, 0.12);
-  --color-secondary: #d7a84f;
-  --color-secondary-strong: #b98422;
-  --color-secondary-soft: rgba(215, 168, 79, 0.14);
-  --color-accent: #16a3a3;
-  --color-accent-soft: rgba(22, 163, 163, 0.14);
+  /* ── Talents brand palette (2026-09 rebrand) ──────────────────────────
+     The five brand colors, raw. Everything below is built from these. */
+  --brand-chocolate: #2b211d; /* Dark Chocolate */
+  --brand-teal: #087f83;      /* Deep Teal */
+  --brand-teal-soft: #4fa7a3; /* Soft Teal */
+  --brand-peach: #e7a58a;     /* Muted Peach */
+  --brand-cream: #f5eedb;     /* Vanilla Cream */
+
+  /* Roles, exactly as the brand defines them:
+       Primary    = Deep Teal            — actions, links, focus
+       Secondary  = Dark Chocolate + Soft Teal
+       Accent     = Muted Peach          — highlights, CTAs, the active pill
+       Background = Vanilla Cream (light mode) */
+  --color-primary: var(--brand-teal);
+  --color-primary-strong: #066a6d; /* text-safe teal on cream (~5.5:1) */
+  --color-primary-soft: rgba(8, 127, 131, 0.13);
+
+  --color-secondary: var(--brand-chocolate);
+  --color-secondary-soft: rgba(43, 33, 29, 0.1);
+  --color-secondary-alt: var(--brand-teal-soft);
+  --color-secondary-alt-soft: rgba(79, 167, 163, 0.16);
+
+  --color-accent: var(--brand-peach);
+  /* -strong = the text-safe peach family: light on chocolate here, deep
+     terracotta in [data-theme="light"] (peach on cream is ~1.8:1). */
+  --color-accent-strong: #f0b9a2;
+  --color-accent-soft: rgba(231, 165, 138, 0.16);
+  /* Text on a solid --color-accent (peach) fill: chocolate, ~7.6:1. Fixed in
+     both themes because the peach fill itself does not flip. */
+  --color-on-accent: var(--brand-chocolate);
+
+  /* Status colors are not brand colors — kept as-is so success/error/warning
+     still read as what they mean. */
   --color-success: #1ea672;
   --color-warning: #d99822;
   --color-error: #df3f4d;
   --color-info: #3a82f6;
 
-  /* Dark surface language adopted from the ready Model source
-     (model/app/globals.css: --bg-main #0a0d14, --card-bg #111622,
-     --card-border #1e2638, body #080b11/#f1f5f9). Only DARK-facing tokens
-     move — [data-theme="light"] redefines all of these separately below and
-     is untouched, so light mode is pixel-identical to before. Brand colors
-     (--color-primary/secondary/success/...) are shared across both themes
-     and are deliberately left alone for the same reason. */
-  --bg-page: #080b11;
-  --bg-page-subtle: #0a0d14;
-  --bg-surface: #0d121c;
-  --bg-card: #111622;
-  --bg-card-muted: #121826;
-  --bg-muted: #141b29;
+  /* Dark theme = warm chocolate, derived from Dark Chocolate #2B211D (the
+     brand ships no dark palette). Cards sit ON the brand chocolate; the page
+     is a step deeper. [data-theme="light"] redefines all of these below. */
+  --bg-page: #1b1310;
+  --bg-page-subtle: #201814;
+  --bg-surface: #261c18;
+  --bg-card: #2b211d;
+  --bg-card-muted: #322722;
+  --bg-muted: #382c27;
 
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-inverse: #081016;
+  --text-primary: #f5eedb;
+  --text-secondary: #d9cfbb;
+  --text-muted: #a99b8e;
+  --text-inverse: #1b1310;
   /* Text on a solid --color-primary fill. Deliberately NOT --text-inverse:
      that token flips with the theme (near-black in dark mode), but the teal
      fill itself does not flip, so it needs one fixed ink colour in both
-     modes. White clears 5.47:1 on #0f766e. */
+     modes. White clears ~4.8:1 on #087f83. */
   --color-primary-ink: #ffffff;
 
-  --border-subtle: #1b2436;
-  --border-strong: #2a374e;
-  --divider: #182030;
+  --border-subtle: #3a2e28;
+  --border-strong: #4e403a;
+  --divider: #342925;
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.14);
   --shadow-sm: 0 6px 14px rgba(0, 0, 0, 0.16);
   --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.22);
   --shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.32);
-  --shadow-focus: 0 0 0 3px rgba(215, 168, 79, 0.34);
+  --shadow-focus: 0 0 0 3px rgba(231, 165, 138, 0.38);
 
   --radius-xs: 6px;
   --radius-sm: 8px;
@@ -105,18 +125,18 @@
   /* Backward-compatible aliases while older pages are migrated. */
   --color-teal: var(--color-primary);
   --color-blue: var(--color-info);
-  --color-orange: #c7792f;
-  --color-purple: #7a5cff;
-  --color-gold: var(--color-secondary);
-  --color-teal-light: #19a89d;
+  --color-orange: #e7a58a; /* legacy name → Muted Peach */
+  --color-purple: #4fa7a3; /* legacy name → Soft Teal */
+  --color-gold: var(--color-accent);
+  --color-teal-light: #4fa7a3;
   --color-teal-dark: var(--color-primary-strong);
-  --color-teal-glow: rgba(15, 118, 110, 0.24);
-  --color-orange-light: #df9148;
-  --color-orange-dark: #a85f24;
-  --color-orange-glow: rgba(199, 121, 47, 0.22);
-  --color-purple-light: #9f89ff;
-  --color-purple-dark: #5840ca;
-  --color-purple-glow: rgba(122, 92, 255, 0.22);
+  --color-teal-glow: rgba(8, 127, 131, 0.26);
+  --color-orange-light: #f0b9a2;
+  --color-orange-dark: #b9694c;
+  --color-orange-glow: rgba(231, 165, 138, 0.24);
+  --color-purple-light: #7cc7c3;
+  --color-purple-dark: #2f7f7b;
+  --color-purple-glow: rgba(79, 167, 163, 0.24);
   --bg-base: var(--bg-page);
   --bg-elevated: var(--bg-card-muted);
   --bg-border: var(--border-subtle);
@@ -125,29 +145,36 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --bg-page: #f7f8f8;
-  --bg-page-subtle: #eef2f3;
-  --bg-surface: #ffffff;
-  --bg-card: #ffffff;
-  --bg-card-muted: #f1f4f5;
-  --bg-muted: #eef2f5;
+  /* Vanilla Cream #F5EEDB is the page ground; cards are a lighter cream so
+     they still read as raised surfaces (borders + soft shadows do the rest). */
+  --bg-page: #f5eedb;
+  --bg-page-subtle: #efe6cf;
+  --bg-surface: #fbf7ea;
+  --bg-card: #fbf7ea;
+  --bg-card-muted: #f1e8d2;
+  --bg-muted: #ece2ca;
 
-  --text-primary: #101820;
-  --text-secondary: #40505f;
-  --text-muted: #6c7a86;
+  --text-primary: #2b211d;
+  --text-secondary: #4e4039;
+  --text-muted: #6e5f55;
   --text-inverse: #ffffff;
 
-  --border-subtle: rgba(16, 24, 32, 0.1);
-  --border-strong: rgba(16, 24, 32, 0.18);
-  --divider: rgba(16, 24, 32, 0.09);
+  /* Peach and teal-on-cream can't carry small text (~1.8:1 / ~4.2:1), so in
+     light mode the text-safe variants take over: --color-accent-strong is
+     a deep terracotta (~4.8:1 on cream). */
+  --color-accent-strong: #9a4e34;
 
-  --shadow-xs: 0 1px 2px rgba(16, 24, 32, 0.08);
-  --shadow-sm: 0 8px 18px rgba(16, 24, 32, 0.08);
-  --shadow-md: 0 16px 36px rgba(16, 24, 32, 0.1);
-  --shadow-lg: 0 30px 80px rgba(16, 24, 32, 0.13);
-  --color-teal-glow: rgba(15, 118, 110, 0.14);
-  --color-orange-glow: rgba(199, 121, 47, 0.16);
-  --color-purple-glow: rgba(122, 92, 255, 0.14);
+  --border-subtle: rgba(43, 33, 29, 0.12);
+  --border-strong: rgba(43, 33, 29, 0.22);
+  --divider: rgba(43, 33, 29, 0.1);
+
+  --shadow-xs: 0 1px 2px rgba(43, 33, 29, 0.08);
+  --shadow-sm: 0 8px 18px rgba(43, 33, 29, 0.08);
+  --shadow-md: 0 16px 36px rgba(43, 33, 29, 0.1);
+  --shadow-lg: 0 30px 80px rgba(43, 33, 29, 0.13);
+  --color-teal-glow: rgba(8, 127, 131, 0.14);
+  --color-orange-glow: rgba(231, 165, 138, 0.18);
+  --color-purple-glow: rgba(79, 167, 163, 0.16);
   --bg-base: var(--bg-page);
   --bg-elevated: var(--bg-card-muted);
   --bg-border: var(--border-subtle);
@@ -221,14 +248,16 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* Teal, not the peach accent: a focus ring needs >=3:1 against the page and
+     peach on Vanilla Cream is ~1.8:1. */
   :focus-visible {
-    outline: 2px solid var(--color-secondary);
+    outline: 2px solid var(--color-primary);
     outline-offset: 3px;
   }
 
   ::selection {
-    background: var(--color-secondary);
-    color: var(--text-inverse);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
   }
 
   ::-webkit-scrollbar {
@@ -298,8 +327,8 @@
 
 .btn-cta,
 .btn-premium {
-  background: var(--color-secondary);
-  color: #11100d;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
 }
 
 .btn-primary:hover,
@@ -317,9 +346,9 @@
 }
 
 .badge-gold {
-  background: var(--color-secondary-soft);
-  color: var(--color-secondary);
-  border: 1px solid color-mix(in srgb, var(--color-secondary) 34%, transparent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 34%, transparent);
 }
 
 .badge-teal {
@@ -329,9 +358,9 @@
 }
 
 .badge-purple {
-  background: rgba(122, 92, 255, 0.12);
+  background: rgba(79, 167, 163, 0.14);
   color: var(--color-purple-light);
-  border: 1px solid rgba(122, 92, 255, 0.22);
+  border: 1px solid rgba(79, 167, 163, 0.26);
 }
 
 .teal-glow {
@@ -358,11 +387,11 @@
 }
 
 .brand-gradient {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 }
 
 .text-gradient {
-  color: var(--color-secondary);
+  color: var(--color-accent);
 }
 
 @keyframes pulseGlow {
@@ -396,5 +425,39 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Theme switch: the new theme rises from the bottom, like a fill ─────────
+   Driven by document.startViewTransition in contexts/SiteContext.tsx. The old
+   page stays put underneath; the new one is revealed bottom → top, so text and
+   surfaces change colour together along the rising edge. */
+
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  animation: theme-rise 950ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+@keyframes theme-rise {
+  from { clip-path: inset(100% 0 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

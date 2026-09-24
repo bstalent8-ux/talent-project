@@ -514,7 +514,7 @@ export default function DashboardPage() {
 
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <img src="/assets/logo.png" alt="Talents" style={{ height: 36, objectFit: "contain" }} />
+          <img src="/assets/talents-logo-light.png" alt="Talents" style={{ height: 36, objectFit: "contain" }} />
         </div>
 
         {/* Welcome banner */}

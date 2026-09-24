@@ -9,10 +9,9 @@ export const runtime = 'edge';
 // path register's email verification already uses).
 
 import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Eye, EyeOff, Languages, Moon, Sun } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
+import { AuthLink } from "../_components/AuthShell";
 import styles from "../auth.module.css";
 
 const tx = {
@@ -101,7 +100,7 @@ const tx = {
 type Step = "email" | "code" | "done";
 
 export default function ForgotPasswordPage() {
-  const { lang, dark, toggleLang, toggleMode } = useSite();
+  const { lang } = useSite();
   const t = tx[lang];
 
   const [step, setStep] = useState<Step>("email");
@@ -184,29 +183,15 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className={styles.authPage}>
-
-      {/* ── FORM SIDE ── */}
-      <div className={styles.formPane}>
-        <div className={styles.controls}>
-          <button type="button" className={styles.controlButton} onClick={toggleLang} aria-label={t.langBtn}>
-            <Languages size={14} aria-hidden="true" />
-            {lang === "ar" ? "EN" : "ع"}
-          </button>
-          <button type="button" className={styles.controlButton} onClick={toggleMode} aria-label={t.themeBtn}>
-            {dark ? <Sun size={14} aria-hidden="true" /> : <Moon size={14} aria-hidden="true" />}
-          </button>
-        </div>
-
-        <div className={styles.formInner}>
+    <>
           {step === "done" ? (
             <>
               <p className={styles.eyebrow}>{t.eyebrow}</p>
               <h1 className={styles.heading}>{t.successTitle}</h1>
               <p className={styles.subheading}>{t.successSub}</p>
-              <Link href="/login" className={styles.submitButton} style={{ display: "block", textAlign: "center", textDecoration: "none", marginTop: 16 }}>
+              <AuthLink href="/login" className={styles.submitButton} style={{ display: "block", textAlign: "center", textDecoration: "none", marginTop: 16 }}>
                 {t.goToLogin}
-              </Link>
+              </AuthLink>
             </>
           ) : (
             <>
@@ -321,26 +306,10 @@ export default function ForgotPasswordPage() {
 
               <p className={styles.footNote}>
                 {t.backToLoginRow}{" "}
-                <Link className={styles.textLink} href="/login">{t.backToLoginLink}</Link>
+                <AuthLink className={styles.textLink} href="/login">{t.backToLoginLink}</AuthLink>
               </p>
             </>
           )}
-        </div>
-      </div>
-
-      {/* ── BRANDING SIDE ── */}
-      <div className={styles.brandPane}>
-        <div className={styles.brandTop}>
-          <Image className={styles.brandLogo} src="/assets/logo-dark.png" alt="Talents" width={110} height={32} />
-        </div>
-        <div className={styles.brandBottom}>
-          <h2 className={styles.brandHeadline}>
-            {t.brand}<br />
-            <span className={styles.brandHighlight}>{t.brandHighlight}</span>
-          </h2>
-          <p className={styles.brandDesc}>{t.brandDesc}</p>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

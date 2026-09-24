@@ -61,7 +61,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
     const MTEXT   = "var(--text-primary)";
     const MMUTED  = "var(--text-muted)";
     const TEAL    = "var(--color-primary)";
-    const GOLD    = "var(--color-secondary)";
+    const GOLD    = "var(--color-accent)";
 
     return (
       <section style={{
@@ -100,7 +100,7 @@ export default function PackagesSection({ onSelect, packages, variant = "default
                   </span>
                   {pkg.popular && (
                     <span style={{
-                      backgroundColor: "color-mix(in srgb, var(--color-secondary) 15%, transparent)",
+                      backgroundColor: "color-mix(in srgb, var(--color-accent) 15%, transparent)",
                       color: GOLD, border: `1px solid ${GOLD}`,
                       borderRadius: 20, padding: "2px 10px", fontSize: 10.5, fontWeight: 800,
                     }}>

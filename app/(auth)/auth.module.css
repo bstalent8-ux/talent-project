@@ -1,106 +1,49 @@
-/* ─── Shared auth chrome ─────────────────────────────────────────────────────
-   Login and register render the same split layout, so the styling lives here
-   once instead of being duplicated as inline objects on both pages.
+/* ─── Auth pages (login · register · forgot-password · waitlist) ─────────────
+   One frame (AuthFrame.tsx): top bar, a showcase card, and a form card. The
+   pages own their forms; this file owns the look.
 
-   Every value resolves to a token from app/globals.css. There are no literal
-   colours, no literal fonts, and no `dark ? a : b` ternaries — the pages react
-   to `[data-theme]` on <html> exactly like the rest of the site, so switching
-   the theme anywhere switches these too.
-
-   RTL comes from the `dir` attribute the SiteProvider sets on <html>; this file
-   uses logical properties throughout, so there is no left/right branching.
+   Everything resolves to a token from app/globals.css — no `dark ? a : b`
+   branches, so the theme toggle re-skins these like the rest of the site.
+   Direction comes from the `dir` attribute on <html>; logical properties are
+   used throughout so RTL needs no separate rules.
    ------------------------------------------------------------------------- */
 
 .authPage {
-  /* Text colour that sits on the gold CTA. Mirrors --nav-on-gold in
-     SiteChrome.module.css rather than inventing a second convention:
-     --text-inverse flips to white in light mode, which is unreadable on gold. */
-  --auth-on-gold: var(--bg-page);
+  /* Teal is the brand's action color. On Vanilla Cream the text-safe teal is
+     --color-primary-strong (~5.5:1); on the dark chocolate card Soft Teal is
+     the one that clears contrast. Large headline text can use the base teal. */
+  --auth-link: var(--color-primary-strong);
+  --auth-accent-text: var(--color-primary);
 
-  /* app/globals.css hardcodes `html { direction: rtl }` unconditionally — it
-     does not read the `dir` attribute SiteProvider toggles. Nothing else on
-     the site notices (CLAUDE.md: most pages branch on `lang` in inline
-     styles, not on CSS `direction`), but this file is built entirely on
-     logical properties, so in English mode every input, icon and alignment
-     here was silently still resolving right-to-left. Fixing the global rule
-     is out of scope for two auth pages; overriding it here, scoped to this
-     wrapper, is enough — `direction` inherits down through every descendant
-     below, all of which already use logical properties. */
-  direction: rtl;
-
-  display: flex;
-  flex-direction: row;
-  /* Fixed height, not min-height: min-height is a floor, so a flex row with
-     the default align-items:stretch would grow past the viewport whenever a
-     child's content needed more room than that — which register's long form
-     always does — pushing the whole PAGE into a vertical scroll instead of
-     .formPane's own overflow-y:auto (below) ever engaging. A fixed height
-     caps this box at the viewport, so .formPane scrolls internally instead.
-     dvh (not vh) accounts for mobile browser chrome. */
-  height: 100dvh;
-  overflow-y: hidden;
+  min-height: 100dvh;
   background: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-sans);
 }
 
-:global([data-theme="light"]) .authPage {
-  --auth-on-gold: var(--text-primary);
+:global(:root:not([data-theme="light"])) .authPage {
+  --auth-link: var(--color-secondary-alt);
+  --auth-accent-text: var(--color-secondary-alt);
 }
 
-:global([dir="ltr"]) .authPage {
-  direction: ltr;
-}
+/* ─── Top bar ─────────────────────────────────────────────────────────────── */
 
-/* ─── Form column ─────────────────────────────────────────────────────────── */
-
-.formPane {
-  position: relative;
+.topBar {
   display: flex;
-  flex-direction: column;
-  /* No justify-content:center here — see .formInner's margin-block:auto,
-     which centers the same way but degrades to top-aligned instead of
-     clipping when content is taller than the pane (verified live: at
-     register's pre-polish height, justify-content:center made the topmost
-     ~34px of content permanently unreachable — scrollTop can't go negative,
-     so centering an overflowing flex item just crops its start edge). */
-  width: 42%;
-  min-width: 380px;
-  padding: var(--space-12) 3.5rem;
-  overflow-y: auto;
-  background: var(--bg-surface);
-  border-inline-end: 1px solid var(--border-subtle);
-}
-
-.formPaneWide {
-  width: 48%;
-  min-width: 400px;
-  /* Top padding matches the base .formPane value (not --space-10): .controls
-     is position:absolute and reserves no layout space of its own, so top
-     padding is what keeps it clear of .eyebrow. Register's controls row
-     carries an extra account-switch link .formPane doesn't have, so shrinking
-     this below the value .controls was sized against reproduces the exact
-     overlap the login page was fixed for. Bottom padding has no such
-     constraint, so it's tightened as part of fitting the register form into
-     1366×768 without a scrollbar. */
-  padding: var(--space-12) 3.25rem var(--space-2);
-}
-
-.formInner {
-  width: 100%;
-  max-width: 440px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: min(1440px, 100%);
   margin-inline: auto;
-  /* Vertical centering that degrades to top-aligned on overflow — see the
-     comment on .formPane. */
-  margin-block: auto;
+  padding: var(--space-2) clamp(1rem, 2.4vw, 2rem);
 }
 
-/* ─── Top-right controls ──────────────────────────────────────────────────── */
+.topLogo {
+  display: inline-flex;
+  border-radius: var(--radius-sm);
+}
 
-.controls {
-  position: absolute;
-  top: var(--space-6);
-  inset-inline-start: var(--space-6);
+.topActions {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -111,66 +54,347 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
-  min-height: 32px;
+  min-height: 36px;
   padding: 0 var(--space-3);
-  border: 1px solid transparent;
-  border-radius: var(--radius-xs);
-  background: var(--bg-card-muted);
-  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
   transition:
     color var(--duration-base) var(--ease-standard),
-    background-color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard),
     transform var(--duration-base) var(--ease-emphasis);
 }
 
 .controlButton:hover {
   color: var(--text-primary);
-  background: var(--bg-muted);
+  border-color: var(--border-strong);
   transform: translateY(-1px);
 }
 
-.controlButton:active {
-  transform: translateY(0);
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline-start: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: color var(--duration-base) var(--ease-standard);
 }
 
-.controlLink {
-  color: var(--text-muted);
+.backLink:hover {
+  color: var(--text-primary);
+}
+
+.controlButton:focus-visible,
+.backLink:focus-visible,
+.topLogo:focus-visible,
+.submitButton:focus-visible,
+.roleCard:focus-visible,
+.revealButton:focus-visible,
+.textLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ─── Split layout ────────────────────────────────────────────────────────── */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--space-4);
+  width: min(1440px, 100%);
+  margin-inline: auto;
+  padding: 0 clamp(1rem, 2.4vw, 2rem) var(--space-8);
+}
+
+.splitSingle {
+  width: min(560px, 100%);
+  margin: var(--space-8) auto;
+  padding-inline: var(--space-4);
+}
+
+/* ─── Showcase card ───────────────────────────────────────────────────────── */
+
+.showcase {
+  position: relative;
+  overflow: hidden;
+  /* One screen tall, like the reference — the form card scrolls past it. */
+  align-self: start;
+  height: min(820px, calc(100dvh - 5.5rem));
+  min-height: 640px;
+  padding: clamp(1.25rem, 2.4vw, 2rem);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(60% 50% at 78% 30%, color-mix(in srgb, var(--color-secondary-alt) 14%, transparent), transparent 70%),
+    var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.showcaseText {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 50%;
+  min-height: 100%;
+}
+
+.showcaseEyebrow {
+  margin: 0;
+  color: var(--text-secondary);
   font-size: var(--text-xs);
-  margin-inline-start: var(--space-1);
+  font-weight: 600;
+  letter-spacing: 0.14em;
 }
 
-.controlLinkAccent {
-  color: var(--color-secondary);
+:global([dir="rtl"]) .showcaseEyebrow {
+  letter-spacing: 0;
+}
+
+.showcaseHeading {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 2.1vw, 2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.showcaseHighlight {
+  display: inline-block;
+  color: var(--auth-accent-text);
+}
+
+.showcaseSub {
+  max-width: 30rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.featureList {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.feature strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: var(--text-base);
   font-weight: 700;
+}
+
+.feature small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.featureIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+/* Icon discs: white on Deep Teal (~4.8:1), chocolate on Muted Peach (~7.6:1). */
+.featureTeal {
+  background: var(--color-primary);
+  color: var(--color-primary-ink);
+}
+
+.featurePeach {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.tagline {
+  position: relative;
+  width: fit-content;
+  margin: auto 0 0;
+  padding-top: var(--space-3);
+  color: var(--text-primary);
+  font-family: 'Caveat', var(--font-display), cursive;
+  font-size: clamp(1.8rem, 2.1vw, 2.4rem);
+  line-height: 1;
+  white-space: nowrap;
+  transform: rotate(-5deg);
+  transform-origin: left bottom;
+}
+
+:global([dir="rtl"]) .tagline {
+  font-family: 'Aref Ruqaa', var(--font-display), serif;
+  font-size: clamp(1.7rem, 2vw, 2.2rem);
+  transform: rotate(-3deg);
+  transform-origin: right bottom;
+}
+
+.taglineStroke {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: -0.55rem;
+  width: 100%;
+  height: 0.75rem;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.showcaseArt {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 54%;
+  pointer-events: none;
+}
+
+.shapes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.shapeTeal {
+  fill: var(--color-secondary-alt);
+}
+
+.shapePeach {
+  fill: var(--color-accent);
+}
+
+.heroPhoto {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 50%;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  transform: translateY(-50%);
+}
+
+.floatCard {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 196px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.floatCard strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.floatCard small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.floatIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+/* Top-left of the art column, tucked behind the photo so it can never cover her face. */
+.floatVerified { top: calc(2% + 10px); inset-inline-start: calc(-4% + 10px); z-index: 0; transform: rotate(-5deg); }
+.floatBrands   { bottom: 30%; inset-inline-end: 0; transform: rotate(7deg); }
+.floatTalents  { bottom: 22%; inset-inline-start: 6%; transform: rotate(-7deg); }
+.floatOpps     { bottom: 3%; inset-inline-start: 2%; transform: rotate(-3deg); }
+
+/* ─── Form card ───────────────────────────────────────────────────────────── */
+
+.formCard {
+  display: flex;
+  padding: var(--space-5) var(--space-8);
+  overflow-x: hidden; /* the form slides horizontally inside the card */
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.langWipe {
+  width: 100%;
+  margin-block: auto;
+}
+
+.formCardInner {
+  width: 100%;
+  max-width: 620px;
+  margin-inline: auto;
+  margin-block: auto;
 }
 
 /* ─── Headings ────────────────────────────────────────────────────────────── */
 
 .eyebrow {
   margin: 0 0 var(--space-1);
-  color: var(--color-secondary);
+  color: var(--auth-link);
   font-size: var(--text-xs);
   font-weight: 700;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.18em;
+}
+
+:global([dir="rtl"]) .eyebrow {
+  letter-spacing: 0;
 }
 
 .heading {
-  margin: 0 0 var(--space-1);
+  margin: 0;
   color: var(--text-primary);
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .subheading {
-  margin: 0 0 var(--space-2);
+  margin: var(--space-1) 0 var(--space-4);
   color: var(--text-secondary);
   font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
 /* ─── Fields ──────────────────────────────────────────────────────────────── */
@@ -178,36 +402,52 @@
 .fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-3);
+}
+
+/* Register: two columns so the whole form fits one screen. Anything that
+   needs the full width (role cards, terms, the button) spans both. */
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-4);
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+.fieldGrid .phoneCountryName {
+  display: none;
 }
 
 .field {
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-3);
 }
 
 .label {
   display: block;
-  margin-bottom: var(--space-1);
-  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+  color: var(--text-primary);
   font-size: var(--text-xs);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .input,
 .select {
   width: 100%;
-  padding: 0.5rem var(--space-4);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--bg-card-muted);
+  height: 42px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   outline: none;
   transition:
     border-color var(--duration-base) var(--ease-standard),
-    box-shadow var(--duration-base) var(--ease-standard),
-    background-color var(--duration-base) var(--ease-standard);
+    box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .input::placeholder {
@@ -216,13 +456,13 @@
 
 .input:hover,
 .select:hover {
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-strong));
 }
 
 .input:focus-visible,
 .select:focus-visible {
-  border-color: var(--color-secondary);
-  box-shadow: var(--shadow-focus);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 
 /* Latin-only fields (email, phone, password) stay LTR even in an RTL page. */
@@ -242,40 +482,56 @@
 .select {
   cursor: pointer;
   appearance: none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
-    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
-  background-position: calc(100% - 1rem) 50%, calc(100% - 0.625rem) 50%;
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
-}
-
-:global([dir="rtl"]) .select {
-  background-position: 1rem 50%, 0.625rem 50%;
 }
 
 .inputWrap {
   position: relative;
 }
 
-/* ─── Phone field ─────────────────────────────────────────────────────────── */
-/* .phoneFieldRow is a plain logical flex row — no forced direction. The
-   country trigger is the first DOM child, so it lands at the inline-START
-   automatically: left on an LTR page, right on an RTL one. That is the
-   whole mechanism; flexbox's own start/end resolution already does what the
-   brief asks ("LEFT (LTR pages) / RIGHT (RTL pages)"), no extra CSS needed.
+.inputIcon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
 
-   .phoneNumberInput is the one deliberate exception to "logical properties
-   only" in this file, and only ITS OWN text rendering, not its position:
-   direction stays ltr regardless of page language — confirmed live that
-   direction:rtl renders "+966 5xx xxx xxx" as "5xx xxx xxx 966+" (segments
-   reordered), which is the Unicode Bidi Algorithm correctly doing its job on
-   a mixed digit/letter run, just not usable. Every production RTL phone
-   input (Careem, WhatsApp...) forces the digits to ltr and uses
-   `text-align` — independent of `direction` — to pick the visual side
-   instead. That split is what delivers "placeholder aligned correctly,
-   types naturally" in Arabic: digits keep their natural order, text-align
-   is what actually follows the page's real direction. */
+.inputWithIcon {
+  padding-inline-start: 2.4rem;
+}
+
+/* Room for the reveal toggle, on whichever side the text ends. */
+.inputWithAffix {
+  padding-inline-end: 2.75rem;
+}
+
+.revealButton {
+  position: absolute;
+  inset-inline-end: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--duration-base) var(--ease-standard);
+}
+
+.revealButton:hover {
+  color: var(--text-primary);
+}
+
+/* ─── Phone field ─────────────────────────────────────────────────────────── */
+/* The country trigger is the first DOM child, so flexbox puts it at the
+   inline-START (left in LTR, right in RTL) with no extra rules. The number
+   box keeps `direction` LTR so "+966 5xx xxx xxx" isn't reordered by the bidi
+   algorithm, and uses text-align to follow the page's real direction. */
 
 .phoneFieldRow {
   position: relative;
@@ -289,12 +545,13 @@
   flex-shrink: 0;
   gap: 0.375rem;
   max-width: 11rem;
+  height: 42px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-strong);
   border-inline-end: none;
-  border-start-start-radius: var(--radius-sm);
-  border-end-start-radius: var(--radius-sm);
-  background: var(--bg-card-muted);
+  border-start-start-radius: var(--radius-md);
+  border-end-start-radius: var(--radius-md);
+  background: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
@@ -304,11 +561,11 @@
 }
 
 .phoneCountryTrigger:hover {
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-strong));
 }
 
 .phoneCountryTrigger:focus-visible {
-  outline: 2px solid var(--color-secondary);
+  outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
 
@@ -357,8 +614,6 @@
   min-width: 0;
   border-start-start-radius: 0;
   border-end-start-radius: 0;
-  /* See the file-level comment above: direction is deliberately NOT
-     inherited here, text-align is what follows the page's real direction. */
   text-align: right;
 }
 
@@ -391,7 +646,7 @@
   padding: 0.5rem var(--space-3);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  background: var(--bg-card-muted);
+  background: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
@@ -399,8 +654,8 @@
 }
 
 .phoneSearchInput:focus-visible {
-  border-color: var(--color-secondary);
-  box-shadow: var(--shadow-focus);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 
 .phoneOptionList {
@@ -451,47 +706,12 @@
   text-align: center;
 }
 
-/* Room for the reveal toggle, on whichever side the text ends. */
-.inputWithAffix {
-  padding-inline-end: 2.6rem;
-}
-
-.revealButton {
-  position: absolute;
-  inset-inline-end: var(--space-3);
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-1);
-  border: none;
-  border-radius: var(--radius-xs);
-  background: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: color var(--duration-base) var(--ease-standard);
-}
-
-.revealButton:hover {
-  color: var(--text-primary);
-}
-
-.revealButton:focus-visible,
-.controlButton:focus-visible,
-.submitButton:focus-visible,
-.roleButton:focus-visible,
-.textLink:focus-visible {
-  outline: 2px solid var(--color-secondary);
-  outline-offset: 2px;
-}
-
 /* ─── Password strength ───────────────────────────────────────────────────── */
 
 .strengthTrack {
   display: flex;
   gap: var(--space-1);
-  margin-top: var(--space-1);
+  margin-top: 0.3rem;
 }
 
 .strengthSegment {
@@ -504,49 +724,90 @@
 
 .strengthWeak   { background: var(--color-error); }
 .strengthFair   { background: var(--color-warning); }
-.strengthGood   { background: var(--color-secondary); }
+.strengthGood   { background: var(--color-secondary-alt); }
 .strengthStrong { background: var(--color-success); }
 
-/* ─── Role toggle ─────────────────────────────────────────────────────────── */
+/* ─── "I'm joining as" cards ──────────────────────────────────────────────── */
 
 .roleRow {
-  display: flex;
-  gap: var(--space-2);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
 }
 
-.roleButton {
-  flex: 1;
-  padding: 0.5rem 0;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--bg-card-muted);
-  color: var(--text-secondary);
+.roleCard {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-page);
+  color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  font-weight: 700;
+  text-align: start;
   cursor: pointer;
   transition:
-    color var(--duration-base) var(--ease-standard),
-    background-color var(--duration-base) var(--ease-standard),
-    border-color var(--duration-base) var(--ease-standard);
+    border-color var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard);
 }
 
-.roleButton:hover {
-  color: var(--text-primary);
-  border-color: var(--border-strong);
+.roleCard:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--border-strong));
 }
 
-.roleButtonActive,
-.roleButtonActive:hover {
-  background: var(--color-secondary);
-  border-color: var(--color-secondary);
-  color: var(--auth-on-gold);
+.roleCardActive,
+.roleCardActive:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--bg-surface));
+}
+
+.roleTop {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--auth-link);
+}
+
+.roleText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.roleRadio {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg-surface);
+}
+
+.roleCardActive .roleRadio {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  box-shadow: inset 0 0 0 3px var(--bg-surface);
+}
+
+.roleCard strong {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.roleCard small {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.3;
 }
 
 /* ─── Feedback ────────────────────────────────────────────────────────────── */
 
 .errorBanner {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--color-error);
   border-radius: var(--radius-sm);
@@ -556,16 +817,16 @@
 }
 
 .errorText {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-3);
   color: var(--color-error);
   font-size: var(--text-xs);
   text-align: center;
 }
 
-/* Field-level error, sits directly under its input — left/start aligned,
-   unlike the centered form-level .errorText banner above. */
+/* Field-level error, directly under its input — start-aligned, unlike the
+   centered form-level .errorText banner above. */
 .fieldError {
-  margin: var(--space-1) 0 0;
+  margin: 0.2rem 0 0;
   color: var(--color-error);
   font-size: var(--text-xs);
   text-align: start;
@@ -574,17 +835,21 @@
 /* ─── Actions ─────────────────────────────────────────────────────────────── */
 
 .submitButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
   width: 100%;
-  padding: 0.875rem;
+  height: 46px;
   border: none;
   border-radius: var(--radius-md);
-  background: var(--color-secondary);
-  color: var(--auth-on-gold);
+  background: var(--color-primary);
+  color: var(--color-primary-ink);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 26%, transparent);
   transition:
     background-color var(--duration-base) var(--ease-standard),
     transform var(--duration-base) var(--ease-emphasis),
@@ -592,9 +857,8 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background: var(--color-secondary-strong);
+  background: var(--color-primary-strong);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
 }
 
 .submitButton:active:not(:disabled) {
@@ -607,26 +871,39 @@
 }
 
 .forgotRow {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
   text-align: end;
 }
 
 .textLink {
-  color: var(--color-secondary);
-  font-size: var(--text-xs);
+  color: var(--auth-link);
+  font-size: var(--text-sm);
   font-weight: 700;
   border-radius: var(--radius-xs);
   transition: color var(--duration-base) var(--ease-standard);
 }
 
 .textLink:hover {
-  color: var(--color-secondary-strong);
+  text-decoration: underline;
+}
+
+.footRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.footRow .footNote {
+  margin: 0;
 }
 
 .footNote {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-4) 0 0;
   color: var(--text-secondary);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   text-align: center;
 }
 
@@ -639,187 +916,298 @@
 
 .checkbox {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  margin-top: 3px;
-  accent-color: var(--color-secondary);
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-primary);
   cursor: pointer;
 }
 
 .termsText {
   color: var(--text-secondary);
   font-size: var(--text-xs);
-  line-height: 1.6;
-}
-
-/* ─── Branding column ─────────────────────────────────────────────────────── */
-/* The hero photo is a fixed dark cinematic shot, so this pane is deliberately
-   NOT theme-reactive — it stays dark and its text stays light regardless of
-   [data-theme]. Same treatment CommunityPage.module.css already uses for its
-   own photo hero band (heroBg / heroTitle forcing #fff), so this isn't a new
-   pattern, just the existing one applied here. */
-
-.brandPane {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: var(--space-8) var(--space-12);
-  overflow: hidden;
-  background:
-    radial-gradient(ellipse at 30% 15%, color-mix(in srgb, var(--color-accent) 22%, transparent) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 85%, color-mix(in srgb, var(--color-purple) 20%, transparent) 0%, transparent 55%),
-    linear-gradient(
-      180deg,
-      rgba(5, 11, 18, 0.82) 0%,
-      rgba(5, 11, 18, 0.32) 30%,
-      rgba(5, 11, 18, 0.38) 62%,
-      rgba(5, 11, 18, 0.92) 100%
-    ),
-    url("/assets/auth-hero.avif") 50% 22% / cover no-repeat;
-}
-
-.brandTop {
-  text-align: start;
-}
-
-.brandLogo {
-  width: auto;
-  height: 32px;
-}
-
-.floatingStack {
-  position: absolute;
-  inset-inline-start: var(--space-12);
-  top: 50%;
-  transform: translateY(-60%);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.floatingCard {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: var(--radius-md);
-  /* Frosted glass over the photo, not the theme card surface — .brandPane no
-     longer follows [data-theme], so var(--bg-card) would go opaque-white in
-     light mode and hide the photo behind these cards. */
-  background: rgba(8, 14, 22, 0.55);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: var(--shadow-sm);
-}
-
-.floatingAvatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-pill);
-  border: 2px solid currentColor;
-  background: color-mix(in srgb, currentColor 18%, transparent);
-  font-size: var(--text-sm);
-  font-weight: 700;
-}
-
-.accentTeal   { color: var(--color-accent); }
-.accentGold   { color: var(--color-secondary); }
-.accentPurple { color: var(--color-purple); }
-
-.floatingName {
-  margin: 0;
-  color: #fff;
-  font-size: var(--text-xs);
-  font-weight: 700;
-}
-
-.floatingSub {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: var(--text-xs);
-}
-
-.brandBottom {
-  text-align: start;
-}
-
-.brandHeadline {
-  margin: 0 0 var(--space-4);
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: var(--text-3xl);
-  font-weight: 900;
-  line-height: 1.15;
-}
-
-.brandHighlight {
-  color: var(--color-secondary);
-  font-style: italic;
-}
-
-.brandHighlight::after {
-  /* Drawn by CSS, not typed as the last character of the translated string
-     (see the comment above `brandHighlight` in login/page.tsx and
-     register/page.tsx) — a generated character always renders at the visual
-     end of THIS element's own content in whichever direction is active, so
-     it can never land on the wrong side the way a literal trailing "."
-     could when direction resolution was wrong. */
-  content: ".";
-  margin-inline-start: 0.04em;
-}
-
-.brandDesc {
-  max-width: 20rem;
-  margin: 0;
-  margin-inline-end: auto;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: var(--text-sm);
-  line-height: 1.7;
-}
-
-.statRow {
-  display: flex;
-  gap: var(--space-10);
-  margin-top: var(--space-10);
-}
-
-.statValue {
-  margin: 0;
-  color: var(--color-secondary);
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 900;
-}
-
-.statLabel {
-  margin: var(--space-1) 0 0;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: var(--text-xs);
+  line-height: 1.5;
 }
 
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 
-@media (max-width: 768px) {
-  .brandPane {
+@media (min-width: 1181px) {
+  .authPage {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Both cards share one fixed row height (same on Sign in and Register, so
+     the persistent showcase never jumps), and the pair sits centered in the
+     free space instead of filling the screen. */
+  .split {
+    flex: 1;
+    min-height: 0;
+    align-content: center;
+    grid-template-rows: min(580px, 100%);
+    padding-bottom: var(--space-4);
+  }
+
+  .splitWide {
+    grid-template-columns: minmax(0, 1fr) minmax(0, clamp(520px, 49vw, 660px));
+  }
+
+  .showcase {
+    align-self: stretch;
+    height: auto;
+    min-height: 0;
+  }
+
+  /* Only if a burst of validation errors ever makes the form taller than the
+     card does this scroll — the normal state never reaches it. */
+  .formCard {
+    align-self: stretch;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 1400px) {
+  .floatTalents {
     display: none;
   }
+}
 
-  .formPane,
-  .formPaneWide {
-    width: 100%;
-    min-width: 0;
-    padding: var(--space-16) var(--space-6) var(--space-8);
-    border-inline-end: none;
+/* The showcase only earns its space on a wide screen: below 1181px the form
+   takes the row alone (the page scrolls naturally instead of being one fixed
+   screen tall). Just above that, the card is still narrow, so it drops the
+   longest copy and keeps headline, feature titles and tagline. */
+@media (max-width: 1365px) {
+  .showcaseSub,
+  .feature small {
+    display: none;
+  }
+}
+
+/* Register's two-column form is tight here: one-line role cards keep it inside the fixed card height. */
+@media (min-width: 1181px) and (max-width: 1365px) {
+  .roleCard small {
+    display: none;
+  }
+}
+
+@media (max-width: 1180px) {
+  .split {
+    grid-template-columns: 1fr;
+    width: min(760px, 100%);
   }
 
-  .controls {
-    inset-inline-start: var(--space-4);
-    top: var(--space-4);
+  .showcase {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formCard {
+    padding: var(--space-5);
+  }
+}
+
+@media (max-width: 480px) {
+  .roleRow {
+    grid-template-columns: 1fr;
+  }
+
+  .backLink {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .controlButton,
+  .submitButton,
+  .roleCard,
+  .input {
+    transition: none;
+  }
+}
+
+/* ─── Form transitions ────────────────────────────────────────────────────── */
+
+/* `backwards`, not `both`: holding the end frame would keep a transform on the
+   card and trap position:fixed descendants inside it. */
+.formEntering {
+  animation: formIn 420ms var(--ease-out-quint) backwards;
+}
+
+.formLeaving {
+  animation: formOut 260ms cubic-bezier(0.4, 0, 1, 1) both;
+  pointer-events: none;
+}
+
+/* ─── Language switch ─────────────────────────────────────────────────────── */
+
+/* Out: the copy is wiped away from right to left, slowly, the left card first
+   and the form a beat later. In: it's typed back — a stepped wipe that runs
+   left→right in English and right→left in Arabic (dir is already flipped by
+   then, while nothing is visible). Only clip-path/opacity move, so nothing
+   reflows. */
+.authPage[data-lang-phase="out"] .showcaseText,
+.authPage[data-lang-phase="out"] .langWipe {
+  animation: langOut 480ms cubic-bezier(0.55, 0, 0.35, 1) both;
+}
+
+.authPage[data-lang-phase="out"] .langWipe {
+  animation-delay: 240ms;
+}
+
+.authPage[data-lang-phase="out"] .floatLayer {
+  animation: langFade 380ms ease-in both;
+}
+
+.authPage[data-lang-phase="in"] .showcaseText,
+.authPage[data-lang-phase="in"] .langWipe {
+  animation: langInLtr 760ms steps(26, end) both;
+}
+
+.authPage[data-lang-phase="in"] .langWipe {
+  animation-delay: 330ms;
+}
+
+:global([dir="rtl"]) .authPage[data-lang-phase="in"] .showcaseText,
+:global([dir="rtl"]) .authPage[data-lang-phase="in"] .langWipe {
+  animation-name: langInRtl;
+}
+
+.authPage[data-lang-phase="in"] .floatLayer {
+  animation: langFadeIn 500ms ease-out 700ms both;
+}
+
+.authPage[data-lang-phase="out"] .controlButton,
+.controlButton:disabled {
+  cursor: progress;
+}
+
+@keyframes langOut {
+  from { clip-path: inset(0 0 0 0); }
+  to   { clip-path: inset(0 100% 0 0); }
+}
+
+@keyframes langInLtr {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes langInRtl {
+  from { clip-path: inset(0 0 0 100%); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes langFade {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes langFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─── Left showcase: re-staged when Sign in ⇄ Register ─────────────────────── */
+
+.showLeaving .showcaseText,
+.showLeaving .floatLayer {
+  animation: showOut 260ms cubic-bezier(0.4, 0, 1, 1) both;
+  pointer-events: none;
+}
+
+.showEntering .showcaseText > * {
+  animation: fadeUp 520ms var(--ease-out-quint) both;
+}
+
+.showEntering .showcaseText > *:nth-child(2) { animation-delay: 60ms; }
+.showEntering .showcaseText > *:nth-child(3) { animation-delay: 120ms; }
+.showEntering .showcaseText > *:nth-child(4) { animation-delay: 180ms; }
+.showEntering .showcaseText > *:nth-child(5) { animation-delay: 260ms; }
+
+/* Float cards pop in one after another. They keep their own rotate() — the
+   keyframes use the individual translate/scale properties so they can't clash. */
+.floatLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.floatLayer .floatCard {
+  animation: cardIn 520ms var(--ease-out-quint) both;
+}
+
+.floatLayer .floatCard:nth-child(1) { animation-delay: 240ms; }
+.floatLayer .floatCard:nth-child(2) { animation-delay: 320ms; }
+.floatLayer .floatCard:nth-child(3) { animation-delay: 400ms; }
+.floatLayer .floatCard:nth-child(4) { animation-delay: 480ms; }
+
+/* The crescent swings a little between the two moods. */
+.shapes {
+  transform-origin: 62% 46%;
+  transition: transform 700ms var(--ease-out-quint);
+}
+
+.shapesLogin {
+  transform: rotate(-16deg) scale(1.05);
+}
+
+/* "Need help?" arrives last, after the form has settled. */
+.helpIn {
+  display: inline-block;
+  animation: helpIn 480ms var(--ease-out-quint) 520ms backwards;
+}
+
+@keyframes showOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateX(-40px); }
+}
+
+@keyframes cardIn {
+  from { opacity: 0; translate: 0 14px; scale: 0.88; }
+  to   { opacity: 1; translate: 0 0;    scale: 1; }
+}
+
+@keyframes helpIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.92); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes formIn {
+  from { opacity: 0; transform: translateX(56px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes formOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateX(-56px); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .formEntering,
+  .formLeaving,
+  .showLeaving .showcaseText,
+  .showLeaving .floatLayer,
+  .authPage[data-lang-phase] .showcaseText,
+  .authPage[data-lang-phase] .langWipe,
+  .authPage[data-lang-phase] .floatLayer,
+  .showEntering .showcaseText > *,
+  .floatLayer .floatCard,
+  .helpIn {
+    animation: none;
+  }
+
+  .shapes {
+    transition: none;
   }
 }

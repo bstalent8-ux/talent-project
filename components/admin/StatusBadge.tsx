@@ -3,7 +3,7 @@ import type { TalentStatus } from "@/features/admin/types";
 
 const CONFIG: Record<TalentStatus, { label: string; labelAr: string; bg: string; color: string; border: string }> = {
   approved:  { label: "Approved",  labelAr: "موافق عليه",   bg: "color-mix(in srgb, var(--color-success) 12%, transparent)", color: "var(--color-success)", border: "color-mix(in srgb, var(--color-success) 34%, transparent)" },
-  pending:   { label: "Pending",   labelAr: "قيد الانتظار", bg: "var(--color-secondary-soft)", color: "var(--color-secondary)", border: "color-mix(in srgb, var(--color-secondary) 34%, transparent)" },
+  pending:   { label: "Pending",   labelAr: "قيد الانتظار", bg: "var(--color-accent-soft)", color: "var(--color-accent)", border: "color-mix(in srgb, var(--color-accent) 34%, transparent)" },
   rejected:  { label: "Rejected",  labelAr: "مرفوض",       bg: "color-mix(in srgb, var(--color-error) 12%, transparent)", color: "var(--color-error)", border: "color-mix(in srgb, var(--color-error) 34%, transparent)" },
   suspended: { label: "Suspended", labelAr: "موقوف",       bg: "var(--bg-card-muted)", color: "var(--text-muted)", border: "var(--border-subtle)" },
 };

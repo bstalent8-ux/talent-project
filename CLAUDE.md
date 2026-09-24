@@ -22,7 +22,7 @@ notifications, and an admin back-office.
 - **Primary language:** Arabic (RTL default), English secondary (LTR) — bilingual UI strings are
   inlined per-component as `TX = { ar: {...}, en: {...} }`.
 - **Currency:** EGP.
-- **Live surface:** guests can browse `/home`, `/explore`, `/talent/[handle]`, `/jobs`, `/community`,
+- **Live surface:** guests can browse `/home`, `/explore`, `/talent/[handle]`, `/jobs`,
   `/brands`, `/about`, `/blog`, `/contact`, and the legal pages.
 
 ---
@@ -317,8 +317,11 @@ Roles live in `profiles.role` (Postgres enum `user_role`).
 ### Guest privilege layer
 Guests are visitors with no Supabase session and no `auth.uid()`. They can browse public marketplace
 content only: `/`, `/home`, `/explore`, `/talents`, `/talent/[handle]`, `/brands`, `/brand/[id]`,
-`/jobs`, `/jobs/[id]`, `/campaigns`, `/community`, `/community/question/[id]`, `/packages`, and
-`/pricing`. Public server pages that use `adminClient` must reapply public filters in code because
+`/jobs`, `/jobs/[id]`, `/campaigns`, `/packages`, and `/pricing`. `/community` (2026-09-23) is
+account-gated too, but client-side, not via `middleware.ts`: the URL loads for a guest, and
+`CommunityClient` swaps the whole feed for `CommunityAuthGate` (a sign-in prompt, not a redirect)
+once `useGuestGuard()` resolves `isGuest`.
+Public server pages that use `adminClient` must reapply public filters in code because
 RLS is bypassed: approved/active talents only, approved/active brands only, open jobs only, and
 active packages only.
 
@@ -1402,3 +1405,34 @@ A **talent's** new profile photo is reviewed too (brands' logos are exempt). `pr
   `PATCH /api/admin/pending-media` with `kind: "avatar"` (ids = profile ids): approve promotes `pending_avatar_url` →
   `avatar_url`; reject keeps the last approved photo live and records the reason. The update is guarded on the exact pending
   URL so a photo re-uploaded a moment earlier isn't overwritten.
+
+---
+
+## Rebrand foundation — 2026-09-24
+
+New identity: Deep Teal `#087F83` (primary) · Soft Teal `#4FA7A3` · Dark Chocolate `#2B211D` · Muted Peach `#E7A58A` (accent) · Vanilla Cream `#F5EEDB` (light-mode page ground).
+
+- **Tokens** (`app/globals.css`): raw palette in `--brand-*`, then roles exactly as the brand defines them — `--color-primary` = Deep Teal; `--color-secondary` = Dark Chocolate, `--color-secondary-alt` = Soft Teal; `--color-accent` = Muted Peach (highlights, CTAs, the active nav pill; `-soft`/`-strong` variants, `--color-on-accent` for text on a peach fill). The ~180 call sites that used `--color-secondary` as the old gold highlight were moved to `--color-accent`. Legacy `--color-orange*`/`--color-purple*` aliases now map to peach/soft teal; status colors (success/warning/error/info) are unchanged.
+- **Dark theme** is derived (the brand ships none): warm chocolate, page `#1B1310`, cards on `#2B211D`. **Light theme**: page `#F5EEDB`, cards `#FBF7EA`, text `#2B211D`.
+- **Contrast rules** (measured): peach on cream ≈ 1.8:1 and Deep Teal on cream ≈ 4.2:1, so peach never carries text on light (`--color-secondary-strong` is `#9A4E34` in light mode) and the global focus ring is teal, not peach.
+- **Logo**: `public/assets/talents-logo-light.png` (chocolate wordmark) and `talents-logo-dark.png` (cream wordmark + Soft Teal mark), generated from `public/assets/1.png`. Renamed from `logo-*.png` on purpose: `next/image` caches by URL and served the old logo.
+- **Navbar** links: About · Discover Talents · Community · Packages · Contact (Home = logo; Projects/Brands left the bar). Hover text-roll and the comet ring are unchanged (comet now peach).
+- **Not migrated yet**: the ~157 files that define their own hex constants (`const GREEN = "#00D26A"` …) still show the old colors until the per-page pass. `DESIGN.md` frontmatter is current; its prose still describes the old dark-first direction. Favicon/`site-icon.png` and OG image are still the old mark.
+
+### Auth pages redesign — 2026-09-24
+
+`/register`, `/login`, `/forgot-password` and `/waitlist` all render inside one frame, `app/(auth)/_components/AuthFrame.tsx` (top bar with logo / language / theme / Back to Home, a showcase card, and a form card); `app/(auth)/auth.module.css` owns the look and is token-only. Form logic stayed in each page. The showcase hides under 980px. `variant="plain"` (waitlist) renders the form card alone.
+
+- Hero photo: `public/assets/auth-hero-talent.webp` (141 KB, halo removed from the cut-out alpha). The 2.2 MB source PNG `92bddf5d-….png` and the old `auth-hero.avif` are no longer referenced.
+- `FIELD_ORDER` (register validation focus order) now follows the on-screen order: name, email, phone, password, confirm, category, other type, terms.
+- No "Continue with Google": there is no OAuth provider wired up, so the button from the mockup was left out rather than faked.
+
+**Auth transitions (2026-09-24):** the frame now lives in `app/(auth)/layout.tsx` via `_components/AuthShell.tsx`, so the top bar and showcase stay mounted between `/login`, `/register`, `/forgot-password`. Links between those pages use `AuthLink`: it plays `formOut` (slide left, 260 ms), then `router.push`; the next form enters with `formIn`. `prefers-reduced-motion` skips both. Pages return only their form — do not wrap them in `AuthFrame` again.
+
+**Auth responsive breakpoints (2026-09-24):** the fixed one-screen layout (both cards a shared 580 px tall, page height locked to the viewport) only applies at **≥ 1181 px**. Below that the showcase card is hidden and the form takes the row alone (max 760 px, page scrolls normally) — at ~1000 px the register showcase used to collapse to ~300 px wide with clipped copy and a pixelated photo. Between 1181 and 1365 px the showcase drops its long paragraph and feature descriptions (`.showcaseSub`, `.feature small`) and register's role cards lose their subtitle so everything still fits. The register form column is `clamp(520px, 49vw, 660px)`. Language switch (`data-lang-phase` on `.authPage`) and theme switch (View Transitions in `SiteContext.setMode`, `theme-switching` class) are animated; `SupportTicketModal` is portaled to `<body>` because the form's slide-in transform otherwise traps its `position: fixed` backdrop.
+
+**Load performance (2026-09-24):** Google Fonts is no longer a CSS `@import` (that was render-blocking, ~0.9 s on a throttled phone): `app/layout.tsx` preconnects to fonts.googleapis.com / fonts.gstatic.com and injects the stylesheet `<link>` from a tiny head script (with a `<noscript>` fallback), so text paints in the fallback face and swaps. The favicon is `/site-icon-64.png` (3 KB) and apple-touch `/site-icon-180.png`; `/site-icon.png` (now 47 KB, was 336 KB) is only the og:image. Lighthouse 12, production build, throttled mobile: /login 62 -> 90, /register 63 -> 83-90 (transfer 942 -> 619 KiB). Remaining cost is Meta Pixel (~190 KB, only when `NEXT_PUBLIC_META_PIXEL_ID` is set) and shared JS.
+
+**Onboarding restored (2026-09-24):** `/onboarding` (a 5-step talent orientation: welcome, how bookings work, why complete your profile, how brands find you, tips) had been unlinked since commit `27847b5` (2026-09-21), which pointed the post-signup redirect straight at `/profile/me/complete`. Registration now sends UGC/Model talents to `/onboarding` again (brands still go to `/profile/me`, "other" talents to `/waitlist`); Skip / the last step lands on `/profile/me/complete`. It shares the auth top bar (logo, language, theme), the brand tokens, and the hero cut-out (hidden below 1101 px). Correction to §12 item 4: `app/(auth)/onboarding/page.tsx` is live code now, not a commented-out wizard. The old `talents_just_onboarded` sessionStorage flag is no longer set (the profile wizard replaced the `/profile/me` popup it fed).
+
+**Language-switch animation is shared (2026-09-24):** the wipe-out / type-in choreography lives in `app/(auth)/_components/useLangSwitch.ts` (`data-lang-phase` = `idle | out | in`, `LANG_OUT_MS` / `LANG_IN_MS`) and is used by both `AuthFrame` (sign-in / register / forgot-password) and `/onboarding` (which wipes `.cardContent` and fades the art chip). Change the timings in the hook and in the matching `langOut` / `langIn*` keyframes together.

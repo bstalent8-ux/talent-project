@@ -4,8 +4,7 @@ export const runtime = "edge";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { Eye, EyeOff, Languages, Moon, Sun } from "lucide-react";
+import { ArrowLeft, ArrowRight, Briefcase, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSite } from "@/contexts/SiteContext";
 import { safeNextPath } from "@/lib/safe-next-path";
@@ -15,6 +14,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { trackEvent } from "@/lib/analytics/track";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { getAttribution } from "@/lib/analytics/attribution";
+import { AuthLink } from "../_components/AuthShell";
 import styles from "../auth.module.css";
 import PhoneInput from "../phone/PhoneInput";
 import { detectDefaultCountryIso, findCountry, rememberCountryIso } from "../phone/countries";
@@ -70,8 +70,8 @@ const BRAND_CATEGORIES = [
 const TX = {
   ar: {
     eyebrow:         "انضم الآن //",
-    headline:        "أنت على بُعد 30 ثانية",
-    sub:             "من أكبر سوق مواهب في العالم العربي",
+    headline:        "إنشاء حساب",
+    sub:             "انضم لمجتمع Talents",
     fullName:        "الاسم الكامل",
     fullNamePH:      "مثلاً: أحمد محمد",
     email:           "البريد الإلكتروني",
@@ -82,7 +82,11 @@ const TX = {
     passwordPH:      "8 أحرف على الأقل",
     confirm:         "تأكيد كلمة المرور",
     confirmPH:       "أعد كتابة كلمة المرور",
-    iAm:             "أنا...",
+    iAm:             "انضم كـ",
+    roleTalentTitle: "أنا موهبة",
+    roleTalentDesc:  "اعرض أعمالك وخلّي البراندات تلاقيك.",
+    roleBrandTitle:  "أنا براند / منظّم",
+    roleBrandDesc:   "لاقي مواهب مميزة وتعاون معاها.",
     talent:          "موهبة / منشئ محتوى",
     brand:           "براند / شركة",
     talentType:      "نوع الموهبة",
@@ -93,7 +97,7 @@ const TX = {
     termsLink:       "الشروط والأحكام",
     terms2:          "و",
     privacyLink:     "سياسة الخصوصية",
-    submit:          "إنشاء الحساب ←",
+    submit:          "إنشاء الحساب",
     loading:         "جاري الإنشاء...",
     haveAccount:     "لديك حساب؟",
     signIn:          "تسجيل الدخول",
@@ -139,8 +143,8 @@ const TX = {
   },
   en: {
     eyebrow:         "JOIN NOW //",
-    headline:        "You're 30 seconds away",
-    sub:             "from the largest Arab talent marketplace",
+    headline:        "Create Account",
+    sub:             "Join the Talents community",
     fullName:        "Full name",
     fullNamePH:      "e.g. Ahmed Mohamed",
     email:           "Email address",
@@ -151,7 +155,11 @@ const TX = {
     passwordPH:      "At least 8 characters",
     confirm:         "Confirm password",
     confirmPH:       "Re-enter your password",
-    iAm:             "I am a...",
+    iAm:             "I'm joining as",
+    roleTalentTitle: "I'm a Talent",
+    roleTalentDesc:  "Showcase my work, get discovered.",
+    roleBrandTitle:  "I'm a Brand / Organizer",
+    roleBrandDesc:   "Find and collaborate with talents.",
     talent:          "Talent / Creator",
     brand:           "Brand / Company",
     talentType:      "Talent type",
@@ -162,7 +170,7 @@ const TX = {
     termsLink:       "Terms of Service",
     terms2:          "and",
     privacyLink:     "Privacy Policy",
-    submit:          "Create account →",
+    submit:          "Create Account",
     loading:         "Creating...",
     haveAccount:     "Already have an account?",
     signIn:          "Sign in",
@@ -222,7 +230,8 @@ export default function RegisterPage() {
   const router = useRouter();
 
   // Same provider the rest of the site uses — no local theme/lang state.
-  const { lang, dark, toggleLang, toggleMode } = useSite();
+  const { lang } = useSite();
+  const Arrow = lang === "ar" ? ArrowLeft : ArrowRight;
 
   const [form,        setForm]        = useState<FormData>(INIT);
   const [loading,     setLoading]     = useState(false);
@@ -557,7 +566,7 @@ export default function RegisterPage() {
       router.push(safeNextPath() ?? (
         form.role !== "talent" ? "/profile/me" :
         isOtherTalentType      ? "/waitlist" :
-        "/profile/me/complete"
+        "/onboarding"
       ));
     } catch (e) {
       setOtpStep("form");
@@ -585,353 +594,319 @@ export default function RegisterPage() {
     :                                             styles.inputInvalid;
 
   return (
-    <div className={styles.authPage}>
+    <>
+      <h1 className={styles.heading}>{tx.headline}</h1>
+      <p className={styles.subheading}>{tx.sub}</p>
 
-      {/* ── FORM SIDE ── */}
-      <div className={`${styles.formPane} ${styles.formPaneWide}`}>
-        <div className={styles.controls}>
-          <button
-            type="button"
-            className={styles.controlButton}
-            onClick={toggleLang}
-            aria-label={tx.langBtn}
-          >
-            <Languages size={14} aria-hidden="true" />
-            {lang === "ar" ? "EN" : "ع"}
-          </button>
-          <button
-            type="button"
-            className={styles.controlButton}
-            onClick={toggleMode}
-            aria-label={tx.themeBtn}
-          >
-            {dark ? <Sun size={14} aria-hidden="true" /> : <Moon size={14} aria-hidden="true" />}
-          </button>
-          <Link className={styles.controlLink} href="/login">
-            {tx.haveAccount}{" "}
-            <span className={styles.controlLinkAccent}>{tx.signIn}</span>
-          </Link>
-        </div>
+      {serverError && (
+        <p className={styles.errorBanner} role="alert">{serverError}</p>
+      )}
 
-        <div className={styles.formInner}>
-          <p className={styles.eyebrow}>{tx.eyebrow}</p>
-          <h1 className={styles.heading}>{tx.headline}</h1>
-          <p className={styles.subheading}>{tx.sub}</p>
-
-          {serverError && (
-            <p className={styles.errorBanner} role="alert">{serverError}</p>
-          )}
-
-          {otpStep === "code" ? (
-            <div className={styles.fieldGroup}>
-              <p className={styles.subheading} style={{ margin: 0 }}>
-                {tx.otpSub} <strong>{form.email.trim()}</strong>
-              </p>
-              <div>
-                <label className={styles.label} htmlFor="register-otp">{tx.otpTitle}</label>
-                <input
-                  id="register-otp"
-                  className={`${styles.input} ${otpError ? styles.inputInvalid : ""}`}
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  placeholder={tx.otpCodePH}
-                  value={otpCode}
-                  aria-invalid={Boolean(otpError) || undefined}
-                  onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setOtpError(null); }}
-                  onKeyDown={(e) => e.key === "Enter" && verifyOtpAndComplete()}
-                  style={{ textAlign: "center", letterSpacing: 6, fontSize: 20 }}
-                />
-                {otpError && <p className={styles.fieldError} role="alert">{otpError}</p>}
-              </div>
-
-              <button
-                type="button"
-                className={styles.submitButton}
-                onClick={verifyOtpAndComplete}
-                disabled={otpVerifying || otpCode.trim().length !== 6}
-              >
-                {otpVerifying ? tx.otpVerifying : tx.otpVerifyBtn}
-              </button>
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <button
-                  type="button"
-                  className={styles.textLink}
-                  style={{ background: "none", border: "none", cursor: otpCooldown > 0 || otpSending ? "default" : "pointer", padding: 0, fontSize: 12.5, opacity: otpCooldown > 0 || otpSending ? 0.5 : 1 }}
-                  onClick={resendOtp}
-                  disabled={otpCooldown > 0 || otpSending}
-                >
-                  {otpCooldown > 0 ? `${tx.otpResendIn} ${otpCooldown}s` : tx.otpResend}
-                </button>
-                <button
-                  type="button"
-                  className={styles.textLink}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 12.5 }}
-                  onClick={() => { setOtpStep("form"); setOtpCode(""); setOtpError(null); }}
-                >
-                  {tx.otpChangeEmail}
-                </button>
-              </div>
-            </div>
-          ) : (
-          <>
-          {/* Role toggle */}
-          <div className={styles.field}>
-            <span className={styles.label}>{tx.iAm}</span>
-            <div className={styles.roleRow} role="group" aria-label={tx.iAm}>
-              {(["talent", "brand"] as Role[]).map((r) => {
-                const active = form.role === r;
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    className={`${styles.roleButton} ${active ? styles.roleButtonActive : ""}`}
-                    onClick={() => set("role", r)}
-                    aria-pressed={active}
-                  >
-                    {r === "talent" ? tx.talent : tx.brand}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Category */}
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="register-category">
-              {form.role === "talent" ? tx.talentType : tx.brandCategory}
-            </label>
-            <CustomSelect
-              id="register-category"
-              value={form.role === "talent" ? form.talentType : form.brandCategory}
-              colors={fieldErrors.category ? { border: "var(--color-error)", card: "var(--bg-card-muted)" } : { card: "var(--bg-card-muted)" }}
-              onChange={(v) => {
-                if (form.role === "talent") set("talentType", v);
-                else set("brandCategory", v);
-              }}
-              options={(form.role === "talent" ? TALENT_TYPES : BRAND_CATEGORIES).map((item) => ({
-                value: item.value,
-                label: lang === "ar" ? item.ar : item.en,
-              }))}
+      {otpStep === "code" ? (
+        <div className={styles.fieldGroup}>
+          <p className={styles.subheading} style={{ margin: 0 }}>
+            {tx.otpSub} <strong>{form.email.trim()}</strong>
+          </p>
+          <div>
+            <label className={styles.label} htmlFor="register-otp">{tx.otpTitle}</label>
+            <input
+              id="register-otp"
+              className={`${styles.input} ${otpError ? styles.inputInvalid : ""}`}
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              placeholder={tx.otpCodePH}
+              value={otpCode}
+              aria-invalid={Boolean(otpError) || undefined}
+              onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setOtpError(null); }}
+              onKeyDown={(e) => e.key === "Enter" && verifyOtpAndComplete()}
+              style={{ textAlign: "center", letterSpacing: 6, fontSize: 20 }}
             />
-            {fieldErrors.category && (
-              <p className={styles.fieldError} role="alert">{fieldErrors.category}</p>
-            )}
+            {otpError && <p className={styles.fieldError} role="alert">{otpError}</p>}
           </div>
 
-          {form.role === "talent" && form.talentType === "other" && (
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="register-other-type">{tx.otherTypeLabel}</label>
-              <input
-                id="register-other-type"
-                className={`${styles.input} ${fieldErrors.otherTypeText ? styles.inputInvalid : ""}`}
-                type="text"
-                placeholder={tx.otherTypePH}
-                value={form.otherTypeText}
-                aria-invalid={Boolean(fieldErrors.otherTypeText) || undefined}
-                onChange={(e) => set("otherTypeText", e.target.value)}
-              />
-              {fieldErrors.otherTypeText && (
-                <p className={styles.fieldError} role="alert">{fieldErrors.otherTypeText}</p>
-              )}
-            </div>
-          )}
+          <button
+            type="button"
+            className={styles.submitButton}
+            onClick={verifyOtpAndComplete}
+            disabled={otpVerifying || otpCode.trim().length !== 6}
+          >
+            {otpVerifying ? tx.otpVerifying : tx.otpVerifyBtn}
+          </button>
 
-          {/* Fields */}
-          <div className={styles.fieldGroup}>
-            <div>
-              <label className={styles.label} htmlFor="register-name">{tx.fullName}</label>
-              <input
-                id="register-name"
-                className={`${styles.input} ${fieldErrors.fullName ? styles.inputInvalid : ""}`}
-                type="text"
-                placeholder={tx.fullNamePH}
-                value={form.fullName}
-                autoComplete="name"
-                aria-invalid={Boolean(fieldErrors.fullName) || undefined}
-                onChange={(e) => set("fullName", e.target.value)}
-              />
-              {fieldErrors.fullName && (
-                <p className={styles.fieldError} role="alert">{fieldErrors.fullName}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={styles.label} htmlFor="register-email">{tx.email}</label>
-              <input
-                id="register-email"
-                className={`${styles.input} ${fieldErrors.email ? styles.inputInvalid : ""}`}
-                type="email"
-                placeholder={tx.emailPH}
-                value={form.email}
-                autoComplete="email"
-                aria-invalid={Boolean(fieldErrors.email) || undefined}
-                onChange={(e) => set("email", e.target.value)}
-              />
-              {fieldErrors.email && (
-                <p className={styles.fieldError} role="alert">
-                  {fieldErrors.email}
-                  {signInPrompt && (
-                    <>
-                      {" "}
-                      <Link className={styles.textLink} href="/login">{tx.signIn}</Link>
-                    </>
-                  )}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className={styles.label} htmlFor="register-phone">{tx.phone}</label>
-              <PhoneInput
-                countryIso={phoneCountryIso}
-                lang={lang}
-                number={form.phoneNumber}
-                numberAutoComplete="tel-national"
-                numberInputId="register-phone"
-                numberPlaceholder={tx.phonePH}
-                invalid={Boolean(fieldErrors.phone)}
-                onCountryChange={handleCountryChange}
-                onNumberChange={(value) => set("phoneNumber", value)}
-              />
-              {fieldErrors.phone && (
-                <p className={styles.fieldError} role="alert">{fieldErrors.phone}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={styles.label} htmlFor="register-password">{tx.password}</label>
-              <div className={styles.inputWrap}>
-                <input
-                  id="register-password"
-                  className={`${styles.input} ${styles.inputWithAffix} ${fieldErrors.password ? styles.inputInvalid : ""}`}
-                  type={showPass ? "text" : "password"}
-                  placeholder={tx.passwordPH}
-                  value={form.password}
-                  autoComplete="new-password"
-                  aria-invalid={Boolean(fieldErrors.password) || undefined}
-                  onChange={(e) => set("password", e.target.value)}
-                />
-                <button
-                  type="button"
-                  className={styles.revealButton}
-                  onClick={() => setShowPass(!showPass)}
-                  aria-label={showPass ? tx.hidePass : tx.showPass}
-                >
-                  {showPass ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
-                </button>
-              </div>
-
-              {form.password.length > 0 && (
-                <div className={styles.strengthTrack}>
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className={`${styles.strengthSegment} ${passStrength >= i ? STRENGTH_CLASS[passStrength] : ""}`}
-                    />
-                  ))}
-                </div>
-              )}
-              {fieldErrors.password && (
-                <p className={styles.fieldError} role="alert">{fieldErrors.password}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={styles.label} htmlFor="register-confirm">{tx.confirm}</label>
-              <div className={styles.inputWrap}>
-                <input
-                  id="register-confirm"
-                  className={`${styles.input} ${styles.inputWithAffix} ${fieldErrors.confirmPassword ? styles.inputInvalid : confirmState}`}
-                  type={showConf ? "text" : "password"}
-                  placeholder={tx.confirmPH}
-                  value={form.confirmPassword}
-                  autoComplete="new-password"
-                  aria-invalid={Boolean(fieldErrors.confirmPassword) || undefined}
-                  onChange={(e) => set("confirmPassword", e.target.value)}
-                />
-                <button
-                  type="button"
-                  className={styles.revealButton}
-                  onClick={() => setShowConf(!showConf)}
-                  aria-label={showConf ? tx.hidePass : tx.showPass}
-                >
-                  {showConf ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
-                </button>
-              </div>
-              {fieldErrors.confirmPassword && (
-                <p className={styles.fieldError} role="alert">{fieldErrors.confirmPassword}</p>
-              )}
-            </div>
-
-            {/* Terms */}
-            <label className={styles.termsRow}>
-              <input
-                id="register-terms"
-                className={styles.checkbox}
-                type="checkbox"
-                checked={form.agreeToTerms}
-                aria-invalid={Boolean(fieldErrors.terms) || undefined}
-                onChange={(e) => set("agreeToTerms", e.target.checked)}
-              />
-              <span className={styles.termsText}>
-                {tx.terms1}{" "}
-                <Link className={styles.textLink} href="/terms">{tx.termsLink}</Link>
-                {" "}{tx.terms2}{" "}
-                <Link className={styles.textLink} href="/privacy">{tx.privacyLink}</Link>
-              </span>
-            </label>
-            {fieldErrors.terms && (
-              <p className={styles.fieldError} role="alert">{fieldErrors.terms}</p>
-            )}
-
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button
               type="button"
-              className={styles.submitButton}
-              onClick={handleSubmit}
-              disabled={loading}
+              className={styles.textLink}
+              style={{ background: "none", border: "none", cursor: otpCooldown > 0 || otpSending ? "default" : "pointer", padding: 0, opacity: otpCooldown > 0 || otpSending ? 0.5 : 1 }}
+              onClick={resendOtp}
+              disabled={otpCooldown > 0 || otpSending}
             >
-              {loading ? tx.loading : tx.submit}
+              {otpCooldown > 0 ? `${tx.otpResendIn} ${otpCooldown}s` : tx.otpResend}
+            </button>
+            <button
+              type="button"
+              className={styles.textLink}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              onClick={() => { setOtpStep("form"); setOtpCode(""); setOtpError(null); }}
+            >
+              {tx.otpChangeEmail}
             </button>
           </div>
-          </>
-          )}
-
-          <p className={styles.footNote}>
-            {tx.haveAccount}{" "}
-            <Link className={styles.textLink} href="/login">{tx.signIn}</Link>
-          </p>
-
-          <div style={{ textAlign: "center", marginTop: 10 }}>
-            <SupportTicketModal page="register" pageError={serverError} />
+        </div>
+      ) : (
+      <>
+      <div className={styles.fieldGrid}>
+        {/* Role — first, because it decides which category list the select below shows */}
+        <div className={styles.fieldFull}>
+          <span className={styles.label} id="register-role-label">{tx.iAm}</span>
+          <div className={styles.roleRow} role="radiogroup" aria-labelledby="register-role-label">
+            {(["talent", "brand"] as Role[]).map((r) => {
+              const active = form.role === r;
+              const RoleIcon = r === "talent" ? User : Briefcase;
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  className={`${styles.roleCard} ${active ? styles.roleCardActive : ""}`}
+                  onClick={() => set("role", r)}
+                >
+                  <span className={styles.roleTop}>
+                    <span className={styles.roleRadio} aria-hidden="true" />
+                    <RoleIcon size={16} aria-hidden="true" />
+                  </span>
+                  <span className={styles.roleText}>
+                    <strong>{r === "talent" ? tx.roleTalentTitle : tx.roleBrandTitle}</strong>
+                    <small>{r === "talent" ? tx.roleTalentDesc : tx.roleBrandDesc}</small>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
-      </div>
 
-      {/* ── BRANDING SIDE — hidden under 768px by the stylesheet ── */}
-      <div className={styles.brandPane}>
-        <div className={styles.brandTop}>
-          {/* Always the white wordmark: .brandPane is a fixed dark photo panel
-              now, independent of [data-theme] (see auth.module.css). */}
-          <Image
-            className={styles.brandLogo}
-            src="/assets/logo-dark.png"
-            alt="Talents"
-            width={110}
-            height={32}
+        <div>
+          <label className={styles.label} htmlFor="register-name">{tx.fullName}</label>
+          <div className={styles.inputWrap}>
+            <User className={styles.inputIcon} size={16} aria-hidden="true" />
+            <input
+              id="register-name"
+              className={`${styles.input} ${styles.inputWithIcon} ${fieldErrors.fullName ? styles.inputInvalid : ""}`}
+              type="text"
+              placeholder={tx.fullNamePH}
+              value={form.fullName}
+              autoComplete="name"
+              aria-invalid={Boolean(fieldErrors.fullName) || undefined}
+              onChange={(e) => set("fullName", e.target.value)}
+            />
+          </div>
+          {fieldErrors.fullName && (
+            <p className={styles.fieldError} role="alert">{fieldErrors.fullName}</p>
+          )}
+        </div>
+
+        <div>
+          <label className={styles.label} htmlFor="register-email">{tx.email}</label>
+          <div className={styles.inputWrap}>
+            <Mail className={styles.inputIcon} size={16} aria-hidden="true" />
+            <input
+              id="register-email"
+              className={`${styles.input} ${styles.inputWithIcon} ${fieldErrors.email ? styles.inputInvalid : ""}`}
+              type="email"
+              placeholder={tx.emailPH}
+              value={form.email}
+              autoComplete="email"
+              aria-invalid={Boolean(fieldErrors.email) || undefined}
+              onChange={(e) => set("email", e.target.value)}
+            />
+          </div>
+          {fieldErrors.email && (
+            <p className={styles.fieldError} role="alert">
+              {fieldErrors.email}
+              {signInPrompt && (
+                <>
+                  {" "}
+                  <AuthLink className={styles.textLink} href="/login">{tx.signIn}</AuthLink>
+                </>
+              )}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className={styles.label} htmlFor="register-phone">{tx.phone}</label>
+          <PhoneInput
+            countryIso={phoneCountryIso}
+            lang={lang}
+            number={form.phoneNumber}
+            numberAutoComplete="tel-national"
+            numberInputId="register-phone"
+            numberPlaceholder={tx.phonePH}
+            invalid={Boolean(fieldErrors.phone)}
+            onCountryChange={handleCountryChange}
+            onNumberChange={(value) => set("phoneNumber", value)}
           />
+          {fieldErrors.phone && (
+            <p className={styles.fieldError} role="alert">{fieldErrors.phone}</p>
+          )}
         </div>
 
-        <div className={styles.brandBottom}>
-          <h2 className={styles.brandHeadline}>
-            {tx.brand2}<br />
-            <span className={styles.brandHighlight}>{tx.brandHighlight}</span>
-          </h2>
-          <p className={styles.brandDesc}>{tx.brandDesc}</p>
+        <div>
+          <label className={styles.label} htmlFor="register-category">
+            {form.role === "talent" ? tx.talentType : tx.brandCategory}
+          </label>
+          <CustomSelect
+            id="register-category"
+            value={form.role === "talent" ? form.talentType : form.brandCategory}
+            colors={fieldErrors.category ? { border: "var(--color-error)", card: "var(--bg-page)" } : { border: "var(--border-strong)", card: "var(--bg-page)" }}
+            onChange={(v) => {
+              if (form.role === "talent") set("talentType", v);
+              else set("brandCategory", v);
+            }}
+            options={(form.role === "talent" ? TALENT_TYPES : BRAND_CATEGORIES).map((item) => ({
+              value: item.value,
+              label: lang === "ar" ? item.ar : item.en,
+            }))}
+          />
+          {fieldErrors.category && (
+            <p className={styles.fieldError} role="alert">{fieldErrors.category}</p>
+          )}
+        </div>
+
+        {form.role === "talent" && form.talentType === "other" && (
+          <div className={styles.fieldFull}>
+            <label className={styles.label} htmlFor="register-other-type">{tx.otherTypeLabel}</label>
+            <input
+              id="register-other-type"
+              className={`${styles.input} ${fieldErrors.otherTypeText ? styles.inputInvalid : ""}`}
+              type="text"
+              placeholder={tx.otherTypePH}
+              value={form.otherTypeText}
+              aria-invalid={Boolean(fieldErrors.otherTypeText) || undefined}
+              onChange={(e) => set("otherTypeText", e.target.value)}
+            />
+            {fieldErrors.otherTypeText && (
+              <p className={styles.fieldError} role="alert">{fieldErrors.otherTypeText}</p>
+            )}
+          </div>
+        )}
+
+        <div>
+          <label className={styles.label} htmlFor="register-password">{tx.password}</label>
+          <div className={styles.inputWrap}>
+            <Lock className={styles.inputIcon} size={16} aria-hidden="true" />
+            <input
+              id="register-password"
+              className={`${styles.input} ${styles.inputWithIcon} ${styles.inputWithAffix} ${fieldErrors.password ? styles.inputInvalid : ""}`}
+              type={showPass ? "text" : "password"}
+              placeholder={tx.passwordPH}
+              value={form.password}
+              autoComplete="new-password"
+              aria-invalid={Boolean(fieldErrors.password) || undefined}
+              onChange={(e) => set("password", e.target.value)}
+            />
+            <button
+              type="button"
+              className={styles.revealButton}
+              onClick={() => setShowPass(!showPass)}
+              aria-label={showPass ? tx.hidePass : tx.showPass}
+            >
+              {showPass ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+            </button>
+          </div>
+
+          {form.password.length > 0 && (
+            <div className={styles.strengthTrack}>
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className={`${styles.strengthSegment} ${passStrength >= i ? STRENGTH_CLASS[passStrength] : ""}`}
+                />
+              ))}
+            </div>
+          )}
+          {fieldErrors.password && (
+            <p className={styles.fieldError} role="alert">{fieldErrors.password}</p>
+          )}
+        </div>
+
+        <div>
+          <label className={styles.label} htmlFor="register-confirm">{tx.confirm}</label>
+          <div className={styles.inputWrap}>
+            <Lock className={styles.inputIcon} size={16} aria-hidden="true" />
+            <input
+              id="register-confirm"
+              className={`${styles.input} ${styles.inputWithIcon} ${styles.inputWithAffix} ${fieldErrors.confirmPassword ? styles.inputInvalid : confirmState}`}
+              type={showConf ? "text" : "password"}
+              placeholder={tx.confirmPH}
+              value={form.confirmPassword}
+              autoComplete="new-password"
+              aria-invalid={Boolean(fieldErrors.confirmPassword) || undefined}
+              onChange={(e) => set("confirmPassword", e.target.value)}
+            />
+            <button
+              type="button"
+              className={styles.revealButton}
+              onClick={() => setShowConf(!showConf)}
+              aria-label={showConf ? tx.hidePass : tx.showPass}
+            >
+              {showConf ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+            </button>
+          </div>
+          {fieldErrors.confirmPassword && (
+            <p className={styles.fieldError} role="alert">{fieldErrors.confirmPassword}</p>
+          )}
+        </div>
+
+        {/* Terms */}
+        <div className={styles.fieldFull}>
+          <label className={styles.termsRow}>
+            <input
+              id="register-terms"
+              className={styles.checkbox}
+              type="checkbox"
+              checked={form.agreeToTerms}
+              aria-invalid={Boolean(fieldErrors.terms) || undefined}
+              onChange={(e) => set("agreeToTerms", e.target.checked)}
+            />
+            <span className={styles.termsText}>
+              {tx.terms1}{" "}
+              <Link className={styles.textLink} href="/terms">{tx.termsLink}</Link>
+              {" "}{tx.terms2}{" "}
+              <Link className={styles.textLink} href="/privacy">{tx.privacyLink}</Link>
+            </span>
+          </label>
+          {fieldErrors.terms && (
+            <p className={styles.fieldError} role="alert">{fieldErrors.terms}</p>
+          )}
+        </div>
+
+        <div className={styles.fieldFull}>
+          <button
+            type="button"
+            className={styles.submitButton}
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? tx.loading : (<>{tx.submit}<Arrow size={18} aria-hidden="true" /></>)}
+          </button>
         </div>
       </div>
-    </div>
+      </>
+      )}
+
+      <div className={styles.footRow}>
+        <p className={styles.footNote}>
+          {tx.haveAccount}{" "}
+          <AuthLink className={styles.textLink} href="/login">{tx.signIn}</AuthLink>
+        </p>
+        <span className={styles.helpIn}>
+          <SupportTicketModal page="register" pageError={serverError} />
+        </span>
+      </div>
+    </>
   );
 }

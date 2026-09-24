@@ -120,7 +120,7 @@ export default function PreviewClient({
               <CustomSelect
                 value={profileTypeId}
                 onChange={switchType}
-                colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-accent)", hover: "var(--bg-card-muted)" }}
                 options={types.map((type) => ({ value: type.id, label: `${(ar ? type.name_ar : type.name_en) ?? type.name} (${type.slug})` }))}
               />
             </div>
@@ -130,7 +130,7 @@ export default function PreviewClient({
               <CustomSelect
                 value={variant}
                 onChange={switchVariant}
-                colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-accent)", hover: "var(--bg-card-muted)" }}
                 options={LAYOUT_VARIANTS.map((item) => ({ value: item, label: item }))}
               />
             </div>

@@ -75,8 +75,8 @@ export default function ComingSoonOverlay({ children }: { children: React.ReactN
               width: 48, height: 48, margin: "0 auto 1rem",
               display: "flex", alignItems: "center", justifyContent: "center",
               borderRadius: "50%",
-              background: "var(--color-secondary-soft)",
-              color: "var(--color-secondary-strong)",
+              background: "var(--color-accent-soft)",
+              color: "var(--color-accent-strong)",
             }}
           >
             <Clock3 size={22} />
@@ -86,8 +86,8 @@ export default function ComingSoonOverlay({ children }: { children: React.ReactN
             style={{
               display: "inline-block", marginBottom: 10,
               padding: "0.3rem 0.75rem", borderRadius: 999,
-              background: "var(--color-secondary-soft)",
-              color: "var(--color-secondary-strong)",
+              background: "var(--color-accent-soft)",
+              color: "var(--color-accent-strong)",
               fontSize: 12, fontWeight: 800,
             }}
           >

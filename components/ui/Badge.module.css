@@ -20,9 +20,9 @@
 }
 
 .warning {
-  background: var(--color-secondary-soft);
-  color: var(--color-secondary);
-  border: 1px solid color-mix(in srgb, var(--color-secondary) 32%, transparent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 32%, transparent);
 }
 
 .error {

@@ -59,11 +59,11 @@
 .packageButton:hover,
 .packageButtonActive {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--color-secondary) 48%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--color-accent) 48%, var(--border-subtle));
 }
 
 .packageButtonActive {
-  background: var(--color-secondary-soft);
+  background: var(--color-accent-soft);
 }
 
 .packageButton strong {
@@ -96,7 +96,7 @@
 
 .pillActive {
   background: var(--color-primary-soft);
-  color: var(--color-accent);
+  color: var(--color-secondary-alt);
   border-color: color-mix(in srgb, var(--color-primary) 36%, var(--border-subtle));
 }
 
@@ -145,7 +145,7 @@
 .field input:focus,
 .field textarea:focus,
 .field select:focus {
-  border-color: var(--color-secondary);
+  border-color: var(--color-accent);
   box-shadow: var(--shadow-focus);
 }
 
@@ -210,7 +210,7 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, var(--color-secondary), #efc66d);
+  background: linear-gradient(135deg, var(--color-accent), #efc66d);
   color: #151109;
 }
 

@@ -24,7 +24,7 @@ export type FieldKey = "category" | "otherTypeText" | "fullName" | "email" | "ph
 
 // Visual top-to-bottom order, used to decide which field gets focus when more
 // than one is invalid at once.
-export const FIELD_ORDER: FieldKey[] = ["category", "otherTypeText", "fullName", "email", "phone", "password", "confirmPassword", "terms"];
+export const FIELD_ORDER: FieldKey[] = ["fullName", "email", "phone", "category", "otherTypeText", "password", "confirmPassword", "terms"];
 
 export const FIELD_IDS: Record<FieldKey, string> = {
   category:        "register-category",

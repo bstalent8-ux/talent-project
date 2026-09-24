@@ -53,16 +53,16 @@
 /* ── Secondary: gold outline, second-choice action beside a primary ── */
 .secondary {
   background: transparent;
-  border-color: var(--color-secondary);
-  color: var(--color-secondary);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .secondary:hover:not(:disabled) {
-  background: var(--color-secondary-soft);
+  background: var(--color-accent-soft);
 }
 
 .secondary:active:not(:disabled) {
-  background: color-mix(in srgb, var(--color-secondary) 20%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
 /* ── Ghost: no fill, no border, tertiary actions ── */
@@ -89,7 +89,7 @@
 
 /* ── Shared states ── */
 .button:focus-visible {
-  outline: 2px solid var(--color-secondary);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 

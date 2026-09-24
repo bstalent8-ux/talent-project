@@ -44,7 +44,7 @@ export default function ScrollProgressPath() {
           height: "100%",
           transformOrigin: "top",
           scaleY: smoothed,
-          background: "linear-gradient(180deg, var(--color-secondary), var(--color-primary, var(--color-secondary)))",
+          background: "linear-gradient(180deg, var(--color-accent), var(--color-primary, var(--color-accent)))",
         }}
       />
     </div>

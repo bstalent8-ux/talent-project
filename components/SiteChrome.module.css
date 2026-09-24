@@ -29,38 +29,41 @@
     box-shadow var(--duration-base) var(--ease-standard);
 }
 
+/* Dark = warm chocolate glass with a Deep Teal tint; active pill = Muted
+   Peach with chocolate text (--nav-on-gold keeps its old name). */
 .darkChrome {
-  --nav-bg: color-mix(in srgb, var(--color-primary) 10%, rgba(10, 14, 22, 0.55));
-  --nav-panel: rgba(255, 255, 255, 0.065);
-  --nav-panel-hover: rgba(255, 255, 255, 0.1);
-  --nav-border: rgba(255, 255, 255, 0.13);
-  --nav-text: #f7fafc;
-  --nav-muted: rgba(247, 250, 252, 0.68);
+  --nav-bg: color-mix(in srgb, var(--color-primary) 10%, rgba(27, 19, 16, 0.62));
+  --nav-panel: rgba(245, 238, 219, 0.07);
+  --nav-panel-hover: rgba(245, 238, 219, 0.11);
+  --nav-border: rgba(245, 238, 219, 0.14);
+  --nav-text: #f5eedb;
+  --nav-muted: rgba(245, 238, 219, 0.7);
   --nav-shadow:
     0 30px 80px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 12px 60px color-mix(in srgb, var(--color-primary) 32%, transparent);
-  --nav-menu-bg: color-mix(in srgb, var(--color-primary) 18%, rgba(10, 16, 22, 0.96));
-  --nav-active-border: rgba(215, 168, 79, 0.56);
-  --nav-on-gold: var(--bg-page);
-  --cta-shadow-hover: 0 16px 48px color-mix(in srgb, var(--color-primary) 60%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    inset 0 1px 0 rgba(245, 238, 219, 0.2),
+    0 12px 60px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  --nav-menu-bg: color-mix(in srgb, var(--color-primary) 14%, rgba(30, 22, 19, 0.97));
+  --nav-active-border: rgba(231, 165, 138, 0.56);
+  --nav-on-gold: #2b211d;
+  --cta-shadow-hover: 0 16px 48px color-mix(in srgb, var(--color-primary) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
+/* Light = Vanilla Cream glass. */
 .lightChrome {
-  --nav-bg: color-mix(in srgb, var(--color-primary) 5%, rgba(255, 255, 255, 0.62));
-  --nav-panel: rgba(255, 255, 255, 0.64);
-  --nav-panel-hover: color-mix(in srgb, var(--color-primary) 9%, rgba(255, 255, 255, 0.7));
-  --nav-border: rgba(15, 118, 110, 0.16);
-  --nav-text: #101820;
-  --nav-muted: #536575;
+  --nav-bg: color-mix(in srgb, var(--color-primary) 4%, rgba(251, 247, 234, 0.74));
+  --nav-panel: rgba(251, 247, 234, 0.7);
+  --nav-panel-hover: color-mix(in srgb, var(--color-primary) 10%, rgba(251, 247, 234, 0.8));
+  --nav-border: rgba(8, 127, 131, 0.2);
+  --nav-text: #2b211d;
+  --nav-muted: #5e4f47;
   --nav-shadow:
-    0 24px 60px rgba(16, 24, 32, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 10px 44px color-mix(in srgb, var(--color-primary) 16%, transparent);
-  --nav-menu-bg: color-mix(in srgb, var(--color-primary) 8%, rgba(247, 248, 248, 0.96));
-  --nav-active-border: rgba(185, 132, 34, 0.38);
-  --nav-on-gold: var(--text-primary);
-  --cta-shadow-hover: 0 14px 40px color-mix(in srgb, var(--color-primary) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    0 24px 60px rgba(43, 33, 29, 0.14),
+    inset 0 1px 0 rgba(255, 253, 244, 0.9),
+    0 10px 44px color-mix(in srgb, var(--color-primary) 14%, transparent);
+  --nav-menu-bg: color-mix(in srgb, var(--color-primary) 6%, rgba(245, 238, 219, 0.97));
+  --nav-active-border: rgba(154, 78, 52, 0.4);
+  --nav-on-gold: #2b211d;
+  --cta-shadow-hover: 0 14px 40px color-mix(in srgb, var(--color-primary) 42%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .brandWrap,
@@ -142,7 +145,7 @@
   overflow: visible;
   pointer-events: none;
   z-index: 1;
-  filter: drop-shadow(0 0 3px rgba(255, 138, 31, 0.6)) drop-shadow(0 0 8px rgba(255, 138, 31, 0.3));
+  filter: drop-shadow(0 0 3px rgba(231, 165, 138, 0.6)) drop-shadow(0 0 8px rgba(231, 165, 138, 0.3));
 }
 
 .neonRect {
@@ -200,7 +203,7 @@
 
 .navLinkActive {
   color: var(--nav-on-gold);
-  background: var(--color-secondary);
+  background: var(--color-accent);
   border-color: var(--nav-active-border);
   font-weight: 800;
   box-shadow: var(--shadow-xs);
@@ -208,15 +211,15 @@
 
 .navLinkActive:hover {
   color: var(--nav-on-gold);
-  background: var(--color-secondary);
+  background: var(--color-accent);
 }
 
 .navSoonBadge {
   margin-inline-start: 0.35rem;
   padding: 0.1rem 0.4rem;
   border-radius: var(--radius-pill);
-  background: var(--color-secondary-soft);
-  color: var(--color-secondary-strong);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
   font-size: 0.65rem;
   font-weight: 800;
   line-height: 1.4;
@@ -274,7 +277,7 @@
 .mobileMenuButton:focus-visible,
 .logoLink:focus-visible,
 .mobileLink:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-secondary) 72%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 72%, transparent);
   outline-offset: 2px;
 }
 
@@ -296,7 +299,7 @@
   padding: 0 1.15rem;
   border: 0;
   border-radius: 100px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 62%, var(--color-success)) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 72%, var(--color-secondary-alt)) 100%);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 800;
@@ -308,7 +311,7 @@
 
 .bookButton:hover {
   filter: brightness(1.14) saturate(1.1);
-  box-shadow: var(--cta-shadow-hover, 0 16px 48px rgba(15, 118, 110, 0.55));
+  box-shadow: var(--cta-shadow-hover, 0 16px 48px rgba(8, 127, 131, 0.55));
 }
 
 .bookButton:active {
@@ -326,7 +329,7 @@
   padding: 0;
   overflow: hidden;
   border-radius: 50%;
-  color: var(--color-secondary);
+  color: var(--color-accent);
 }
 
 .notificationButton {
@@ -364,8 +367,8 @@
 .spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid color-mix(in srgb, var(--color-secondary) 28%, transparent);
-  border-top-color: var(--color-secondary);
+  border: 2px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  border-top-color: var(--color-accent);
   border-radius: var(--radius-pill);
   animation: navSpin 0.75s linear infinite;
 }
@@ -407,7 +410,7 @@
 
 .dropdownItem:hover {
   background: var(--nav-panel);
-  color: var(--color-secondary);
+  color: var(--color-accent);
 }
 
 .dangerItem {
@@ -474,7 +477,7 @@
 
 .mobileLinkActive {
   color: var(--nav-on-gold);
-  background: var(--color-secondary);
+  background: var(--color-accent);
   border-color: var(--nav-active-border);
 }
 
@@ -584,12 +587,12 @@
 
 .footerLink svg {
   opacity: 0;
-  color: var(--color-secondary);
+  color: var(--color-accent);
   transition: opacity var(--duration-base) var(--ease-standard);
 }
 
 .footerLink:hover {
-  color:  var(--color-secondary);
+  color:  var(--color-accent);
   transform: translateX(-3px);
 }
 
@@ -624,8 +627,8 @@
 }
 
 .socialLink:hover {
-  background: var(--color-secondary);
-  border-color: var(--color-secondary);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   transform: translateY(-2px);
 }
 
@@ -669,36 +672,47 @@
 }
 
 .footerDark {
-  --footer-bg-top: #08111d;
-  --footer-bg-bottom: #050912;
-  --footer-panel: rgba(255, 255, 255, 0.08);
-  --footer-border: rgba(255, 255, 255, 0.14);
-  --footer-text: #ffffff;
-  --footer-muted: rgba(255, 255, 255, 0.7);
-  --footer-glow: rgba(215, 168, 79, 0.14);
+  --footer-bg-top: #201814;
+  --footer-bg-bottom: #150f0d;
+  --footer-panel: rgba(245, 238, 219, 0.07);
+  --footer-border: rgba(245, 238, 219, 0.14);
+  --footer-text: #f5eedb;
+  --footer-muted: rgba(245, 238, 219, 0.72);
+  --footer-glow: rgba(231, 165, 138, 0.12);
   --footer-image-opacity: 0.22;
-  --footer-overlay: linear-gradient(180deg, rgba(5, 10, 18, 0.5), rgba(5, 9, 18, 0.78));
+  --footer-overlay: linear-gradient(180deg, rgba(21, 15, 13, 0.5), rgba(21, 15, 13, 0.8));
 }
 
 .footerDark .footerTagline,
 .footerDark .footerLink {
-  color: #ffffff;
+  color: var(--footer-text);
 }
 
 .footerDark .footerBottom {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--footer-muted);
 }
 
+/* Light footer sits one step deeper than the Vanilla Cream page so the edge
+   reads without a heavy rule. */
 .footerLight {
-  --footer-bg-top: #ffffff;
-  --footer-bg-bottom: #ffffff;
-  --footer-panel: rgba(255, 255, 255, 0.86);
-  --footer-border: rgba(16, 24, 32, 0.1);
-  --footer-text: #101820;
-  --footer-muted: #607080;
-  --footer-glow: rgba(15, 118, 110, 0.08);
+  --footer-bg-top: #efe6cf;
+  --footer-bg-bottom: #ebe1c8;
+  --footer-panel: rgba(251, 247, 234, 0.86);
+  --footer-border: rgba(43, 33, 29, 0.12);
+  --footer-text: #2b211d;
+  --footer-muted: #62534a;
+  --footer-glow: rgba(8, 127, 131, 0.08);
   --footer-image-opacity: 0.05;
-  --footer-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.94));
+  --footer-overlay: linear-gradient(180deg, rgba(239, 230, 207, 0.88), rgba(235, 225, 200, 0.94));
+}
+
+/* Hover text can't be peach on cream (~1.8:1) — Deep Teal there. */
+.footerLight .footerLink:hover {
+  color: var(--color-primary);
+}
+
+.footerLight .footerLink svg {
+  color: var(--color-primary);
 }
 
 .desktopOnly {
@@ -723,12 +737,28 @@
 .desktopOnly button:hover {
   color: var(--nav-text) !important;
   background: var(--nav-panel-hover) !important;
-  border-color: color-mix(in srgb, var(--color-secondary) 42%, var(--nav-border)) !important;
+  border-color: color-mix(in srgb, var(--color-accent) 42%, var(--nav-border)) !important;
   transform: translateY(-1px);
 }
 
 .footerBottom p {
   margin: 0;
+}
+
+/* Peach is fine on the chocolate chrome but ~1.8:1 on cream, so anything that
+   uses it as TEXT or an icon in the light chrome swaps to Deep Teal. The
+   active pill keeps its peach fill (chocolate text on it is ~7.6:1). */
+.lightChrome .avatarButton {
+  color: var(--color-primary);
+}
+
+.lightChrome .spinner {
+  border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
+  border-top-color: var(--color-primary);
+}
+
+.lightChrome .dropdownItem:hover {
+  color: var(--color-primary);
 }
 
 @keyframes navSpin {

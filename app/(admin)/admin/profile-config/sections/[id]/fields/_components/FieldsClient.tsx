@@ -471,7 +471,7 @@ export default function FieldsClient({ profileType, section, initialFields }: Pr
                         validation: {},
                       }))
                     }
-                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                    colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-accent)", hover: "var(--bg-card-muted)" }}
                     options={FIELD_TYPES.map((type) => ({ value: type, label: type }))}
                   />
                 </div>

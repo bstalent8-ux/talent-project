@@ -25,7 +25,7 @@
 // this was built for already uses controlled React state (value/onChange),
 // so that gap doesn't apply to them.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChevronDown, Check } from "lucide-react";
 import { useSite } from "@/contexts/SiteContext";
 
@@ -85,7 +85,8 @@ export default function CustomSelect({
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const listboxId = useMemo(() => id ? `${id}-listbox` : `cs-${Math.random().toString(36).slice(2, 9)}-listbox`, [id]);
+  const generatedId = useId();
+  const listboxId = useMemo(() => id ? `${id}-listbox` : `${generatedId}-listbox`, [id, generatedId]);
 
   const selectedIndex = options.findIndex((o) => o.value === value);
   const selected = selectedIndex >= 0 ? options[selectedIndex] : null;

@@ -15,7 +15,7 @@
 import { useEffect, useRef } from "react";
 import styles from "./SiteChrome.module.css";
 
-const NEON = "#ff8a1f";
+const NEON = "#e7a58a"; // Muted Peach — the brand accent
 const SLOW_FACTOR = 0.28;
 const EASE_PER_SECOND = 4; // how fast the speed converges to its target
 

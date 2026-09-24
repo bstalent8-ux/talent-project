@@ -198,7 +198,7 @@ export default function AdminCategoriesClient({ initialCategories }: { initialCa
                 <CustomSelect
                   value={form.role_type}
                   onChange={(v) => setForm((current) => ({ ...current, role_type: v as CategoryRoleType }))}
-                  colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-secondary)", hover: "var(--bg-card-muted)" }}
+                  colors={{ border: "var(--border-subtle)", card: "var(--bg-surface)", text: "var(--text-primary)", muted: "var(--text-muted)", primary: "var(--color-accent)", hover: "var(--bg-card-muted)" }}
                   options={[{ value: "talent", label: "Talent" }, { value: "brand", label: "Brand" }]}
                 />
               </div>
