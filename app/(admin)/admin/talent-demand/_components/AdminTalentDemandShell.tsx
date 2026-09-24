@@ -33,10 +33,10 @@ export default function AdminTalentDemandShell({
   const router = useRouter();
   const t = TX[lang];
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
 
   return (
     <AdminShell title={t.title}>

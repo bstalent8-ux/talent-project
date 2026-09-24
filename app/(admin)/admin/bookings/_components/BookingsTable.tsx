@@ -60,11 +60,11 @@ export default function BookingsTable({ bookings, total, page, pageSize, status,
     }
   }
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const TH     = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const TH     = dark ? "#261C18" : "#F1E8D2";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -113,7 +113,7 @@ export default function BookingsTable({ bookings, total, page, pageSize, status,
                 {bookings.map(b => {
                   const brand  = Array.isArray(b.brand)  ? b.brand[0]  : b.brand;
                   const talent = Array.isArray(b.talent) ? b.talent[0] : b.talent;
-                  const col    = STATUS_COLOR[b.status] ?? { bg: "rgba(148,163,184,0.1)", text: MUTED };
+                  const col    = STATUS_COLOR[b.status] ?? { bg: "rgba(169,155,142,0.1)", text: MUTED };
                   const label  = STATUS_LABEL[b.status]?.[lang] ?? b.status;
                   const idx    = PIPELINE.indexOf(b.status as typeof PIPELINE[number]);
                   const isLoading = loading === b.id;
@@ -154,7 +154,7 @@ export default function BookingsTable({ bookings, total, page, pageSize, status,
                             <button
                               onClick={() => setReviewing(b)}
                               title={t.reviewPayment}
-                              style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(244,183,64,0.12)", border: "1px solid rgba(244,183,64,0.4)", borderRadius: 6, padding: "3px 9px", cursor: "pointer", color: "#F4B740", fontSize: 11, fontWeight: 700 }}
+                              style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(231,165,138,0.12)", border: "1px solid rgba(231,165,138,0.4)", borderRadius: 6, padding: "3px 9px", cursor: "pointer", color: "#E7A58A", fontSize: 11, fontWeight: 700 }}
                             >
                               💳 {t.reviewPayment}
                             </button>
@@ -174,7 +174,7 @@ export default function BookingsTable({ bookings, total, page, pageSize, status,
                               onClick={() => move(b, "next")}
                               disabled={isLoading}
                               title={t.moveNext}
-                              style={{ background: "none", border: `1px solid #00D26A55`, borderRadius: 6, padding: "3px 6px", cursor: "pointer", color: "#00D26A", display: "flex" }}
+                              style={{ background: "none", border: `1px solid #087F8355`, borderRadius: 6, padding: "3px 6px", cursor: "pointer", color: "var(--color-primary-text)", display: "flex" }}
                             >
                               <ChevronRight size={14} />
                             </button>
@@ -226,7 +226,7 @@ export default function BookingsTable({ bookings, total, page, pageSize, status,
               <button
                 onClick={() => confirmPayment(reviewing)}
                 disabled={confirmingPayment}
-                style={{ background: confirmingPayment ? "rgba(0,210,106,0.5)" : "#00D26A", border: "none", borderRadius: 8, padding: "9px 18px", cursor: confirmingPayment ? "default" : "pointer", color: "#050B12", fontSize: 13, fontWeight: 800 }}
+                style={{ background: confirmingPayment ? "rgba(8,127,131,0.5)" : "#087F83", border: "none", borderRadius: 8, padding: "9px 18px", cursor: confirmingPayment ? "default" : "pointer", color: "#1B1310", fontSize: 13, fontWeight: 800 }}
               >
                 {t.confirmPayment}
               </button>

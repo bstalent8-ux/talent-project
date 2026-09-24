@@ -11,15 +11,15 @@ export const PIPELINE = [
 export type PipelineStatus = typeof PIPELINE[number] | "rejected" | "cancelled";
 
 export const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  pending:          { bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
-  changes_requested:{ bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
-  contacting:       { bg: "rgba(148,163,184,0.15)", text: "#94a3b8" },
-  brief_sent:       { bg: "rgba(96,165,250,0.15)",  text: "#60a5fa" },
-  accepted:         { bg: "rgba(167,139,250,0.15)", text: "#a78bfa" },
-  payment_pending:  { bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
+  pending:          { bg: "rgba(231,165,138,0.15)",  text: "#E7A58A" },
+  changes_requested:{ bg: "rgba(231,165,138,0.15)",  text: "#E7A58A" },
+  contacting:       { bg: "rgba(169,155,142,0.15)", text: "#A99B8E" },
+  brief_sent:       { bg: "rgba(79,167,163,0.15)",  text: "#4FA7A3" },
+  accepted:         { bg: "rgba(201,138,112,0.15)", text: "#C98A70" },
+  payment_pending:  { bg: "rgba(231,165,138,0.15)",  text: "#E7A58A" },
   in_progress:      { bg: "rgba(251,146,60,0.15)",  text: "#fb923c" },
-  completed:        { bg: "rgba(0,210,106,0.15)",   text: "#00D26A" },
-  paid:             { bg: "rgba(0,210,106,0.25)",   text: "#00D26A" },
+  completed:        { bg: "rgba(8,127,131,0.15)",   text: "#087F83" },
+  paid:             { bg: "rgba(8,127,131,0.25)",   text: "#087F83" },
   rejected:         { bg: "rgba(239,68,68,0.15)",   text: "#EF4444" },
   cancelled:        { bg: "rgba(239,68,68,0.15)",   text: "#EF4444" },
 };

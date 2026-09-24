@@ -64,11 +64,11 @@ export default function BlogTable({ posts, total, page, pageSize, status, sort, 
   const [modal, setModal] = useState<ModalState | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const CARD   = dark ? "#0D1623" : ADMIN_LIGHT.card;
-  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
-  const TEXT   = dark ? "#f1f5f9" : ADMIN_LIGHT.text;
-  const MUTED  = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
-  const TH     = dark ? "#0a121c" : ADMIN_LIGHT.tableHead;
+  const CARD   = dark ? "#2B211D" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#3A2E28" : ADMIN_LIGHT.border;
+  const TEXT   = dark ? "#F5EEDB" : ADMIN_LIGHT.text;
+  const MUTED  = dark ? "#A99B8E" : ADMIN_LIGHT.muted;
+  const TH     = dark ? "#261C18" : ADMIN_LIGHT.tableHead;
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -112,8 +112,8 @@ export default function BlogTable({ posts, total, page, pageSize, status, sort, 
 
   const modalConfig = modal ? {
     delete:     { color: "#EF4444", msg: t.confirmDelete,     label: t.delete },
-    publish:    { color: "#00D26A", msg: t.confirmPublish,    label: t.publish },
-    unpublish:  { color: "#F4B740", msg: t.confirmUnpublish,  label: t.unpublish },
+    publish:    { color: "var(--color-primary-text)", msg: t.confirmPublish,    label: t.publish },
+    unpublish:  { color: "#E7A58A", msg: t.confirmUnpublish,  label: t.unpublish },
   }[modal.type] : null;
 
   return (
@@ -167,8 +167,8 @@ export default function BlogTable({ posts, total, page, pageSize, status, sort, 
                     <td style={cellCenterStyle}>
                       <span style={{
                         padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-                        backgroundColor: post.status === "published" ? "rgba(0,210,106,0.15)" : "rgba(148,163,184,0.15)",
-                        color: post.status === "published" ? "#00D26A" : MUTED,
+                        backgroundColor: post.status === "published" ? "rgba(8,127,131,0.15)" : "rgba(169,155,142,0.15)",
+                        color: post.status === "published" ? "#087F83" : MUTED,
                       }}>
                         {post.status === "published" ? t.publishedStatus : t.draft}
                       </span>
@@ -179,7 +179,7 @@ export default function BlogTable({ posts, total, page, pageSize, status, sort, 
                     </td>
                     <td style={cellStyle}>
                       <div style={{ display: "flex", gap: 4 }}>
-                        <Link href={`/admin/blog/${post.id}/edit`} title={t.edit} style={{ color: "#60A5FA", display: "flex", padding: 4 }}>
+                        <Link href={`/admin/blog/${post.id}/edit`} title={t.edit} style={{ color: "#4FA7A3", display: "flex", padding: 4 }}>
                           <Pencil size={16} />
                         </Link>
                         {post.status === "published" && (
@@ -190,7 +190,7 @@ export default function BlogTable({ posts, total, page, pageSize, status, sort, 
                         <button
                           onClick={() => setModal({ type: post.status === "published" ? "unpublish" : "publish", post })}
                           title={post.status === "published" ? t.unpublish : t.publish}
-                          style={{ background: "none", border: "none", cursor: "pointer", color: post.status === "published" ? "#F4B740" : "#00D26A", padding: 4, display: "flex" }}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: post.status === "published" ? "#E7A58A" : "#087F83", padding: 4, display: "flex" }}
                         >
                           {post.status === "published" ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>

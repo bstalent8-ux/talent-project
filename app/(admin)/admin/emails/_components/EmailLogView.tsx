@@ -147,11 +147,11 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
     setSendProgress({ sent: 0, total: 0 });
   }
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const TH = dark ? "#0a121c" : "#f8fafc";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const TH = dark ? "#261C18" : "#F1E8D2";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const cellStyle: React.CSSProperties = { padding: "12px 14px", color: TEXT, fontSize: 13, borderBottom: `1px solid ${BORDER}` };
@@ -222,7 +222,7 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
 
   const inputStyle: React.CSSProperties = {
     width: "100%", borderRadius: 8, border: `1px solid ${BORDER}`,
-    backgroundColor: dark ? "#0a121c" : "#f8fafc",
+    backgroundColor: dark ? "#261C18" : "#F1E8D2",
     color: TEXT, padding: 10, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit",
   };
   const labelStyle: React.CSSProperties = { color: MUTED, fontSize: 12, display: "block", marginBottom: 6 };
@@ -264,15 +264,15 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
                       </td>
                       <td style={cellStyle}>{e.subject}</td>
                       <td style={cellStyle}>
-                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: "rgba(76,141,255,0.14)", color: "#4c8dff" }}>
+                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: "rgba(8,127,131,0.14)", color: "var(--color-primary-text)" }}>
                           {tpl[lang]}
                         </span>
                       </td>
                       <td style={cellStyle}>
                         <span style={{
                           padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-                          backgroundColor: e.status === "sent" ? "rgba(0,210,106,0.15)" : "rgba(239,68,68,0.15)",
-                          color: e.status === "sent" ? "#00D26A" : "#EF4444",
+                          backgroundColor: e.status === "sent" ? "rgba(8,127,131,0.15)" : "rgba(239,68,68,0.15)",
+                          color: e.status === "sent" ? "#087F83" : "#EF4444",
                         }}>
                           {e.status === "sent" ? t.sent : t.failed}
                         </span>
@@ -357,13 +357,13 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
                 fallback from the original fix. */}
             {selected.template === "custom" ? (
               <div
-                style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#0a121c" : "#f8fafc", whiteSpace: "pre-wrap", wordBreak: "break-word", color: TEXT, fontSize: 13 }}
+                style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#261C18" : "#F1E8D2", whiteSpace: "pre-wrap", wordBreak: "break-word", color: TEXT, fontSize: 13 }}
               >
                 {escapeHtml(selected.bodyHtml)}
               </div>
             ) : (
               <div
-                style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#0a121c" : "#f8fafc", color: TEXT, fontSize: 13 }}
+                style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, backgroundColor: dark ? "#261C18" : "#F1E8D2", color: TEXT, fontSize: 13 }}
                 dangerouslySetInnerHTML={{ __html: selected.bodyHtml }}
               />
             )}
@@ -405,7 +405,7 @@ export default function EmailLogView({ emails, total, page, pageSize }: Props) {
                     {selectedRecipients.map((r) => (
                       <span
                         key={r.id}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 6, backgroundColor: dark ? "#0a121c" : "#f8fafc", border: `1px solid ${BORDER}`, borderRadius: 999, padding: "4px 6px 4px 10px", fontSize: 12.5, color: TEXT }}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, backgroundColor: dark ? "#261C18" : "#F1E8D2", border: `1px solid ${BORDER}`, borderRadius: 999, padding: "4px 6px 4px 10px", fontSize: 12.5, color: TEXT }}
                       >
                         {r.full_name ?? r.handle ?? r.id}
                         {r.handle && <span style={{ color: MUTED }}>· @{r.handle}</span>}

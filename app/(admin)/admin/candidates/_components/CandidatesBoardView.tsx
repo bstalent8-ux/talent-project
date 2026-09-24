@@ -25,11 +25,11 @@ export default function CandidatesBoardView({ stages, category, assignedTo, acti
   const router = useRouter();
   const t = TX[lang];
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const TH = dark ? "#0a121c" : "#f8fafc";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const TH = dark ? "#261C18" : "#F1E8D2";
 
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);

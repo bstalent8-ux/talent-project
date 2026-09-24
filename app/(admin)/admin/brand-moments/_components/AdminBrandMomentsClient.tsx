@@ -11,8 +11,8 @@ import { CheckCircle, XCircle } from "lucide-react";
 const STATUS_FILTERS = ["all", "pending", "approved", "rejected"] as const;
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  pending:  { bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
-  approved: { bg: "rgba(0,210,106,0.15)",   text: "#00D26A" },
+  pending:  { bg: "rgba(231,165,138,0.15)",  text: "#E7A58A" },
+  approved: { bg: "rgba(8,127,131,0.15)",   text: "#087F83" },
   rejected: { bg: "rgba(239,68,68,0.15)",   text: "#EF4444" },
 };
 
@@ -52,11 +52,11 @@ export default function AdminBrandMomentsClient({ moments }: { moments: AdminBra
   const [reason,  setReason]  = useState("");
   const [loading, setLoading] = useState(false);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const TH     = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const TH     = dark ? "#261C18" : "#F1E8D2";
 
   const filtered = filter === "all" ? moments : moments.filter((v) => v.status === filter);
 
@@ -78,7 +78,7 @@ export default function AdminBrandMomentsClient({ moments }: { moments: AdminBra
   const thStyle:   React.CSSProperties = { padding: "10px 14px", color: MUTED, fontSize: 12, fontWeight: 600, textAlign: ar ? "right" : "left", backgroundColor: TH, borderBottom: `1px solid ${BORDER}` };
 
   const confirmCfg = modal ? {
-    approve: { color: "#00D26A", msg: t.confirmApprove, label: t.approve },
+    approve: { color: "var(--color-primary-text)", msg: t.confirmApprove, label: t.approve },
     reject:  { color: "#EF4444", msg: t.confirmReject,  label: t.reject  },
   }[modal.type] : null;
 
@@ -87,7 +87,7 @@ export default function AdminBrandMomentsClient({ moments }: { moments: AdminBra
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
         {STATUS_FILTERS.map((s) => {
           const active = filter === s;
-          const col = s === "all" ? "#60a5fa" : (STATUS_COLOR[s]?.text ?? MUTED);
+          const col = s === "all" ? "#4FA7A3" : (STATUS_COLOR[s]?.text ?? MUTED);
           return (
             <button key={s} onClick={() => setFilter(s)} style={{
               padding: "6px 14px", borderRadius: 20, cursor: "pointer",
@@ -145,7 +145,7 @@ export default function AdminBrandMomentsClient({ moments }: { moments: AdminBra
                         <div style={{ display: "flex", gap: 4 }}>
                           {v.status !== "approved" && (
                             <button onClick={() => setModal({ type: "approve", id: v.id })} title={t.approve}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "#00D26A", padding: 4, borderRadius: 6, display: "flex" }}>
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-primary-text)", padding: 4, borderRadius: 6, display: "flex" }}>
                               <CheckCircle size={16} />
                             </button>
                           )}
@@ -184,7 +184,7 @@ export default function AdminBrandMomentsClient({ moments }: { moments: AdminBra
                 rows={3}
                 style={{
                   width: "100%", borderRadius: 8, border: `1px solid ${BORDER}`,
-                  backgroundColor: dark ? "#0a121c" : "#f8fafc",
+                  backgroundColor: dark ? "#261C18" : "#F1E8D2",
                   color: TEXT, padding: 10, fontSize: 13, resize: "vertical",
                   outline: "none", boxSizing: "border-box",
                 }}

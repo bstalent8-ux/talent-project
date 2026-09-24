@@ -24,7 +24,7 @@ export function SkeletonStyles() {
   return (
     <style>{`
       .admin-skeleton-block {
-        background: linear-gradient(90deg, rgba(148,163,184,0.14) 25%, rgba(148,163,184,0.24) 37%, rgba(148,163,184,0.14) 63%);
+        background: linear-gradient(90deg, rgba(169,155,142,0.14) 25%, rgba(169,155,142,0.24) 37%, rgba(169,155,142,0.14) 63%);
         background-size: 400% 100%;
         animation: admin-skeleton-shimmer 1.4s ease infinite;
       }

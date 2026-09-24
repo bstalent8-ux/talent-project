@@ -55,11 +55,11 @@ export default function AdminPagination({
   const showsRowCount = total != null && pageSize != null && !!buildPageSizeHref;
   const shownOnPage = showsRowCount ? Math.max(0, Math.min(pageSize!, total! - (page - 1) * pageSize!)) : 0;
 
-  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
-  const CARD   = dark ? "#0D1623" : ADMIN_LIGHT.card;
-  const TEXT   = dark ? "#f1f5f9" : ADMIN_LIGHT.text;
-  const MUTED  = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
-  const GREEN  = "#00D26A";
+  const BORDER = dark ? "#3A2E28" : ADMIN_LIGHT.border;
+  const CARD   = dark ? "#2B211D" : ADMIN_LIGHT.card;
+  const TEXT   = dark ? "#F5EEDB" : ADMIN_LIGHT.text;
+  const MUTED  = dark ? "#A99B8E" : ADMIN_LIGHT.muted;
+  const GREEN  = "#087F83";
   const PRIMARY = dark ? "var(--color-primary)" : ADMIN_LIGHT.primary;
 
   // Custom dropdown for the page-size picker — a native <select>'s open

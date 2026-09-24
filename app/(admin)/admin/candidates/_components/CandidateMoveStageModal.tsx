@@ -29,10 +29,10 @@ interface Props {
 export default function CandidateMoveStageModal({ candidateId, stage, onClose, onMoved }: Props) {
   const { dark, lang } = useSite();
   const t = TX[lang];
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
   const inputStyle: React.CSSProperties = { padding: "9px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 13, width: "100%" };
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -81,7 +81,7 @@ export default function CandidateMoveStageModal({ candidateId, stage, onClose, o
                   style={inputStyle}
                   value={answers[f.fieldKey] ?? ""}
                   onChange={(v) => setAnswers((a) => ({ ...a, [f.fieldKey]: v }))}
-                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                   options={[{ value: "", label: "—" }, ...(f.options ?? []).map((opt) => ({ value: opt.value, label: lang === "ar" ? opt.labelAr : opt.labelEn }))]}
                 />
               ) : (

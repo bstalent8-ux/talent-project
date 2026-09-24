@@ -18,11 +18,11 @@ export const EVENT_LABEL: Record<"ar" | "en", Record<UserEventName, string>> = {
 };
 
 export const EVENT_COLOR: Record<UserEventName, string> = {
-  page_view:           "#64748b",
-  talent_profile_view: "#00D26A",
+  page_view:           "#6E5F55",
+  talent_profile_view: "#087F83",
   search:              "#0EA5E9",
-  booking_brief_sent:  "#F4B740",
-  job_application:     "#8B5CF6",
+  booking_brief_sent:  "#E7A58A",
+  job_application:     "#B9694C",
   signup:              "#EC4899",
   login:               "#14B8A6",
   page_engagement:     "#F97316",

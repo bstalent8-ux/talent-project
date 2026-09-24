@@ -108,17 +108,17 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
   const [logEntries, setLogEntries] = useState<TalentActionAuditEntry[] | null>(null);
   const [logLoading, setLogLoading] = useState(false);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const INPUT  = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const INPUT  = dark ? "#261C18" : "#F1E8D2";
 
   const inp: React.CSSProperties = {
     width: "100%", padding: "9px 12px", borderRadius: 8,
     border: `1px solid ${BORDER}`, backgroundColor: INPUT,
     color: TEXT, fontSize: 13.5, outline: "none",
-    fontFamily: "'IBM Plex Sans Arabic', sans-serif", boxSizing: "border-box",
+    fontFamily: "var(--font-sans)", boxSizing: "border-box",
   };
   const labelStyle: React.CSSProperties = { color: MUTED, fontSize: 12.5, display: "block", marginBottom: 6, fontWeight: 500 };
 
@@ -262,7 +262,7 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
                 value={actionType}
                 onChange={(v) => setActionType(v as TalentActionType)}
                 style={inp}
-                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                 options={TALENT_ACTION_TYPES.map((a) => ({ value: a, label: t.types[a] }))}
               />
             </div>
@@ -281,8 +281,8 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
               disabled={busy}
               style={{
                 alignSelf: "flex-start", padding: "9px 20px", borderRadius: 8, border: "none",
-                backgroundColor: "#00D26A", color: "#000", fontSize: 13.5, fontWeight: 800,
-                cursor: busy ? "wait" : "pointer", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                backgroundColor: "#087F83", color: "#fff", fontSize: 13.5, fontWeight: 800,
+                cursor: busy ? "wait" : "pointer", fontFamily: "var(--font-sans)",
                 opacity: busy ? 0.7 : 1,
               }}
             >
@@ -315,7 +315,7 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
                           value={editForm.actionType}
                           onChange={(v) => setEditForm((f) => ({ ...f, actionType: v as TalentActionType }))}
                           style={inp}
-                          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                           options={TALENT_ACTION_TYPES.map((a) => ({ value: a, label: t.types[a] }))}
                         />
                       </div>
@@ -345,8 +345,8 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
                         onClick={() => saveEdit(action.id)}
                         style={{
                           padding: "7px 16px", borderRadius: 8, border: "none",
-                          backgroundColor: "#00D26A", color: "#000", fontSize: 12.5, fontWeight: 800,
-                          cursor: busy ? "wait" : "pointer", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                          backgroundColor: "#087F83", color: "#fff", fontSize: 12.5, fontWeight: 800,
+                          cursor: busy ? "wait" : "pointer", fontFamily: "var(--font-sans)",
                         }}
                       >
                         {busy ? t.saving : t.save}
@@ -354,7 +354,7 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
                       <button
                         type="button"
                         onClick={() => setEditingActionId(null)}
-                        style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: MUTED, fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}
+                        style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: MUTED, fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-sans)" }}
                       >
                         {t.cancel}
                       </button>
@@ -426,7 +426,7 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {logEntries.map((entry) => {
                 const LogIcon = entry.action === "created" ? PlusCircle : entry.action === "deleted" ? MinusCircle : Pencil;
-                const logColor = entry.action === "created" ? "#00D26A" : entry.action === "deleted" ? "#EF4444" : "#F59E0B";
+                const logColor = entry.action === "created" ? "#087F83" : entry.action === "deleted" ? "#EF4444" : "#F59E0B";
                 const label = entry.action === "created" ? t.logCreated : entry.action === "deleted" ? t.logDeleted : t.logUpdated;
 
                 const changedFields = (["action_type", "note", "follow_up_at"] as const).filter((key) => {
@@ -458,7 +458,7 @@ export default function TalentActionsPanel({ talentProfileId, initialActions }: 
                     )}
 
                     {entry.action === "deleted" && entry.oldValue && (
-                      <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 8, backgroundColor: dark ? "#0a121c" : "#f8fafc", border: `1px solid ${BORDER}` }}>
+                      <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 8, backgroundColor: dark ? "#261C18" : "#F1E8D2", border: `1px solid ${BORDER}` }}>
                         <div style={{ color: MUTED, fontSize: 11, fontWeight: 700, marginBottom: 4 }}>{t.deletedSnapshot}</div>
                         <div style={{ color: TEXT }}>
                           {fieldLabel("action_type")}: {fieldValue("action_type", entry.oldValue.action_type)}

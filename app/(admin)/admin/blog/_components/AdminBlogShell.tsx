@@ -30,8 +30,8 @@ export default function AdminBlogShell({ status, children }: { status: string; c
   const { dark, lang } = useSite();
   const t = TX[lang];
 
-  const MUTED = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
-  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
+  const MUTED = dark ? "#A99B8E" : ADMIN_LIGHT.muted;
+  const BORDER = dark ? "#3A2E28" : ADMIN_LIGHT.border;
   const PRIMARY = dark ? "var(--color-primary)" : ADMIN_LIGHT.primary;
 
   return (

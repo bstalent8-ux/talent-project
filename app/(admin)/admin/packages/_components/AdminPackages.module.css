@@ -210,7 +210,7 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, var(--color-accent), #efc66d);
+  background: linear-gradient(135deg, var(--color-accent), #E7A58A);
   color: #151109;
 }
 

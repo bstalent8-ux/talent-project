@@ -75,11 +75,11 @@ export default function BlogForm({ initialPost }: { initialPost?: BlogPostRow })
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const CARD = dark ? "#0D1623" : ADMIN_LIGHT.card;
-  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
-  const TEXT = dark ? "#f1f5f9" : ADMIN_LIGHT.text;
-  const MUTED = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
-  const INPUT_BG = dark ? "#0a121c" : ADMIN_LIGHT.inputBg;
+  const CARD = dark ? "#2B211D" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#3A2E28" : ADMIN_LIGHT.border;
+  const TEXT = dark ? "#F5EEDB" : ADMIN_LIGHT.text;
+  const MUTED = dark ? "#A99B8E" : ADMIN_LIGHT.muted;
+  const INPUT_BG = dark ? "#261C18" : ADMIN_LIGHT.inputBg;
   const PRIMARY = dark ? "var(--color-primary)" : ADMIN_LIGHT.primary;
 
   const inputStyle: React.CSSProperties = {
@@ -151,7 +151,7 @@ export default function BlogForm({ initialPost }: { initialPost?: BlogPostRow })
             <CustomSelect
               value={category}
               onChange={(v) => setCategory(v as BlogCategory)}
-              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
               options={BLOG_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABEL[c][lang] }))}
             />
           </div>
@@ -174,7 +174,7 @@ export default function BlogForm({ initialPost }: { initialPost?: BlogPostRow })
             <CustomSelect
               value={postLang}
               onChange={(v) => setPostLang(v as BlogLang)}
-              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
               options={[{ value: "ar", label: "العربية" }, { value: "en", label: "English" }]}
             />
           </div>
@@ -235,8 +235,8 @@ export default function BlogForm({ initialPost }: { initialPost?: BlogPostRow })
           <p style={hintStyle}>{t.tagsHint}</p>
         </div>
 
-        <div style={{ ...fieldWrap, padding: 14, borderRadius: 10, backgroundColor: dark ? "rgba(244,183,64,0.08)" : "rgba(244,183,64,0.1)", border: "1px solid rgba(244,183,64,0.3)" }}>
-          <p style={{ margin: 0, fontSize: 12.5, color: dark ? "#F4B740" : "#8a6412", lineHeight: 1.7 }}>{t.seoNote}</p>
+        <div style={{ ...fieldWrap, padding: 14, borderRadius: 10, backgroundColor: dark ? "rgba(231,165,138,0.08)" : "rgba(231,165,138,0.1)", border: "1px solid rgba(231,165,138,0.3)" }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: dark ? "#E7A58A" : "#9A4E34", lineHeight: 1.7 }}>{t.seoNote}</p>
         </div>
 
         <div style={fieldWrap}>
@@ -257,7 +257,7 @@ export default function BlogForm({ initialPost }: { initialPost?: BlogPostRow })
             value={status}
             onChange={(v) => setStatus(v as "draft" | "published")}
             style={{ maxWidth: 200 }}
-            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
             options={[{ value: "draft", label: t.draft }, { value: "published", label: t.published }]}
           />
         </div>

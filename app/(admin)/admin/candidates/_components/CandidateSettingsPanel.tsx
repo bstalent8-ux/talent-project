@@ -25,10 +25,10 @@ export default function CandidateSettingsPanel({ stages, categories, onClose, on
   const t = TX[lang];
   const [tab, setTab] = useState<Tab>("stages");
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "stages", label: t.stages },
@@ -60,7 +60,7 @@ export default function CandidateSettingsPanel({ stages, categories, onClose, on
               style={{
                 padding: "6px 14px", borderRadius: 8,
                 border: `1px solid ${tab === key ? "var(--color-primary)" : BORDER}`,
-                backgroundColor: tab === key ? "rgba(0,210,106,0.1)" : "transparent",
+                backgroundColor: tab === key ? "rgba(8,127,131,0.1)" : "transparent",
                 color: tab === key ? "var(--color-primary)" : MUTED,
                 fontSize: 12.5, fontWeight: tab === key ? 700 : 400, cursor: "pointer",
               }}

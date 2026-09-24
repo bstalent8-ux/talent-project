@@ -33,10 +33,10 @@ export default function LeadAssigneePicker({ onPick, placeholder, autoFocus, api
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
   const inputStyle: React.CSSProperties = { padding: "9px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 13, width: "100%" };
 
   async function search(value: string) {

@@ -317,13 +317,15 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
   // 2026-09-08 redesign asked for light mode specifically to match a new
   // blue/white reference design, dark mode untouched — so this is now a
   // real theme fork instead of a fixed color.
-  const BG = dark ? "#060c18" : ADMIN_LIGHT.sidebarBg;
-  const ACTIVE = dark ? "var(--color-primary)" : ADMIN_LIGHT.sidebarActiveText;
-  const ACTIVE_TINT = dark ? "color-mix(in srgb, var(--color-primary) 15%, transparent)" : ADMIN_LIGHT.sidebarActiveBg;
+  // 2026-09-24 rebrand: a Dark Chocolate rail in both themes (a step deeper
+  // in dark mode), with the Muted Peach active pill the public navbar uses.
+  const BG = dark ? "#140E0B" : ADMIN_LIGHT.sidebarBg;
+  const ACTIVE = ADMIN_LIGHT.sidebarActiveText;
+  const ACTIVE_TINT = ADMIN_LIGHT.sidebarActiveBg;
   const DESTRUCTIVE = "color-mix(in srgb, var(--color-error) 80%, white)";
   const DESTRUCTIVE_HOVER = "color-mix(in srgb, var(--color-error) 8%, transparent)";
-  const MUTED = dark ? "rgba(255,255,255,0.55)" : ADMIN_LIGHT.sidebarText;
-  const HOVER = dark ? "rgba(255,255,255,0.07)" : ADMIN_LIGHT.sidebarHover;
+  const MUTED = ADMIN_LIGHT.sidebarText;
+  const HOVER = ADMIN_LIGHT.sidebarHover;
 
   // Plain startsWith would make /admin/notifications-log also light up the
   // /admin/notifications composer (a real string-prefix collision, not a
@@ -357,12 +359,13 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           borderRadius: 10,
           color: active ? ACTIVE : MUTED,
           backgroundColor: active ? ACTIVE_TINT : "transparent",
-          border: active && !dark ? `1px solid ${ADMIN_LIGHT.sidebarActiveBorder}` : "1px solid transparent",
+          border: active ? `1px solid ${ADMIN_LIGHT.sidebarActiveBorder}` : "1px solid transparent",
+          boxShadow: active ? "0 6px 16px rgba(231,165,138,0.22)" : "none",
           // Glass pill (light mode only) — dark mode's ACTIVE_TINT is
           // already an opaque-ish flat tint over a flat navy bg, nothing to
           // blur there.
-          backdropFilter: active && !dark ? "blur(10px)" : "none",
-          WebkitBackdropFilter: active && !dark ? "blur(10px)" : "none",
+          backdropFilter: "none",
+          WebkitBackdropFilter: "none",
           textDecoration: "none",
           fontSize: 14,
           fontWeight: active ? 600 : 400,
@@ -430,7 +433,10 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           // login page's brand panel) with a blue gradient overlay for text
           // contrast — nav items sit on it as frosted-glass pills (see
           // renderNavLink below). Dark mode: unchanged flat navy.
-          background: dark ? BG : ADMIN_LIGHT.sidebarPhotoBackground,
+          background: dark
+            ? `radial-gradient(120% 60% at 0% 0%, rgba(8,127,131,0.28) 0%, transparent 60%), ${BG}`
+            : ADMIN_LIGHT.sidebarPhotoBackground,
+          borderInlineEnd: "1px solid rgba(245,238,219,0.06)",
           display: "flex",
           flexDirection: "column",
           padding: "24px 0",
@@ -443,6 +449,15 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           overflowY: "auto",
         }}
       >
+        {/* Brand mark — the cream wordmark variant, since the rail is Dark
+            Chocolate in both themes. Hidden on the collapsed icon rail. */}
+        {!collapsed && (
+          <Link href="/admin" onClick={onClose} aria-label="Talents" style={{ display: "flex", padding: "0 20px 22px" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/talents-logo-dark.png" alt="Talents" style={{ height: 34, width: "auto" }} />
+          </Link>
+        )}
+
         <div
           style={{
             padding: collapsed ? "0 12px 28px" : "0 16px 28px",
@@ -497,7 +512,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
                   // now a translucent glass pill + white text for nav items
                   // in light mode, which would wash a white-on-white icon
                   // out here. This wants a solid, opaque circle regardless.
-                  backgroundColor: dark ? ACTIVE_TINT : "rgba(255,255,255,0.9)",
+                  backgroundColor: ACTIVE_TINT,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -505,7 +520,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
                   zIndex: 1,
                 }}
               >
-                <User size={18} color={dark ? ACTIVE : ADMIN_LIGHT.sidebarBg} />
+                <User size={18} color={ACTIVE} />
               </div>
             )}
           </div>
@@ -523,7 +538,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
             >
               <span
                 style={{
-                  color: "#fff",
+                  color: "#F5EEDB",
                   fontWeight: 700,
                   fontSize: 13,
                   overflow: "hidden",
@@ -533,7 +548,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
               >
                 {adminName}
               </span>
-              <span style={{ color: dark ? ACTIVE : "rgba(255,255,255,0.75)", fontWeight: 500, fontSize: 11, marginTop: 1 }}>
+              <span style={{ color: "#E7A58A", fontWeight: 500, fontSize: 11, marginTop: 1 }}>
                 {ar ? "مسؤول النظام" : "System Admin"}
               </span>
             </div>
@@ -664,15 +679,15 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
               padding: "8px",
               borderRadius: 10,
               background: menuOpen ? HOVER : "none",
-              border: "1px solid rgba(255,255,255,0.1)",
+              border: "1px solid rgba(245,238,219,0.12)",
               cursor: "pointer",
-              color: menuOpen ? "#fff" : MUTED,
+              color: menuOpen ? "#F5EEDB" : MUTED,
               transition: "all 0.2s",
             }}
             type="button"
             onMouseEnter={(event) => {
               event.currentTarget.style.backgroundColor = HOVER;
-              event.currentTarget.style.color = "#fff";
+              event.currentTarget.style.color = "#F5EEDB";
             }}
             onMouseLeave={(event) => {
               if (!menuOpen) {
@@ -724,7 +739,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
             left: width - 36,
             width: 72,
             height: "100vh",
-            background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 55%, transparent 100%)",
+            background: "linear-gradient(90deg, transparent 0%, rgba(231,165,138,0.55) 55%, transparent 100%)",
             opacity: edgeHover ? 1 : 0,
             pointerEvents: "none",
             zIndex: 22,
@@ -759,8 +774,8 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           height: 28,
           borderRadius: "50%",
           border: `1px solid ${dark ? "rgba(255,255,255,0.15)" : ADMIN_LIGHT.border}`,
-          background: dark ? "#0d1420" : ADMIN_LIGHT.card,
-          color: dark ? "#fff" : ADMIN_LIGHT.sidebarBg,
+          background: dark ? "#2B211D" : ADMIN_LIGHT.card,
+          color: dark ? "#F5EEDB" : ADMIN_LIGHT.primary,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -786,7 +801,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
             bottom: menuPos.bottom,
             left: menuPos.left,
             minWidth: 200,
-            backgroundColor: dark ? "#0d1420" : ADMIN_LIGHT.card,
+            backgroundColor: dark ? "#2B211D" : ADMIN_LIGHT.card,
             border: dark ? "1px solid rgba(255,255,255,0.12)" : `1px solid ${ADMIN_LIGHT.border}`,
             borderRadius: 10,
             padding: 4,
@@ -812,7 +827,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
                   background: active ? ACTIVE_TINT : "none",
                   border: "none",
                   cursor: "pointer",
-                  color: active ? ACTIVE : (dark ? "#fff" : ADMIN_LIGHT.text),
+                  color: active ? (dark ? "#E7A58A" : ADMIN_LIGHT.primary) : (dark ? "#F5EEDB" : ADMIN_LIGHT.text),
                   fontSize: 13,
                   fontWeight: active ? 700 : 400,
                   whiteSpace: "nowrap",

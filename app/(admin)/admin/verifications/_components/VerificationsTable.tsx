@@ -13,8 +13,8 @@ import { verificationApprovedEmail } from "@/lib/email/templates/verification-ap
 import { CheckCircle, ChevronDown, ChevronUp, ExternalLink, Mail, ShieldCheck, User, XCircle } from "lucide-react";
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  pending:  { bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
-  approved: { bg: "rgba(0,210,106,0.15)",   text: "#00D26A" },
+  pending:  { bg: "rgba(231,165,138,0.15)",  text: "#E7A58A" },
+  approved: { bg: "rgba(8,127,131,0.15)",   text: "#087F83" },
   rejected: { bg: "rgba(239,68,68,0.15)",   text: "#EF4444" },
 };
 
@@ -107,11 +107,11 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
   const [sendEmail, setSendEmail] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const TH     = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const TH     = dark ? "#261C18" : "#F1E8D2";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -144,7 +144,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
   const thStyle:   React.CSSProperties = { padding: "10px 14px", color: MUTED, fontSize: 12, fontWeight: 600, textAlign: ar ? "right" : "left", backgroundColor: TH, borderBottom: `1px solid ${BORDER}` };
 
   const confirmCfg = modal ? {
-    approve: { color: "#00D26A", msg: t.confirmApprove, label: t.approve },
+    approve: { color: "var(--color-primary-text)", msg: t.confirmApprove, label: t.approve },
     reject:  { color: "#EF4444", msg: t.confirmReject,  label: t.reject  },
   }[modal.type] : null;
 
@@ -187,7 +187,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <span style={{ fontWeight: 600 }}>{v.fullName ?? "—"}</span>
                             {v.isVerified && (
-                              <ShieldCheck size={14} color="#00D26A" />
+                              <ShieldCheck size={14} color="var(--color-primary-text)" />
                             )}
                           </div>
                         </div>
@@ -203,7 +203,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
                       <td style={cellStyle}>
                         {v.idDocumentUrl ? (
                           <a href={v.idDocumentUrl} target="_blank" rel="noopener noreferrer"
-                            style={{ color: "#60a5fa", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                            style={{ color: "#4FA7A3", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
                             <ExternalLink size={13} /> {t.view}
                           </a>
                         ) : <span style={{ color: MUTED }}>—</span>}
@@ -211,7 +211,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
                       <td style={cellStyle}>
                         {v.selfieUrl ? (
                           <a href={v.selfieUrl} target="_blank" rel="noopener noreferrer"
-                            style={{ color: "#60a5fa", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                            style={{ color: "#4FA7A3", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
                             <ExternalLink size={13} /> {t.view}
                           </a>
                         ) : <span style={{ color: MUTED }}>—</span>}
@@ -219,7 +219,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
                       <td style={cellStyle}>
                         {v.socialProof ? (
                           <a href={v.socialProof} target="_blank" rel="noopener noreferrer"
-                            style={{ color: "#60a5fa", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                            style={{ color: "#4FA7A3", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
                             <ExternalLink size={13} /> {t.view}
                           </a>
                         ) : <span style={{ color: MUTED }}>—</span>}
@@ -232,7 +232,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
                           {v.status !== "approved" && (
                             <button onClick={() => setModal({ type: "approve", id: v.id })}
                               title={t.approve}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "#00D26A", padding: 4, borderRadius: 6, display: "flex" }}>
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-primary-text)", padding: 4, borderRadius: 6, display: "flex" }}>
                               <CheckCircle size={16} />
                             </button>
                           )}
@@ -297,7 +297,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
                 {showPreview && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {sendNotification && (
-                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#0a121c" : "#f8fafc" }}>
+                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#261C18" : "#F1E8D2" }}>
                         <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: MUTED, display: "flex", alignItems: "center", gap: 5 }}>
                           <ShieldCheck size={12} /> {t.notificationPreview}
                         </p>
@@ -306,7 +306,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
                       </div>
                     )}
                     {sendEmail && (
-                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#0a121c" : "#f8fafc" }}>
+                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#261C18" : "#F1E8D2" }}>
                         <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: MUTED, display: "flex", alignItems: "center", gap: 5 }}>
                           <Mail size={12} /> {t.emailPreview}
                         </p>
@@ -330,7 +330,7 @@ export default function VerificationsTable({ verifications, total, page, pageSiz
                 rows={3}
                 style={{
                   width: "100%", borderRadius: 8, border: `1px solid ${BORDER}`,
-                  backgroundColor: dark ? "#0a121c" : "#f8fafc",
+                  backgroundColor: dark ? "#261C18" : "#F1E8D2",
                   color: TEXT, padding: 10, fontSize: 13, resize: "vertical",
                   outline: "none", boxSizing: "border-box",
                 }}

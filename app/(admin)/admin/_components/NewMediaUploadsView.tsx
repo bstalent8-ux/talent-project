@@ -62,11 +62,11 @@ export default function NewMediaUploadsView({ uploads }: { uploads: AdminNewMedi
     });
   }
 
-  const CARD = dark ? "#0D1623" : ADMIN_LIGHT.card;
-  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
-  const TEXT = dark ? "#f1f5f9" : ADMIN_LIGHT.text;
-  const MUTED = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
-  const TH = dark ? "#0a121c" : ADMIN_LIGHT.tableHead;
+  const CARD = dark ? "#2B211D" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#3A2E28" : ADMIN_LIGHT.border;
+  const TEXT = dark ? "#F5EEDB" : ADMIN_LIGHT.text;
+  const MUTED = dark ? "#A99B8E" : ADMIN_LIGHT.muted;
+  const TH = dark ? "#261C18" : ADMIN_LIGHT.tableHead;
   const PRIMARY = dark ? "var(--color-primary)" : ADMIN_LIGHT.primary;
 
   async function approve(talentProfileId: string) {
@@ -142,7 +142,7 @@ export default function NewMediaUploadsView({ uploads }: { uploads: AdminNewMedi
                       </td>
                       <td style={{ ...cellStyle, width: 1, whiteSpace: "nowrap" }} onClick={(e) => e.stopPropagation()}>
                         {isApproved ? (
-                          <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#00D26A", fontSize: 12, fontWeight: 700 }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--color-primary-text)", fontSize: 12, fontWeight: 700 }}>
                             <CheckCircle size={13} />{t.approved}
                           </span>
                         ) : (
@@ -151,7 +151,7 @@ export default function NewMediaUploadsView({ uploads }: { uploads: AdminNewMedi
                             onClick={() => approve(u.talentProfileId)}
                             style={{
                               display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
-                              border: "none", backgroundColor: "#00D26A", color: "#fff",
+                              border: "none", backgroundColor: "#087F83", color: "#fff",
                               fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: approvingId === u.talentProfileId ? 0.7 : 1,
                             }}
                           >

@@ -56,10 +56,10 @@ export function LeadCallButton({ phone, size = 15 }: { phone: string; size?: num
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   function handleClick(e: React.MouseEvent) {
     e.stopPropagation();
@@ -77,7 +77,7 @@ export function LeadCallButton({ phone, size = 15 }: { phone: string; size?: num
         type="button"
         title={t.call}
         onClick={handleClick}
-        style={{ display: "flex", background: "none", border: "none", padding: 0, cursor: "pointer", color: "#00D26A" }}
+        style={{ display: "flex", background: "none", border: "none", padding: 0, cursor: "pointer", color: "var(--color-primary-text)" }}
       >
         <Phone size={size} />
       </button>
@@ -100,7 +100,7 @@ export function LeadCallButton({ phone, size = 15 }: { phone: string; size?: num
             <p style={{ margin: "0 0 20px", fontSize: 32, fontWeight: 800, color: TEXT, direction: "ltr" }}>{toDisplayPhone(phone)}</p>
             <a
               href={toTelLink(phone)}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 24px", borderRadius: 10, backgroundColor: "#00D26A", color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 24px", borderRadius: 10, backgroundColor: "#087F83", color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}
             >
               <Phone size={16} />{t.callNow}
             </a>

@@ -50,16 +50,16 @@ export default function TalentBrandsPanel({ talentProfileId, initialBrands }: Pr
   const [busy, setBusy] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const INPUT  = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const INPUT  = dark ? "#261C18" : "#F1E8D2";
 
   const inp: React.CSSProperties = {
     padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
     backgroundColor: INPUT, color: TEXT, fontSize: 13, outline: "none",
-    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+    fontFamily: "var(--font-sans)",
   };
 
   async function refresh() {
@@ -177,7 +177,7 @@ export default function TalentBrandsPanel({ talentProfileId, initialBrands }: Pr
 
           <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: TEXT, cursor: "pointer" }}>
             <input type="checkbox" checked={brand.verified} onChange={(e) => patchBrand(brand.id, { verified: e.target.checked })} />
-            <CheckCircle2 size={13} color={brand.verified ? "#00D26A" : MUTED} />
+            <CheckCircle2 size={13} color={brand.verified ? "#087F83" : MUTED} />
             {t.verified}
           </label>
 
@@ -216,8 +216,8 @@ export default function TalentBrandsPanel({ talentProfileId, initialBrands }: Pr
           disabled={busy || !newName.trim()}
           style={{
             display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, border: "none",
-            backgroundColor: "#00D26A", color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer",
-            fontFamily: "'IBM Plex Sans Arabic', sans-serif", opacity: busy || !newName.trim() ? 0.6 : 1,
+            backgroundColor: "#087F83", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer",
+            fontFamily: "var(--font-sans)", opacity: busy || !newName.trim() ? 0.6 : 1,
           }}
         >
           <Plus size={14} />{t.add}

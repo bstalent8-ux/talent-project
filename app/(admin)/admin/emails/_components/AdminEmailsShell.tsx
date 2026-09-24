@@ -28,8 +28,8 @@ export default function AdminEmailsShell({
       {!emailConfigured && (
         <div style={{
           marginBottom: 16, padding: "10px 14px", borderRadius: 10, fontSize: 12.5,
-          backgroundColor: "rgba(244,183,64,0.1)", border: "1px solid rgba(244,183,64,0.3)",
-          color: dark ? "#F4B740" : "#92650a",
+          backgroundColor: "rgba(231,165,138,0.1)", border: "1px solid rgba(231,165,138,0.3)",
+          color: dark ? "#E7A58A" : "#9A4E34",
         }}>
           {t.notConfigured}
         </div>

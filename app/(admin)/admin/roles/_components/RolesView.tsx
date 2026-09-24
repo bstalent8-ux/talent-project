@@ -76,11 +76,11 @@ export default function RolesView() {
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const TH = dark ? "#0a121c" : "#f8fafc";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const TH = dark ? "#261C18" : "#F1E8D2";
 
   const [tab, setTab] = useState<"roles" | "audit">("roles");
   const [roles, setRoles] = useState<AdminRole[]>([]);
@@ -170,9 +170,9 @@ export default function RolesView() {
             type="button"
             onClick={() => setTab(k)}
             style={{
-              padding: "7px 16px", borderRadius: 20, border: `1px solid ${tab === k ? "#00D26A" : BORDER}`,
-              backgroundColor: tab === k ? "rgba(0,210,106,0.1)" : "transparent",
-              color: tab === k ? "#00D26A" : MUTED, fontSize: 13, fontWeight: tab === k ? 700 : 400, cursor: "pointer",
+              padding: "7px 16px", borderRadius: 20, border: `1px solid ${tab === k ? "#087F83" : BORDER}`,
+              backgroundColor: tab === k ? "rgba(8,127,131,0.1)" : "transparent",
+              color: tab === k ? "#087F83" : MUTED, fontSize: 13, fontWeight: tab === k ? 700 : 400, cursor: "pointer",
             }}
           >
             {k === "roles" ? t.tabRoles : t.tabAudit}
@@ -333,10 +333,10 @@ function actionLabel(action: AdminRoleAuditEntry["action"], t: (typeof TX)["ar"]
 // ─── Assign-role-to-admin panel ──────────────────────────────────────────
 function AssignRolePanel({ roles, lang, dark, onAssigned }: { roles: AdminRole[]; lang: "ar" | "en"; dark: boolean; onAssigned: () => void }) {
   const t = TX[lang];
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AdminSearchResult[]>([]);
@@ -419,7 +419,7 @@ function AssignRolePanel({ roles, lang, dark, onAssigned }: { roles: AdminRole[]
               value={roleChoice}
               onChange={setRoleChoice}
               style={inputStyle}
-              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
               options={[{ value: "", label: t.fullAccess }, ...roles.map((r) => ({ value: r.id, label: lang === "ar" ? r.labelAr : r.labelEn }))]}
             />
             <button
@@ -440,10 +440,10 @@ function AssignRolePanel({ roles, lang, dark, onAssigned }: { roles: AdminRole[]
 // which only reassigns the role on an admin who already exists.
 function CreateAdminPanel({ roles, lang, dark, onCreated }: { roles: AdminRole[]; lang: "ar" | "en"; dark: boolean; onCreated: () => void }) {
   const t = TX[lang];
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   const [form, setForm] = useState({ email: "", password: "", confirmPassword: "", fullName: "", roleId: "" });
   const [busy, setBusy] = useState(false);
@@ -496,7 +496,7 @@ function CreateAdminPanel({ roles, lang, dark, onCreated }: { roles: AdminRole[]
           value={form.roleId}
           onChange={(v) => setForm((f) => ({ ...f, roleId: v }))}
           style={inputStyle}
-          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
           options={[{ value: "", label: t.fullAccess }, ...roles.map((r) => ({ value: r.id, label: lang === "ar" ? r.labelAr : r.labelEn }))]}
         />
         <button
@@ -507,7 +507,7 @@ function CreateAdminPanel({ roles, lang, dark, onCreated }: { roles: AdminRole[]
         </button>
       </form>
       {error && <p style={{ marginTop: 8, fontSize: 12.5, color: "#EF4444" }}>{error}</p>}
-      {success && <p style={{ marginTop: 8, fontSize: 12.5, color: "#00D26A" }}>{t.createAdminSuccess}</p>}
+      {success && <p style={{ marginTop: 8, fontSize: 12.5, color: "var(--color-primary-text)" }}>{t.createAdminSuccess}</p>}
     </div>
   );
 }

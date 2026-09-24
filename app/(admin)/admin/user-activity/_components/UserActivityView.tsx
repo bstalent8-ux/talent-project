@@ -167,15 +167,15 @@ export default function UserActivityView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramsKey]);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const TH     = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const TH     = dark ? "#261C18" : "#F1E8D2";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const trafficSummary = summarizeTrafficSources(trafficSources);
-  const SUMMARY_CARD_COLOR = { total: TEXT, campaign: "#00D26A", organic: MUTED } as const;
+  const SUMMARY_CARD_COLOR = { total: TEXT, campaign: "#087F83", organic: MUTED } as const;
 
   // "Visited but didn't register" — every visitor in this range's rollup
   // already carries a `registered` flag (see fetchAdminUserActivityVisitors),
@@ -185,10 +185,10 @@ export default function UserActivityView({
   const conversionPct = visitors.length > 0 ? (registeredCount / visitors.length) * 100 : 0;
 
   const TREND_SERIES = [
-    { key: "pageViews",          label: t.pageViewsLegend,     color: "#60A5FA", data: dailyTraffic.map((d) => ({ date: d.date, value: d.pageViews })) },
-    { key: "signups",            label: t.signupsLegend,       color: "#00D26A", data: dailyTraffic.map((d) => ({ date: d.date, value: d.signups })) },
+    { key: "pageViews",          label: t.pageViewsLegend,     color: "#4FA7A3", data: dailyTraffic.map((d) => ({ date: d.date, value: d.pageViews })) },
+    { key: "signups",            label: t.signupsLegend,       color: "var(--color-primary-text)", data: dailyTraffic.map((d) => ({ date: d.date, value: d.signups })) },
     { key: "clicks",             label: t.clicksLegend,        color: "#F472B6", data: dailyTraffic.map((d) => ({ date: d.date, value: d.clicks })) },
-    { key: "talentProfileViews", label: t.profileViewsLegend,  color: "#F4B740", data: dailyTraffic.map((d) => ({ date: d.date, value: d.talentProfileViews })) },
+    { key: "talentProfileViews", label: t.profileViewsLegend,  color: "#E7A58A", data: dailyTraffic.map((d) => ({ date: d.date, value: d.talentProfileViews })) },
   ];
 
   const roleLabel = (role: string) => (role === "talent" ? t.talent : role === "brand" ? t.brand : t.unknown);
@@ -217,7 +217,7 @@ export default function UserActivityView({
         ))}
         <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>
           <p style={{ margin: 0, fontSize: 12, color: MUTED }}>{t.conversionRate}</p>
-          <p style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 700, color: "#00D26A" }}>{conversionPct.toFixed(1)}%</p>
+          <p style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 700, color: "var(--color-primary-text)" }}>{conversionPct.toFixed(1)}%</p>
           <p style={{ margin: "2px 0 0", fontSize: 11, color: MUTED }}>{guestCount} {t.visitedNotRegistered}</p>
         </div>
       </div>
@@ -244,8 +244,8 @@ export default function UserActivityView({
           ) : (
             <RankedBarList
               data={signupBreakdown.byRole.map((r) => ({ label: roleLabel(r.role), value: r.count }))}
-              color="#60A5FA"
-              mutedColor={dark ? "#1e293b" : "#E2E8F0"}
+              color="#4FA7A3"
+              mutedColor={dark ? "#3A2E28" : "#E6DCC6"}
               textColor={TEXT}
               formatValue={(v) => String(v)}
             />
@@ -259,7 +259,7 @@ export default function UserActivityView({
             <RankedBarList
               data={signupBreakdown.byCategory.map((c) => ({ label: c.category === "unknown" ? t.unknown : formatTalentTag(c.category, lang), value: c.count }))}
               color="#F97316"
-              mutedColor={dark ? "#1e293b" : "#E2E8F0"}
+              mutedColor={dark ? "#3A2E28" : "#E6DCC6"}
               textColor={TEXT}
               formatValue={(v) => String(v)}
             />
@@ -328,8 +328,8 @@ export default function UserActivityView({
                     <td style={{ padding: "10px 16px" }}>
                       <span style={{
                         padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-                        backgroundColor: v.registered ? "rgba(0,210,106,0.15)" : "rgba(148,163,184,0.15)",
-                        color: v.registered ? "#00D26A" : MUTED,
+                        backgroundColor: v.registered ? "rgba(8,127,131,0.15)" : "rgba(169,155,142,0.15)",
+                        color: v.registered ? "#087F83" : MUTED,
                       }}>
                         {v.registered ? (v.role ? `${t.registeredYes} · ${v.role}` : t.registeredYes) : t.registeredNo}
                       </span>

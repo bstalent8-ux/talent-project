@@ -4,9 +4,9 @@ import { ADMIN_LIGHT } from "@/components/admin/adminLightTheme";
 
 export default function IncompleteSignupsSkeleton() {
   const { dark } = useSite();
-  const CARD = dark ? "#0D1623" : ADMIN_LIGHT.card;
-  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
-  const PULSE = dark ? "#141b29" : ADMIN_LIGHT.tableHead;
+  const CARD = dark ? "#2B211D" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#3A2E28" : ADMIN_LIGHT.border;
+  const PULSE = dark ? "#322722" : ADMIN_LIGHT.tableHead;
 
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", marginTop: 24 }}>

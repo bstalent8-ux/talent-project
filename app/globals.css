@@ -18,6 +18,9 @@
   --color-primary: var(--brand-teal);
   --color-primary-strong: #066a6d; /* text-safe teal on cream (~5.5:1) */
   --color-primary-soft: rgba(8, 127, 131, 0.13);
+  /* Teal as TEXT: Deep Teal is ~2.9:1 on the chocolate dark cards, so dark
+     mode reads Soft Teal; light mode uses the text-safe strong teal. */
+  --color-primary-text: var(--brand-teal-soft);
 
   --color-secondary: var(--brand-chocolate);
   --color-secondary-soft: rgba(43, 33, 29, 0.1);
@@ -163,6 +166,7 @@
      light mode the text-safe variants take over: --color-accent-strong is
      a deep terracotta (~4.8:1 on cream). */
   --color-accent-strong: #9a4e34;
+  --color-primary-text: var(--color-primary-strong);
 
   --border-subtle: rgba(43, 33, 29, 0.12);
   --border-strong: rgba(43, 33, 29, 0.22);

@@ -17,15 +17,15 @@ const TX = {
 export default function AdminBookingsShell({ status, children }: { status: string; children: React.ReactNode }) {
   const { dark, lang } = useSite();
   const t = TX[lang];
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
 
   return (
     <AdminShell title={t.title}>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
         {FILTERS.map((s) => {
           const active = status === s;
-          const color = s === "all" ? "#60a5fa" : (STATUS_COLOR[s]?.text ?? MUTED);
+          const color = s === "all" ? "#4FA7A3" : (STATUS_COLOR[s]?.text ?? MUTED);
           return (
             <Link
               key={s}

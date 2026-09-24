@@ -46,10 +46,10 @@ const TX = {
 };
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  pending:   { bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
-  approved:  { bg: "rgba(0,210,106,0.15)",   text: "#00D26A" },
+  pending:   { bg: "rgba(231,165,138,0.15)",  text: "#E7A58A" },
+  approved:  { bg: "rgba(8,127,131,0.15)",   text: "#087F83" },
   rejected:  { bg: "rgba(239,68,68,0.15)",   text: "#EF4444" },
-  suspended: { bg: "rgba(148,163,184,0.15)", text: "#94A3B8" },
+  suspended: { bg: "rgba(169,155,142,0.15)", text: "#A99B8E" },
 };
 
 const STATUS_LABEL: Record<string, { ar: string; en: string }> = {
@@ -95,11 +95,11 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
     });
   }
 
-  const CARD = dark ? "#0D1623" : ADMIN_LIGHT.card;
-  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
-  const TEXT = dark ? "#f1f5f9" : ADMIN_LIGHT.text;
-  const MUTED = dark ? "#94a3b8" : ADMIN_LIGHT.muted;
-  const TH = dark ? "#0a121c" : ADMIN_LIGHT.tableHead;
+  const CARD = dark ? "#2B211D" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#3A2E28" : ADMIN_LIGHT.border;
+  const TEXT = dark ? "#F5EEDB" : ADMIN_LIGHT.text;
+  const MUTED = dark ? "#A99B8E" : ADMIN_LIGHT.muted;
+  const TH = dark ? "#261C18" : ADMIN_LIGHT.tableHead;
   const PRIMARY = dark ? "var(--color-primary)" : ADMIN_LIGHT.primary;
 
   const notReminded = signups.filter((s) => !s.alreadyReminded && !sentIds.has(s.userId));
@@ -228,7 +228,7 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
       </div>
 
       {!collapsed && showPreview && signups.length > 0 && (
-        <div style={{ padding: 14, borderBottom: `1px solid ${BORDER}`, backgroundColor: dark ? "#0a121c" : ADMIN_LIGHT.tableHead }}>
+        <div style={{ padding: 14, borderBottom: `1px solid ${BORDER}`, backgroundColor: dark ? "#261C18" : ADMIN_LIGHT.tableHead }}>
           <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: MUTED, display: "flex", alignItems: "center", gap: 5 }}>
             <Mail size={12} /> {t.subject}: <span style={{ color: TEXT, fontWeight: 600 }}>{sampleEmail.subject}</span>
           </p>
@@ -280,7 +280,7 @@ export default function IncompleteSignupsView({ signups }: { signups: AdminIncom
                       </td>
                       <td style={{ ...cellStyle, width: 1, whiteSpace: "nowrap" }} onClick={(e) => e.stopPropagation()}>
                         {wasReminded ? (
-                          <span style={{ color: "#00D26A", fontSize: 12, fontWeight: 700 }}>{t.sent}</span>
+                          <span style={{ color: "var(--color-primary-text)", fontSize: 12, fontWeight: 700 }}>{t.sent}</span>
                         ) : (
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
                             {failedInfo[s.userId] && (

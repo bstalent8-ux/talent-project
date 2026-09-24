@@ -3,9 +3,9 @@ import { useSite } from "@/contexts/SiteContext";
 
 export default function EmailLogSkeleton() {
   const { dark } = useSite();
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const PULSE = dark ? "#141b29" : "#F1F5F9";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const PULSE = dark ? "#322722" : "#F1E8D2";
 
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>

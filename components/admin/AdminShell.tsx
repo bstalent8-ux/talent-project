@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSite } from "@/contexts/SiteContext";
 import AdminSidebar, { type SidebarMode } from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
-import { ADMIN_LIGHT } from "./adminLightTheme";
+import { ADMIN_DARK, ADMIN_LIGHT } from "./adminLightTheme";
 
 interface Props {
   title: string;
@@ -37,7 +37,7 @@ export default function AdminShell({ title, children, search, onSearchChange, se
     localStorage.setItem(STORAGE_KEY, mode);
   }
 
-  const BG = dark ? "#050B12" : ADMIN_LIGHT.pageBg;
+  const BG = dark ? ADMIN_DARK.pageBg : ADMIN_LIGHT.pageBg;
 
   // Every admin page routes through this one shell, so a single `zoom` here
   // scales the whole panel at once — text, icons, spacing all together,
@@ -55,7 +55,7 @@ export default function AdminShell({ title, children, search, onSearchChange, se
     <div
       dir="ltr"
       className="admin-zoom-shell"
-      style={{ display: "flex", height: `${100 / 1.15}vh`, overflow: "hidden", backgroundColor: BG, zoom: 1.15, WebkitTextStroke: "0.25px currentColor" }}
+      style={{ display: "flex", height: `${100 / 1.15}vh`, overflow: "hidden", backgroundColor: BG, color: dark ? ADMIN_DARK.text : ADMIN_LIGHT.text, fontFamily: "var(--font-sans)", zoom: 1.15, WebkitTextStroke: "0.25px currentColor" }}
     >
       <AdminSidebar
         open={sidebarOpen}
@@ -89,6 +89,16 @@ export default function AdminShell({ title, children, search, onSearchChange, se
           in a stylesheet beats even an inline style, so this cleanly
           overrides the zoom/height set above without touching the JS. */}
       <style>{`
+        /* Same type pairing as the auth pages: Alexandria for headings,
+           IBM Plex Sans Arabic for everything else. */
+        .admin-zoom-shell h1, .admin-zoom-shell h2, .admin-zoom-shell h3 {
+          font-family: var(--font-display);
+        }
+        .admin-zoom-shell button, .admin-zoom-shell input,
+        .admin-zoom-shell select, .admin-zoom-shell textarea {
+          font-family: inherit;
+        }
+        .admin-zoom-shell ::selection { background: rgba(231,165,138,0.45); }
         @media (max-width: 900px) {
           .admin-zoom-shell {
             zoom: 1 !important;

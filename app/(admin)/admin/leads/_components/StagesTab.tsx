@@ -7,7 +7,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { useAdminPermissions } from "@/contexts/AdminPermissionsContext";
 import { STAGE_FIELD_TYPES, type LeadStage, type StageFieldType } from "@/features/leads/types";
 
-const COLOR_SWATCHES = ["#00D26A", "#0EA5E9", "#F4B740", "#8B5CF6", "#EF4444", "#94A3B8", "#EC4899", "#10B981"];
+const COLOR_SWATCHES = ["#087F83", "#0EA5E9", "#E7A58A", "#B9694C", "#EF4444", "#A99B8E", "#EC4899", "#10B981"];
 
 const TX = {
   ar: {
@@ -50,9 +50,9 @@ export default function StagesTab({ stages, onChanged }: { stages: LeadStage[]; 
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.leads?.canDelete;
 
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
   const inputStyle: React.CSSProperties = { padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 13, width: "100%" };
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -185,7 +185,7 @@ export default function StagesTab({ stages, onChanged }: { stages: LeadStage[]; 
                       value={newField.fieldType}
                       onChange={(v) => setNewField((f) => ({ ...f, fieldType: v as StageFieldType }))}
                       style={inputStyle}
-                      colors={{ border: BORDER, card: dark ? "#0D1623" : "#FFFFFF", text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                      colors={{ border: BORDER, card: dark ? "#2B211D" : "#FBF7EA", text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                       options={STAGE_FIELD_TYPES.map((ft) => ({ value: ft, label: t[FIELD_TYPE_LABEL_KEY[ft]] }))}
                     />
                     {newField.fieldType === "select" && (

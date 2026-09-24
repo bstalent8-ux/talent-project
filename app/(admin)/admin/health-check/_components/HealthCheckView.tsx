@@ -45,9 +45,9 @@ const TX = {
 };
 
 const BAND_COLOR: Record<RatingBand, string> = {
-  excellent: "#00D26A",
-  good: "#60A5FA",
-  medium: "#F4B740",
+  excellent: "#087F83",
+  good: "#4FA7A3",
+  medium: "#E7A58A",
   low: "#EF4444",
 };
 
@@ -89,11 +89,11 @@ export default function HealthCheckView({
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const TRACK = dark ? "#1e293b" : "#E2E8F0";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const TRACK = dark ? "#3A2E28" : "#E6DCC6";
 
   async function handleRun() {
     setRunning(true);
@@ -189,7 +189,7 @@ export default function HealthCheckView({
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {result.security.items.map((item) => (
                   <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: TEXT }}>
-                    {item.passed ? <CheckCircle2 size={15} color="#00D26A" /> : <XCircle size={15} color="#EF4444" />}
+                    {item.passed ? <CheckCircle2 size={15} color="var(--color-primary-text)" /> : <XCircle size={15} color="#EF4444" />}
                     <span>{ar ? item.labelAr : item.labelEn}</span>
                   </div>
                 ))}
@@ -246,8 +246,8 @@ export default function HealthCheckView({
           <p style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: TEXT }}>{t.history}</p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {history.map((h) => (
-              <div key={h.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 12px", borderRadius: 8, background: dark ? "#0a121c" : "#f8fafc", minWidth: 90 }}>
-                <span style={{ fontSize: 18, fontWeight: 800, color: h.score >= 80 ? "#00D26A" : h.score >= 50 ? "#F4B740" : "#EF4444" }}>{h.score}</span>
+              <div key={h.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 12px", borderRadius: 8, background: dark ? "#261C18" : "#F1E8D2", minWidth: 90 }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: h.score >= 80 ? "#087F83" : h.score >= 50 ? "#E7A58A" : "#EF4444" }}>{h.score}</span>
                 <span style={{ fontSize: 10.5, color: MUTED }}>{new Date(h.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-GB")}</span>
               </div>
             ))}

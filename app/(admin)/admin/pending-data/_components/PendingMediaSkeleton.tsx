@@ -3,9 +3,9 @@ import { useSite } from "@/contexts/SiteContext";
 
 export default function PendingMediaSkeleton() {
   const { dark } = useSite();
-  const BG = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const BAR = dark ? "#1e293b" : "#E2E8F0";
+  const BG = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const BAR = dark ? "#3A2E28" : "#E6DCC6";
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 14 }}>
       {Array.from({ length: 8 }).map((_, i) => (

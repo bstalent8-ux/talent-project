@@ -39,9 +39,9 @@ export default function TaxonomyManagerPanel({ apiPath, terms, onChanged }: Prop
   const permissions = useAdminPermissions();
   const canDelete = permissions === null || !!permissions.leads?.canDelete;
 
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
   const inputStyle: React.CSSProperties = { padding: "8px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 13, width: "100%" };
 
   const [busy, setBusy] = useState(false);

@@ -136,11 +136,11 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
   const [sendEmail, setSendEmail] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const TH     = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const TH     = dark ? "#261C18" : "#F1E8D2";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -234,17 +234,17 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
   // recognize a number at a glance without exposing the full digits on a
   // shared screen by default.
   function completionBarColor(score: number): string {
-    if (score >= 80) return "#00D26A";
+    if (score >= 80) return "#087F83";
     if (score >= 50) return "#00C9B1";
-    if (score >= 25) return "#FFB800";
+    if (score >= 25) return "#E7A58A";
     return "#FF6B2B";
   }
 
   const confirmConfig = modal ? {
-    approve: { color: "#00D26A", msg: t.confirmApprove },
+    approve: { color: "var(--color-primary-text)", msg: t.confirmApprove },
     reject:  { color: "#EF4444", msg: t.confirmReject  },
-    suspend: { color: "#F4B740", msg: t.confirmSuspend },
-    restore: { color: "#00D26A", msg: t.confirmApprove },
+    suspend: { color: "#E7A58A", msg: t.confirmSuspend },
+    restore: { color: "var(--color-primary-text)", msg: t.confirmApprove },
     delete:  { color: "#EF4444", msg: t.confirmDelete  },
   }[modal.type] : null;
 
@@ -257,8 +257,8 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "6px 12px", borderRadius: 20,
-              border: `1px solid ${duplicate === "with" ? "#F4B740" : "rgba(244,183,64,0.4)"}`,
-              backgroundColor: "rgba(244,183,64,0.1)", color: "#F4B740",
+              border: `1px solid ${duplicate === "with" ? "#E7A58A" : "rgba(231,165,138,0.4)"}`,
+              backgroundColor: "rgba(231,165,138,0.1)", color: "#E7A58A",
               fontSize: 12.5, fontWeight: 700, textDecoration: "none",
             }}
           >
@@ -314,7 +314,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                         </div>
                         <span style={{ fontWeight: 600 }}>{talent.fullName ?? "—"}</span>
                         {talent.isVerified && (
-                          <ShieldCheck size={13} color="#00D26A" aria-label={ar ? "موثق" : "Verified"} />
+                          <ShieldCheck size={13} color="var(--color-primary-text)" aria-label={ar ? "موثق" : "Verified"} />
                         )}
                         {talent.isDuplicate && (
                           <span
@@ -326,7 +326,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                             style={{
                               display: "flex", alignItems: "center", gap: 3,
                               padding: "2px 6px", borderRadius: 20,
-                              backgroundColor: "rgba(244,183,64,0.12)", color: "#F4B740",
+                              backgroundColor: "rgba(231,165,138,0.12)", color: "#E7A58A",
                               fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap",
                             }}
                           >
@@ -336,7 +336,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                         )}
                         {talent.isDuplicateBest && (
                           <span title={t.duplicateBest} style={{ display: "flex" }}>
-                            <Crown size={13} color="#00D26A" aria-label={t.duplicateBest} />
+                            <Crown size={13} color="var(--color-primary-text)" aria-label={t.duplicateBest} />
                           </span>
                         )}
                       </div>
@@ -384,7 +384,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                           onClick={(e) => e.stopPropagation()}
                           style={{ color: MUTED, display: "flex" }}
                         >
-                          {actionIcon(<Pencil size={16} />, ar ? "تعديل" : "Edit", "#60A5FA")}
+                          {actionIcon(<Pencil size={16} />, ar ? "تعديل" : "Edit", "#4FA7A3")}
                         </Link>
                         {talent.handle && (
                           <Link
@@ -404,13 +404,13 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                           email={talent.email}
                         />
                         {talent.status !== "approved" && (
-                          actionBtn(() => setModal({ type: "approve", talent }), <CheckCircle size={16} />, t.approve, "#00D26A")
+                          actionBtn(() => setModal({ type: "approve", talent }), <CheckCircle size={16} />, t.approve, "#087F83")
                         )}
                         {talent.status === "approved" && (
-                          actionBtn(() => setModal({ type: "suspend", talent }), <PauseCircle size={16} />, t.suspend, "#F4B740")
+                          actionBtn(() => setModal({ type: "suspend", talent }), <PauseCircle size={16} />, t.suspend, "#E7A58A")
                         )}
                         {talent.status === "suspended" && (
-                          actionBtn(() => setModal({ type: "restore", talent }), <RotateCcw size={16} />, t.restore, "#60A5FA")
+                          actionBtn(() => setModal({ type: "restore", talent }), <RotateCcw size={16} />, t.restore, "#4FA7A3")
                         )}
                         {talent.status !== "rejected" && (
                           actionBtn(() => setModal({ type: "reject", talent }), <XCircle size={16} />, t.reject, "#EF4444")
@@ -475,7 +475,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                 {showPreview && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {sendNotification && (
-                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#0a121c" : "#f8fafc" }}>
+                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#261C18" : "#F1E8D2" }}>
                         <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: MUTED, display: "flex", alignItems: "center", gap: 5 }}>
                           <ShieldCheck size={12} /> {t.notificationPreview}
                         </p>
@@ -484,7 +484,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                       </div>
                     )}
                     {sendEmail && (
-                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#0a121c" : "#f8fafc" }}>
+                      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, backgroundColor: dark ? "#261C18" : "#F1E8D2" }}>
                         <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: MUTED, display: "flex", alignItems: "center", gap: 5 }}>
                           <Mail size={12} /> {t.emailPreview}
                         </p>
@@ -508,7 +508,7 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                 rows={3}
                 style={{
                   width: "100%", borderRadius: 8, border: `1px solid ${BORDER}`,
-                  backgroundColor: dark ? "#0a121c" : "#f8fafc",
+                  backgroundColor: dark ? "#261C18" : "#F1E8D2",
                   color: TEXT, padding: 10, fontSize: 13, resize: "vertical", outline: "none",
                   boxSizing: "border-box",
                 }}

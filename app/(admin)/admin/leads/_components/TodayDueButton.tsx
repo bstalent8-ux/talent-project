@@ -37,10 +37,10 @@ export default function TodayDueButton({ module }: Props) {
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   const [open, setOpen] = useState(false);
   const [due, setDue] = useState<ActivityEntry[] | null>(null);

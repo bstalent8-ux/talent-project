@@ -82,7 +82,7 @@
   place-items: center;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  background: #050b12;
+  background: #1B1310;
   color: rgba(255, 255, 255, 0.76);
   font-weight: 900;
 }
@@ -241,7 +241,7 @@
 
 .primaryButton {
   background: var(--color-primary);
-  color: #050b12;
+  color: #1B1310;
 }
 
 .secondaryButton {

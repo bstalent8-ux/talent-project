@@ -6,7 +6,7 @@ import AdminShell from "@/components/admin/AdminShell";
 const STATUS_FILTERS = ["all", "new", "seen", "process", "done"] as const;
 
 const STATUS_COLOR: Record<string, string> = {
-  all: "#60a5fa", new: "#EF4444", seen: "#a78bfa", process: "#F4B740", done: "#00D26A",
+  all: "#4FA7A3", new: "#EF4444", seen: "#C98A70", process: "#E7A58A", done: "#087F83",
 };
 
 const TX = {
@@ -20,8 +20,8 @@ const TX = {
 export default function AdminSupportShell({ status, children }: { status: string; children: React.ReactNode }) {
   const { dark, lang } = useSite();
   const t = TX[lang];
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
 
   return (
     <AdminShell title={t.title}>

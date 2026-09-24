@@ -10,7 +10,7 @@ import AdminPagination from "@/components/admin/AdminPagination";
 import { cdnImage } from "@/lib/images";
 import type { AdminPendingMedia, PendingKind, PendingMediaStatus, PendingMediaType } from "@/features/admin/services/pending-media.service";
 
-const STATUS_COLOR = { pending: "#F4B740", approved: "#00D26A", rejected: "#EF4444" } as const;
+const STATUS_COLOR = { pending: "#E7A58A", approved: "#087F83", rejected: "#EF4444" } as const;
 
 const TX = {
   ar: {
@@ -82,10 +82,10 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
   const permissions = useAdminPermissions();
   const canUpdate = permissions === null || !!permissions.pendingData?.canUpdate;
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<Pending>(null);
@@ -149,13 +149,13 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
       {canUpdate && (
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14, minHeight: 36 }}>
           <label style={{ display: "flex", alignItems: "center", gap: 8, color: MUTED, fontSize: 12.5, cursor: "pointer" }}>
-            <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ width: 16, height: 16, accentColor: "#00D26A" }} />
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ width: 16, height: 16, accentColor: "#087F83" }} />
             {t.selectAll}
           </label>
           {selected.size > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: "6px 10px", borderRadius: 10, backgroundColor: dark ? "#111c2c" : "#F1F5F9", border: `1px solid ${BORDER}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: "6px 10px", borderRadius: 10, backgroundColor: dark ? "#322722" : "#F1E8D2", border: `1px solid ${BORDER}` }}>
               <span style={{ color: TEXT, fontSize: 12.5, fontWeight: 700 }}>{t.selected(selected.size)}</span>
-              {status !== "approved" && btn(t.approveSel, "#00D26A", () => open([...selected], "approve"), true)}
+              {status !== "approved" && btn(t.approveSel, "#087F83", () => open([...selected], "approve"), true)}
               {status !== "rejected" && btn(t.rejectSel, "#EF4444", () => open([...selected], "reject"))}
               <button type="button" onClick={() => setSelected(new Set())} style={{ background: "none", border: "none", color: MUTED, fontSize: 12, cursor: "pointer" }}>{t.clear}</button>
             </div>
@@ -170,21 +170,21 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
           const video = it.mediaType === "video";
           const src = video ? videoPoster(it.url) : cdnImage(it.url, 520);
           return (
-            <div key={it.id} style={{ backgroundColor: CARD, border: `1px solid ${isSel ? "#00D26A" : BORDER}`, borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <div key={it.id} style={{ backgroundColor: CARD, border: `1px solid ${isSel ? "#087F83" : BORDER}`, borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", minWidth: 0 }}>
               <div
                 role="button"
                 tabIndex={0}
                 onClick={() => setPreview(it)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPreview(it); } }}
-                style={{ position: "relative", aspectRatio: isAvatar ? "1 / 1" : "4 / 3", cursor: "zoom-in", backgroundColor: dark ? "#141A2B" : "#E9EEF5", backgroundImage: src ? `url(${src})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}
+                style={{ position: "relative", aspectRatio: isAvatar ? "1 / 1" : "4 / 3", cursor: "zoom-in", backgroundColor: dark ? "#322722" : "#ECE2CA", backgroundImage: src ? `url(${src})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}
               >
                 {video && (
                   <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: "rgba(10,13,20,0.6)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}><Play size={18} color="#fff" fill="#fff" /></span>
+                    <span style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: "rgba(27,19,16,0.6)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}><Play size={18} color="#fff" fill="#fff" /></span>
                   </span>
                 )}
                 <span style={{ position: "absolute", top: 8, insetInlineEnd: 8, padding: "2px 9px", borderRadius: 999, fontSize: 11, fontWeight: 800, backgroundColor: `${col}dd`, color: "#111" }}>{t[it.status]}</span>
-                <span style={{ position: "absolute", bottom: 8, insetInlineStart: 8, padding: "2px 8px", borderRadius: 6, fontSize: 10.5, fontWeight: 700, backgroundColor: "rgba(10,13,20,0.72)", color: "#fff" }}>{isAvatar ? t.profilePhoto : video ? t.video : t.photo}</span>
+                <span style={{ position: "absolute", bottom: 8, insetInlineStart: 8, padding: "2px 8px", borderRadius: 6, fontSize: 10.5, fontWeight: 700, backgroundColor: "rgba(27,19,16,0.72)", color: "#fff" }}>{isAvatar ? t.profilePhoto : video ? t.video : t.photo}</span>
                 {canUpdate && (
                   <input
                     type="checkbox"
@@ -192,14 +192,14 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
                     onClick={(e) => e.stopPropagation()}
                     onChange={() => toggle(it.id)}
                     aria-label={t.selectAll}
-                    style={{ position: "absolute", top: 8, insetInlineStart: 8, width: 18, height: 18, accentColor: "#00D26A", cursor: "pointer" }}
+                    style={{ position: "absolute", top: 8, insetInlineStart: 8, width: 18, height: 18, accentColor: "#087F83", cursor: "pointer" }}
                   />
                 )}
               </div>
 
               <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                  <span style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, backgroundColor: dark ? "#1e293b" : "#E2E8F0", backgroundImage: it.talent.avatarUrl ? `url(${cdnImage(it.talent.avatarUrl, 64)})` : undefined, backgroundSize: "cover", color: MUTED, fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, backgroundColor: dark ? "#3A2E28" : "#E6DCC6", backgroundImage: it.talent.avatarUrl ? `url(${cdnImage(it.talent.avatarUrl, 64)})` : undefined, backgroundSize: "cover", color: MUTED, fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {!it.talent.avatarUrl && it.talent.name.charAt(0).toUpperCase()}
                   </span>
                   <div style={{ minWidth: 0, flex: 1 }}>
@@ -218,7 +218,7 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
                   </div>
                 )}
                 {it.talent.profileStatus && it.talent.profileStatus !== "approved" && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#F4B740", fontSize: 11 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#E7A58A", fontSize: 11 }}>
                     <AlertTriangle size={12} />{t.profilePending} ({it.talent.profileStatus})
                   </div>
                 )}
@@ -228,7 +228,7 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
 
                 {canUpdate && (
                   <div style={{ display: "flex", gap: 8, marginTop: "auto", paddingTop: 4 }}>
-                    {it.status !== "approved" && btn(it.status === "rejected" ? t.reapprove : t.approve, "#00D26A", () => open([it.id], "approve"), true)}
+                    {it.status !== "approved" && btn(it.status === "rejected" ? t.reapprove : t.approve, "#087F83", () => open([it.id], "approve"), true)}
                     {it.status !== "rejected" && btn(it.status === "approved" ? t.takeDown : t.reject, "#EF4444", () => open([it.id], "reject"))}
                   </div>
                 )}
@@ -242,7 +242,7 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
 
       {/* Approve / reject confirmation */}
       {modal && (
-        <div onClick={(e) => e.target === e.currentTarget && !busy && setModal(null)} style={{ position: "fixed", inset: 0, zIndex: 300, backgroundColor: "rgba(2,6,23,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div onClick={(e) => e.target === e.currentTarget && !busy && setModal(null)} style={{ position: "fixed", inset: 0, zIndex: 300, backgroundColor: "rgba(27,19,16,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div role="dialog" aria-modal="true" style={{ width: "100%", maxWidth: 460, backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22 }}>
             <h3 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: "0 0 6px" }}>{modal.action === "approve" ? t.approveTitle : t.rejectTitle}</h3>
             {modal.action === "approve" ? (
@@ -252,7 +252,7 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
                 <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.7, margin: "0 0 10px" }}>{t.rejectHint}</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
                   {t.quick.map((r) => (
-                    <button key={r} type="button" onClick={() => { setReason(r); setError(""); }} style={{ padding: "4px 10px", borderRadius: 999, border: `1px solid ${BORDER}`, backgroundColor: reason === r ? (dark ? "#1e293b" : "#EEF2F7") : "transparent", color: TEXT, fontSize: 11.5, cursor: "pointer" }}>{r}</button>
+                    <button key={r} type="button" onClick={() => { setReason(r); setError(""); }} style={{ padding: "4px 10px", borderRadius: 999, border: `1px solid ${BORDER}`, backgroundColor: reason === r ? (dark ? "#3A2E28" : "#F1E8D2") : "transparent", color: TEXT, fontSize: 11.5, cursor: "pointer" }}>{r}</button>
                   ))}
                 </div>
                 <textarea
@@ -261,14 +261,14 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
                   placeholder={t.rejectPlaceholder}
                   rows={3}
                   maxLength={500}
-                  style={{ width: "100%", boxSizing: "border-box", padding: 10, borderRadius: 10, border: `1px solid ${BORDER}`, backgroundColor: dark ? "#0A121C" : "#F8FAFC", color: TEXT, fontSize: 13, resize: "vertical", outline: "none", fontFamily: "inherit", marginBottom: 12 }}
+                  style={{ width: "100%", boxSizing: "border-box", padding: 10, borderRadius: 10, border: `1px solid ${BORDER}`, backgroundColor: dark ? "#261C18" : "#F1E8D2", color: TEXT, fontSize: 13, resize: "vertical", outline: "none", fontFamily: "inherit", marginBottom: 12 }}
                 />
               </>
             )}
             {error && <p role="alert" style={{ color: "#EF4444", fontSize: 12.5, margin: "0 0 12px" }}>{error}</p>}
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" disabled={busy} onClick={() => setModal(null)} style={{ padding: "9px 16px", borderRadius: 10, border: `1px solid ${BORDER}`, backgroundColor: "transparent", color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t.cancel}</button>
-              <button type="button" disabled={busy} onClick={submit} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 10, border: "none", backgroundColor: modal.action === "approve" ? "#00D26A" : "#EF4444", color: modal.action === "approve" ? "#052e16" : "#fff", fontSize: 13, fontWeight: 800, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.7 : 1 }}>
+              <button type="button" disabled={busy} onClick={submit} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 10, border: "none", backgroundColor: modal.action === "approve" ? "#087F83" : "#EF4444", color: "#fff", fontSize: 13, fontWeight: 800, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.7 : 1 }}>
                 {busy ? <Loader2 size={14} className="spin" /> : modal.action === "approve" ? <Check size={14} /> : <X size={14} />}
                 {modal.action === "approve" ? t.confirmApprove : t.confirmReject}
               </button>
@@ -279,7 +279,7 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
 
       {/* Full-size preview */}
       {preview && (
-        <div onClick={(e) => e.target === e.currentTarget && setPreview(null)} style={{ position: "fixed", inset: 0, zIndex: 290, backgroundColor: "rgba(2,6,23,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div onClick={(e) => e.target === e.currentTarget && setPreview(null)} style={{ position: "fixed", inset: 0, zIndex: 290, backgroundColor: "rgba(27,19,16,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ width: "100%", maxWidth: 900, maxHeight: "92vh", display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, color: "#fff" }}>
               <div style={{ minWidth: 0 }}>
@@ -300,7 +300,7 @@ export default function PendingMediaGrid({ kind, items, total, page, pageSize, s
             </div>
             {canUpdate && (
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                {preview.status !== "approved" && <button type="button" onClick={() => open([preview.id], "approve")} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 22px", borderRadius: 10, border: "none", backgroundColor: "#00D26A", color: "#052e16", fontSize: 13.5, fontWeight: 800, cursor: "pointer" }}><Check size={15} />{t.approve}</button>}
+                {preview.status !== "approved" && <button type="button" onClick={() => open([preview.id], "approve")} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 22px", borderRadius: 10, border: "none", backgroundColor: "#087F83", color: "#fff", fontSize: 13.5, fontWeight: 800, cursor: "pointer" }}><Check size={15} />{t.approve}</button>}
                 {preview.status !== "rejected" && <button type="button" onClick={() => open([preview.id], "reject")} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 22px", borderRadius: 10, border: "1px solid #EF4444", backgroundColor: "transparent", color: "#fca5a5", fontSize: 13.5, fontWeight: 800, cursor: "pointer" }}><X size={15} />{preview.status === "approved" ? t.takeDown : t.reject}</button>}
               </div>
             )}

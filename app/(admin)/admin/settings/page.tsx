@@ -82,12 +82,12 @@ export default function AdminSettingsPage() {
   const [pwStatus, setPwStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pwMsg, setPwMsg] = useState("");
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const INPUT  = dark ? "#0a121c" : "#f8fafc";
-  const GREEN  = "#00D26A";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const INPUT  = dark ? "#261C18" : "#F1E8D2";
+  const GREEN  = "#087F83";
 
   useEffect(() => {
     fetch("/api/admin/me")

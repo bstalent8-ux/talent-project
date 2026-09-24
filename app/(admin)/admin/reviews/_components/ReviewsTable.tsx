@@ -36,8 +36,8 @@ const TX = {
 };
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  pending:  { bg: "rgba(244,183,64,0.15)",  text: "#F4B740" },
-  approved: { bg: "rgba(0,210,106,0.15)",   text: "#00D26A" },
+  pending:  { bg: "rgba(231,165,138,0.15)",  text: "#E7A58A" },
+  approved: { bg: "rgba(8,127,131,0.15)",   text: "#087F83" },
   rejected: { bg: "rgba(239,68,68,0.15)",   text: "#EF4444" },
 };
 
@@ -82,11 +82,11 @@ export default function ReviewsTable({ reviews, total, page, pageSize, status, s
   const [modal,   setModal]   = useState<ModalType | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const TH     = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const TH     = dark ? "#261C18" : "#F1E8D2";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -111,7 +111,7 @@ export default function ReviewsTable({ reviews, total, page, pageSize, status, s
   const thStyle:   React.CSSProperties = { padding: "10px 14px", color: MUTED, fontSize: 12, fontWeight: 600, textAlign: ar ? "right" : "left", backgroundColor: TH, borderBottom: `1px solid ${BORDER}` };
 
   const confirmCfg = modal ? {
-    approve: { color: "#00D26A", msg: t.confirmApprove, label: t.approve },
+    approve: { color: "var(--color-primary-text)", msg: t.confirmApprove, label: t.approve },
     reject:  { color: "#EF4444", msg: t.confirmReject,  label: t.reject  },
     delete:  { color: "#EF4444", msg: t.confirmDelete,  label: t.delete  },
   }[modal.action] : null;
@@ -148,11 +148,11 @@ export default function ReviewsTable({ reviews, total, page, pageSize, status, s
                     <tr key={r.id}>
                       <td style={cellStyle}>{brand?.full_name ?? "—"}</td>
                       <td style={cellStyle}>{talent?.full_name ?? "—"}</td>
-                      <td style={{ ...cellStyle, color: "#F4B740", letterSpacing: 1, whiteSpace: "nowrap" }}>
+                      <td style={{ ...cellStyle, color: "#E7A58A", letterSpacing: 1, whiteSpace: "nowrap" }}>
                         {STARS(r.rating)}
                       </td>
                       <td style={{ ...cellStyle, color: MUTED }}>
-                        <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, backgroundColor: "rgba(96,165,250,0.12)", color: "#60a5fa" }}>
+                        <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, backgroundColor: "rgba(79,167,163,0.12)", color: "#4FA7A3" }}>
                           {r.review_type ?? "brand"}
                         </span>
                       </td>
@@ -164,7 +164,7 @@ export default function ReviewsTable({ reviews, total, page, pageSize, status, s
                       <td style={cellStyle}>
                         {r.proof_link ? (
                           <a href={r.proof_link} target="_blank" rel="noopener noreferrer"
-                            style={{ color: "#60a5fa", display: "flex", alignItems: "center", gap: 4 }}>
+                            style={{ color: "#4FA7A3", display: "flex", alignItems: "center", gap: 4 }}>
                             <ExternalLink size={13} />
                           </a>
                         ) : <span style={{ color: MUTED }}>—</span>}
@@ -180,14 +180,14 @@ export default function ReviewsTable({ reviews, total, page, pageSize, status, s
                           {r.status !== "approved" && (
                             <button onClick={() => setModal({ action: "approve", id: r.id })}
                               title={t.approve}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "#00D26A", padding: 4, borderRadius: 6, display: "flex" }}>
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-primary-text)", padding: 4, borderRadius: 6, display: "flex" }}>
                               <CheckCircle size={16} />
                             </button>
                           )}
                           {r.status !== "rejected" && (
                             <button onClick={() => setModal({ action: "reject", id: r.id })}
                               title={t.reject}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "#F4B740", padding: 4, borderRadius: 6, display: "flex" }}>
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#E7A58A", padding: 4, borderRadius: 6, display: "flex" }}>
                               <XCircle size={16} />
                             </button>
                           )}

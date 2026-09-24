@@ -123,9 +123,9 @@ interface Broadcast {
 }
 
 const PRIORITY_TONE: Record<NotificationPriority, string> = {
-  low:    "#94A3B8",
+  low:    "#A99B8E",
   normal: "#0EA5E9",
-  high:   "#F4B740",
+  high:   "#E7A58A",
   urgent: "#EF4444",
 };
 
@@ -134,12 +134,12 @@ export default function AdminNotificationsClient() {
   const t  = TX[lang];
   const ar = lang === "ar";
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const FIELD  = dark ? "#0a121c" : "#f8fafc";
-  const GREEN  = "#00D26A";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const FIELD  = dark ? "#261C18" : "#F1E8D2";
+  const GREEN  = "#087F83";
 
   // ─── Composer state ───────────────────────────────────────────────────────
   const [mode,        setMode]        = useState<AudienceMode>("single");
@@ -362,7 +362,7 @@ export default function AdminNotificationsClient() {
                       padding:      "8px 14px",
                       borderRadius: 999,
                       border:       `1px solid ${active ? GREEN : BORDER}`,
-                      background:   active ? "rgba(0,210,106,0.12)" : "transparent",
+                      background:   active ? "rgba(8,127,131,0.12)" : "transparent",
                       color:        active ? GREEN : MUTED,
                       fontSize:     13,
                       fontWeight:   active ? 700 : 500,
@@ -396,7 +396,7 @@ export default function AdminNotificationsClient() {
                       gap:          6,
                       padding:      "4px 10px",
                       borderRadius: 999,
-                      background:   "rgba(0,210,106,0.12)",
+                      background:   "rgba(8,127,131,0.12)",
                       color:        GREEN,
                       fontSize:     12,
                       fontWeight:   600,
@@ -436,7 +436,7 @@ export default function AdminNotificationsClient() {
                         gap:          10,
                         width:        "100%",
                         padding:      "9px 12px",
-                        background:   picked ? "rgba(0,210,106,0.08)" : "transparent",
+                        background:   picked ? "rgba(8,127,131,0.08)" : "transparent",
                         border:       "none",
                         borderBottom: `1px solid ${BORDER}`,
                         cursor:       "pointer",
@@ -447,7 +447,7 @@ export default function AdminNotificationsClient() {
                         width:          28,
                         height:         28,
                         borderRadius:   "50%",
-                        background:     dark ? "#152238" : "#E2E8F0",
+                        background:     dark ? "#3A2E28" : "#E6DCC6",
                         display:        "flex",
                         alignItems:     "center",
                         justifyContent: "center",
@@ -466,7 +466,7 @@ export default function AdminNotificationsClient() {
                           {u.role}{u.handle ? ` · @${u.handle}` : ""}
                         </span>
                       </span>
-                      {picked && <Check size={15} color={GREEN} />}
+                      {picked && <Check size={15} color="var(--color-primary-text)" />}
                     </button>
                   );
                 })}
@@ -488,7 +488,7 @@ export default function AdminNotificationsClient() {
                       padding:      "8px 16px",
                       borderRadius: 10,
                       border:       `1px solid ${picked ? GREEN : BORDER}`,
-                      background:   picked ? "rgba(0,210,106,0.12)" : "transparent",
+                      background:   picked ? "rgba(8,127,131,0.12)" : "transparent",
                       color:        picked ? GREEN : MUTED,
                       fontSize:     13,
                       fontWeight:   picked ? 700 : 500,
@@ -516,7 +516,7 @@ export default function AdminNotificationsClient() {
                       padding:      "8px 16px",
                       borderRadius: 10,
                       border:       `1px solid ${picked ? GREEN : BORDER}`,
-                      background:   picked ? "rgba(0,210,106,0.12)" : "transparent",
+                      background:   picked ? "rgba(8,127,131,0.12)" : "transparent",
                       color:        picked ? GREEN : MUTED,
                       fontSize:     13,
                       fontWeight:   picked ? 700 : 500,
@@ -538,7 +538,7 @@ export default function AdminNotificationsClient() {
                 value={type}
                 onChange={(v) => setType(v as NotificationType)}
                 style={field}
-                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                 options={NOTIFICATION_TYPES.map((code) => ({
                   value: code,
                   label: `${TYPE_ICON[code]} ${ar ? TYPE_LABEL[code].ar : TYPE_LABEL[code].en}`,
@@ -552,7 +552,7 @@ export default function AdminNotificationsClient() {
                 value={priority}
                 onChange={(v) => setPriority(v as NotificationPriority)}
                 style={field}
-                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                 options={NOTIFICATION_PRIORITIES.map((p) => ({ value: p, label: t[p] }))}
               />
             </div>
@@ -622,7 +622,7 @@ export default function AdminNotificationsClient() {
                   {(ar ? messageAr : messageEn || messageAr) || "—"}
                 </div>
                 {actionUrl && (
-                  <div style={{ fontSize: 11, color: GREEN, marginTop: 6 }} dir="ltr">{actionUrl}</div>
+                  <div style={{ fontSize: 11, color: "var(--color-primary-text)", marginTop: 6 }} dir="ltr">{actionUrl}</div>
                 )}
               </div>
             </div>
@@ -646,8 +646,8 @@ export default function AdminNotificationsClient() {
                 padding:      "11px 24px",
                 borderRadius: 12,
                 border:       "none",
-                background:   sending ? "rgba(0,210,106,0.4)" : GREEN,
-                color:        "#0D1623",
+                background:   sending ? "rgba(8,127,131,0.4)" : GREEN,
+                color:        "#2B211D",
                 fontSize:     14,
                 fontWeight:   700,
                 cursor:       sending ? "default" : "pointer",
@@ -665,7 +665,7 @@ export default function AdminNotificationsClient() {
               borderRadius: 10,
               fontSize:     13,
               fontWeight:   600,
-              background:   notice.kind === "ok" ? "rgba(0,210,106,0.12)" : "rgba(239,68,68,0.12)",
+              background:   notice.kind === "ok" ? "rgba(8,127,131,0.12)" : "rgba(239,68,68,0.12)",
               color:        notice.kind === "ok" ? GREEN : "#EF4444",
             }}>
               {notice.text}
@@ -704,7 +704,7 @@ export default function AdminNotificationsClient() {
                         {b.title}
                       </td>
                       <td style={{ padding: "10px", color: MUTED }}>{b.audience}</td>
-                      <td style={{ padding: "10px", color: GREEN, fontWeight: 700 }}>{b.recipient_count}</td>
+                      <td style={{ padding: "10px", color: "var(--color-primary-text)", fontWeight: 700 }}>{b.recipient_count}</td>
                       <td style={{ padding: "10px", color: MUTED }}>{b.sender_name ?? "—"}</td>
                       <td style={{ padding: "10px", color: MUTED }} dir="ltr">
                         {new Date(b.created_at).toLocaleString(ar ? "ar-EG" : "en-GB")}

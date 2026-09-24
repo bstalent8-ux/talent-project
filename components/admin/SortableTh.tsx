@@ -21,10 +21,10 @@ interface Props {
 export default function SortableTh({ label, col, activeCol, activeDir, onSort, align = "start" }: Props) {
   const { dark, lang } = useSite();
   const ar = lang === "ar";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const TH = dark ? "#0a121c" : "#f8fafc";
-  const BORDER = dark ? "#1e293b" : "#e2e8f0";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const TH = dark ? "#261C18" : "#F1E8D2";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
   const active = activeCol === col;
 
   return (

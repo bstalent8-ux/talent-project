@@ -9,7 +9,7 @@ import type { AvatarReviewCounts, PendingKind, PendingMediaCounts, PendingMediaS
 
 const STATUS_TABS: PendingMediaStatus[] = ["pending", "rejected", "approved", "all"];
 const STATUS_COLOR: Record<PendingMediaStatus, string> = {
-  pending: "#F4B740", rejected: "#EF4444", approved: "#00D26A", all: "#60a5fa",
+  pending: "#E7A58A", rejected: "#EF4444", approved: "#087F83", all: "#4FA7A3",
 };
 const TYPES: PendingMediaType[] = ["all", "photo", "video"];
 
@@ -54,10 +54,10 @@ export default function PendingDataShell({ kind, avatarCounts, status, type, q, 
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
 
   const isAvatar = kind === "avatar";
   const hrefFor = (next: Partial<{ status: string; type: string; q: string; kind: string }>) => {
@@ -93,9 +93,9 @@ export default function PendingDataShell({ kind, avatarCounts, status, type, q, 
         {([["media", t.kindMedia, counts.pending], ["avatar", t.kindAvatar, avatarCounts.pending]] as const).map(([k, label, pending]) => {
           const active = kind === k;
           return (
-            <Link key={k} href={hrefFor({ kind: k, status: "pending", type: "all", q: "" })} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10, textDecoration: "none", fontSize: 13.5, fontWeight: active ? 800 : 500, border: `1px solid ${active ? TEXT : BORDER}`, backgroundColor: active ? (dark ? "#1e293b" : "#0f172a") : "transparent", color: active ? "#fff" : MUTED }}>
+            <Link key={k} href={hrefFor({ kind: k, status: "pending", type: "all", q: "" })} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10, textDecoration: "none", fontSize: 13.5, fontWeight: active ? 800 : 500, border: `1px solid ${active ? TEXT : BORDER}`, backgroundColor: active ? (dark ? "#3A2E28" : "#2B211D") : "transparent", color: active ? "#fff" : MUTED }}>
               {label}
-              {pending > 0 && <span style={{ minWidth: 20, textAlign: "center", padding: "1px 7px", borderRadius: 10, fontSize: 11, fontWeight: 800, backgroundColor: "#F4B740", color: "#111" }}>{pending}</span>}
+              {pending > 0 && <span style={{ minWidth: 20, textAlign: "center", padding: "1px 7px", borderRadius: 10, fontSize: 11, fontWeight: 800, backgroundColor: "#E7A58A", color: "#111" }}>{pending}</span>}
             </Link>
           );
         })}
@@ -104,13 +104,13 @@ export default function PendingDataShell({ kind, avatarCounts, status, type, q, 
       <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.7, margin: "0 0 16px", maxWidth: 760 }}>{isAvatar ? t.avatarIntro : t.intro}</p>
 
       {isAvatar && !avatarCounts.migrated && (
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(244,183,64,0.12)", border: "1px solid rgba(244,183,64,0.4)", color: dark ? "#fcd34d" : "#92400e", fontSize: 12.5, lineHeight: 1.6 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(231,165,138,0.12)", border: "1px solid rgba(231,165,138,0.4)", color: dark ? "#fcd34d" : "#92400e", fontSize: 12.5, lineHeight: 1.6 }}>
           <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />{t.avatarMigration}
         </div>
       )}
 
       {!isAvatar && !counts.migrated && (
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(244,183,64,0.12)", border: "1px solid rgba(244,183,64,0.4)", color: dark ? "#fcd34d" : "#92400e", fontSize: 12.5, lineHeight: 1.6 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, marginBottom: 16, backgroundColor: "rgba(231,165,138,0.12)", border: "1px solid rgba(231,165,138,0.4)", color: dark ? "#fcd34d" : "#92400e", fontSize: 12.5, lineHeight: 1.6 }}>
           <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />{t.migration}
         </div>
       )}
@@ -131,7 +131,7 @@ export default function PendingDataShell({ kind, avatarCounts, status, type, q, 
                 }}
               >
                 {t[s]}
-                <span style={{ minWidth: 20, textAlign: "center", padding: "1px 7px", borderRadius: 10, fontSize: 11, fontWeight: 800, backgroundColor: s === "pending" && count(s) > 0 ? col : (dark ? "#1e293b" : "#EEF2F7"), color: s === "pending" && count(s) > 0 ? "#111" : MUTED, fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ minWidth: 20, textAlign: "center", padding: "1px 7px", borderRadius: 10, fontSize: 11, fontWeight: 800, backgroundColor: s === "pending" && count(s) > 0 ? col : (dark ? "#3A2E28" : "#F1E8D2"), color: s === "pending" && count(s) > 0 ? "#111" : MUTED, fontVariantNumeric: "tabular-nums" }}>
                   {count(s)}
                 </span>
               </Link>
@@ -145,7 +145,7 @@ export default function PendingDataShell({ kind, avatarCounts, status, type, q, 
               const active = type === ty;
               const label = ty === "all" ? t.typeAll : ty === "photo" ? t.photo : t.video;
               return (
-                <Link key={ty} href={hrefFor({ type: ty })} style={{ padding: "5px 12px", borderRadius: 8, textDecoration: "none", fontSize: 12.5, fontWeight: active ? 700 : 500, color: active ? TEXT : MUTED, backgroundColor: active ? (dark ? "#1e293b" : "#EEF2F7") : "transparent" }}>
+                <Link key={ty} href={hrefFor({ type: ty })} style={{ padding: "5px 12px", borderRadius: 8, textDecoration: "none", fontSize: 12.5, fontWeight: active ? 700 : 500, color: active ? TEXT : MUTED, backgroundColor: active ? (dark ? "#3A2E28" : "#F1E8D2") : "transparent" }}>
                   {label}
                 </Link>
               );

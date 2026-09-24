@@ -43,14 +43,14 @@ export default function AdminBookingDetailClient({ booking: initial }: { booking
   const [booking, setBooking] = useState(initial);
   const [confirming, setConfirming] = useState(false);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BG     = dark ? "#090e1a" : "#f8fafc";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const SUB    = dark ? "#0A121C" : "#F8FAFC";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BG     = dark ? "#1B1310" : "#F1E8D2";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const SUB    = dark ? "#261C18" : "#F1E8D2";
 
-  const sm = STATUS_COLOR[booking.status] ?? { bg: "rgba(148,163,184,0.15)", text: MUTED };
+  const sm = STATUS_COLOR[booking.status] ?? { bg: "rgba(169,155,142,0.15)", text: MUTED };
   const smLabel = STATUS_LABEL[booking.status]?.[lang] ?? booking.status;
 
   const brand  = Array.isArray(booking.brand)  ? booking.brand[0]  : booking.brand;
@@ -97,7 +97,7 @@ export default function AdminBookingDetailClient({ booking: initial }: { booking
               </div>
               <div>
                 <p style={{ color: MUTED, fontSize: 11, margin: "0 0 3px" }}>{t.amount}</p>
-                <p style={{ color: "#F4B740", fontSize: 14, fontWeight: 800, margin: 0 }}>{booking.amount ? `${booking.amount.toLocaleString()} EGP` : "—"}</p>
+                <p style={{ color: "#E7A58A", fontSize: 14, fontWeight: 800, margin: 0 }}>{booking.amount ? `${booking.amount.toLocaleString()} EGP` : "—"}</p>
               </div>
             </div>
             <span style={{ padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, backgroundColor: sm.bg, color: sm.text }}>
@@ -125,7 +125,7 @@ export default function AdminBookingDetailClient({ booking: initial }: { booking
               )}
               {payment.status === "pending" && (
                 <button onClick={confirmPayment} disabled={confirming}
-                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", backgroundColor: confirming ? "rgba(0,210,106,0.5)" : "#00D26A", color: "#050B12", border: "none", borderRadius: 10, cursor: confirming ? "default" : "pointer", fontSize: 13, fontWeight: 800 }}>
+                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", backgroundColor: confirming ? "rgba(8,127,131,0.5)" : "#087F83", color: "#1B1310", border: "none", borderRadius: 10, cursor: confirming ? "default" : "pointer", fontSize: 13, fontWeight: 800 }}>
                   <CreditCard size={14} /> {confirming ? t.confirming : t.confirm}
                 </button>
               )}
@@ -152,7 +152,7 @@ export default function AdminBookingDetailClient({ booking: initial }: { booking
                   <div key={dd.id ?? i} style={{ backgroundColor: SUB, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 12px" }}>
                     <p style={{ color: TEXT, fontSize: 12.5, fontWeight: 700, margin: "0 0 4px", textTransform: "capitalize" }}>{dd.status}</p>
                     {dd.notes && <p style={{ color: MUTED, fontSize: 12.5, margin: "0 0 4px" }}>{dd.notes}</p>}
-                    {dd.links?.map((l) => <a key={l} href={l} target="_blank" rel="noreferrer" style={{ display: "block", color: "#00D26A", fontSize: 12, wordBreak: "break-all" }}>{l}</a>)}
+                    {dd.links?.map((l) => <a key={l} href={l} target="_blank" rel="noreferrer" style={{ display: "block", color: "var(--color-primary-text)", fontSize: 12, wordBreak: "break-all" }}>{l}</a>)}
                   </div>
                 );
               })}

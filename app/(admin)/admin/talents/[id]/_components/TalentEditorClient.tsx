@@ -259,18 +259,18 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
 
   const isModel = form.category === "model" || form.category === "fashion";
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const INPUT  = dark ? "#0a121c" : "#f8fafc";
-  const GREEN  = "#00D26A";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const INPUT  = dark ? "#261C18" : "#F1E8D2";
+  const GREEN  = "#087F83";
 
   const inp: React.CSSProperties = {
     width: "100%", padding: "10px 12px", borderRadius: 8,
     border: `1px solid ${BORDER}`, backgroundColor: INPUT,
     color: TEXT, fontSize: 14, outline: "none",
-    fontFamily: "'IBM Plex Sans Arabic', sans-serif", boxSizing: "border-box",
+    fontFamily: "var(--font-sans)", boxSizing: "border-box",
   };
 
   function set(k: keyof typeof form, v: string) {
@@ -443,7 +443,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
     background: "none", border: `1px solid ${danger ? "#EF4444" : BORDER}`,
     color: danger ? "#EF4444" : TEXT, borderRadius: 8, padding: "6px 12px",
     fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+    fontFamily: "var(--font-sans)",
   });
 
   return (
@@ -483,8 +483,8 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             {identity.category && (
               <span style={{
-                backgroundColor: dark ? "rgba(0,210,106,0.12)" : "rgba(0,210,106,0.1)",
-                color: GREEN, fontSize: 12.5, fontWeight: 700, padding: "4px 10px", borderRadius: 999,
+                backgroundColor: dark ? "rgba(8,127,131,0.12)" : "rgba(8,127,131,0.1)",
+                color: "var(--color-primary-text)", fontSize: 12.5, fontWeight: 700, padding: "4px 10px", borderRadius: 999,
               }}>
                 {identity.category}
               </span>
@@ -552,7 +552,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
                     type="button"
                     onClick={handleSaveEmail}
                     disabled={emailStatus === "saving" || !emailDraft}
-                    style={{ padding: "6px 14px", borderRadius: 8, border: "none", backgroundColor: GREEN, color: "#000", fontSize: 12.5, fontWeight: 700, cursor: emailStatus === "saving" ? "wait" : "pointer", opacity: !emailDraft ? 0.6 : 1 }}
+                    style={{ padding: "6px 14px", borderRadius: 8, border: "none", backgroundColor: GREEN, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: emailStatus === "saving" ? "wait" : "pointer", opacity: !emailDraft ? 0.6 : 1 }}
                   >
                     {emailStatus === "saving" ? t.saving : t.saveEmailBtn}
                   </button>
@@ -573,11 +573,11 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
                 <button
                   type="button"
                   onClick={() => { setEditingEmail(true); setEmailDraft(currentEmail ?? ""); setEmailStatus("idle"); setEmailErrMsg(null); }}
-                  style={{ background: "none", border: "none", color: GREEN, fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
+                  style={{ background: "none", border: "none", color: "var(--color-primary-text)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
                 >
                   {t.editEmail}
                 </button>
-                {emailStatus === "saved" && <span style={{ color: GREEN, fontSize: 12 }}>{t.emailChanged}</span>}
+                {emailStatus === "saved" && <span style={{ color: "var(--color-primary-text)", fontSize: 12 }}>{t.emailChanged}</span>}
               </div>
             )}
           </div>
@@ -630,7 +630,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
               style={{ ...inp }}
               value={form.availability}
               onChange={(v) => set("availability", v)}
-              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+              colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
               options={Object.entries(t.availableOpts).map(([v, l]) => ({ value: v, label: l }))}
             />
           </div>
@@ -700,7 +700,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
                   style={inp}
                   value={pkg.icon}
                   onChange={(v) => updatePackage(pkg.id, { icon: v })}
-                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                   options={PACKAGE_ICON_OPTIONS.map((opt) => ({ value: opt, label: t.packageIconLabels[opt] }))}
                 />
               </div>
@@ -798,16 +798,16 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
           disabled={status === "saving"}
           style={{
             display: "flex", alignItems: "center", gap: 8,
-            backgroundColor: "#00D26A", color: "#000", border: "none",
+            backgroundColor: "#087F83", color: "#fff", border: "none",
             borderRadius: 10, padding: "12px 28px", fontSize: 14,
             fontWeight: 800, cursor: status === "saving" ? "wait" : "pointer",
-            fontFamily: "'IBM Plex Sans Arabic', sans-serif", opacity: status === "saving" ? 0.7 : 1,
+            fontFamily: "var(--font-sans)", opacity: status === "saving" ? 0.7 : 1,
           }}
         >
           <Save size={16} />
           {status === "saving" ? t.saving : t.save}
         </button>
-        {status === "saved" && <span style={{ color: "#00D26A", fontSize: 14 }}>✓ {t.saved}</span>}
+        {status === "saved" && <span style={{ color: "var(--color-primary-text)", fontSize: 14 }}>✓ {t.saved}</span>}
         {status === "error" && <span style={{ color: "#EF4444", fontSize: 14 }}>✗ {t.error}</span>}
       </div>
     </AdminShell>

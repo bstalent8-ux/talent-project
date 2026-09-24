@@ -48,10 +48,10 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
 
   function hrefFor(overrides: Partial<{ status: string; category: string; city: string; duplicate: string; q: string; score: number | null; scoreOp: string | null }>) {
     const next = { status, category, city, duplicate, q, score, scoreOp, ...overrides };
@@ -122,9 +122,9 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
                 href={hrefFor({ status: s })}
                 style={{
                   padding: "7px 16px", borderRadius: 20,
-                  border: `1px solid ${active ? "#00D26A" : BORDER}`,
-                  backgroundColor: active ? "rgba(0,210,106,0.1)" : "transparent",
-                  color: active ? "#00D26A" : MUTED, fontSize: 13, fontWeight: active ? 700 : 400,
+                  border: `1px solid ${active ? "#087F83" : BORDER}`,
+                  backgroundColor: active ? "rgba(8,127,131,0.1)" : "transparent",
+                  color: active ? "#087F83" : MUTED, fontSize: 13, fontWeight: active ? 700 : 400,
                   textDecoration: "none",
                 }}
               >
@@ -140,7 +140,7 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
             value={category ?? ""}
             onChange={(v) => router.push(hrefFor({ category: v || undefined }))}
             style={{ width: "auto", minWidth: 140 }}
-            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
             options={[
               { value: "", label: t.filterCategory },
               { value: "ugc", label: t.categoryUgc },
@@ -153,7 +153,7 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
             value={city ?? ""}
             onChange={(v) => router.push(hrefFor({ city: v || undefined }))}
             style={{ width: "auto", minWidth: 140 }}
-            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
             options={[
               { value: "", label: t.filterCity },
               ...filterOptions.cities.map((c) => ({ value: c, label: c })),
@@ -166,8 +166,8 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
             style={{ width: "auto", minWidth: 150 }}
             colors={
               duplicate !== "all"
-                ? { border: "#F4B740", card: CARD, text: "#F4B740", muted: MUTED, primary: "#F4B740", hover: dark ? "#131F2E" : "#F1F5F9" }
-                : { border: BORDER, card: CARD, text: MUTED, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }
+                ? { border: "#E7A58A", card: CARD, text: "#E7A58A", muted: MUTED, primary: "#E7A58A", hover: dark ? "#322722" : "#F1E8D2" }
+                : { border: BORDER, card: CARD, text: MUTED, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }
             }
             options={[
               { value: "all", label: t.duplicateAll },
@@ -183,8 +183,8 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
               style={{ width: "auto", minWidth: 120 }}
               colors={
                 opDraft
-                  ? { border: "#00D26A", card: CARD, text: "#00D26A", muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }
-                  : { border: BORDER, card: CARD, text: MUTED, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }
+                  ? { border: "#087F83", card: CARD, text: "#087F83", muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }
+                  : { border: BORDER, card: CARD, text: MUTED, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }
               }
               options={[
                 { value: "", label: t.scoreAny },

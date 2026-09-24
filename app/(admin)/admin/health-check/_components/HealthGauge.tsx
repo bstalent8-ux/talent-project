@@ -8,8 +8,8 @@ const STROKE = 18;
 const ARC_LENGTH = Math.PI * RADIUS; // half the circle's circumference
 
 function colorFor(score: number): string {
-  if (score >= 80) return "#00D26A";
-  if (score >= 50) return "#F4B740";
+  if (score >= 80) return "#087F83";
+  if (score >= 50) return "#E7A58A";
   return "#EF4444";
 }
 

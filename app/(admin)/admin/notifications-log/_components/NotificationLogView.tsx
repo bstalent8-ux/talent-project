@@ -53,11 +53,11 @@ export default function NotificationLogView({ notifications, total, page, pageSi
 
   const [selected, setSelected] = useState<AdminNotificationLogRow | null>(null);
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const TH = dark ? "#0a121c" : "#f8fafc";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const TH = dark ? "#261C18" : "#F1E8D2";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const cellStyle: React.CSSProperties = { padding: "12px 14px", color: TEXT, fontSize: 13, borderBottom: `1px solid ${BORDER}` };
@@ -84,7 +84,7 @@ export default function NotificationLogView({ notifications, total, page, pageSi
           value={type ?? ""}
           onChange={onTypeChange}
           style={{ width: "auto", minWidth: 160 }}
-          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
           options={[
             { value: "", label: t.allTypes },
             ...NOTIFICATION_TYPES.map((nt) => ({ value: nt, label: TYPE_LABEL[nt]?.[lang] ?? nt })),
@@ -116,15 +116,15 @@ export default function NotificationLogView({ notifications, total, page, pageSi
                       </td>
                       <td style={cellStyle}>{title}</td>
                       <td style={cellStyle}>
-                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: "rgba(76,141,255,0.14)", color: "#4c8dff", whiteSpace: "nowrap" }}>
+                        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: "rgba(8,127,131,0.14)", color: "var(--color-primary-text)", whiteSpace: "nowrap" }}>
                           {TYPE_ICON[n.type as keyof typeof TYPE_ICON] ?? "🔔"} {labelFor(n)}
                         </span>
                       </td>
                       <td style={cellStyle}>
                         <span style={{
                           padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-                          backgroundColor: n.isRead ? "rgba(0,210,106,0.15)" : "rgba(148,163,184,0.15)",
-                          color: n.isRead ? "#00D26A" : MUTED,
+                          backgroundColor: n.isRead ? "rgba(8,127,131,0.15)" : "rgba(169,155,142,0.15)",
+                          color: n.isRead ? "#087F83" : MUTED,
                         }}>
                           {n.isRead ? t.read : t.unread}
                         </span>
@@ -167,13 +167,13 @@ export default function NotificationLogView({ notifications, total, page, pageSi
             <p style={{ color: TEXT, fontSize: 13.5, lineHeight: 1.7, margin: 0 }}>{contentFor(selected).message}</p>
 
             <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: "rgba(76,141,255,0.14)", color: "#4c8dff" }}>
+              <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: "rgba(8,127,131,0.14)", color: "var(--color-primary-text)" }}>
                 {labelFor(selected)}
               </span>
               <span style={{
                 padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-                backgroundColor: selected.isRead ? "rgba(0,210,106,0.15)" : "rgba(148,163,184,0.15)",
-                color: selected.isRead ? "#00D26A" : MUTED,
+                backgroundColor: selected.isRead ? "rgba(8,127,131,0.15)" : "rgba(169,155,142,0.15)",
+                color: selected.isRead ? "#087F83" : MUTED,
               }}>
                 {selected.isRead ? t.read : t.unread}
               </span>

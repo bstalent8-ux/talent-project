@@ -12,9 +12,9 @@ import { Copy, Eye, Image as ImageIcon, Mail, Phone, Trash2, User, Video, X } fr
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   new:     { bg: "rgba(239,68,68,0.15)",  text: "#EF4444" },
-  seen:    { bg: "rgba(167,139,250,0.15)", text: "#a78bfa" },
-  process: { bg: "rgba(244,183,64,0.15)", text: "#F4B740" },
-  done:    { bg: "rgba(0,210,106,0.15)",  text: "#00D26A" },
+  seen:    { bg: "rgba(201,138,112,0.15)", text: "#C98A70" },
+  process: { bg: "rgba(231,165,138,0.15)", text: "#E7A58A" },
+  done:    { bg: "rgba(8,127,131,0.15)",  text: "#087F83" },
 };
 
 const PAGE_LABEL: Record<string, { ar: string; en: string }> = {
@@ -108,11 +108,11 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
   const [copied, setCopied] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<AdminSupportTicket | null>(null);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const TH     = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const TH     = dark ? "#261C18" : "#F1E8D2";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -208,7 +208,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                         <div style={{ fontWeight: 600 }}>{v.name || v.email}</div>
                         <div style={{ color: MUTED, fontSize: 11 }}>{v.email}</div>
                         {v.phone && <div style={{ color: MUTED, fontSize: 11 }}>{v.phone}</div>}
-                        <div style={{ color: v.context?.submittedBy?.type === "admin" ? "#F4B740" : MUTED, fontSize: 10.5, fontWeight: v.context?.submittedBy?.type === "admin" ? 700 : 400, marginTop: 2 }}>
+                        <div style={{ color: v.context?.submittedBy?.type === "admin" ? "#E7A58A" : MUTED, fontSize: 10.5, fontWeight: v.context?.submittedBy?.type === "admin" ? 700 : 400, marginTop: 2 }}>
                           {submittedByLabel(v, t)}
                         </div>
                       </td>
@@ -294,8 +294,8 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                   </span>
                   <span style={{
                     padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, display: "inline-block",
-                    backgroundColor: selected.context?.submittedBy?.type === "admin" ? "rgba(244,183,64,0.15)" : "rgba(96,165,250,0.15)",
-                    color: selected.context?.submittedBy?.type === "admin" ? "#F4B740" : "#60A5FA",
+                    backgroundColor: selected.context?.submittedBy?.type === "admin" ? "rgba(231,165,138,0.15)" : "rgba(79,167,163,0.15)",
+                    color: selected.context?.submittedBy?.type === "admin" ? "#E7A58A" : "#4FA7A3",
                   }}>
                     {submittedByLabel(selected, t)}
                   </span>
@@ -319,11 +319,11 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                 <button
                   onClick={() => copyEmail(selected.email)}
                   title={t.copyEmail}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: copied ? "#00D26A" : MUTED, display: "flex", padding: 2 }}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: copied ? "#087F83" : MUTED, display: "flex", padding: 2 }}
                 >
                   <Copy size={13} />
                 </button>
-                {copied && <span style={{ color: "#00D26A", fontSize: 11 }}>{t.copied}</span>}
+                {copied && <span style={{ color: "var(--color-primary-text)", fontSize: 11 }}>{t.copied}</span>}
               </div>
               {selected.phone && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Phone size={13} color={MUTED} />{selected.phone}</div>}
               {selected.context?.page && (
@@ -402,7 +402,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                     placeholder={t.assignedAdminPH}
                     style={{
                       flex: 1, minWidth: 0, borderRadius: 8, border: `1px solid ${BORDER}`,
-                      backgroundColor: dark ? "#0a121c" : "#f8fafc",
+                      backgroundColor: dark ? "#261C18" : "#F1E8D2",
                       color: TEXT, padding: "8px 10px", fontSize: 13, outline: "none", boxSizing: "border-box",
                     }}
                   />
@@ -430,7 +430,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                 placeholder={t.adminNotePH}
                 style={{
                   width: "100%", borderRadius: 8, border: `1px solid ${BORDER}`,
-                  backgroundColor: dark ? "#0a121c" : "#f8fafc",
+                  backgroundColor: dark ? "#261C18" : "#F1E8D2",
                   color: TEXT, padding: 10, fontSize: 13, resize: "vertical",
                   outline: "none", boxSizing: "border-box", fontFamily: "inherit",
                 }}
@@ -457,14 +457,14 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                 placeholder={t.replyPH}
                 style={{
                   width: "100%", borderRadius: 8, border: `1px solid ${BORDER}`,
-                  backgroundColor: dark ? "#0a121c" : "#f8fafc",
+                  backgroundColor: dark ? "#261C18" : "#F1E8D2",
                   color: TEXT, padding: 10, fontSize: 13, resize: "vertical",
                   outline: "none", boxSizing: "border-box", fontFamily: "inherit",
                 }}
               />
               <p style={{
                 marginTop: 6, marginBottom: 0, fontSize: 11.5,
-                color: emailConfigured ? "#00D26A" : "#F4B740",
+                color: emailConfigured ? "#087F83" : "#E7A58A",
               }}>
                 {emailConfigured ? t.emailAuto : t.emailManual}
               </p>
@@ -475,7 +475,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                 <button
                   disabled={saving}
                   onClick={() => patch(selected.id, { status: "seen" })}
-                  style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #a78bfa", backgroundColor: "rgba(167,139,250,0.1)", color: "#a78bfa", fontSize: 12.5, cursor: "pointer" }}
+                  style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #C98A70", backgroundColor: "rgba(201,138,112,0.1)", color: "#C98A70", fontSize: 12.5, cursor: "pointer" }}
                 >
                   {t.markSeen}
                 </button>
@@ -493,7 +493,7 @@ export default function SupportTicketsView({ tickets, total, page, pageSize, sta
                 <button
                   disabled={saving}
                   onClick={() => patch(selected.id, { status: "done" })}
-                  style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #00D26A", backgroundColor: "rgba(0,210,106,0.1)", color: "#00D26A", fontSize: 12.5, cursor: "pointer" }}
+                  style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #087F83", backgroundColor: "rgba(8,127,131,0.1)", color: "var(--color-primary-text)", fontSize: 12.5, cursor: "pointer" }}
                 >
                   {t.markDone}
                 </button>

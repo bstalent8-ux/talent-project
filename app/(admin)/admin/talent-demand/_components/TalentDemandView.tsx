@@ -23,7 +23,7 @@ const TX = {
   },
 };
 
-const TYPE_COLOR: Record<string, string> = { ugc: "#00D26A", model: "#F4B740", other: "#8B5CF6" };
+const TYPE_COLOR: Record<string, string> = { ugc: "#087F83", model: "#E7A58A", other: "#B9694C" };
 
 interface Props {
   stats:    AdminTalentTypeStats;
@@ -48,11 +48,11 @@ export default function TalentDemandView({ stats, requests, total, page, pageSiz
   const { dark, lang } = useSite();
   const t = TX[lang];
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const TH     = dark ? "#0a121c" : "#f8fafc";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const TH     = dark ? "#261C18" : "#F1E8D2";
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 

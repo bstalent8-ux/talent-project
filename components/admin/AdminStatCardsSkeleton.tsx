@@ -15,8 +15,8 @@ interface Props {
 // Admin stat-card grid already uses (see talent-demand, dashboard).
 export default function AdminStatCardsSkeleton({ count = 3, minWidth = 140, withIcon = false }: Props) {
   const { dark } = useSite();
-  const CARD   = dark ? "#0D1623" : ADMIN_LIGHT.card;
-  const BORDER = dark ? "#1e293b" : ADMIN_LIGHT.border;
+  const CARD   = dark ? "#2B211D" : ADMIN_LIGHT.card;
+  const BORDER = dark ? "#3A2E28" : ADMIN_LIGHT.border;
 
   return (
     <>

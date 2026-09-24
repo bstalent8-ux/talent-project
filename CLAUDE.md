@@ -1436,3 +1436,12 @@ New identity: Deep Teal `#087F83` (primary) · Soft Teal `#4FA7A3` · Dark Choco
 **Onboarding restored (2026-09-24):** `/onboarding` (a 5-step talent orientation: welcome, how bookings work, why complete your profile, how brands find you, tips) had been unlinked since commit `27847b5` (2026-09-21), which pointed the post-signup redirect straight at `/profile/me/complete`. Registration now sends UGC/Model talents to `/onboarding` again (brands still go to `/profile/me`, "other" talents to `/waitlist`); Skip / the last step lands on `/profile/me/complete`. It shares the auth top bar (logo, language, theme), the brand tokens, and the hero cut-out (hidden below 1101 px). Correction to §12 item 4: `app/(auth)/onboarding/page.tsx` is live code now, not a commented-out wizard. The old `talents_just_onboarded` sessionStorage flag is no longer set (the profile wizard replaced the `/profile/me` popup it fed).
 
 **Language-switch animation is shared (2026-09-24):** the wipe-out / type-in choreography lives in `app/(auth)/_components/useLangSwitch.ts` (`data-lang-phase` = `idle | out | in`, `LANG_OUT_MS` / `LANG_IN_MS`) and is used by both `AuthFrame` (sign-in / register / forgot-password) and `/onboarding` (which wipes `.cardContent` and fades the art chip). Change the timings in the hook and in the matching `langOut` / `langIn*` keyframes together.
+
+### Admin back-office rebrand — 2026-09-24
+
+The whole `/admin` panel now uses the brand palette and the auth pages' type pairing.
+- `components/admin/adminLightTheme.ts`: `ADMIN_LIGHT` is cream/chocolate/teal (page `#F5EEDB`, cards `#FBF7EA`, text `#2B211D`, primary `#087F83`); new `ADMIN_DARK` holds the chocolate dark-mode values.
+- Sidebar is a Dark Chocolate rail in both themes (teal/peach glow, no photo), Muted Peach active pill with chocolate text, and the cream Talents wordmark (`talents-logo-dark.png`) at the top (hidden when collapsed).
+- The old per-file hexes (`#00D26A` green, `#F4B740` gold, `#60A5FA` blue, the navy/slate dark and light greys, the 09-08 blue theme) were remapped to brand values across every admin file. Status reds/ambers/success greens were left alone.
+- Teal used as text goes through the new global token `--color-primary-text` (Soft Teal in dark, `--color-primary-strong` in light), since Deep Teal on the chocolate cards is ~2.9:1. Text on a teal fill is white.
+- `AdminShell` sets `font-family: var(--font-sans)` and headings use `var(--font-display)` (Alexandria), same as the auth pages.

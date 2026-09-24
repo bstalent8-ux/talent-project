@@ -107,10 +107,10 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
   const [manual, setManual] = useState({ fullName: "", phone: "", email: "", socialHandle: "", note: "", jobTitle: "", expectedSalary: "", categoryId: "" });
   const [sheetUrl, setSheetUrl] = useState("");
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   const inputStyle: React.CSSProperties = {
     padding: "9px 12px", borderRadius: 8, border: `1px solid ${BORDER}`,
@@ -258,7 +258,7 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
                 style={{
                   display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
                   border: `1px solid ${tab === key ? "var(--color-primary)" : BORDER}`,
-                  backgroundColor: tab === key ? "rgba(0,210,106,0.1)" : "transparent",
+                  backgroundColor: tab === key ? "rgba(8,127,131,0.1)" : "transparent",
                   color: tab === key ? "var(--color-primary)" : MUTED,
                   fontSize: 12.5, fontWeight: tab === key ? 700 : 400, cursor: "pointer",
                 }}
@@ -288,7 +288,7 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
                   style={inputStyle}
                   value={manual.categoryId}
                   onChange={(v) => setManual((m) => ({ ...m, categoryId: v }))}
-                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                  colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                   options={[{ value: "", label: t.categoryPh }, ...categories.map((c) => ({ value: c.id, label: lang === "ar" ? c.labelAr : c.labelEn }))]}
                 />
               </div>
@@ -325,7 +325,7 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                   gap: 8, padding: "28px 16px", borderRadius: 10,
                   border: `2px dashed ${isDragging ? "var(--color-primary)" : BORDER}`,
-                  backgroundColor: isDragging ? "rgba(0,210,106,0.06)" : "transparent",
+                  backgroundColor: isDragging ? "rgba(8,127,131,0.06)" : "transparent",
                   cursor: busy ? "default" : "pointer", textAlign: "center",
                 }}
               >
@@ -389,9 +389,9 @@ export default function CandidateImportPanel({ categories }: { categories: Candi
 
           {!busy && summary && (
             <div style={{ marginTop: 12 }}>
-              <p style={{ margin: "0 0 6px", fontSize: 13.5, fontWeight: 800, color: "#00D26A" }}>{t.done}</p>
+              <p style={{ margin: "0 0 6px", fontSize: 13.5, fontWeight: 800, color: "var(--color-primary-text)" }}>{t.done}</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: 12.5, color: MUTED }}>
-                {summary.created > 0 && <span style={{ color: "#00D26A" }}>{t.resultCreated(summary.created)}</span>}
+                {summary.created > 0 && <span style={{ color: "var(--color-primary-text)" }}>{t.resultCreated(summary.created)}</span>}
                 {summary.merged > 0 && <span>{t.resultMerged(summary.merged)}</span>}
                 {summary.flaggedDuplicate > 0 && <span style={{ color: "#F59E0B" }}>{t.resultFlagged(summary.flaggedDuplicate)}</span>}
                 {summary.failed > 0 && <span style={{ color: "#EF4444" }}>{t.resultFailed(summary.failed)}</span>}

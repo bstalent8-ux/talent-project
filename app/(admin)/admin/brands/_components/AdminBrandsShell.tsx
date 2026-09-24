@@ -11,7 +11,7 @@ const TX = {
 };
 
 const COLOR: Record<string, string> = {
-  all: "#60a5fa", pending: "#F4B740", approved: "#00D26A", rejected: "#EF4444",
+  all: "#4FA7A3", pending: "#E7A58A", approved: "#087F83", rejected: "#EF4444",
 };
 
 // Sidebar + topbar + status filter tabs — rendered immediately, never
@@ -20,8 +20,8 @@ const COLOR: Record<string, string> = {
 export default function AdminBrandsShell({ status, children }: { status: string; children: React.ReactNode }) {
   const { dark, lang } = useSite();
   const t = TX[lang];
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
 
   return (
     <AdminShell title={t.title}>

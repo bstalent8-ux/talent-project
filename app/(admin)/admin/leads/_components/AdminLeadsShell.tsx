@@ -53,10 +53,10 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
   const { dark, lang } = useSite();
   const router = useRouter();
   const t = TX[lang];
-  const MUTED = dark ? "#94a3b8" : "#64748b";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
   const [managingStages, setManagingStages] = useState(false);
   const [dragOverStageId, setDragOverStageId] = useState<string | null>(null);
   const [pendingMove, setPendingMove] = useState<{ leadId: string; stage: LeadStage } | null>(null);
@@ -106,9 +106,9 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
               href={hrefFor({ stage: "all" })}
               style={{
                 padding: "7px 16px", borderRadius: 20,
-                border: `1px solid ${stage === "all" ? "#00D26A" : BORDER}`,
-                backgroundColor: stage === "all" ? "rgba(0,210,106,0.1)" : "transparent",
-                color: stage === "all" ? "#00D26A" : MUTED, fontSize: 13, fontWeight: stage === "all" ? 700 : 400,
+                border: `1px solid ${stage === "all" ? "#087F83" : BORDER}`,
+                backgroundColor: stage === "all" ? "rgba(8,127,131,0.1)" : "transparent",
+                color: stage === "all" ? "#087F83" : MUTED, fontSize: 13, fontWeight: stage === "all" ? 700 : 400,
                 textDecoration: "none",
               }}
             >
@@ -152,8 +152,8 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
               title={t.board}
               style={{
                 padding: "7px 12px", display: "flex", alignItems: "center",
-                backgroundColor: view === "board" ? "rgba(0,210,106,0.1)" : "transparent",
-                color: view === "board" ? "#00D26A" : MUTED, textDecoration: "none",
+                backgroundColor: view === "board" ? "rgba(8,127,131,0.1)" : "transparent",
+                color: view === "board" ? "#087F83" : MUTED, textDecoration: "none",
               }}
             >
               <Columns3 size={15} />
@@ -163,8 +163,8 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
               title={t.table}
               style={{
                 padding: "7px 12px", display: "flex", alignItems: "center",
-                backgroundColor: view === "table" ? "rgba(0,210,106,0.1)" : "transparent",
-                color: view === "table" ? "#00D26A" : MUTED, textDecoration: "none",
+                backgroundColor: view === "table" ? "rgba(8,127,131,0.1)" : "transparent",
+                color: view === "table" ? "#087F83" : MUTED, textDecoration: "none",
                 borderInlineStart: `1px solid ${BORDER}`,
               }}
             >
@@ -191,7 +191,7 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
           value={assignedTo ?? ""}
           onChange={(v) => router.push(hrefFor({ assignedTo: v || undefined }))}
           style={{ width: "auto", minWidth: 150 }}
-          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
           options={[
             { value: "", label: t.filterAssignee },
             ...assignees.map((a) => ({ value: a.id, label: a.fullName ?? a.handle })),
@@ -202,7 +202,7 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
           value={channel ?? ""}
           onChange={(v) => router.push(hrefFor({ channel: v || undefined }))}
           style={{ width: "auto", minWidth: 150 }}
-          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
           options={[
             { value: "", label: t.filterChannel },
             ...channels.map((c) => ({ value: c.key, label: lang === "ar" ? c.labelAr : c.labelEn })),
@@ -213,7 +213,7 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
           value={category ?? ""}
           onChange={(v) => router.push(hrefFor({ category: v || undefined }))}
           style={{ width: "auto", minWidth: 150 }}
-          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
           options={[
             { value: "", label: t.filterCategory },
             ...categories.map((c) => ({ value: c.key, label: lang === "ar" ? c.labelAr : c.labelEn })),
@@ -228,7 +228,7 @@ export default function AdminLeadsShell({ stage, view, stages, channels, categor
           value={actionPersonId ?? ""}
           onChange={(v) => router.push(hrefFor({ actionPersonId: v || undefined }))}
           style={{ width: "auto", minWidth: 150 }}
-          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+          colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
           options={[
             { value: "", label: t.filterActionPerson },
             ...assignees.map((a) => ({ value: a.id, label: a.fullName ?? a.handle })),

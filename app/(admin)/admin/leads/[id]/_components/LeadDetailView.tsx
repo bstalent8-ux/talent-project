@@ -86,10 +86,10 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
   const ar = lang === "ar";
   const BackIcon = ar ? ArrowRight : ArrowLeft;
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED = dark ? "#94a3b8" : "#64748b";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC6";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
 
   const [busy, setBusy] = useState(false);
   const [actionType, setActionType] = useState<string>("call");
@@ -276,7 +276,7 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
                   });
                   setEditingContact(true);
                 }}
-                style={{ display: "flex", background: "none", border: "none", cursor: "pointer", color: "#60A5FA", flexShrink: 0 }}
+                style={{ display: "flex", background: "none", border: "none", cursor: "pointer", color: "#4FA7A3", flexShrink: 0 }}
               >
                 <Pencil size={15} />
               </button>
@@ -345,7 +345,7 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
             disabled={busy}
             onChange={changeStage}
             style={{ marginBottom: 14 }}
-            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+            colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
             options={[
               ...(!lead.stage ? [{ value: "", label: t.none }] : []),
               ...stages.map((s) => ({ value: s.id, label: ar ? s.labelAr : s.labelEn })),
@@ -359,7 +359,7 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
                 value={lead.channel?.id ?? ""}
                 disabled={busy}
                 onChange={(v) => changeTaxonomy("channelId", v)}
-                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                 options={[{ value: "", label: t.unset }, ...channels.map((c) => ({ value: c.id, label: ar ? c.labelAr : c.labelEn }))]}
               />
             </div>
@@ -369,7 +369,7 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
                 value={lead.category?.id ?? ""}
                 disabled={busy}
                 onChange={(v) => changeTaxonomy("categoryId", v)}
-                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                 options={[{ value: "", label: t.unset }, ...categories.map((c) => ({ value: c.id, label: ar ? c.labelAr : c.labelEn }))]}
               />
             </div>
@@ -395,7 +395,7 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
                     type="button"
                     title={t.editAssignee}
                     onClick={() => setEditingAssignee(true)}
-                    style={{ display: "inline-flex", verticalAlign: "middle", marginInlineStart: 6, background: "none", border: "none", cursor: "pointer", color: "#60A5FA" }}
+                    style={{ display: "inline-flex", verticalAlign: "middle", marginInlineStart: 6, background: "none", border: "none", cursor: "pointer", color: "#4FA7A3" }}
                   >
                     <Pencil size={12} />
                   </button>
@@ -418,7 +418,7 @@ export default function LeadDetailView({ lead, stages, channels, categories }: P
               <CustomSelect
                 value={actionType}
                 onChange={setActionType}
-                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#00D26A", hover: dark ? "#131F2E" : "#F1F5F9" }}
+                colors={{ border: BORDER, card: CARD, text: TEXT, muted: MUTED, primary: "#087F83", hover: dark ? "#322722" : "#F1E8D2" }}
                 options={LEAD_ACTION_TYPES.map((a) => ({ value: a, label: t[ACTION_LABEL_KEY[a]] }))}
               />
             </div>
