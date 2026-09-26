@@ -118,8 +118,9 @@ export default function Footer() {
           <div className={styles.footerBrand}>
             <Link className={styles.logoLink} href="/home" aria-label="Talents">
               <Image
-                src={dark ? "/assets/talents-logo-dark.png" : "/assets/talents-logo-light.png"}
+                src={dark ? "/assets/talents-logo-dark.webp" : "/assets/talents-logo-light.webp"}
                 alt="Talents"
+                unoptimized
                 width={120}
                 height={38}
                 style={{ objectFit: "contain", width: "auto", height: 38 }}

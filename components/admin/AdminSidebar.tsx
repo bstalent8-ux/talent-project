@@ -480,7 +480,7 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
         {!rail && (
           <Link href="/admin" onClick={onClose} aria-label="Talents" className="admin-rail-label" style={{ display: "flex", padding: "0 20px 22px" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/talents-logo-dark.png" alt="Talents" style={{ height: 34, width: "auto" }} />
+            <img src="/assets/talents-logo-dark.webp" alt="Talents" style={{ height: 34, width: "auto" }} />
           </Link>
         )}
 

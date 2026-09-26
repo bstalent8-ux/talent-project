@@ -196,8 +196,9 @@ export default function Navbar() {
         <div className={styles.brandWrap}>
           <Link className={styles.logoLink} href="/home" aria-label="Talents">
             <Image
-              src={dark ? "/assets/talents-logo-dark.png" : "/assets/talents-logo-light.png"}
+              src={dark ? "/assets/talents-logo-dark.webp" : "/assets/talents-logo-light.webp"}
               alt="Talents"
+              unoptimized
               width={108}
               height={34}
               style={{ objectFit: "contain", width: "auto", height: 34 }}

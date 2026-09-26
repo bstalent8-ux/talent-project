@@ -84,7 +84,7 @@ export default function AuthFrame({ variant, leaving = false, showcaseLeaving = 
   const t = TX[lang];
   const ar = lang === "ar";
   const Chevron = ar ? ChevronRight : ChevronLeft;
-  const logoSrc = dark ? "/assets/talents-logo-dark.png" : "/assets/talents-logo-light.png";
+  const logoSrc = dark ? "/assets/talents-logo-dark.webp" : "/assets/talents-logo-light.webp";
   const showcase = variant !== "plain";
 
   // Wipe-out / type-in language switch (shared with the onboarding page).
@@ -95,7 +95,7 @@ export default function AuthFrame({ variant, leaving = false, showcaseLeaving = 
     <div className={styles.authPage} data-lang-phase={phase}>
       <header className={styles.topBar}>
         <Link href="/home" aria-label="Talents" className={styles.topLogo}>
-          <Image src={logoSrc} alt="Talents" width={150} height={47} priority style={{ width: "auto", height: 38 }} />
+          <Image src={logoSrc} alt="Talents" width={150} height={47} priority unoptimized style={{ width: "auto", height: 38 }} />
         </Link>
         <div className={styles.topActions}>
           <button type="button" className={styles.controlButton} onClick={switchLang} disabled={phase !== "idle"} aria-label={t.lang}>

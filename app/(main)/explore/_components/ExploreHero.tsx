@@ -14,7 +14,12 @@ import styles from "./ExplorePage.module.css";
 // activeType/onTypeChange), so dropping them here loses no functionality.
 // The real background image (was a CSS gradient only) + featured-talent
 // marquee replace the height that used to come from the stats strip.
-const HERO_BG = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=70";
+// Sized per viewport (srcSet) — a single 1600px/277 KB image was the LCP on
+// phones (8.5 s on Lighthouse mobile). The hero sits under a dark overlay, so
+// q=60 is visually identical.
+const HERO_SRC = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=60";
+const HERO_BG = `${HERO_SRC}&w=1280`;
+const HERO_SRCSET = [480, 768, 1024, 1280, 1600].map((w) => `${HERO_SRC}&w=${w} ${w}w`).join(", ");
 
 interface Props {
   lang: "ar" | "en";
@@ -40,7 +45,7 @@ export default function ExploreHero({ lang, search, onSearch, resultCount, featu
 
   return (
     <section className={styles.hero}>
-      <img className={styles.heroImage} src={HERO_BG} alt="" aria-hidden="true" loading="eager" />
+      <img className={styles.heroImage} src={HERO_BG} srcSet={HERO_SRCSET} sizes="100vw" alt="" aria-hidden="true" loading="eager" fetchPriority="high" decoding="async" />
       <div className={styles.heroOverlay} aria-hidden="true" />
 
       <div className={styles.heroContent}>

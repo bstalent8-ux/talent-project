@@ -158,7 +158,7 @@ export default function OnboardingPage() {
   const isLast = stepIndex === t.steps.length - 1;
   const Icon = step.icon;
   const Back = ar ? ChevronRight : ChevronLeft;
-  const logoSrc = dark ? "/assets/talents-logo-dark.png" : "/assets/talents-logo-light.png";
+  const logoSrc = dark ? "/assets/talents-logo-dark.webp" : "/assets/talents-logo-light.webp";
 
   function go(delta: 1 | -1) {
     setDir(delta > 0 ? "next" : "prev");
@@ -175,7 +175,7 @@ export default function OnboardingPage() {
     <div className={styles.page} data-lang-phase={phase}>
       <header className={authStyles.topBar}>
         <Link href="/home" aria-label="Talents" className={authStyles.topLogo}>
-          <Image src={logoSrc} alt="Talents" width={150} height={47} priority style={{ width: "auto", height: 38 }} />
+          <Image src={logoSrc} alt="Talents" width={150} height={47} priority unoptimized style={{ width: "auto", height: 38 }} />
         </Link>
         <div className={authStyles.topActions}>
           <button type="button" className={authStyles.controlButton} onClick={switchLang} disabled={phase !== "idle"} aria-label={t.lang}>
