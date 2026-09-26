@@ -17,6 +17,7 @@ const TX = {
     searchPlaceholder: "بحث بالاسم أو رقم الهاتف...",
     scoreAny: "السكور: الكل", scoreEq: "السكور = ", scoreLte: "السكور ≤ ", scoreGte: "السكور ≥ ",
     scorePlaceholder: "0-100",
+    setGender: "تحديد النوع (Male / Female)",
   },
   en: {
     title: "Talents", all: "All", pending: "Pending", approved: "Approved", rejected: "Rejected", suspended: "Suspended",
@@ -25,6 +26,7 @@ const TX = {
     searchPlaceholder: "Search by name or phone...",
     scoreAny: "Score: Any", scoreEq: "Score = ", scoreLte: "Score ≤ ", scoreGte: "Score ≥ ",
     scorePlaceholder: "0-100",
+    setGender: "Set gender (Male / Female)",
   },
 };
 
@@ -135,6 +137,15 @@ export default function AdminTalentsShell({ status, category, city, duplicate = 
         </div>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Link
+            href="/admin/talents/gender"
+            style={{
+              padding: "7px 14px", borderRadius: 20, border: "1px solid #087F83",
+              color: "var(--color-primary-text)", fontSize: 13, fontWeight: 700, textDecoration: "none",
+            }}
+          >
+            {t.setGender}
+          </Link>
           <CustomSelect
             size="sm"
             value={category ?? ""}
