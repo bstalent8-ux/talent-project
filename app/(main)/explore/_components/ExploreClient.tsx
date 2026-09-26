@@ -421,6 +421,30 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
       {/* ── Final CTA ── sign-up prompt: visitors only ── */}
       {myRole === null && (
       <section className={styles.finalCta}>
+        {/* Decoration: a peach orb + arc on the start side, a teal one on the end side. */}
+        <svg className={`${styles.ctaOrbs} ${styles.ctaOrbsStart}`} viewBox="0 0 420 440" aria-hidden="true" focusable="false">
+          <defs>
+            <radialGradient id="cta-peach" cx="70%" cy="30%" r="75%">
+              <stop offset="0%" stopColor="#E7A58A" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#E7A58A" stopOpacity="0.04" />
+            </radialGradient>
+          </defs>
+          <circle cx="120" cy="120" r="250" fill="url(#cta-peach)" />
+          <path d="M-40 250 C 120 230 250 300 300 440" fill="none" stroke="#E7A58A" strokeOpacity="0.55" strokeWidth="1.5" />
+          <circle cx="330" cy="215" r="20" fill="#C98A70" opacity="0.8" />
+        </svg>
+        <svg className={`${styles.ctaOrbs} ${styles.ctaOrbsEnd}`} viewBox="0 0 420 440" aria-hidden="true" focusable="false">
+          <defs>
+            <radialGradient id="cta-teal" cx="40%" cy="20%" r="80%">
+              <stop offset="0%" stopColor="#4FA7A3" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#087F83" stopOpacity="0.05" />
+            </radialGradient>
+          </defs>
+          <circle cx="330" cy="420" r="230" fill="url(#cta-teal)" />
+          <path d="M40 440 C 90 300 200 190 420 160" fill="none" stroke="#4FA7A3" strokeOpacity="0.6" strokeWidth="1.5" />
+          <path d="M360 -10 L 420 -10 L 420 150 L 330 170 Z" fill="#087F83" opacity="0.45" />
+          <circle cx="330" cy="75" r="20" fill="#1F4A4B" stroke="#4FA7A3" strokeOpacity="0.5" />
+        </svg>
         <div className={styles.finalCtaInner}>
           <h2>{ar ? "جاهز لإطلاق حملتك القادمة؟" : "Ready to launch your next campaign?"}</h2>
           <p>

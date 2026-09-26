@@ -1171,40 +1171,102 @@
   .bandLines { width: 150px; height: 180px; }
 }
 
-/* ── Final CTA ───────────────────────────────────────── */
-.finalCta {
-  position: relative;
-  overflow: hidden;
-  padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 2rem);
-  color: #fff;
-  background:
-    radial-gradient(circle at 15% 25%, rgba(231,165,138, 0.2), transparent 22rem),
-    radial-gradient(circle at 88% 30%, rgba(8,127,131, 0.24), transparent 22rem),
-    linear-gradient(135deg, #241B17, #160F0C);
+/* ── Final CTA ─────────────────────────────────────────
+   Dark chocolate band with a peach orb/arc on the start side and a teal one
+   on the end side (inline SVG in ExploreClient), and a frosted glass panel
+   in the middle carrying the copy and the two actions. */
+/* The band's top and bottom edges dissolve into the page (a vertical mask on
+   the background layer and the orbs); on hover the fade animates to 0 so the
+   edges turn crisp and the band lifts with a drop shadow. The mask sits on
+   ::before / the SVGs, not on .finalCta itself, because a mask on the section
+   would also clip its own box-shadow. --cta-fade is registered so it can
+   transition. */
+@property --cta-fade {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 56px;
 }
+
+.finalCta {
+  --cta-fade: 56px;
+  --cta-mask: linear-gradient(to bottom, transparent 0, #000 var(--cta-fade), #000 calc(100% - var(--cta-fade)), transparent 100%);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(2.5rem, 5vw, 3.5rem) clamp(1rem, 4vw, 2rem);
+  color: #F5EEDB;
+  box-shadow: 0 0 0 rgba(27, 19, 16, 0);
+  transition:
+    --cta-fade 420ms var(--ease-out-quint),
+    box-shadow 420ms var(--ease-out-quint);
+}
+
+.finalCta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(40% 60% at 55% 0%, rgba(231,165,138, 0.16), transparent 70%),
+    linear-gradient(90deg, #2B1D17 0%, #1B1310 55%, #10201F 100%);
+  -webkit-mask-image: var(--cta-mask);
+  mask-image: var(--cta-mask);
+}
+
+@media (hover: hover) {
+  .finalCta:hover {
+    z-index: 1; /* keep the shadow above the footer that follows */
+    --cta-fade: 0px;
+    box-shadow: 0 24px 48px -12px rgba(27, 19, 16, 0.45), 0 -12px 32px -16px rgba(27, 19, 16, 0.3);
+  }
+}
+
+.ctaOrbs {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  height: 100%;
+  width: clamp(200px, 26vw, 420px);
+  pointer-events: none;
+  -webkit-mask-image: var(--cta-mask);
+  mask-image: var(--cta-mask);
+}
+
+.ctaOrbsStart { inset-inline-start: 0; }
+.ctaOrbsEnd { inset-inline-end: 0; }
+:global([dir="rtl"]) .ctaOrbs { transform: scaleX(-1); }
+@media (max-width: 640px) { .ctaOrbs { width: 55vw; opacity: 0.6; } }
+@media (prefers-reduced-motion: reduce) { .finalCta { transition: none; } }
 
 .finalCtaInner {
   width: min(760px, 100%);
   margin: 0 auto;
+  padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 3rem);
+  border: 1px solid rgba(245, 238, 219, 0.1);
+  border-radius: var(--radius-xl);
+  background: rgba(245, 238, 219, 0.04);
+  box-shadow: inset 0 1px 0 rgba(245, 238, 219, 0.06), 0 30px 60px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
   text-align: center;
   display: grid;
-  gap: 1.1rem;
+  gap: 1rem;
   justify-items: center;
 }
 
 .finalCta h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  line-height: 1.18;
+  font-size: clamp(1.8rem, 3.6vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.15;
   text-wrap: balance;
 }
 
 .finalCta p {
   margin: 0;
   max-width: 560px;
-  color: rgba(255, 255, 255, 0.82);
-  line-height: 1.8;
+  color: rgba(245, 238, 219, 0.8);
+  line-height: 1.75;
   font-size: var(--text-base);
 }
 
@@ -1240,13 +1302,13 @@
 .buttonPrimary {
   background: var(--color-accent);
   color: #2B211D;
-  box-shadow: 0 14px 28px rgba(231,165,138, 0.18);
+  box-shadow: 0 0 0 1px rgba(231,165,138, 0.35), 0 12px 32px rgba(231,165,138, 0.35);
 }
 
 .buttonGhost {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.24);
-  color: #fff;
+  background: rgba(27, 19, 16, 0.55);
+  border-color: rgba(245, 238, 219, 0.3);
+  color: #F5EEDB;
   backdrop-filter: blur(12px);
 }
 
