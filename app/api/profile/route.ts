@@ -10,6 +10,7 @@ import { ProfileError, profileService } from "@/features/profiles";
 import { syncTalentBrands } from "@/lib/talent-brands-sync";
 import { hasRecentVerifiedRegisterOtp } from "@/lib/email-otp";
 import { profileDataSchema } from "./schema";
+import { normalizeGender } from "@/lib/profile-fields";
 
 // ─── Mass-assignment guards ──────────────────────────────────────────────────
 // This route writes through the service role (RLS bypassed), so the caller must
@@ -114,6 +115,13 @@ export async function POST(req: NextRequest) {
     // The `profiles` upsert above has already run, so trg_sync_profile_type has
     // populated profile_type_id and the service can resolve the provider.
     if (effectiveRole === "talent" && talentProfileData) {
+      // social_links.gender feeds the Explore filter: store only male/female,
+      // anything else (including an explicit null = "not set") drops the key.
+      const sl = talentProfileData.social_links;
+      if (sl && typeof sl === "object" && "gender" in sl) {
+        const gender = normalizeGender(sl.gender);
+        if (gender) sl.gender = gender; else delete sl.gender;
+      }
       try {
         await profileService.updateCoreForUser(targetId, talentProfileData);
       } catch (e) {

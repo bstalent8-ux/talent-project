@@ -452,7 +452,7 @@ export default function DashboardPage() {
       age: form.age, hair_color: form.hair_color, eye_color: form.eye_color,
       shoe_size: form.shoe_size, languages: form.languages,
       dialect: form.dialect,
-      ...(normalizeGender(form.gender) ? { gender: normalizeGender(form.gender) } : {}),
+      gender: normalizeGender(form.gender), // null = "not set"; the API drops the key
       usage_addons: addons,
       brands,
     };
