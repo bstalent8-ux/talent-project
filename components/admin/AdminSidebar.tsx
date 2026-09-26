@@ -645,14 +645,23 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
                       <span className="admin-rail-label" style={{ flex: 1, textAlign: "start" }}>{groupLabel}</span>
                       <ChevronDown
                         size={14}
-                        style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                        style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }}
                       />
                     </button>
-                    {isOpen && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}>
-                        {entry.items.map((it) => renderNavLink(it, true))}
+                    {/* Always mounted so it can animate: height via grid rows
+                        0fr ↔ 1fr, items fade/slide in with a small stagger.
+                        `inert` keeps a closed group's links out of tab order. */}
+                    <div className="admin-group-body" data-open={isOpen ? "true" : "false"} inert={!isOpen}>
+                      <div className="admin-group-clip">
+                        <div style={{ display: "flex", flexDirection: "column", gap: 2, paddingTop: 2 }}>
+                          {entry.items.map((it, i) => (
+                            <div key={it.key} className="admin-group-item" style={{ "--i": i } as React.CSSProperties}>
+                              {renderNavLink(it, true)}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               })}
@@ -891,6 +900,30 @@ export default function AdminSidebar({ open, mode, onClose, onModeChange }: Prop
           from { opacity: 0; transform: translateX(6px); }
           to   { opacity: 1; transform: none; }
         }
+        /* Sidebar groups open/close smoothly instead of popping. */
+        .admin-group-body {
+          display: grid;
+          grid-template-rows: 0fr;
+          transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .admin-group-body[data-open="true"] { grid-template-rows: 1fr; }
+        .admin-group-clip { overflow: hidden; min-height: 0; }
+        .admin-group-item {
+          opacity: 0;
+          transform: translateY(-4px);
+          transition: opacity 0.16s ease, transform 0.16s ease;
+        }
+        .admin-group-body[data-open="true"] .admin-group-item {
+          opacity: 1;
+          transform: none;
+          transition: opacity 0.24s ease, transform 0.24s ease;
+          transition-delay: calc(var(--i, 0) * 30ms + 60ms);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .admin-group-body,
+          .admin-group-item { transition: none !important; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .admin-sidebar,
           .admin-edge-toggle,
