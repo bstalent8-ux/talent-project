@@ -79,9 +79,9 @@ const TX = {
     phone:           "رقم الهاتف",
     phonePH:         "+966 5xx xxx xxx",
     password:        "كلمة المرور",
-    passwordPH:      "8 أحرف على الأقل",
+    passwordPH:      "8 أحرف فأكثر",
     confirm:         "تأكيد كلمة المرور",
-    confirmPH:       "أعد كتابة كلمة المرور",
+    confirmPH:       "أعد كتابتها",
     iAm:             "انضم كـ",
     roleTalentTitle: "أنا موهبة",
     roleTalentDesc:  "اعرض أعمالك وخلّي البراندات تلاقيك.",
@@ -152,9 +152,9 @@ const TX = {
     phone:           "Phone number",
     phonePH:         "+966 5xx xxx xxx",
     password:        "Password",
-    passwordPH:      "At least 8 characters",
+    passwordPH:      "8+ characters",
     confirm:         "Confirm password",
-    confirmPH:       "Re-enter your password",
+    confirmPH:       "Repeat password",
     iAm:             "I'm joining as",
     roleTalentTitle: "I'm a Talent",
     roleTalentDesc:  "Showcase my work, get discovered.",
@@ -794,7 +794,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <div>
+        <div className={styles.fieldHalf}>
           <label className={styles.label} htmlFor="register-password">{tx.password}</label>
           <div className={styles.inputWrap}>
             <Lock className={styles.inputIcon} size={16} aria-hidden="true" />
@@ -833,7 +833,7 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <div>
+        <div className={styles.fieldHalf}>
           <label className={styles.label} htmlFor="register-confirm">{tx.confirm}</label>
           <div className={styles.inputWrap}>
             <Lock className={styles.inputIcon} size={16} aria-hidden="true" />
