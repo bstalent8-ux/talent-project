@@ -1,3 +1,4 @@
+import { exploreHiddenReason } from "@/lib/explore-visibility";
 import { adminClient } from "@/lib/supabase/admin";
 import type { AdminTalent, AdminDashboardStats, AdminBooking, AdminBookingFull, AdminReview, TalentAction, AddTalentActionInput, AdminTalentBrand, TalentActionAuditEntry } from "../types";
 import { clusterPageVisits, totalDurationByPage, type PageTotal, type EngagementSample } from "./page-duration-clustering";
@@ -308,6 +309,13 @@ async function buildAdminTalents(
   );
   const emailMap = Object.fromEntries(profileIds.map((id, i) => [id, emailResults[i]]));
 
+  // account_status is read separately and error-tolerant: it only feeds the
+  // "hidden from Explore" badge, and must never break the table.
+  const { data: statusRows } = profileIds.length
+    ? await adminClient.from("profiles").select("id, account_status").in("id", profileIds)
+    : { data: [] };
+  const accountStatusMap = Object.fromEntries((statusRows ?? []).map((r) => [r.id, r.account_status as string | null]));
+
   return rows.flatMap((p) => {
     const tp = tpOf(p);
     if (!tp) return [];
@@ -339,6 +347,13 @@ async function buildAdminTalents(
       isVerified:      p.is_verified as boolean ?? false,
       balance:         p.balance     as number  ?? 0,
       completionScore: calculateCompletion(p, tp, hasPortfolio.has(tp.id as string) ? [{}] : []).score,
+      exploreHidden:   exploreHiddenReason({
+        status:        talentStatus,
+        handle:        p.handle as string | null,
+        isSuspended:   isSuspended,
+        accountStatus: accountStatusMap[id] ?? null,
+        category:      tp.category as string | null,
+      }),
       isDuplicate:        duplicateInfo.get(id)?.isDuplicate ?? false,
       isDuplicateBest:    duplicateInfo.get(id)?.isBest ?? false,
       duplicateMatchedBy: duplicateInfo.get(id)?.matchedBy ?? [],

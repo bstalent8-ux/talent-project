@@ -29,6 +29,8 @@ export interface AdminTalent {
   completionScore: number;
   /** Shares a normalized full name or phone number with at least one other
    *  talent row — see computeTalentDuplicateInfo() in admin.service.ts. */
+  /** Approved but not on /explore, and why (lib/explore-visibility.ts). */
+  exploreHidden?: import("@/lib/explore-visibility").ExploreHiddenReason | null;
   isDuplicate: boolean;
   /** Within its duplicate cluster, this row has the highest completionScore
    *  — the one an admin would keep. False for every non-duplicate row. */

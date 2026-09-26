@@ -77,10 +77,29 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
   const [sex,      setSex]      = useState("all");
   // How many talents have each gender set — shown on the filter chips so an
   // empty result reads as "not many set yet", not as a broken filter.
-  const genderCounts = useMemo(() => ({
-    male:   talents.filter((t) => t.gender === "male").length,
-    female: talents.filter((t) => t.gender === "female").length,
-  }), [talents]);
+  // Counted over the SAME filters as the results (except the gender one), so
+  // picking "Female (7)" always shows 7 — not the whole unfiltered catalogue.
+  const passesBaseFilters = (t: TalentCard) => {
+    // Platform restriction, independent of the Type dropdown: Explore
+    // only ever surfaces ugc/model talents, even when "All" is selected.
+    const category = (t.category ?? "").toLowerCase();
+    if (category !== "ugc" && category !== "model") return false;
+    if (search && !fuzzyMatch(search, t.name, t.category)) return false;
+    if (!matchesType(t, type)) return false;
+    if (verified && !t.verified) return false;
+    if (t.starting_price !== null) {
+      if (t.starting_price < minPrice || t.starting_price > maxPrice) return false;
+    }
+    return true;
+  };
+  const genderCounts = useMemo(() => {
+    const base = talents.filter(passesBaseFilters);
+    return {
+      male:   base.filter((t) => t.gender === "male").length,
+      female: base.filter((t) => t.gender === "female").length,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [talents, search, type, minPrice, maxPrice, verified]);
   const [page,     setPage]     = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -176,20 +195,7 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
   }, [talents, viewerBrandCategory]);
 
   const filtered = useMemo(() => {
-    let list = talents.filter((t) => {
-      // Platform restriction, independent of the Type dropdown: Explore
-      // only ever surfaces ugc/model talents, even when "All" is selected.
-      const category = (t.category ?? "").toLowerCase();
-      if (category !== "ugc" && category !== "model") return false;
-      if (search && !fuzzyMatch(search, t.name, t.category)) return false;
-      if (!matchesType(t, type)) return false;
-      if (sex !== "all" && t.gender !== sex) return false;
-      if (verified && !t.verified) return false;
-      if (t.starting_price !== null) {
-        if (t.starting_price < minPrice || t.starting_price > maxPrice) return false;
-      }
-      return true;
-    });
+    let list = talents.filter((t) => passesBaseFilters(t) && (sex === "all" || t.gender === sex));
 
     list = [...list].sort((a, b) => {
       // Category affinity is the primary key; the chosen sort breaks ties.

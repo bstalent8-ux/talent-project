@@ -21,6 +21,8 @@ import TalentComplaintButton from "./TalentComplaintButton";
 
 const TX = {
   ar: {
+    hiddenExplore: "مش ظاهر في Explore",
+    hiddenWhy: { no_handle: "مفيش handle", suspended: "موقوف", account_blocked: "الحساب محظور", category: "التصنيف مش UGC/Model" },
     name: "الاسم", email: "البريد الإلكتروني", phone: "رقم الهاتف", category: "التصنيف", city: "المدينة",
     noPhone: "لا يوجد",
     completion: "اكتمال الملف",
@@ -46,6 +48,8 @@ const TX = {
     duplicateSummaryNone: "مفيش بروفايلات مكررة",
   },
   en: {
+    hiddenExplore: "Hidden from Explore",
+    hiddenWhy: { no_handle: "no handle", suspended: "suspended", account_blocked: "account blocked", category: "category isn't UGC/Model" },
     name: "Name", email: "Email", phone: "Phone", category: "Category", city: "City",
     noPhone: "None",
     completion: "Profile Completion",
@@ -376,6 +380,12 @@ export default function TalentsTable({ talents, total, duplicateTotal, page, pag
                     </td>
                     <td style={cellCenterStyle}>
                       <StatusBadge status={talent.status} lang={lang} />
+                      {talent.exploreHidden && (
+                        <div title={t.hiddenWhy[talent.exploreHidden]} style={{ marginTop: 4, fontSize: 11, fontWeight: 700, color: "#B45309", whiteSpace: "nowrap" }}>
+                          {t.hiddenExplore}
+                          <div style={{ fontWeight: 400, color: MUTED }}>{t.hiddenWhy[talent.exploreHidden]}</div>
+                        </div>
+                      )}
                     </td>
                     <td style={cellStyle} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: "flex", gap: 4 }}>
