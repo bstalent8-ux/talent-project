@@ -179,7 +179,7 @@
   font-size: 3.4rem;
   font-weight: 900;
   color: rgba(255, 255, 255, 0.16);
-  background: linear-gradient(160deg, var(--color-primary), #081016);
+  background: linear-gradient(160deg, var(--color-primary), #160F0C);
 }
 
 .categoryBadge {

@@ -34,13 +34,13 @@ const TX = {
 export default function MissionVision({ dark, lang }: Props) {
   const t      = TX[lang];
   const ar     = lang === "ar";
-  const GREEN  = "#00D26A";
-  const GOLD   = "#FFB800";
-  const BG     = dark ? "#060d18" : "#ffffff";
-  const CARD   = dark ? "#0D1623" : "#f8fafc";
-  const BORDER = dark ? "rgba(0,255,163,0.1)" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
+  const BG     = dark ? "#1B1310" : "#FBF7EA";
+  const CARD   = dark ? "#2B211D" : "#F6F0DD";
+  const BORDER = dark ? "rgba(79,167,163,0.1)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
 
   const cards = [
     { data: t.mission, icon: Target,    accent: GREEN, delay: 0   },
@@ -79,8 +79,8 @@ export default function MissionVision({ dark, lang }: Props) {
 
             <div style={{
               width: 48, height: 48, borderRadius: 14,
-              backgroundColor: `${accent}18`,
-              border: `1px solid ${accent}30`,
+              backgroundColor: `color-mix(in srgb, ${accent} 9%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${accent} 19%, transparent)`,
               display: "flex", alignItems: "center", justifyContent: "center",
               marginBottom: 20,
             }}>

@@ -53,8 +53,8 @@ export default function CompleteProfilePage() {
 
   useEffect(() => { refreshAll(); }, []);
 
-  const BG = dark ? "#050B12" : "#F1F5F9";
-  const TEXT = dark ? "#A8B3C2" : "#64748B";
+  const BG = dark ? "#1B1310" : "#F1EAD3";
+  const TEXT = dark ? "#A99B8E" : "#6E5F55";
 
   if (status !== "ready") {
     return (

@@ -52,12 +52,12 @@ export default function ContactForm() {
   const [hp, setHp]         = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
 
-  const BORDER = dark ? "rgba(255,255,255,0.1)" : "#e2e8f0";
-  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#ffffff";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const INPUT  = dark ? "rgba(255,255,255,0.06)" : "#f8fafc";
-  const GREEN  = "#00D26A";
+  const BORDER = dark ? "rgba(255,255,255,0.1)" : "#E6DCC3";
+  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#FBF7EA";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const INPUT  = dark ? "rgba(255,255,255,0.06)" : "#F6F0DD";
+  const GREEN  = "var(--color-primary-text)";
 
   function validate(): boolean {
     const e: Record<string, string> = {};
@@ -117,8 +117,8 @@ export default function ContactForm() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         style={{
-          background:   dark ? "rgba(0,210,106,0.08)" : "rgba(0,210,106,0.06)",
-          border:       "1px solid rgba(0,210,106,0.3)",
+          background:   dark ? "rgba(8,127,131,0.08)" : "rgba(8,127,131,0.06)",
+          border:       "1px solid rgba(8,127,131,0.3)",
           borderRadius: 16, padding: "40px 32px",
           textAlign:    "center", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
         }}
@@ -176,7 +176,7 @@ export default function ContactForm() {
                 padding:      "8px 20px",
                 borderRadius: 20,
                 border:       `1px solid ${form.type === opt ? GREEN : BORDER}`,
-                background:   form.type === opt ? `rgba(0,210,106,0.12)` : INPUT,
+                background:   form.type === opt ? `rgba(8,127,131,0.12)` : INPUT,
                 color:        form.type === opt ? GREEN : MUTED,
                 fontSize:     13,
                 fontWeight:   form.type === opt ? 700 : 400,
@@ -233,24 +233,24 @@ export default function ContactForm() {
           padding:      "14px 32px",
           borderRadius: 12,
           border:       "none",
-          background:   status === "sending" ? MUTED : `linear-gradient(135deg, #00D26A, #00C9B1)`,
+          background:   status === "sending" ? MUTED : "var(--color-primary)",
           color:        "#fff",
           fontSize:     15,
           fontWeight:   700,
           fontFamily:   "'IBM Plex Sans Arabic', sans-serif",
           cursor:       status === "sending" ? "not-allowed" : "pointer",
           transition:   "transform 0.2s, box-shadow 0.2s",
-          boxShadow:    "0 4px 16px rgba(0,210,106,0.3)",
+          boxShadow:    "0 4px 16px rgba(8,127,131,0.3)",
         }}
         onMouseEnter={e => {
           if (status !== "sending") {
             (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 24px rgba(0,210,106,0.4)";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 24px rgba(8,127,131,0.4)";
           }
         }}
         onMouseLeave={e => {
           (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-          (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(0,210,106,0.3)";
+          (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(8,127,131,0.3)";
         }}
       >
         {status === "sending" ? t.sending : t.send}

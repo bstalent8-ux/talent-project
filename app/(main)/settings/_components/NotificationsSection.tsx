@@ -28,11 +28,11 @@ const TX = {
 export default function NotificationsSection({ lang, dark }: SectionProps) {
   const t = TX[lang];
   const { unreadCount } = useNotifications();
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
-  const GREEN  = "#00D26A";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
+  const GREEN  = "var(--color-primary-text)";
 
   const events = [
     { icon: MessageCircle, label: t.newBrief },
@@ -57,7 +57,7 @@ export default function NotificationsSection({ lang, dark }: SectionProps) {
 
       <p style={{ color: MUTED, fontSize: 11.5, lineHeight: 1.7, margin: "0 0 20px" }}>{t.note}</p>
 
-      <Link href="/notifications" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", backgroundColor: GREEN, borderRadius: 10, color: "#000", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>
+      <Link href="/notifications" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", backgroundColor: "var(--color-primary)", borderRadius: 10, color: "var(--color-primary-ink)", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>
         <Bell size={15} />
         {t.viewAll}
         {unreadCount > 0 && (

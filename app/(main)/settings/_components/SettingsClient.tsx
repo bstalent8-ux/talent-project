@@ -78,12 +78,12 @@ export default function SettingsClient({ profile, email, talentStatus, talentCat
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const BG     = dark ? "#050B12" : "#F1F5F9";
-  const GREEN  = "#00D26A";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const BG     = dark ? "#1B1310" : "#F1EAD3";
+  const GREEN  = "var(--color-primary-text)";
 
   const [section, setSection] = useState<SectionKey>("account");
 
@@ -113,7 +113,7 @@ export default function SettingsClient({ profile, email, talentStatus, talentCat
           display: "flex", alignItems: "center", gap: 10,
           padding: isMobile ? "8px 14px" : "10px 14px",
           borderRadius: 10, border: "none", cursor: "pointer",
-          backgroundColor: active ? "rgba(0,210,106,0.12)" : "transparent",
+          backgroundColor: active ? "rgba(8,127,131,0.12)" : "transparent",
           color: active ? GREEN : MUTED,
           fontSize: 13.5, fontWeight: active ? 700 : 500,
           whiteSpace: "nowrap", flexShrink: 0,

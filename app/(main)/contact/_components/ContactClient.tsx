@@ -43,12 +43,12 @@ export default function ContactClient() {
   const t  = TX[lang];
   const ar = lang === "ar";
 
-  const BG     = dark ? "#060d18" : "#f8fafc";
-  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#ffffff";
-  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const GREEN  = "#00D26A";
+  const BG     = dark ? "#1B1310" : "#F6F0DD";
+  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#FBF7EA";
+  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const GREEN  = "var(--color-primary-text)";
 
   return (
     <div dir={ar ? "rtl" : "ltr"} style={{ background: BG, minHeight: "100vh", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
@@ -58,8 +58,8 @@ export default function ContactClient() {
         <div style={{
           position: "absolute", inset: 0,
           background: dark
-            ? `radial-gradient(ellipse 70% 55% at 50% 0%, rgba(0,210,106,0.09) 0%, transparent 70%), #060d18`
-            : `radial-gradient(ellipse 70% 55% at 50% 0%, rgba(0,210,106,0.06) 0%, transparent 70%), #f8fafc`,
+            ? `radial-gradient(ellipse 70% 55% at 50% 0%, rgba(8,127,131,0.09) 0%, transparent 70%), #1B1310`
+            : `radial-gradient(ellipse 70% 55% at 50% 0%, rgba(8,127,131,0.06) 0%, transparent 70%), #F5EEDB`,
         }} />
         <div style={{ position: "relative", zIndex: 1, maxWidth: 600, margin: "0 auto" }}>
           <motion.span
@@ -67,8 +67,8 @@ export default function ContactClient() {
             animate={{ opacity: 1, y: 0 }}
             style={{
               display: "inline-block", marginBottom: 18,
-              background: dark ? "rgba(0,210,106,0.1)" : "rgba(0,210,106,0.08)",
-              border: "1px solid rgba(0,210,106,0.25)",
+              background: dark ? "rgba(8,127,131,0.1)" : "rgba(8,127,131,0.08)",
+              border: "1px solid rgba(8,127,131,0.25)",
               borderRadius: 100, padding: "4px 16px",
               color: GREEN, fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase",
             }}
@@ -114,7 +114,7 @@ export default function ContactClient() {
             >
               <div style={{
                 width: 44, height: 44, borderRadius: 12,
-                background: "rgba(0,210,106,0.1)",
+                background: "rgba(8,127,131,0.1)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 20, flexShrink: 0,
               }}>
@@ -156,9 +156,9 @@ export default function ContactClient() {
             {/* Decoration */}
             <div style={{
               background: dark
-                ? "linear-gradient(135deg, rgba(0,210,106,0.08), rgba(0,201,177,0.06))"
-                : "linear-gradient(135deg, rgba(0,210,106,0.06), rgba(0,201,177,0.04))",
-              border: "1px solid rgba(0,210,106,0.2)",
+                ? "linear-gradient(135deg, rgba(8,127,131,0.08), rgba(79,167,163,0.06))"
+                : "linear-gradient(135deg, rgba(8,127,131,0.06), rgba(79,167,163,0.04))",
+              border: "1px solid rgba(8,127,131,0.2)",
               borderRadius: 16, padding: "24px",
               textAlign: "center",
             }}>

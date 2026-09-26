@@ -22,12 +22,12 @@ const TX = {
 export default function AboutCTA({ dark, lang }: Props) {
   const t      = TX[lang];
   const ar     = lang === "ar";
-  const GREEN  = "#00D26A";
-  const GOLD   = "#FFB800";
-  const BG     = dark ? "#050B12" : "#f1f5f9";
-  const BORDER = dark ? "rgba(0,255,163,0.1)" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#475569";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
+  const BG     = dark ? "#1B1310" : "#F1EAD3";
+  const BORDER = dark ? "rgba(79,167,163,0.1)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#5C4E45";
 
   return (
     <section style={{
@@ -46,7 +46,7 @@ export default function AboutCTA({ dark, lang }: Props) {
           maxWidth: 680, margin: "0 auto",
           textAlign: "center",
           padding: "60px 40px",
-          backgroundColor: dark ? "#0D1623" : "#ffffff",
+          backgroundColor: dark ? "#2B211D" : "#FBF7EA",
           border: `1px solid ${BORDER}`,
           borderRadius: 24,
           position: "relative", overflow: "hidden",
@@ -80,13 +80,13 @@ export default function AboutCTA({ dark, lang }: Props) {
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <Link href="/explore" style={{
             display: "inline-flex", alignItems: "center", gap: 8,
-            backgroundColor: GREEN, color: "#000",
+            backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)",
             padding: "13px 28px", borderRadius: 12,
             fontWeight: 800, fontSize: 14,
             textDecoration: "none", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
             transition: "transform 0.2s, box-shadow 0.2s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,210,106,0.35)"; }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(8,127,131,0.35)"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
           >
             {t.cta1} {ar ? "←" : "→"}

@@ -59,11 +59,11 @@ export default function NotificationsClient() {
 
   const [tab, setTab] = useState<Tab>("all");
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT   = dark ? "#F1F5F9" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const GREEN  = "#00D26A";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const GREEN  = "var(--color-primary-text)";
 
   const visible = useMemo(
     () => (tab === "unread" ? notifications.filter((n) => !n.is_read) : notifications),
@@ -112,7 +112,7 @@ export default function NotificationsClient() {
               padding:      "9px 14px",
               borderRadius: 10,
               border:       `1px solid ${BORDER}`,
-              background:   dark ? "rgba(0,210,106,0.08)" : "rgba(0,210,106,0.06)",
+              background:   dark ? "rgba(8,127,131,0.08)" : "rgba(8,127,131,0.06)",
               color:        GREEN,
               fontSize:     13,
               fontWeight:   600,
@@ -141,7 +141,7 @@ export default function NotificationsClient() {
                 padding:      "8px 16px",
                 borderRadius: 999,
                 border:       `1px solid ${active ? GREEN : BORDER}`,
-                background:   active ? "rgba(0,210,106,0.12)" : "transparent",
+                background:   active ? "rgba(8,127,131,0.12)" : "transparent",
                 color:        active ? GREEN : MUTED,
                 fontSize:     13,
                 fontWeight:   active ? 700 : 500,
@@ -153,7 +153,7 @@ export default function NotificationsClient() {
               {key === "unread" && unreadCount > 0 && (
                 <span style={{
                   background:   GREEN,
-                  color:        "#0D1623",
+                  color:        "#2B211D",
                   fontSize:     11,
                   fontWeight:   700,
                   borderRadius: 999,

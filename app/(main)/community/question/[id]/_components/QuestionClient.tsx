@@ -43,14 +43,14 @@ export default function QuestionClient() {
 
   const t = TX[lang];
   const ar = lang === "ar";
-  const TEAL = "#00D26A";
+  const TEAL = "var(--color-primary-text)";
 
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.1)" : "#E2E8F0";
-  const TEXT = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED = dark ? "#94A3B8" : "#64748B";
-  const INPUT_BG = dark ? "#0d1527" : "#ffffff";
-  const INPUT_BORDER = dark ? "rgba(0,255,163,0.15)" : "#cbd5e1";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.1)" : "#E6DCC3";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const INPUT_BG = dark ? "#231A16" : "#FBF7EA";
+  const INPUT_BORDER = dark ? "rgba(79,167,163,0.15)" : "#D9CDB1";
 
   useEffect(() => {
     fetchQuestion();
@@ -112,7 +112,7 @@ export default function QuestionClient() {
   return (
     <div style={{
       minHeight: "100vh",
-      backgroundColor: dark ? "#050B12" : "#f1f5f9",
+      backgroundColor: dark ? "#1B1310" : "#F1EAD3",
       fontFamily: "'IBM Plex Sans Arabic', sans-serif",
       direction: ar ? "rtl" : "ltr",
       padding: "40px 20px",
@@ -165,7 +165,7 @@ export default function QuestionClient() {
             {question.tags?.map((tag: string) => (
               <span key={tag} style={{
                 fontSize: "12px",
-                backgroundColor: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9",
+                backgroundColor: dark ? "rgba(255,255,255,0.05)" : "#F1EAD3",
                 color: MUTED,
                 padding: "6px 12px",
                 borderRadius: "6px",
@@ -241,8 +241,8 @@ export default function QuestionClient() {
                 style={{
                   padding: "12px 32px",
                   borderRadius: "12px",
-                  backgroundColor: TEAL,
-                  color: "#000",
+                  backgroundColor: "var(--color-primary)",
+                  color: "var(--color-primary-ink)",
                   fontWeight: 700,
                   border: "none",
                   cursor: submitting ? "not-allowed" : "pointer",

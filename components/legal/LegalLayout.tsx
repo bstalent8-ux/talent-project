@@ -20,12 +20,12 @@ export default function LegalLayout({ badge, title, subtitle, lastUpdated, secti
   const { lang, dark } = useSite();
   const ar = lang === "ar";
 
-  const BG     = dark ? "#060d18" : "#f8fafc";
-  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#ffffff";
-  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#94a3b8" : "#64748b";
-  const GREEN  = "#00D26A";
+  const BG     = dark ? "#1B1310" : "#F6F0DD";
+  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#FBF7EA";
+  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const GREEN  = "var(--color-primary-text)";
 
   return (
     <div dir={ar ? "rtl" : "ltr"} style={{ background: BG, minHeight: "100vh", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
@@ -38,8 +38,8 @@ export default function LegalLayout({ badge, title, subtitle, lastUpdated, secti
         <div style={{
           position: "absolute", inset: 0,
           background: dark
-            ? `radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,210,106,0.08) 0%, transparent 70%), #060d18`
-            : `radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,210,106,0.05) 0%, transparent 70%), #f8fafc`,
+            ? `radial-gradient(ellipse 60% 50% at 50% 0%, rgba(8,127,131,0.08) 0%, transparent 70%), #1B1310`
+            : `radial-gradient(ellipse 60% 50% at 50% 0%, rgba(8,127,131,0.05) 0%, transparent 70%), #F5EEDB`,
         }} />
         <div style={{ position: "relative", zIndex: 1, maxWidth: 640, margin: "0 auto" }}>
           <motion.span
@@ -48,8 +48,8 @@ export default function LegalLayout({ badge, title, subtitle, lastUpdated, secti
             transition={{ duration: 0.4 }}
             style={{
               display: "inline-block", marginBottom: 16,
-              background: dark ? "rgba(0,210,106,0.1)" : "rgba(0,210,106,0.08)",
-              border: "1px solid rgba(0,210,106,0.25)",
+              background: dark ? "rgba(8,127,131,0.1)" : "rgba(8,127,131,0.08)",
+              border: "1px solid rgba(8,127,131,0.25)",
               borderRadius: 100, padding: "4px 16px",
               color: GREEN, fontSize: 11, fontWeight: 700,
               letterSpacing: 1.2, textTransform: "uppercase",
@@ -106,7 +106,7 @@ export default function LegalLayout({ badge, title, subtitle, lastUpdated, secti
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: 8,
-                  background: `rgba(0,210,106,0.12)`,
+                  background: `rgba(8,127,131,0.12)`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 13, fontWeight: 700, color: GREEN, flexShrink: 0,
                 }}>

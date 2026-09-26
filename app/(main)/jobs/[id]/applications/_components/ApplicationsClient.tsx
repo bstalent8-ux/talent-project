@@ -294,7 +294,7 @@ export default function ApplicationsClient({
 
                     {/* Proposal message */}
                     {app.message && (
-                      <div style={{ backgroundColor: dark ? "#060d18" : "#F6F0DD", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+                      <div style={{ backgroundColor: dark ? "#1B1310" : "#F6F0DD", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
                         <p style={{ color: MUTED, fontSize: 11, fontWeight: 700, margin: "0 0 4px", display: "flex", alignItems: "center", gap: 4 }}>
                           <Users size={10} /> {t.message}
                         </p>
@@ -368,7 +368,7 @@ export default function ApplicationsClient({
             <textarea
               value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
               placeholder={t.rejectReason} rows={3}
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#F6F0DD", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", resize: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#1B1310" : "#F6F0DD", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", resize: "none", boxSizing: "border-box" }}
             />
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               <button onClick={() => handleReject(rejectModalHeld)} disabled={!!loadingId}

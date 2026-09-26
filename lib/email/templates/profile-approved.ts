@@ -5,6 +5,7 @@
 // lib/profile-completion.ts's COMPLETION_THRESHOLDS.appearInSearch.
 
 import { escapeHtml } from "@/lib/email/escapeHtml";
+import { emailLayout } from "@/lib/email/layout";
 
 export function profileApprovedEmail(lang: "ar" | "en", name: string): { subject: string; html: string } {
   // `name` is a talent's own profiles.full_name — user-controlled, no
@@ -15,9 +16,9 @@ export function profileApprovedEmail(lang: "ar" | "en", name: string): { subject
   if (lang === "ar") {
     return {
       subject: "🎉 تمت الموافقة على بروفايلك في Talents",
-      html: `
-        <div dir="rtl" style="font-family:'Segoe UI',Tahoma,sans-serif; max-width:520px; margin:0 auto; color:#0f172a;">
-          <h2 style="color:#0f766e;">مبروك يا ${displayName}! 🎉</h2>
+      html: emailLayout(lang, `
+        <div dir="rtl" style="font-family:'Segoe UI',Tahoma,sans-serif; color:#2B211D;">
+          <h2 style="color:#087F83;">مبروك يا ${displayName}! 🎉</h2>
           <p style="font-size:15px; line-height:1.8;">
             بروفايلك اتوافق عليه وبقى ظاهر رسمياً على منصة <b>Talents</b>. من دلوقتي البراندات
             تقدر تشوفك وتبعتلك عروض تعاون مباشرة.
@@ -28,23 +29,23 @@ export function profileApprovedEmail(lang: "ar" | "en", name: string): { subject
           </p>
           <p style="margin:28px 0;">
             <a href="https://talent-s.com/profile/me"
-               style="background:#0f766e; color:#fff; padding:12px 22px; border-radius:8px; text-decoration:none; font-weight:700; display:inline-block;">
+               style="background:#087F83; color:#fff; padding:12px 22px; border-radius:8px; text-decoration:none; font-weight:700; display:inline-block;">
               كمّل بروفايلك الآن
             </a>
           </p>
-          <p style="font-size:12.5px; color:#64748b;">
+          <p style="font-size:12.5px; color:#6E5F55;">
             تابعنا عشان توصلك آخر الفرص أول بأول.
           </p>
         </div>
-      `,
+      `),
     };
   }
 
   return {
     subject: "🎉 Your Talents profile has been approved",
-    html: `
-      <div style="font-family:'Segoe UI',Tahoma,sans-serif; max-width:520px; margin:0 auto; color:#0f172a;">
-        <h2 style="color:#0f766e;">Congrats, ${displayName}! 🎉</h2>
+    html: emailLayout(lang, `
+      <div style="font-family:'Segoe UI',Tahoma,sans-serif; color:#2B211D;">
+        <h2 style="color:#087F83;">Congrats, ${displayName}! 🎉</h2>
         <p style="font-size:15px; line-height:1.8;">
           Your profile has been approved and is now live on <b>Talents</b>. Brands can
           discover you and send direct collaboration offers starting now.
@@ -55,14 +56,14 @@ export function profileApprovedEmail(lang: "ar" | "en", name: string): { subject
         </p>
         <p style="margin:28px 0;">
           <a href="https://talent-s.com/profile/me"
-             style="background:#0f766e; color:#fff; padding:12px 22px; border-radius:8px; text-decoration:none; font-weight:700; display:inline-block;">
+             style="background:#087F83; color:#fff; padding:12px 22px; border-radius:8px; text-decoration:none; font-weight:700; display:inline-block;">
             Complete your profile now
           </a>
         </p>
-        <p style="font-size:12.5px; color:#64748b;">
+        <p style="font-size:12.5px; color:#6E5F55;">
           Follow along so you don't miss new opportunities.
         </p>
       </div>
-    `,
+    `),
   };
 }

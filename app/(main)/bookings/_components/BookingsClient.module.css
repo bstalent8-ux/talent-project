@@ -5,29 +5,29 @@
 }
 
 .dark {
-  --page-bg: #050b12;
-  --card-bg: #0d1623;
-  --surface-bg: #0a121c;
-  --border: rgba(0, 255, 163, 0.15);
-  --strong-border: rgba(0, 210, 106, 0.34);
-  --text: #f1f5f9;
-  --muted: #a8b3c2;
-  --green: #00d26a;
-  --gold: #ffb800;
-  --red: #ef4444;
+  --page-bg: #1B1310;
+  --card-bg: #2B211D;
+  --surface-bg: #231A16;
+  --border: #3A2E28;
+  --strong-border: rgba(8,127,131, 0.34);
+  --text: #F5EEDB;
+  --muted: #A99B8E;
+  --green: var(--color-primary-text);
+  --gold: var(--color-accent-strong);
+  --red: #F08A7E;
 }
 
 .light {
-  --page-bg: #f1f5f9;
-  --card-bg: #ffffff;
-  --surface-bg: #f8fafc;
-  --border: #e2e8f0;
-  --strong-border: rgba(0, 210, 106, 0.42);
-  --text: #0f172a;
-  --muted: #64748b;
-  --green: #00d26a;
-  --gold: #ffb800;
-  --red: #dc2626;
+  --page-bg: #F5EEDB;
+  --card-bg: #FBF7EA;
+  --surface-bg: #F3ECD6;
+  --border: #E6DCC3;
+  --strong-border: rgba(8,127,131, 0.42);
+  --text: #2B211D;
+  --muted: #6E5F55;
+  --green: var(--color-primary-text);
+  --gold: var(--color-accent-strong);
+  --red: #B3402F;
 }
 
 .page {
@@ -99,13 +99,13 @@
 
 .tabActive {
   border-color: var(--strong-border);
-  background: rgba(0, 210, 106, 0.1);
+  background: rgba(8,127,131, 0.1);
   color: var(--green);
 }
 
 .tabActive span {
   background: var(--green);
-  color: #050b12;
+  color: #1B1310;
 }
 
 .list {
@@ -198,9 +198,9 @@
 .proposal {
   margin: 0;
   padding: 0.75rem 0.85rem;
-  border: 1px solid rgba(255, 184, 0, 0.28);
+  border: 1px solid rgba(231,165,138, 0.28);
   border-radius: 10px;
-  background: rgba(255, 184, 0, 0.1);
+  background: rgba(231,165,138, 0.1);
   color: var(--text);
   font-size: var(--text-sm);
   line-height: 1.7;
@@ -230,18 +230,18 @@
 
 .pending {
   color: var(--gold);
-  background: rgba(255, 184, 0, 0.1);
+  background: rgba(231,165,138, 0.1);
 }
 
 .warning {
   color: var(--gold);
-  background: rgba(255, 184, 0, 0.1);
+  background: rgba(231,165,138, 0.1);
 }
 
 .accepted,
 .completed {
   color: var(--green);
-  background: rgba(0, 210, 106, 0.1);
+  background: rgba(8,127,131, 0.1);
 }
 
 .rejected {
@@ -265,7 +265,7 @@
   border-radius: 10px;
   padding: 0 0.95rem;
   background: var(--green);
-  color: #050b12;
+  color: #1B1310;
   font-size: var(--text-sm);
   font-weight: 900;
   text-decoration: none;

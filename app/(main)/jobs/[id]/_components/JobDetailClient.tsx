@@ -16,12 +16,12 @@ export default function JobDetailClient({ job }: { job: JobPost }) {
   const [applied, setApplied] = useState(false);
 
   const ar = lang === "ar";
-  const CARD = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT = dark ? "#F8FAFC" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const GREEN = "#00D26A";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
+  const CARD = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const GREEN = "var(--color-primary-text)";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
   const Arrow = ar ? ArrowRight : ArrowLeft;
 
   const budget = job.budget_min || job.budget_max
@@ -38,7 +38,7 @@ export default function JobDetailClient({ job }: { job: JobPost }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: dark ? "#050B12" : "#F1F5F9", padding: "40px 24px 80px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: dark ? "#1B1310" : "#F1EAD3", padding: "40px 24px 80px", fontFamily: "'IBM Plex Sans Arabic',sans-serif", direction: ar ? "rtl" : "ltr" }}>
       <main style={{ maxWidth: 900, margin: "0 auto" }}>
         <Link href="/jobs" style={{ display: "inline-flex", alignItems: "center", gap: 8, color: GREEN, fontWeight: 800, textDecoration: "none", marginBottom: 20 }}>
           <Arrow size={16} />
@@ -86,8 +86,8 @@ export default function JobDetailClient({ job }: { job: JobPost }) {
               alignItems: "center",
               justifyContent: "center",
               gap: 8,
-              backgroundColor: GREEN,
-              color: "#050B12",
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-primary-ink)",
               border: "none",
               borderRadius: 10,
               padding: "12px 22px",

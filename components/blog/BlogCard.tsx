@@ -21,12 +21,12 @@ interface Props {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  "UGC":        "#00C9B1",
-  "Branding":   "#1565C0",
-  "Talent":     "#8B2FC9",
-  "Marketing":  "#FF6B2B",
-  "Tips":       "#FFB800",
-  "News":       "#00D26A",
+  "UGC":        "var(--color-primary-text)",
+  "Branding":   "#3E9A98",
+  "Talent":     "#B9694C",
+  "Marketing":  "var(--color-accent-strong)",
+  "Tips":       "var(--color-accent-strong)",
+  "News":       "var(--color-primary-text)",
 };
 
 export default function BlogCard({ post, index }: Props) {
@@ -39,11 +39,11 @@ export default function BlogCard({ post, index }: Props) {
     return Number.isNaN(d.getTime()) ? post.date : d.toLocaleDateString(ar ? "ar-EG" : "en-US", { month: "short", day: "numeric", year: "numeric" });
   })();
 
-  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#ffffff";
-  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const accent = CATEGORY_COLORS[post.category] ?? "#00D26A";
+  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#FBF7EA";
+  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const accent = CATEGORY_COLORS[post.category] ?? "var(--color-primary-text)";
 
   return (
     <motion.div
@@ -68,7 +68,7 @@ export default function BlogCard({ post, index }: Props) {
             const el = e.currentTarget as HTMLDivElement;
             el.style.transform   = "translateY(-4px)";
             el.style.boxShadow   = dark ? "0 20px 40px rgba(0,0,0,0.4)" : "0 20px 40px rgba(0,0,0,0.1)";
-            el.style.borderColor = `${accent}50`;
+            el.style.borderColor = `color-mix(in srgb, ${accent} 31%, transparent)`;
           }}
           onMouseLeave={e => {
             const el = e.currentTarget as HTMLDivElement;
@@ -82,7 +82,7 @@ export default function BlogCard({ post, index }: Props) {
             height:     180,
             background: post.cover
               ? `url(${post.cover}) center/cover`
-              : `linear-gradient(135deg, ${accent}22 0%, ${accent}08 100%)`,
+              : `linear-gradient(135deg, color-mix(in srgb, ${accent} 13%, transparent) 0%, color-mix(in srgb, ${accent} 3%, transparent) 100%)`,
             display:    "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -95,8 +95,8 @@ export default function BlogCard({ post, index }: Props) {
               position:     "absolute",
               top:          12,
               left:         12,
-              background:   `${accent}22`,
-              border:       `1px solid ${accent}44`,
+              background:   `color-mix(in srgb, ${accent} 13%, transparent)`,
+              border:       `1px solid color-mix(in srgb, ${accent} 27%, transparent)`,
               borderRadius: 20,
               padding:      "3px 10px",
               color:        accent,

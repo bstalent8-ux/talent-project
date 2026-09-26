@@ -68,13 +68,13 @@ const TX = {
 export default function DeliverablesForm({ bookingId, deliverables, myRole, bookingStatus, dark, lang, onUpdate }: Props) {
   const t  = TX[lang];
   const ar = lang === "ar";
-  const BG     = dark ? "#0d1623" : "#ffffff";
-  const BORDER = dark ? "#1e293b" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const INPUT  = dark ? "#060d18" : "#f8fafc";
-  const GREEN  = "#00D26A";
-  const GOLD   = "#FFB800";
+  const BG     = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const INPUT  = dark ? "#1B1310" : "#F6F0DD";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
 
   const [links,   setLinks]   = useState("");
   const [notes,   setNotes]   = useState("");
@@ -128,7 +128,7 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
   const statusMap: Record<string, { label: string; color: string }> = {
     submitted:          { label: ar ? t.waiting   : t.waiting,   color: GOLD   },
     approved:           { label: ar ? t.approved  : t.approved,  color: GREEN  },
-    revision_requested: { label: ar ? t.revision  : t.revision,  color: "#f59e0b" },
+    revision_requested: { label: ar ? t.revision  : t.revision,  color: "var(--color-accent-strong)" },
   };
 
   return (
@@ -142,7 +142,7 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
       {deliverables.map((d) => {
         const st = statusMap[d.status] ?? { label: d.status, color: MUTED };
         return (
-          <div key={d.id} style={{ backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+          <div key={d.id} style={{ backgroundColor: dark ? "#1B1310" : "#F6F0DD", border: `1px solid ${BORDER}`, borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <span style={{ fontSize: 12, color: MUTED }}>{new Date(d.created_at).toLocaleDateString(ar ? "ar-EG" : "en-GB")}</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: st.color, padding: "2px 8px", borderRadius: 20, backgroundColor: `${st.color}15` }}>{st.label}</span>
@@ -154,8 +154,8 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
             ))}
             {d.notes && <p style={{ color: MUTED, fontSize: 12, margin: "6px 0 0" }}>{d.notes}</p>}
             {d.feedback && (
-              <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 8, backgroundColor: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>
-                <p style={{ color: "#f59e0b", fontSize: 12, margin: 0 }}><strong>{t.feedback}:</strong> {d.feedback}</p>
+              <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 8, backgroundColor: "rgba(231,165,138,0.08)", border: "1px solid rgba(231,165,138,0.2)" }}>
+                <p style={{ color: "var(--color-accent-strong)", fontSize: 12, margin: 0 }}><strong>{t.feedback}:</strong> {d.feedback}</p>
               </div>
             )}
 
@@ -163,12 +163,12 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
             {myRole === "brand" && d.status === "submitted" && (
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <button onClick={() => handleApprove(d.id)} disabled={loading}
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#000", border: "none", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 900, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 900, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   <CheckCircle2 size={13} /> {t.approve}
                 </button>
                 {revMode !== d.id ? (
                   <button onClick={() => setRevMode(d.id)} disabled={loading}
-                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: "var(--color-accent-strong)", border: "1px solid rgba(231,165,138,0.4)", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                     <Clock size={13} /> {t.askRevision}
                   </button>
                 ) : (
@@ -176,7 +176,7 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
                     <textarea value={revNote} onChange={(e) => setRevNote(e.target.value)} placeholder={t.revPh} rows={2}
                       style={{ ...inputStyle, resize: "none", fontSize: 12 }} />
                     <div style={{ display: "flex", gap: 6 }}>
-                      <button onClick={() => handleRevision(d.id)} disabled={loading} style={{ flex: 1, backgroundColor: "#f59e0b", color: "#000", border: "none", borderRadius: 6, padding: "7px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>{t.send}</button>
+                      <button onClick={() => handleRevision(d.id)} disabled={loading} style={{ flex: 1, backgroundColor: "var(--color-accent)", color: "var(--color-on-accent)", border: "none", borderRadius: 6, padding: "7px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>{t.send}</button>
                       <button onClick={() => setRevMode(null)} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 6, padding: "7px 0", fontSize: 12, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>{t.cancel}</button>
                     </div>
                   </div>
@@ -203,7 +203,7 @@ export default function DeliverablesForm({ bookingId, deliverables, myRole, book
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t.notesPh} rows={2} style={{ ...inputStyle, resize: "vertical" }} />
           </div>
           {error && <p style={{ color: "#f87171", fontSize: 12, margin: 0 }}>{error}</p>}
-          <button type="submit" disabled={loading} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: loading ? "rgba(0,210,106,0.5)" : GREEN, color: "#000", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+          <button type="submit" disabled={loading} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: loading ? "rgba(8,127,131,0.5)" : "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <Send size={14} /> {loading ? t.sending : t.submit}
           </button>
         </form>

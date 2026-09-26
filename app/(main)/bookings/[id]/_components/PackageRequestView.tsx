@@ -60,12 +60,12 @@ export default function PackageRequestView({
 }: Props) {
   const t = TX[lang];
   const ar = lang === "ar";
-  const BG     = dark ? "#0d1623" : "#ffffff";
-  const BORDER = dark ? "#1e293b" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const GREEN  = "#00D26A";
-  const GOLD   = "#FFB800";
+  const BG     = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +103,7 @@ export default function PackageRequestView({
           <Package size={18} color={GREEN} />
           <h3 style={{ margin: 0, color: TEXT, fontSize: 16, fontWeight: 800 }}>{t.title}</h3>
         </div>
-        <span style={{ fontSize: 12, fontWeight: 700, color: statusColor, padding: "3px 10px", borderRadius: 20, backgroundColor: `${statusColor}15`, border: `1px solid ${statusColor}33` }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: statusColor, padding: "3px 10px", borderRadius: 20, backgroundColor: `color-mix(in srgb, ${statusColor} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${statusColor} 20%, transparent)` }}>
           {statusLabel}
         </span>
       </div>
@@ -136,7 +136,7 @@ export default function PackageRequestView({
       {canRespond && (
         <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
           <button onClick={() => respond("accept")} disabled={loading}
-            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <CheckCircle2 size={14} /> {t.accept}
           </button>
           <button onClick={() => respond("reject")} disabled={loading}

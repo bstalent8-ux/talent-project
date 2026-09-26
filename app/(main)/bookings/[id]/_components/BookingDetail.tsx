@@ -67,15 +67,15 @@ interface BookingData {
 interface Props { booking: BookingData; myRole: "brand" | "talent" }
 
 const STATUS_META: Record<string, { ar: string; en: string; color: string }> = {
-  pending:         { ar: "قيد المراجعة",      en: "Pending Review",   color: "#FFB800" },
-  contacting:      { ar: "تواصل",          en: "Contacting",      color: "#64748b" },
-  brief_sent:      { ar: "تم إرسال الملخص", en: "Brief Sent",      color: "#60A5FA" },
-  changes_requested:{ ar: "تعديلات مطلوبة",  en: "Changes Requested", color: "#FFB800" },
-  accepted:        { ar: "تم القبول",       en: "Brief Accepted",  color: "#A78BFA" },
+  pending:         { ar: "قيد المراجعة",      en: "Pending Review",   color: "var(--color-accent-strong)" },
+  contacting:      { ar: "تواصل",          en: "Contacting",      color: "#8C7D71" },
+  brief_sent:      { ar: "تم إرسال الملخص", en: "Brief Sent",      color: "var(--color-secondary-alt)" },
+  changes_requested:{ ar: "تعديلات مطلوبة",  en: "Changes Requested", color: "var(--color-accent-strong)" },
+  accepted:        { ar: "تم القبول",       en: "Brief Accepted",  color: "var(--color-secondary-alt)" },
   rejected:        { ar: "مرفوض",           en: "Rejected",        color: "#ef4444" },
-  in_progress:     { ar: "جاري التنفيذ",   en: "In Progress",     color: "#FFB800" },
-  completed:       { ar: "بانتظار الموافقة","en": "Awaiting Approval", color: "#00D26A" },
-  paid:            { ar: "مكتمل",          en: "Completed & Paid", color: "#00D26A" },
+  in_progress:     { ar: "جاري التنفيذ",   en: "In Progress",     color: "var(--color-accent-strong)" },
+  completed:       { ar: "بانتظار الموافقة","en": "Awaiting Approval", color: "var(--color-primary-text)" },
+  paid:            { ar: "مكتمل",          en: "Completed & Paid", color: "var(--color-primary-text)" },
   cancelled:       { ar: "ملغي",           en: "Cancelled",       color: "#ef4444" },
 };
 
@@ -162,13 +162,13 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
   const [payError,    setPayError]    = useState<string | null>(null);
   const [reviewDone,  setReviewDone]  = useState(!!booking.review);
 
-  const BG     = dark ? "#090e1a" : "#f8fafc";
-  const CARD   = dark ? "#0d1623" : "#ffffff";
-  const BORDER = dark ? "#1e293b" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const GOLD   = "#FFB800";
-  const GREEN  = "#00D26A";
+  const BG     = dark ? "#1B1310" : "#F6F0DD";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const GOLD   = "var(--color-accent-strong)";
+  const GREEN  = "var(--color-primary-text)";
 
   const sm = STATUS_META[booking.status] ?? { ar: booking.status, en: booking.status, color: MUTED };
 
@@ -245,7 +245,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
                 {booking.job?.title ?? (ar ? "مشروع مباشر" : "Direct Project")}
               </h1>
               {booking.service_type && (
-                <span style={{ display: "inline-block", marginTop: 6, padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: `${GOLD}15`, color: GOLD, border: `1px solid ${GOLD}33` }}>
+                <span style={{ display: "inline-block", marginTop: 6, padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: `color-mix(in srgb, ${GOLD} 8%, transparent)`, color: GOLD, border: `1px solid color-mix(in srgb, ${GOLD} 20%, transparent)` }}>
                   {booking.service_type}
                 </span>
               )}
@@ -259,7 +259,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 20 }}>
             {[{ label: t.brand, user: booking.brand }, { label: t.talent, user: booking.talent }].map(({ label, user }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: dark ? "#1e293b" : "#e2e8f0", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: MUTED }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: dark ? "#3A2E28" : "#E6DCC3", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: MUTED }}>
                   {user?.avatar_url ? <img src={user.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (user?.full_name ?? "?")[0]}
                 </div>
                 <div>
@@ -281,7 +281,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
 
           {/* Chat button */}
           <button onClick={openChat}
-            style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, padding: "9px 18px", backgroundColor: dark ? "rgba(255,184,0,0.08)" : "rgba(255,184,0,0.06)", color: GOLD, border: `1px solid ${GOLD}33`, borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+            style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, padding: "9px 18px", backgroundColor: dark ? "rgba(231,165,138,0.08)" : "rgba(231,165,138,0.06)", color: GOLD, border: `1px solid color-mix(in srgb, ${GOLD} 20%, transparent)`, borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <MessageSquare size={15} /> {t.chat}
           </button>
         </div>
@@ -294,13 +294,13 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
               { label: t.started, value: booking.start_date ? new Date(booking.start_date).toLocaleDateString(ar ? "ar-EG" : "en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—" },
               { label: booking.service_type === "fixed_project" ? t.deadline : t.duration, value: durationLabel },
             ].map((item) => (
-              <div key={item.label} style={{ backgroundColor: dark ? "#0A121C" : "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 12px" }}>
+              <div key={item.label} style={{ backgroundColor: dark ? "#231A16" : "#F6F0DD", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "10px 12px" }}>
                 <p style={{ color: MUTED, fontSize: 11, fontWeight: 700, margin: "0 0 4px" }}>{item.label}</p>
                 <p style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: 0 }}>{item.value}</p>
               </div>
             ))}
             {booking.negotiation_message && (
-              <div style={{ gridColumn: "1 / -1", backgroundColor: "rgba(255,184,0,0.08)", border: `1px solid ${GOLD}33`, borderRadius: 10, padding: "10px 12px" }}>
+              <div style={{ gridColumn: "1 / -1", backgroundColor: "rgba(231,165,138,0.08)", border: `1px solid color-mix(in srgb, ${GOLD} 20%, transparent)`, borderRadius: 10, padding: "10px 12px" }}>
                 <p style={{ color: GOLD, fontSize: 11, fontWeight: 800, margin: "0 0 4px" }}>{t.proposal}</p>
                 <p style={{ color: TEXT, fontSize: 13, lineHeight: 1.7, margin: 0 }}>{booking.negotiation_message}</p>
               </div>
@@ -323,7 +323,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
 
         {st === "contacting" && isBrand && section(t.sendBrief,
           <button onClick={() => setShowBrief(true)}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
             <Send size={14} /> {t.sendBrief}
           </button>
         )}
@@ -335,7 +335,7 @@ export default function BookingDetail({ booking: initialBooking, myRole }: Props
         {st === "accepted" && isBrand && !booking.payment && section(t.confirmPay,
           <div>
             <p style={{ color: MUTED, fontSize: 13, margin: "0 0 12px" }}>{t.payOutside}</p>
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: paying ? "rgba(0,210,106,0.5)" : GREEN, color: "#050B12", border: "none", borderRadius: 10, cursor: paying ? "default" : "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", backgroundColor: paying ? "rgba(8,127,131,0.5)" : "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 10, cursor: paying ? "default" : "pointer", fontSize: 14, fontWeight: 900, fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
               <CreditCard size={14} /> {paying ? t.paying : t.uploadProof}
               <input
                 type="file"

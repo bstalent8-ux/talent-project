@@ -35,12 +35,12 @@ const TX = {
 
 export default function PrivacySection({ profile, talentStatus, lang, dark }: SectionProps) {
   const t = TX[lang];
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
-  const GREEN  = "#00D26A";
-  const GOLD   = "#F4B740";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
   const RED    = "#EF4444";
 
   const status = profile.role === "brand" ? profile.brand_status : talentStatus;

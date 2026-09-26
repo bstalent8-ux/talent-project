@@ -76,15 +76,15 @@ export default function BecomeTalentClient() {
   const t  = TX[lang];
   const ar = lang === "ar";
 
-  const BG     = dark ? "#060d18" : "#f8fafc";
-  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#ffffff";
-  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const TEAL   = "#00C9B1";
-  const GREEN  = "#00D26A";
-  const GOLD   = "#FFB800";
-  const PURPLE = "#8B2FC9";
+  const BG     = dark ? "#1B1310" : "#F6F0DD";
+  const CARD   = dark ? "rgba(255,255,255,0.04)" : "#FBF7EA";
+  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const TEAL   = "var(--color-primary-text)";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
+  const PURPLE = "var(--color-primary-text)";
 
   return (
     <div dir={ar ? "rtl" : "ltr"} style={{ background: BG, minHeight: "100vh", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
@@ -94,15 +94,15 @@ export default function BecomeTalentClient() {
         <div style={{
           position: "absolute", inset: 0,
           background: dark
-            ? `radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,201,177,0.12) 0%, transparent 65%),
-               radial-gradient(ellipse 50% 40% at 80% 100%, rgba(255,184,0,0.08) 0%, transparent 55%),
-               #060d18`
-            : `radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,201,177,0.08) 0%, transparent 65%),
-               #f8fafc`,
+            ? `radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,167,163,0.12) 0%, transparent 65%),
+               radial-gradient(ellipse 50% 40% at 80% 100%, rgba(231,165,138,0.08) 0%, transparent 55%),
+               #1B1310`
+            : `radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,167,163,0.08) 0%, transparent 65%),
+               #F5EEDB`,
         }} />
         <div style={{
           position: "absolute", inset: 0, opacity: dark ? 0.025 : 0.04,
-          backgroundImage: `linear-gradient(rgba(0,201,177,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(0,201,177,0.7) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(79,167,163,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(79,167,163,0.7) 1px, transparent 1px)`,
           backgroundSize: "56px 56px",
         }} />
 
@@ -111,7 +111,7 @@ export default function BecomeTalentClient() {
             initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
             style={{
               display: "inline-block", marginBottom: 20,
-              background: "rgba(0,201,177,0.1)", border: "1px solid rgba(0,201,177,0.25)",
+              background: "rgba(79,167,163,0.1)", border: "1px solid rgba(79,167,163,0.25)",
               borderRadius: 100, padding: "5px 18px",
               color: TEAL, fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase",
             }}
@@ -122,7 +122,7 @@ export default function BecomeTalentClient() {
             style={{ fontSize: "clamp(30px,6vw,60px)", fontWeight: 900, margin: "0 0 20px", lineHeight: 1.15, color: TEXT }}
           >
             {t.title}<br />
-            <span style={{ backgroundImage: `linear-gradient(135deg, ${TEAL}, ${GREEN})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ color: TEAL }}>
               {t.titleAccent}
             </span>
           </motion.h1>
@@ -139,19 +139,19 @@ export default function BecomeTalentClient() {
             <Link href="/register" style={{
               display: "inline-flex", alignItems: "center", gap: 10,
               padding: "16px 36px", borderRadius: 14,
-              background: `linear-gradient(135deg, ${TEAL}, ${GREEN})`,
+              background: "var(--color-primary)",
               color: "#fff", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
               fontSize: 16, fontWeight: 700, textDecoration: "none",
-              boxShadow: "0 6px 24px rgba(0,201,177,0.35)",
+              boxShadow: "0 6px 24px rgba(79,167,163,0.35)",
               transition: "transform 0.2s, box-shadow 0.2s",
             }}
             onMouseEnter={e => {
               (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-3px)";
-              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 12px 32px rgba(0,201,177,0.45)";
+              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 12px 32px rgba(79,167,163,0.45)";
             }}
             onMouseLeave={e => {
               (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)";
-              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 6px 24px rgba(0,201,177,0.35)";
+              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 6px 24px rgba(79,167,163,0.35)";
             }}
             >
               ✨ {t.cta}
@@ -188,8 +188,8 @@ export default function BecomeTalentClient() {
               </div>
               <div style={{
                 width: 52, height: 52, borderRadius: 14,
-                background: `linear-gradient(135deg, rgba(0,201,177,0.15), rgba(0,210,106,0.1))`,
-                border: "1px solid rgba(0,201,177,0.2)",
+                background: `linear-gradient(135deg, rgba(79,167,163,0.15), rgba(8,127,131,0.1))`,
+                border: "1px solid rgba(79,167,163,0.2)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 24, marginBottom: 16,
               }}>
@@ -252,7 +252,7 @@ export default function BecomeTalentClient() {
             >
               <div style={{
                 width: 46, height: 46, borderRadius: 12,
-                background: dark ? "rgba(255,184,0,0.1)" : "rgba(255,184,0,0.08)",
+                background: dark ? "rgba(231,165,138,0.1)" : "rgba(231,165,138,0.08)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 22, flexShrink: 0,
               }}>{b.icon}</div>
@@ -271,9 +271,9 @@ export default function BecomeTalentClient() {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           style={{
             background: dark
-              ? `linear-gradient(135deg, rgba(0,201,177,0.08), rgba(0,210,106,0.06))`
-              : `linear-gradient(135deg, rgba(0,201,177,0.06), rgba(0,210,106,0.04))`,
-            border: "1px solid rgba(0,201,177,0.25)",
+              ? `linear-gradient(135deg, rgba(79,167,163,0.08), rgba(8,127,131,0.06))`
+              : `linear-gradient(135deg, rgba(79,167,163,0.06), rgba(8,127,131,0.04))`,
+            border: "1px solid rgba(79,167,163,0.25)",
             borderRadius: 24, padding: "52px 40px",
           }}
         >
@@ -283,10 +283,10 @@ export default function BecomeTalentClient() {
           <Link href="/register" style={{
             display: "inline-flex", alignItems: "center", gap: 10,
             padding: "16px 40px", borderRadius: 14,
-            background: `linear-gradient(135deg, ${TEAL}, ${GREEN})`,
+            background: "var(--color-primary)",
             color: "#fff", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
             fontSize: 16, fontWeight: 700, textDecoration: "none",
-            boxShadow: "0 6px 24px rgba(0,201,177,0.35)",
+            boxShadow: "0 6px 24px rgba(79,167,163,0.35)",
           }}>
             ✨ {t.finalBtn}
           </Link>

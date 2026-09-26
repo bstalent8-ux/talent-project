@@ -30,14 +30,14 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, { ar: string; en: string; color: string }> = {
-  pending:          { ar: "قيد المراجعة",    en: "Pending",         color: "#F4B740" },
-  contacting:       { ar: "تواصل",           en: "Contacting",      color: "#94a3b8" },
-  brief_sent:       { ar: "إرسال البريف",    en: "Brief Sent",      color: "#60a5fa" },
-  accepted:         { ar: "مقبول",           en: "Accepted",        color: "#a78bfa" },
-  payment_pending:  { ar: "انتظار دفع",      en: "Payment Pending", color: "#F4B740" },
+  pending:          { ar: "قيد المراجعة",    en: "Pending",         color: "var(--color-accent-strong)" },
+  contacting:       { ar: "تواصل",           en: "Contacting",      color: "#8C7D71" },
+  brief_sent:       { ar: "إرسال البريف",    en: "Brief Sent",      color: "var(--color-secondary-alt)" },
+  accepted:         { ar: "مقبول",           en: "Accepted",        color: "var(--color-primary-text)" },
+  payment_pending:  { ar: "انتظار دفع",      en: "Payment Pending", color: "var(--color-accent-strong)" },
   in_progress:      { ar: "جاري التنفيذ",    en: "In Progress",     color: "#fb923c" },
-  completed:        { ar: "مكتمل",           en: "Completed",       color: "#00D26A" },
-  paid:             { ar: "تم الدفع",        en: "Paid",            color: "#00D26A" },
+  completed:        { ar: "مكتمل",           en: "Completed",       color: "var(--color-primary-text)" },
+  paid:             { ar: "تم الدفع",        en: "Paid",            color: "var(--color-primary-text)" },
   rejected:         { ar: "مرفوض",           en: "Rejected",        color: "#EF4444" },
   cancelled:        { ar: "ملغي",            en: "Cancelled",       color: "#EF4444" },
 };
@@ -102,12 +102,12 @@ export default function DashboardClient({ role, profile, recentBookings, talentP
   const t = TX[lang];
   const ar = lang === "ar";
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const BG     = dark ? "#050B12" : "#F1F5F9";
-  const GREEN  = "#00D26A";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const BG     = dark ? "#1B1310" : "#F1EAD3";
+  const GREEN  = "var(--color-primary-text)";
 
   const [completion, setCompletion] = useState<CompletionDTO | null>(null);
   useEffect(() => {
@@ -139,11 +139,11 @@ export default function DashboardClient({ role, profile, recentBookings, talentP
                   <h2 style={sectionTitle as React.CSSProperties}>{t.completion}</h2>
                   {completion && <span style={{ color: GREEN, fontWeight: 800, fontSize: 18 }}>{completion.score}%</span>}
                 </div>
-                <div style={{ height: 8, borderRadius: 4, backgroundColor: dark ? "#0a121c" : "#f1f5f9", overflow: "hidden", marginBottom: 14 }}>
+                <div style={{ height: 8, borderRadius: 4, backgroundColor: dark ? "#231A16" : "#F1EAD3", overflow: "hidden", marginBottom: 14 }}>
                   <div style={{ height: "100%", width: `${completion?.score ?? 0}%`, backgroundColor: GREEN, borderRadius: 4, transition: "width 0.3s" }} />
                 </div>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <Link href="/profile/me/complete" style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: GREEN, borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>
+                  <Link href="/profile/me/complete" style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: "var(--color-primary)", borderRadius: 8, color: "var(--color-primary-ink)", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>
                     {t.completeNow}
                   </Link>
                   {profile.handle && (
@@ -155,7 +155,7 @@ export default function DashboardClient({ role, profile, recentBookings, talentP
                 {talentProfile && (
                   <div style={{ display: "flex", gap: 20, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <Star size={14} color="#F4B740" fill="#F4B740" />
+                      <Star size={14} color="var(--color-accent-strong)" fill="var(--color-accent-strong)" />
                       <span style={{ color: TEXT, fontWeight: 700, fontSize: 13 }}>{talentProfile.avg_rating ? Number(talentProfile.avg_rating).toFixed(1) : "—"}</span>
                       <span style={{ color: MUTED, fontSize: 12 }}>({talentProfile.total_reviews ?? 0} {t.reviews})</span>
                     </div>
@@ -173,14 +173,14 @@ export default function DashboardClient({ role, profile, recentBookings, talentP
                   <h2 style={sectionTitle as React.CSSProperties}>{t.brandStatusLabel}</h2>
                   <span style={{
                     padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700,
-                    backgroundColor: brandStatus === "approved" ? "rgba(0,210,106,0.15)" : brandStatus === "rejected" ? "rgba(239,68,68,0.15)" : "rgba(244,183,64,0.15)",
-                    color: brandStatus === "approved" ? GREEN : brandStatus === "rejected" ? "#EF4444" : "#F4B740",
+                    backgroundColor: brandStatus === "approved" ? "rgba(8,127,131,0.15)" : brandStatus === "rejected" ? "rgba(239,68,68,0.15)" : "rgba(231,165,138,0.15)",
+                    color: brandStatus === "approved" ? GREEN : brandStatus === "rejected" ? "#EF4444" : "var(--color-accent-strong)",
                   }}>
                     {t.brandStatus[brandStatus ?? "approved"] ?? brandStatus}
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-                  <Link href="/explore" style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: GREEN, borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>
+                  <Link href="/explore" style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: "var(--color-primary)", borderRadius: 8, color: "var(--color-primary-ink)", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>
                     <TrendingUp size={14} />{t.findTalent}
                   </Link>
                   <Link href="/jobs/create" style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", backgroundColor: "transparent", border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>

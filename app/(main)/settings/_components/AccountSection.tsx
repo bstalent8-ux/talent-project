@@ -44,11 +44,11 @@ const TX = {
 
 export default function AccountSection({ profile, email, lang, dark }: SectionProps) {
   const t = TX[lang];
-  const TEXT  = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED = dark ? "#A8B3C2" : "#64748B";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const INP   = dark ? "#0d1527" : "#f8fafc";
-  const GREEN = "#00D26A";
+  const TEXT  = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const INP   = dark ? "#231A16" : "#F6F0DD";
+  const GREEN = "var(--color-primary-text)";
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -117,7 +117,7 @@ export default function AccountSection({ profile, email, lang, dark }: SectionPr
           <button
             onClick={savePassword}
             disabled={pwSaving || !newPassword || !confirmPassword}
-            style={{ alignSelf: "flex-start", padding: "9px 18px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: pwSaving ? "wait" : "pointer", opacity: (!newPassword || !confirmPassword) ? 0.5 : 1 }}
+            style={{ alignSelf: "flex-start", padding: "9px 18px", backgroundColor: "var(--color-primary)", border: "none", borderRadius: 8, color: "var(--color-primary-ink)", fontSize: 13, fontWeight: 800, cursor: pwSaving ? "wait" : "pointer", opacity: (!newPassword || !confirmPassword) ? 0.5 : 1 }}
           >
             {pwSaving ? t.saving : t.savePassword}
           </button>

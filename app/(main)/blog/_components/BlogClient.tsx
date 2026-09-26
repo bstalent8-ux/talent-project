@@ -41,12 +41,12 @@ export default function BlogClient({ posts }: { posts: BlogPost[] }) {
   const [search, setSearch]     = useState("");
   const [activecat, setActivecat] = useState("All");
 
-  const BG     = dark ? "#060d18" : "#f8fafc";
-  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const INPUT  = dark ? "rgba(255,255,255,0.06)" : "#ffffff";
-  const GREEN  = "#00D26A";
+  const BG     = dark ? "#1B1310" : "#F6F0DD";
+  const BORDER = dark ? "rgba(255,255,255,0.08)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const INPUT  = dark ? "rgba(255,255,255,0.06)" : "#FBF7EA";
+  const GREEN  = "var(--color-primary-text)";
 
   const filtered = posts.filter(p => {
     const matchesCat = activecat === "All" || p.category === activecat;
@@ -62,14 +62,14 @@ export default function BlogClient({ posts }: { posts: BlogPost[] }) {
         <div style={{
           position: "absolute", inset: 0,
           background: dark
-            ? `radial-gradient(ellipse 70% 55% at 50% 0%, rgba(139,47,201,0.1) 0%, transparent 70%), #060d18`
-            : `radial-gradient(ellipse 70% 55% at 50% 0%, rgba(139,47,201,0.06) 0%, transparent 70%), #f8fafc`,
+            ? `radial-gradient(ellipse 70% 55% at 50% 0%, rgba(231,165,138,0.1) 0%, transparent 70%), #1B1310`
+            : `radial-gradient(ellipse 70% 55% at 50% 0%, rgba(231,165,138,0.06) 0%, transparent 70%), #F5EEDB`,
         }} />
         {/* Grid overlay */}
         <div style={{
           position: "absolute", inset: 0,
           opacity: dark ? 0.02 : 0.04,
-          backgroundImage: `linear-gradient(rgba(139,47,201,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(139,47,201,0.8) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(231,165,138,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(231,165,138,0.8) 1px, transparent 1px)`,
           backgroundSize: "56px 56px",
         }} />
 
@@ -78,9 +78,9 @@ export default function BlogClient({ posts }: { posts: BlogPost[] }) {
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
             style={{
               display: "inline-block", marginBottom: 18,
-              background: "rgba(139,47,201,0.1)", border: "1px solid rgba(139,47,201,0.25)",
+              background: "rgba(231,165,138,0.1)", border: "1px solid rgba(231,165,138,0.25)",
               borderRadius: 100, padding: "4px 16px",
-              color: "#8B2FC9", fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase",
+              color: "var(--color-accent-strong)", fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase",
             }}
           >{t.badge}</motion.span>
 
@@ -88,7 +88,7 @@ export default function BlogClient({ posts }: { posts: BlogPost[] }) {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             style={{ fontSize: "clamp(28px,5vw,52px)", fontWeight: 900, color: TEXT, margin: "0 0 16px" }}
           >
-            {t.title} <span style={{ color: "#8B2FC9" }}>{t.titleGreen}</span>
+            {t.title} <span style={{ color: "var(--color-accent-strong)" }}>{t.titleGreen}</span>
           </motion.h1>
 
           <motion.p
@@ -126,9 +126,9 @@ export default function BlogClient({ posts }: { posts: BlogPost[] }) {
             return (
               <button key={cat} onClick={() => setActivecat(cat)} style={{
                 padding: "7px 20px", borderRadius: 20,
-                border: `1px solid ${active ? "#8B2FC9" : BORDER}`,
-                background: active ? "rgba(139,47,201,0.12)" : "transparent",
-                color: active ? "#8B2FC9" : MUTED,
+                border: `1px solid ${active ? "var(--color-accent-strong)" : BORDER}`,
+                background: active ? "rgba(231,165,138,0.12)" : "transparent",
+                color: active ? "var(--color-accent-strong)" : MUTED,
                 fontSize: 13, fontWeight: active ? 700 : 400,
                 cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
                 transition: "all 0.15s",
@@ -168,9 +168,9 @@ export default function BlogClient({ posts }: { posts: BlogPost[] }) {
           transition={{ delay: 0.4 }}
           style={{
             background: dark
-              ? "linear-gradient(135deg, rgba(139,47,201,0.08), rgba(21,101,192,0.06))"
-              : "linear-gradient(135deg, rgba(139,47,201,0.05), rgba(21,101,192,0.04))",
-            border: "1px solid rgba(139,47,201,0.2)",
+              ? "linear-gradient(135deg, rgba(231,165,138,0.08), rgba(79,167,163,0.06))"
+              : "linear-gradient(135deg, rgba(231,165,138,0.05), rgba(79,167,163,0.04))",
+            border: "1px solid rgba(231,165,138,0.2)",
             borderRadius: 20, padding: "40px 32px",
             textAlign: "center",
           }}

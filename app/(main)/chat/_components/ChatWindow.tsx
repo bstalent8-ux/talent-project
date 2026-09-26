@@ -27,11 +27,11 @@ export default function ChatWindow({ conversationId, conversation, currentUserId
   // Suppresses chat-message notifications while this thread is on screen.
   useConversationPresence(conversationId);
 
-  const BORDER = dark ? "#1e293b"  : "#E2E8F0";
-  const BG     = dark ? "#060d18"  : "#F8FAFC";
-  const TEXT   = dark ? "#f1f5f9"  : "#0f172a";
-  const MUTED  = dark ? "#64748b"  : "#94a3b8";
-  const GOLD   = "#FFB800";
+  const BORDER = dark ? "#3A2E28"  : "#E6DCC3";
+  const BG     = dark ? "#1B1310"  : "#F6F0DD";
+  const TEXT   = dark ? "#F5EEDB"  : "#2B211D";
+  const MUTED  = dark ? "#8F8175"  : "#8C7D71";
+  const GOLD   = "var(--color-accent-strong)";
 
   const fetchMessages = useCallback(async (before?: string) => {
     const url = before
@@ -181,14 +181,14 @@ export default function ChatWindow({ conversationId, conversation, currentUserId
       {/* Header */}
       <div style={{
         padding: "0 20px", height: 60, display: "flex", alignItems: "center", gap: 12,
-        borderBottom: `1px solid ${BORDER}`, backgroundColor: dark ? "#0D1623" : "#FFFFFF",
+        borderBottom: `1px solid ${BORDER}`, backgroundColor: dark ? "#2B211D" : "#FBF7EA",
         flexShrink: 0, direction: ar ? "rtl" : "ltr",
       }}>
         {other ? (
           <>
             <div style={{
               width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-              backgroundColor: dark ? "#1e293b" : "#e2e8f0",
+              backgroundColor: dark ? "#3A2E28" : "#E6DCC3",
               overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 14, fontWeight: 700, color: MUTED,
             }}>

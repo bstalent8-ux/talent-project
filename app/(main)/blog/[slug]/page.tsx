@@ -62,7 +62,7 @@ function renderParagraphs(content: string): string {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  UGC: "#00C9B1", Branding: "#1565C0", Talent: "#8B2FC9", Marketing: "#FF6B2B", Tips: "#FFB800", News: "#00D26A",
+  UGC: "var(--color-primary-text)", Branding: "#3E9A98", Talent: "#B9694C", Marketing: "var(--color-accent-strong)", Tips: "var(--color-accent-strong)", News: "var(--color-primary-text)",
 };
 
 export default async function BlogPostPage({ params }: Props) {
@@ -73,7 +73,7 @@ export default async function BlogPostPage({ params }: Props) {
   incrementBlogPostViewCount(post.id); // fire-and-forget, never blocks render
 
   const ar = post.lang === "ar";
-  const accent = CATEGORY_COLORS[post.category] ?? "#00D26A";
+  const accent = CATEGORY_COLORS[post.category] ?? "var(--color-primary-text)";
   const dateLabel = new Date(post.publishedAt ?? post.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US", {
     year: "numeric", month: "long", day: "numeric",
   });
@@ -103,7 +103,7 @@ export default async function BlogPostPage({ params }: Props) {
 
         <div style={{ marginTop: 20, marginBottom: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <span style={{
-            background: `${accent}22`, border: `1px solid ${accent}44`, borderRadius: 20,
+            background: `color-mix(in srgb, ${accent} 13%, transparent)`, border: `1px solid color-mix(in srgb, ${accent} 27%, transparent)`, borderRadius: 20,
             padding: "4px 12px", color: accent, fontSize: 12, fontWeight: 700,
           }}>
             {post.category}

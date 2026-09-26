@@ -56,7 +56,7 @@
   background:
     radial-gradient(circle at 18% 20%, rgba(215, 168, 79, 0.22), transparent 24rem),
     radial-gradient(circle at 86% 16%, rgba(22, 163, 163, 0.26), transparent 22rem),
-    linear-gradient(160deg, #0c1f22 0%, #081016 52%, #0a1410 100%);
+    linear-gradient(160deg, #241B17 0%, #160F0C 52%, #0a1410 100%);
 }
 
 .heroBg::after {
@@ -133,14 +133,14 @@
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.95);
-  color: #111820;
+  color: #2B211D;
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(18px);
 }
 
 .searchBar svg {
   flex-shrink: 0;
-  color: #64717e;
+  color: #6E5F55;
 }
 
 .searchBar input {
@@ -149,21 +149,21 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: #111820;
+  color: #2B211D;
   font-family: inherit;
   font-size: var(--text-base);
   font-weight: 700;
 }
 
 .searchBar input::placeholder {
-  color: #6b7683;
+  color: #6E5F55;
   font-weight: 500;
 }
 
 .searchClear {
   border: 0;
   background: transparent;
-  color: #6b7683;
+  color: #6E5F55;
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;

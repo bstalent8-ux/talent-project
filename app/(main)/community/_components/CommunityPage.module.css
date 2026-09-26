@@ -855,7 +855,7 @@
   background:
     radial-gradient(circle at 15% 25%, rgba(215, 168, 79, 0.2), transparent 22rem),
     radial-gradient(circle at 88% 30%, rgba(22, 163, 163, 0.24), transparent 22rem),
-    linear-gradient(135deg, #0b1f22, #081016);
+    linear-gradient(135deg, #241B17, #160F0C);
 }
 
 .finalCtaInner {

@@ -14,12 +14,12 @@ export default function MessageInput({ onSend, disabled }: Props) {
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const BORDER = dark ? "#1e293b"  : "#E2E8F0";
-  const BG     = dark ? "#0D1623"  : "#FFFFFF";
-  const INPUT  = dark ? "#0a121c"  : "#F8FAFC";
-  const TEXT   = dark ? "#f1f5f9"  : "#0f172a";
-  const MUTED  = dark ? "#64748b"  : "#94a3b8";
-  const GOLD   = "#FFB800";
+  const BORDER = dark ? "#3A2E28"  : "#E6DCC3";
+  const BG     = dark ? "#2B211D"  : "#FBF7EA";
+  const INPUT  = dark ? "#231A16"  : "#F6F0DD";
+  const TEXT   = dark ? "#F5EEDB"  : "#2B211D";
+  const MUTED  = dark ? "#8F8175"  : "#8C7D71";
+  const GOLD   = "var(--color-accent-strong)";
 
   async function handleSend() {
     const trimmed = value.trim();
@@ -84,7 +84,7 @@ export default function MessageInput({ onSend, disabled }: Props) {
         disabled={!value.trim() || sending || disabled}
         style={{
           width: 42, height: 42, borderRadius: "50%", border: "none",
-          backgroundColor: value.trim() && !sending ? GOLD : (dark ? "#1e293b" : "#e2e8f0"),
+          backgroundColor: value.trim() && !sending ? GOLD : (dark ? "#3A2E28" : "#E6DCC3"),
           color: value.trim() && !sending ? "#000" : MUTED,
           cursor: value.trim() && !sending ? "pointer" : "default",
           display: "flex", alignItems: "center", justifyContent: "center",

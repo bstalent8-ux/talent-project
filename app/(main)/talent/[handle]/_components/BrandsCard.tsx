@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useSite } from "@/contexts/SiteContext";
 import type { BrandItem } from "@/features/talent-profile/types";
 
-const COLORS = ["var(--color-accent-strong)", "#1565C0", "#D32F2F", "var(--color-primary-text)", "#9C27B0", "#E91E63"];
+const COLORS = ["var(--color-accent-strong)", "#3E9A98", "#B9694C", "var(--color-primary-text)", "#7A5A4C", "#D98B7B"];
 
 interface Props {
   brands: BrandItem[];

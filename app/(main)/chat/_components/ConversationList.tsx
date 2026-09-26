@@ -27,13 +27,13 @@ export default function ConversationList() {
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string | null>(null);
 
-  const CARD   = dark ? "#0D1623" : "#FFFFFF";
-  const BG     = dark ? "#060d18" : "#F8FAFC";
-  const BORDER = dark ? "#1e293b" : "#E2E8F0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const GOLD   = "#FFB800";
-  const ACTIVE = dark ? "#0f1e35" : "#FFF8E1";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BG     = dark ? "#1B1310" : "#F6F0DD";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const GOLD   = "var(--color-accent-strong)";
+  const ACTIVE = dark ? "#1F4A4B" : "#E4F1EF";
 
   const load = useCallback(async () => {
     const res = await fetch("/api/chat/conversations");
@@ -109,7 +109,7 @@ export default function ConversationList() {
                 {/* Avatar */}
                 <div style={{
                   width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-                  backgroundColor: dark ? "#1e293b" : "#e2e8f0",
+                  backgroundColor: dark ? "#3A2E28" : "#E6DCC3",
                   border: `2px solid ${isActive ? GOLD : "transparent"}`,
                   overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 16, fontWeight: 700, color: MUTED,
@@ -137,8 +137,8 @@ export default function ConversationList() {
                     </span>
                     {hasUnread && (
                       <span style={{
-                        minWidth: 18, height: 18, borderRadius: 9, backgroundColor: GOLD,
-                        color: "#000", fontSize: 11, fontWeight: 700,
+                        minWidth: 18, height: 18, borderRadius: 9, backgroundColor: "var(--color-accent)",
+                        color: "var(--color-on-accent)", fontSize: 11, fontWeight: 700,
                         display: "flex", alignItems: "center", justifyContent: "center",
                         padding: "0 5px", flexShrink: 0,
                       }}>

@@ -32,13 +32,13 @@ const TX = {
 export default function HowItWorks({ dark, lang }: Props) {
   const t      = TX[lang];
   const ar     = lang === "ar";
-  const GREEN  = "#00D26A";
-  const BG     = dark ? "#050B12" : "#f1f5f9";
-  const CARD   = dark ? "#0D1623" : "#ffffff";
-  const BORDER = dark ? "rgba(0,255,163,0.1)" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const LINE   = dark ? "rgba(0,210,106,0.15)" : "#d1fae5";
+  const GREEN  = "var(--color-primary-text)";
+  const BG     = dark ? "#1B1310" : "#F1EAD3";
+  const CARD   = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "rgba(79,167,163,0.1)" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const LINE   = dark ? "rgba(8,127,131,0.15)" : "#d1fae5";
 
   return (
     <section style={{
@@ -60,8 +60,8 @@ export default function HowItWorks({ dark, lang }: Props) {
         >
           <span style={{
             display: "inline-block", marginBottom: 12,
-            backgroundColor: dark ? "rgba(0,210,106,0.1)" : "rgba(0,210,106,0.07)",
-            border: "1px solid rgba(0,210,106,0.2)",
+            backgroundColor: dark ? "rgba(8,127,131,0.1)" : "rgba(8,127,131,0.07)",
+            border: "1px solid rgba(8,127,131,0.2)",
             borderRadius: 100, padding: "4px 16px",
             color: GREEN, fontSize: 11, fontWeight: 700,
             letterSpacing: 1.2, textTransform: "uppercase",
@@ -91,7 +91,7 @@ export default function HowItWorks({ dark, lang }: Props) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.45, delay: i * 0.08 }}
-                whileHover={{ y: -4, boxShadow: dark ? "0 10px 32px rgba(0,210,106,0.1)" : "0 10px 28px rgba(0,0,0,0.08)" }}
+                whileHover={{ y: -4, boxShadow: dark ? "0 10px 32px rgba(8,127,131,0.1)" : "0 10px 28px rgba(0,0,0,0.08)" }}
                 style={{
                   backgroundColor: CARD,
                   border: `1px solid ${BORDER}`,
@@ -104,8 +104,8 @@ export default function HowItWorks({ dark, lang }: Props) {
                 <div style={{
                   position: "absolute", top: 14, right: ar ? "auto" : 14, left: ar ? 14 : "auto",
                   width: 22, height: 22, borderRadius: "50%",
-                  backgroundColor: `${GREEN}20`,
-                  border: `1px solid ${GREEN}40`,
+                  backgroundColor: `color-mix(in srgb, ${GREEN} 13%, transparent)`,
+                  border: `1px solid color-mix(in srgb, ${GREEN} 25%, transparent)`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 10, fontWeight: 900, color: GREEN,
                 }}>
@@ -115,8 +115,8 @@ export default function HowItWorks({ dark, lang }: Props) {
                 {/* Icon */}
                 <div style={{
                   width: 44, height: 44, borderRadius: 12,
-                  backgroundColor: dark ? "rgba(0,210,106,0.08)" : "rgba(0,210,106,0.06)",
-                  border: "1px solid rgba(0,210,106,0.18)",
+                  backgroundColor: dark ? "rgba(8,127,131,0.08)" : "rgba(8,127,131,0.06)",
+                  border: "1px solid rgba(8,127,131,0.18)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   <Icon size={20} color={GREEN} />

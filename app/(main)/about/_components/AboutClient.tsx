@@ -11,7 +11,7 @@ export default function AboutClient() {
   return (
     <div style={{
       minHeight: "100vh",
-      backgroundColor: dark ? "#050B12" : "#f1f5f9",
+      backgroundColor: dark ? "#1B1310" : "#F1EAD3",
       fontFamily: "'IBM Plex Sans Arabic', sans-serif",
     }}>
       <AboutHero    dark={dark} lang={lang} />

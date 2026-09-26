@@ -76,12 +76,12 @@ const TX = {
 
 export default function ProfileSection({ profile, talentStatus, talentCategory, brandCategories, lang, dark }: SectionProps) {
   const t = TX[lang];
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const SURFACE = dark ? "#0A121C" : "#F8FAFC";
-  const INP    = dark ? "#0d1527" : "#f8fafc";
-  const GREEN  = "#00D26A";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const SURFACE = dark ? "#231A16" : "#F6F0DD";
+  const INP    = dark ? "#231A16" : "#F6F0DD";
+  const GREEN  = "var(--color-primary-text)";
 
   // ─── Brand: minimal real form, wired to the existing /api/profile
   // endpoint (its brandProfileData.company_name + shared profileData fields
@@ -177,7 +177,7 @@ export default function ProfileSection({ profile, talentStatus, talentCategory, 
           <button
             onClick={saveBrand}
             disabled={saving}
-            style={{ alignSelf: "flex-start", padding: "9px 20px", backgroundColor: GREEN, border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: saving ? "wait" : "pointer" }}
+            style={{ alignSelf: "flex-start", padding: "9px 20px", backgroundColor: "var(--color-primary)", border: "none", borderRadius: 8, color: "var(--color-primary-ink)", fontSize: 13, fontWeight: 800, cursor: saving ? "wait" : "pointer" }}
           >
             {saving ? t.saving : t.save}
           </button>
@@ -189,11 +189,11 @@ export default function ProfileSection({ profile, talentStatus, talentCategory, 
           <p style={{ color: MUTED, fontSize: 13, margin: "0 0 16px" }}>{t.verifyDesc}</p>
 
           {profile.brand_status === "approved" ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", backgroundColor: "rgba(0,210,106,0.1)", border: "1px solid rgba(0,210,106,0.3)", borderRadius: 10, color: GREEN, fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", backgroundColor: "rgba(8,127,131,0.1)", border: "1px solid rgba(8,127,131,0.3)", borderRadius: 10, color: GREEN, fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
               <ShieldCheck size={16} />{t.verifyApproved}
             </div>
           ) : profile.brand_status === "pending" ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", backgroundColor: "rgba(244,183,64,0.1)", border: "1px solid rgba(244,183,64,0.3)", borderRadius: 10, color: "#F4B740", fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", backgroundColor: "rgba(231,165,138,0.1)", border: "1px solid rgba(231,165,138,0.3)", borderRadius: 10, color: "var(--color-accent-strong)", fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
               <Clock3 size={16} />{t.verifyPending}
             </div>
           ) : profile.brand_status === "rejected" ? (
@@ -271,7 +271,7 @@ export default function ProfileSection({ profile, talentStatus, talentCategory, 
             <button
               onClick={submitVerification}
               disabled={vSaving}
-              style={{ alignSelf: "flex-start", padding: "9px 20px", backgroundColor: "#d7a84f", border: "none", borderRadius: 8, color: "#000", fontSize: 13, fontWeight: 800, cursor: vSaving ? "wait" : "pointer" }}
+              style={{ alignSelf: "flex-start", padding: "9px 20px", backgroundColor: "var(--color-accent)", border: "none", borderRadius: 8, color: "var(--color-on-accent)", fontSize: 13, fontWeight: 800, cursor: vSaving ? "wait" : "pointer" }}
             >
               {vSaving ? t.submitting : (profile.brand_status ? t.resubmit : t.submit)}
             </button>
@@ -288,7 +288,7 @@ export default function ProfileSection({ profile, talentStatus, talentCategory, 
       <p style={{ color: MUTED, fontSize: 13, margin: "0 0 20px", lineHeight: 1.7 }}>{t.talentDesc}</p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 420 }}>
-        <Link href="/profile/me/complete" style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", backgroundColor: GREEN, borderRadius: 10, color: "#000", fontSize: 14, fontWeight: 800, textDecoration: "none" }}>
+        <Link href="/profile/me/complete" style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", backgroundColor: "var(--color-primary)", borderRadius: 10, color: "var(--color-primary-ink)", fontSize: 14, fontWeight: 800, textDecoration: "none" }}>
           <Pencil size={16} />{t.editProfile}
         </Link>
         {profile.handle && (

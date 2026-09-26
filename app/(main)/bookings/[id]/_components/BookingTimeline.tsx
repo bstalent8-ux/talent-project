@@ -20,12 +20,12 @@ export default function BookingTimeline({ status, dark, lang }: { status: string
   const ar = lang === "ar";
   const normalized = normalizeStatus(status);
   const currentIdx = Math.max(0, ORDER.indexOf(normalized));
-  const GOLD  = "#FFB800";
-  const GREEN = "#00D26A";
+  const GOLD  = "var(--color-accent-strong)";
+  const GREEN = "var(--color-primary-text)";
   const RED   = "#EF4444";
-  const MUTED = dark ? "#334155" : "#cbd5e1";
-  const TEXT  = dark ? "#f1f5f9" : "#0f172a";
-  const DIMM  = dark ? "#64748b" : "#94a3b8";
+  const MUTED = dark ? "#4E403A" : "#D9CDB1";
+  const TEXT  = dark ? "#F5EEDB" : "#2B211D";
+  const DIMM  = dark ? "#8F8175" : "#8C7D71";
 
   if (["cancelled", "rejected"].includes(status)) {
     return (
@@ -52,7 +52,7 @@ export default function BookingTimeline({ status, dark, lang }: { status: string
                 border: `2px solid ${color}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 12, fontWeight: 700,
-                color: done || current ? "#050B12" : DIMM,
+                color: done || current ? "#1B1310" : DIMM,
                 flexShrink: 0,
               }}>
                 {done ? "✓" : i + 1}

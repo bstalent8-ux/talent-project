@@ -60,7 +60,7 @@
   border: 1px solid color-mix(in srgb, var(--border-subtle) 72%, transparent);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, #ffffff 92%, var(--bg-card));
-  box-shadow: 0 6px 8px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 8px rgba(43, 33, 29, 0.06);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -91,7 +91,7 @@
 .packageCardLocked:hover {
   border-color: color-mix(in srgb, var(--border-subtle) 72%, transparent);
   background: color-mix(in srgb, #ffffff 92%, var(--bg-card));
-  box-shadow: 0 6px 8px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 8px rgba(43, 33, 29, 0.06);
 }
 
 /* Blurs everything except the footer button and the Coming Soon badge, so the
@@ -113,12 +113,12 @@
   gap: 0.3rem;
   padding: 0.32rem 0.7rem;
   border-radius: var(--radius-pill);
-  background: #241447;
+  background: #2B211D;
   color: #ffffff;
   font-size: var(--text-xs);
   font-weight: 900;
   letter-spacing: 0.01em;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 4px 10px rgba(43, 33, 29, 0.25);
 }
 
 .packageHeader {
@@ -141,7 +141,7 @@
 
 .packageTitle {
   margin: 0;
-  color: #241447;
+  color: #2B211D;
   font-family: var(--font-display);
   font-size: var(--text-xl);
   line-height: 1.2;
@@ -150,7 +150,7 @@
 
 .packageDescription {
   margin: 0;
-  color: #5a506f;
+  color: #6E5F55;
   line-height: 1.75;
   font-size: var(--text-sm);
 }
@@ -175,17 +175,17 @@
   display: flex;
   align-items: baseline;
   gap: 0.45rem;
-  color: #241447;
+  color: #2B211D;
 }
 
 .price {
-  color: #241447;
+  color: #2B211D;
   font-size: var(--text-2xl);
   font-weight: 950;
 }
 
 .currency {
-  color: #7b7191;
+  color: #8C7D71;
   font-size: var(--text-sm);
   font-weight: 850;
 }
@@ -202,7 +202,7 @@
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  color: #5a506f;
+  color: #6E5F55;
   font-size: var(--text-sm);
   line-height: 1.6;
 }

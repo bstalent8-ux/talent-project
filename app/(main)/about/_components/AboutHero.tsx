@@ -21,8 +21,8 @@ const TX = {
 export default function AboutHero({ dark, lang }: Props) {
   const t     = TX[lang];
   const ar    = lang === "ar";
-  const GREEN = "#00D26A";
-  const GOLD  = "#FFB800";
+  const GREEN = "var(--color-primary-text)";
+  const GOLD  = "var(--color-accent-strong)";
 
   return (
     <section style={{
@@ -36,12 +36,12 @@ export default function AboutHero({ dark, lang }: Props) {
       <div style={{
         position: "absolute", inset: 0, zIndex: 0,
         background: dark
-          ? `radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,210,106,0.1) 0%, transparent 65%),
-             radial-gradient(ellipse 50% 40% at 80% 90%, rgba(255,184,0,0.06) 0%, transparent 60%),
-             #050B12`
-          : `radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,210,106,0.07) 0%, transparent 65%),
-             radial-gradient(ellipse 50% 40% at 80% 90%, rgba(255,184,0,0.04) 0%, transparent 60%),
-             #f1f5f9`,
+          ? `radial-gradient(ellipse 70% 50% at 50% 0%, rgba(8,127,131,0.1) 0%, transparent 65%),
+             radial-gradient(ellipse 50% 40% at 80% 90%, rgba(231,165,138,0.06) 0%, transparent 60%),
+             #1B1310`
+          : `radial-gradient(ellipse 70% 50% at 50% 0%, rgba(8,127,131,0.07) 0%, transparent 65%),
+             radial-gradient(ellipse 50% 40% at 80% 90%, rgba(231,165,138,0.04) 0%, transparent 60%),
+             #F5EEDB`,
       }} />
 
       {/* Grid */}
@@ -61,8 +61,8 @@ export default function AboutHero({ dark, lang }: Props) {
           transition={{ duration: 0.45 }}
           style={{
             display: "inline-block", marginBottom: 20,
-            backgroundColor: dark ? "rgba(0,210,106,0.1)" : "rgba(0,210,106,0.08)",
-            border: "1px solid rgba(0,210,106,0.25)",
+            backgroundColor: dark ? "rgba(8,127,131,0.1)" : "rgba(8,127,131,0.08)",
+            border: "1px solid rgba(8,127,131,0.25)",
             borderRadius: 100, padding: "5px 18px",
             color: GREEN, fontSize: 11, fontWeight: 700,
             letterSpacing: 1.2, textTransform: "uppercase",
@@ -81,7 +81,7 @@ export default function AboutHero({ dark, lang }: Props) {
             fontWeight: 900, lineHeight: 1.2,
             margin: "0 0 20px",
             fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-            color: dark ? "#ffffff" : "#0f172a",
+            color: dark ? "#ffffff" : "#2B211D",
           }}
         >
           {t.title}<br />
@@ -94,7 +94,7 @@ export default function AboutHero({ dark, lang }: Props) {
           transition={{ duration: 0.55, delay: 0.2 }}
           style={{
             fontSize: "clamp(14px, 2vw, 17px)",
-            color: dark ? "#94a3b8" : "#475569",
+            color: dark ? "#A99B8E" : "#5C4E45",
             lineHeight: 1.8, maxWidth: 520, margin: "0 auto",
             fontFamily: "'IBM Plex Sans Arabic', sans-serif",
           }}

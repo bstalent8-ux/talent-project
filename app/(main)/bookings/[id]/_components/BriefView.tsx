@@ -106,12 +106,12 @@ export default function BriefView({
 }: Props) {
   const t  = TX[lang];
   const ar = lang === "ar";
-  const BG     = dark ? "#0d1623" : "#ffffff";
-  const BORDER = dark ? "#1e293b" : "#e2e8f0";
-  const TEXT   = dark ? "#f1f5f9" : "#0f172a";
-  const MUTED  = dark ? "#64748b" : "#94a3b8";
-  const GREEN  = "#00D26A";
-  const GOLD   = "#FFB800";
+  const BG     = dark ? "#2B211D" : "#FBF7EA";
+  const BORDER = dark ? "#3A2E28" : "#E6DCC3";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#8F8175" : "#8C7D71";
+  const GREEN  = "var(--color-primary-text)";
+  const GOLD   = "var(--color-accent-strong)";
 
   const [showReject, setShowReject] = useState(false);
   const [showChanges, setShowChanges] = useState(false);
@@ -197,7 +197,7 @@ export default function BriefView({
           <FileText size={18} color={GREEN} />
           <h3 style={{ margin: 0, color: TEXT, fontSize: 16, fontWeight: 800 }}>{t.title}</h3>
         </div>
-        <span style={{ fontSize: 12, fontWeight: 700, color: statusColor, padding: "3px 10px", borderRadius: 20, backgroundColor: `${statusColor}15`, border: `1px solid ${statusColor}33` }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: statusColor, padding: "3px 10px", borderRadius: 20, backgroundColor: `color-mix(in srgb, ${statusColor} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${statusColor} 20%, transparent)` }}>
           {statusLabel}
         </span>
       </div>
@@ -209,7 +209,7 @@ export default function BriefView({
       )}
 
       {brief.requirements && (
-        <div style={{ backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 16px", marginBottom: 14 }}>
+        <div style={{ backgroundColor: dark ? "#1B1310" : "#F6F0DD", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 16px", marginBottom: 14 }}>
           <p style={{ color: MUTED, fontSize: 11, fontWeight: 700, margin: "0 0 6px", textTransform: "uppercase" }}>{t.req}</p>
           <p style={{ color: TEXT, fontSize: 13, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>{brief.requirements}</p>
         </div>
@@ -243,7 +243,7 @@ export default function BriefView({
       )}
 
       {isCustomBooking && (
-        <div style={{ backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ backgroundColor: dark ? "#1B1310" : "#F6F0DD", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
           <p style={{ color: MUTED, fontSize: 11, fontWeight: 700, margin: "0 0 8px", textTransform: "uppercase" }}>{t.priceTitle}</p>
 
           {isPriceFinalized ? (
@@ -276,12 +276,12 @@ export default function BriefView({
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     {proposedAmount != null && (
                       <button onClick={() => respondPrice("accept_price")} disabled={priceLoading}
-                        style={{ flex: "1 1 120px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 13.5, fontWeight: 900, cursor: priceLoading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                        style={{ flex: "1 1 120px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 13.5, fontWeight: 900, cursor: priceLoading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                         <CheckCircle2 size={14} /> {t.acceptPrice}
                       </button>
                     )}
                     <button onClick={() => setShowCounter(true)} disabled={priceLoading}
-                      style={{ flex: "1 1 140px", backgroundColor: "transparent", color: GOLD, border: `1px solid ${GOLD}66`, borderRadius: 10, padding: "10px 0", fontSize: 13.5, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                      style={{ flex: "1 1 140px", backgroundColor: "transparent", color: GOLD, border: `1px solid color-mix(in srgb, ${GOLD} 40%, transparent)`, borderRadius: 10, padding: "10px 0", fontSize: 13.5, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       {proposedAmount != null ? t.counterPrice : t.proposePrice}
                     </button>
                   </div>
@@ -291,12 +291,12 @@ export default function BriefView({
                       type="number" inputMode="decimal" min={500} step={1}
                       value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)}
                       placeholder={t.proposePricePh}
-                      style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#0d1623" : "#ffffff", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box" }}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#2B211D" : "#FBF7EA", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box" }}
                     />
                     <textarea
                       value={counterMessage} onChange={(e) => setCounterMessage(e.target.value)}
                       placeholder={t.proposeMessagePh} rows={2}
-                      style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#0d1623" : "#ffffff", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#2B211D" : "#FBF7EA", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }}
                     />
                     <div style={{ display: "flex", gap: 10 }}>
                       <button
@@ -306,7 +306,7 @@ export default function BriefView({
                           respondPrice("propose_price", n);
                         }}
                         disabled={priceLoading}
-                        style={{ flex: 1, backgroundColor: GOLD, color: "#050B12", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 800, cursor: priceLoading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                        style={{ flex: 1, backgroundColor: "var(--color-accent)", color: "var(--color-on-accent)", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 800, cursor: priceLoading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                         {priceLoading ? "…" : t.send}
                       </button>
                       <button onClick={() => setShowCounter(false)}
@@ -343,11 +343,11 @@ export default function BriefView({
           {!showReject && !showChanges ? (
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button onClick={() => respond("accept")} disabled={loading}
-                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: GREEN, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "var(--color-primary)", color: "var(--color-primary-ink)", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 900, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 <CheckCircle2 size={14} /> {t.accept}
               </button>
               <button onClick={() => setShowChanges(true)} disabled={loading}
-                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: GOLD, border: `1px solid ${GOLD}66`, borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                style={{ flex: "1 1 140px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "transparent", color: GOLD, border: `1px solid color-mix(in srgb, ${GOLD} 40%, transparent)`, borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                 {t.requestChanges}
               </button>
               <button onClick={() => setShowReject(true)} disabled={loading}
@@ -358,7 +358,7 @@ export default function BriefView({
           ) : showReject ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t.rejectPh} rows={3}
-                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#1B1310" : "#F6F0DD", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => respond("reject")} disabled={loading}
                   style={{ flex: 1, backgroundColor: "#ef4444", color: "#fff", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 700, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
@@ -372,10 +372,10 @@ export default function BriefView({
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t.changesPh} rows={3}
-                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#060d18" : "#f8fafc", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 10, backgroundColor: dark ? "#1B1310" : "#F6F0DD", border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontFamily: "'IBM Plex Sans Arabic',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical" }} />
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => respond("request_changes")} disabled={loading}
-                  style={{ flex: 1, backgroundColor: GOLD, color: "#050B12", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 800, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                  style={{ flex: 1, backgroundColor: "var(--color-accent)", color: "var(--color-on-accent)", border: "none", borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 800, cursor: loading ? "default" : "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                   {loading ? "…" : t.send}
                 </button>
                 <button onClick={() => setShowChanges(false)} style={{ flex: 1, backgroundColor: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: 10, padding: "11px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>

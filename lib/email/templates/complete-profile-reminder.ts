@@ -8,6 +8,7 @@
 // preview, same reasoning as the other approval templates.
 
 import { escapeHtml } from "@/lib/email/escapeHtml";
+import { emailLayout } from "@/lib/email/layout";
 
 export function completeProfileReminderEmail(lang: "ar" | "en", name: string): { subject: string; html: string } {
   // See S-2 note in profile-approved.ts — `name` is user-controlled.
@@ -16,9 +17,9 @@ export function completeProfileReminderEmail(lang: "ar" | "en", name: string): {
   if (lang === "ar") {
     return {
       subject: "📸 كمّل بروفايلك عشان تظهر للبراندات",
-      html: `
-        <div dir="rtl" style="font-family:'Segoe UI',Tahoma,sans-serif; max-width:520px; margin:0 auto; color:#0f172a;">
-          <h2 style="color:#0f766e;">فاضلك خطوة يا ${displayName} 📸</h2>
+      html: emailLayout(lang, `
+        <div dir="rtl" style="font-family:'Segoe UI',Tahoma,sans-serif; color:#2B211D;">
+          <h2 style="color:#087F83;">فاضلك خطوة يا ${displayName} 📸</h2>
           <p style="font-size:15px; line-height:1.8;">
             بروفايلك على <b>Talents</b> لسه مفهوش أي صور أو فيديوهات بورتفوليو — وده بيقلل فرصتك جداً
             إنك تظهر في نتائج البحث قدام البراندات، حتى لو باقي بياناتك كاملة.
@@ -29,23 +30,23 @@ export function completeProfileReminderEmail(lang: "ar" | "en", name: string): {
           </p>
           <p style="margin:28px 0;">
             <a href="https://talent-s.com/profile/me"
-               style="background:#0f766e; color:#fff; padding:12px 22px; border-radius:8px; text-decoration:none; font-weight:700; display:inline-block;">
+               style="background:#087F83; color:#fff; padding:12px 22px; border-radius:8px; text-decoration:none; font-weight:700; display:inline-block;">
               ضيف صور بروفايلك الآن
             </a>
           </p>
-          <p style="font-size:12.5px; color:#64748b;">
+          <p style="font-size:12.5px; color:#6E5F55;">
             تابعنا عشان توصلك آخر الفرص أول بأول.
           </p>
         </div>
-      `,
+      `),
     };
   }
 
   return {
     subject: "📸 Finish your profile so brands can find you",
-    html: `
-      <div style="font-family:'Segoe UI',Tahoma,sans-serif; max-width:520px; margin:0 auto; color:#0f172a;">
-        <h2 style="color:#0f766e;">One step left, ${displayName} 📸</h2>
+    html: emailLayout(lang, `
+      <div style="font-family:'Segoe UI',Tahoma,sans-serif; color:#2B211D;">
+        <h2 style="color:#087F83;">One step left, ${displayName} 📸</h2>
         <p style="font-size:15px; line-height:1.8;">
           Your Talents profile still has no portfolio photos or videos — that alone makes it much
           less likely to show up in search results for brands, even if everything else is filled in.
@@ -56,14 +57,14 @@ export function completeProfileReminderEmail(lang: "ar" | "en", name: string): {
         </p>
         <p style="margin:28px 0;">
           <a href="https://talent-s.com/profile/me"
-             style="background:#0f766e; color:#fff; padding:12px 22px; border-radius:8px; text-decoration:none; font-weight:700; display:inline-block;">
+             style="background:#087F83; color:#fff; padding:12px 22px; border-radius:8px; text-decoration:none; font-weight:700; display:inline-block;">
             Add your photos now
           </a>
         </p>
-        <p style="font-size:12.5px; color:#64748b;">
+        <p style="font-size:12.5px; color:#6E5F55;">
           Follow along so you don't miss new opportunities.
         </p>
       </div>
-    `,
+    `),
   };
 }

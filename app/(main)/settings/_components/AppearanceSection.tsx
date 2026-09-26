@@ -19,10 +19,10 @@ const TX = {
 export default function AppearanceSection({ dark }: SectionProps) {
   const { lang, setLang, mode, setMode } = useSite();
   const t = TX[lang];
-  const TEXT   = dark ? "#FFFFFF" : "#0F172A";
-  const MUTED  = dark ? "#A8B3C2" : "#64748B";
-  const BORDER = dark ? "rgba(0,255,163,0.15)" : "#E2E8F0";
-  const GREEN  = "#00D26A";
+  const TEXT   = dark ? "#F5EEDB" : "#2B211D";
+  const MUTED  = dark ? "#A99B8E" : "#6E5F55";
+  const BORDER = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
+  const GREEN  = "var(--color-primary-text)";
 
   const optionBtn = (active: boolean, label: string, icon: React.ReactNode, onClick: () => void) => (
     <button
@@ -31,7 +31,7 @@ export default function AppearanceSection({ dark }: SectionProps) {
         display: "flex", alignItems: "center", gap: 8,
         padding: "12px 20px", borderRadius: 10,
         border: `1px solid ${active ? GREEN : BORDER}`,
-        backgroundColor: active ? "rgba(0,210,106,0.1)" : "transparent",
+        backgroundColor: active ? "rgba(8,127,131,0.1)" : "transparent",
         color: active ? GREEN : TEXT,
         fontSize: 13.5, fontWeight: active ? 700 : 500, cursor: "pointer",
         fontFamily: "'IBM Plex Sans Arabic', sans-serif",

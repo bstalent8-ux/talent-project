@@ -209,11 +209,11 @@ export default function DashboardPage() {
 
   const CARD    = dark ? "#2B211D" : "#FBF7EA";
   const BORDER  = dark ? "rgba(79,167,163,0.15)" : "#E6DCC3";
-  const TEXT    = dark ? "#FFFFFF" : "#2B211D";
+  const TEXT    = dark ? "#F5EEDB" : "#2B211D";
   const MUTED   = dark ? "#A99B8E" : "#6E5F55";
   const SURFACE = dark ? "#231A16" : "#F6F0DD";
   const BG      = dark ? "#1B1310" : "#F1EAD3";
-  const INP     = dark ? "#0d1527" : "#F6F0DD";
+  const INP     = dark ? "#231A16" : "#F6F0DD";
 
   const [status,        setStatus]        = useState<"loading"|"ready"|"none">("loading");
   // Always true now — profile/me is directly editable the moment you land
@@ -522,7 +522,7 @@ export default function DashboardPage() {
 
         {/* Welcome banner */}
         <div style={{
-          background: dark ? "linear-gradient(135deg,#1a2a0a 0%,#0d1a0a 100%)" : "linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%)",
+          background: dark ? "linear-gradient(135deg,#1F4A4B 0%,#1B1310 100%)" : "linear-gradient(135deg,#E4F1EF 0%,#DCEDEA 100%)",
           border: `1px solid ${dark ? "#2d5a1b" : "var(--color-success)"}`,
           borderRadius: 20, padding: "32px 28px", textAlign: "center", marginBottom: 20,
         }}>
@@ -682,7 +682,7 @@ export default function DashboardPage() {
 
             {/* Avatar */}
             <div style={{ position: "relative" }}>
-              <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 200, height: isMobile ? 220 : 260, borderRadius: 14, overflow: "hidden", background: dark ? "linear-gradient(160deg,#1e3a5f,#2B211D,#1B1310)" : "linear-gradient(160deg,#dbeafe,#bfdbfe,#93c5fd)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 200, height: isMobile ? 220 : 260, borderRadius: 14, overflow: "hidden", background: dark ? "linear-gradient(160deg,#1F4A4B,#2B211D,#1B1310)" : "linear-gradient(160deg,#E4F1EF,#DCEDEA,#C5E0DC)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {(pendingAvatar ?? (edit ? form.avatar_url : profile.avatar_url)) ? (
                   <img src={pendingAvatar ?? (edit ? form.avatar_url : profile.avatar_url)} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
@@ -835,7 +835,7 @@ export default function DashboardPage() {
                       <Upload size={12} />{t.addPhoto}
                     </button>
                     <input ref={videoRef} type="file" accept="video/*" multiple style={{ display: "none" }} onChange={e => { handleMediaFilesUpload(e.target.files,"video"); e.target.value=""; }} />
-                    <button onClick={() => videoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 8, color: "#a78bfa", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                    <button onClick={() => videoRef.current?.click()} disabled={mediaUploading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", backgroundColor: "rgba(79,167,163,0.1)", border: "1px solid rgba(79,167,163,0.25)", borderRadius: 8, color: "var(--color-primary-text)", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Play size={12} />{t.addVideo}
                     </button>
                   </div>
@@ -924,7 +924,7 @@ export default function DashboardPage() {
                     {!["height","weight","age","hair_color","eye_color","shoe_size","languages","dialect"].some(k => form[k]) && (
                       <button
                         onClick={() => router.push("/profile/me/complete?step=physical")}
-                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: `1px dashed rgba(0,201,177,0.3)`, borderRadius: 10, color: "var(--color-primary-text)", fontSize: 13, fontWeight: 700, cursor: "pointer", background: "transparent", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: `1px dashed rgba(79,167,163,0.3)`, borderRadius: 10, color: "var(--color-primary-text)", fontSize: 13, fontWeight: 700, cursor: "pointer", background: "transparent", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}
                       >
                         <span style={{ fontSize: 18 }}>📏</span>
                         {lang === "ar" ? "أضف بياناتك الشخصية" : "Add your personal details"}
@@ -1006,7 +1006,7 @@ export default function DashboardPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                   <h3 style={{ color: TEXT, fontSize: 16, fontWeight: 800, margin: 0 }}>{t.usageAddons}</h3>
                   {edit && (
-                    <button onClick={addAddonItem} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 8, color: "#a78bfa", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
+                    <button onClick={addAddonItem} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", backgroundColor: "rgba(79,167,163,0.1)", border: "1px solid rgba(79,167,163,0.25)", borderRadius: 8, color: "var(--color-primary-text)", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic',sans-serif" }}>
                       <Plus size={13} />{t.addAddon}
                     </button>
                   )}
@@ -1035,7 +1035,7 @@ export default function DashboardPage() {
                     {addons.map(addon => (
                       <div key={addon.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${BORDER}` }}>
                         <span style={{ color: MUTED, fontSize: 13 }}>{addon.label}</span>
-                        <span style={{ color: "#a78bfa", fontSize: 13, fontWeight: 700, direction: "ltr" }}>+{addon.price} EGP</span>
+                        <span style={{ color: "var(--color-primary-text)", fontSize: 13, fontWeight: 700, direction: "ltr" }}>+{addon.price} EGP</span>
                       </div>
                     ))}
                   </div>
