@@ -315,6 +315,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const [personal, setPersonal] = useState({ full_name: profile?.full_name ?? "", city: profile?.city ?? "" });
   const [bio, setBio] = useState(profile?.bio ?? talentProfile?.bio ?? "");
   const [gender, setGender] = useState<string>(normalizeGender(talentProfile?.social_links?.gender) ?? "");
+  const [genderMissing, setGenderMissing] = useState(false);
   const [presence, setPresence] = useState<Record<string, string>>(
     Object.fromEntries(TALENT_SOCIAL_KEYS.map((k) => [k, sl[k] ?? ""])),
   );
@@ -610,6 +611,14 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   };
 
   const handleSaveContinue = async () => {
+    // Gender is required (it feeds the Explore filter): the basic step can't be
+    // left without it, and finishing with it empty sends the talent back there.
+    if (!gender && (steps[stepIdx] === "basic" || stepIdx === steps.length - 1)) {
+      setGenderMissing(true);
+      const basicIdx = steps.indexOf("basic");
+      if (basicIdx >= 0 && basicIdx !== stepIdx) goToStep(basicIdx);
+      return;
+    }
     const ok = await saveStep(steps[stepIdx]);
     if (!ok) return;
     if (stepIdx < steps.length - 1) goToStep(stepIdx + 1);
@@ -835,16 +844,21 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                   <input style={inp} value={personal.city} onChange={(e) => setPersonal((f) => ({ ...f, city: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={label}>{lang === "ar" ? "النوع" : "Gender"}</label>
-                  <div role="radiogroup" style={{ display: "flex", gap: 8 }}>
+                  <label style={label}>{lang === "ar" ? "النوع" : "Gender"} <span style={{ color: "var(--color-error)" }}>*</span></label>
+                  <div role="radiogroup" aria-required="true" aria-invalid={genderMissing && !gender} style={{ display: "flex", gap: 8 }}>
                     {([["male", lang === "ar" ? "ذكر" : "Male"], ["female", lang === "ar" ? "أنثى" : "Female"]] as const).map(([v, l]) => (
-                      <button key={v} type="button" role="radio" aria-checked={gender === v} onClick={() => setGender(v)} style={{
+                      <button key={v} type="button" role="radio" aria-checked={gender === v} onClick={() => { setGender(v); setGenderMissing(false); }} style={{
                         flex: 1, minHeight: 42, borderRadius: "var(--radius-sm)", fontSize: 13.5, fontWeight: 700, cursor: "pointer",
                         fontFamily: "var(--font-sans)", background: gender === v ? TEAL : INP, color: gender === v ? INK : MUTED,
-                        border: `1px solid ${gender === v ? TEAL : BORDER}`,
+                        border: `1px solid ${gender === v ? TEAL : genderMissing ? "var(--color-error)" : BORDER}`,
                       }}>{l}</button>
                     ))}
                   </div>
+                  {genderMissing && !gender && (
+                    <p role="alert" style={{ margin: "6px 0 0", fontSize: 12.5, color: "var(--color-error)" }}>
+                      {lang === "ar" ? "اختار النوع (ذكر أو أنثى) عشان تكمّل." : "Choose Male or Female to continue."}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label style={label}>{t.labels.bio}</label>

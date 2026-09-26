@@ -614,11 +614,11 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
               <input style={inp} value={form.city} onChange={e => set("city", e.target.value)} />
             </div>
             <div>
-              {label(ar ? "النوع (فلتر Explore)" : "Gender (Explore filter)")}
+              {label(ar ? "النوع / Gender" : "Gender")}
               <select style={inp} value={gender} onChange={e => setGender(e.target.value)}>
                 <option value="">{ar ? "غير محدد" : "Not set"}</option>
-                <option value="male">{ar ? "ذكر" : "Male"}</option>
-                <option value="female">{ar ? "أنثى" : "Female"}</option>
+                <option value="male">{ar ? "ذكر — Male" : "Male"}</option>
+                <option value="female">{ar ? "أنثى — Female" : "Female"}</option>
               </select>
             </div>
             <div>
