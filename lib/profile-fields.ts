@@ -24,3 +24,17 @@ export const GENERAL_PHYSICAL_FIELDS = ["age", "languages", "dialect"] as const;
 export const TALENT_SOCIAL_KEYS = [
   "instagram", "tiktok", "facebook", "youtube", "linkedin", "telegram", "website", "other",
 ] as const;
+
+// talent_profiles.social_links.gender — what the Explore Male/Female filter
+// reads. Deliberately NOT in TALENT_PHYSICAL_KEYS: that list drives the
+// "physical" completion section, and a gender alone must not mark it done.
+export const TALENT_GENDERS = ["male", "female"] as const;
+export type TalentGender = (typeof TALENT_GENDERS)[number];
+
+/** Normalises whatever was stored (any case, Arabic words) to male/female/null. */
+export function normalizeGender(v: unknown): TalentGender | null {
+  const x = typeof v === "string" ? v.trim().toLowerCase() : "";
+  if (["male", "m", "man", "ذكر", "رجل"].includes(x)) return "male";
+  if (["female", "f", "woman", "أنثى", "انثى", "ست"].includes(x)) return "female";
+  return null;
+}

@@ -14,12 +14,11 @@ import styles from "./ExplorePage.module.css";
 // activeType/onTypeChange), so dropping them here loses no functionality.
 // The real background image (was a CSS gradient only) + featured-talent
 // marquee replace the height that used to come from the stats strip.
-// Sized per viewport (srcSet) — a single 1600px/277 KB image was the LCP on
-// phones (8.5 s on Lighthouse mobile). The hero sits under a dark overlay, so
-// q=60 is visually identical.
-const HERO_SRC = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=60";
-const HERO_BG = `${HERO_SRC}&w=1280`;
-const HERO_SRCSET = [480, 768, 1024, 1280, 1600].map((w) => `${HERO_SRC}&w=${w} ${w}w`).join(", ");
+// Brand cover art (public/assets/explore-cover-*.webp, made from the 2172×724
+// source): creators on both sides, a dark empty middle for the title/search.
+// Per-viewport sizes so a phone downloads ~25–50 KB, not the full image.
+const HERO_BG = "/assets/explore-cover-1280.webp";
+const HERO_SRCSET = [768, 1280, 1920, 2172].map((w) => `/assets/explore-cover-${w}.webp ${w}w`).join(", ");
 
 interface Props {
   lang: "ar" | "en";

@@ -16,6 +16,7 @@ const TX = {
     handle: "رابط ملفك العام",
     brandTitle: "بيانات الشركة",
     brandDesc: "البيانات دي بتظهر في صفحة شركتك العامة.",
+    brandSetup: "تعديل صفحة البراند (اللوجو، الغلاف، النبذة، الروابط)",
     companyName: "اسم الشركة", city: "المدينة", bio: "نبذة عن الشركة",
     bioPlaceholder: "اكتب نبذة عن نشاط شركتك...",
     save: "حفظ التغييرات", saving: "جاري الحفظ...", saved: "تم الحفظ ✓",
@@ -48,6 +49,7 @@ const TX = {
     handle: "Your public profile link",
     brandTitle: "Company Details",
     brandDesc: "This information appears on your public brand page.",
+    brandSetup: "Edit your brand page (logo, cover, about, links)",
     companyName: "Company Name", city: "City", bio: "Company Bio",
     bioPlaceholder: "Describe what your company does...",
     save: "Save Changes", saving: "Saving...", saved: "Saved ✓",
@@ -158,7 +160,10 @@ export default function ProfileSection({ profile, talentStatus, talentCategory, 
     return (
       <div>
         <h2 style={{ color: TEXT, fontSize: 17, fontWeight: 800, margin: "0 0 8px" }}>{t.brandTitle}</h2>
-        <p style={{ color: MUTED, fontSize: 13, margin: "0 0 20px" }}>{t.brandDesc}</p>
+        <p style={{ color: MUTED, fontSize: 13, margin: "0 0 12px" }}>{t.brandDesc}</p>
+        <a href="/profile/brand-setup" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 20, color: "var(--color-primary-text)", fontSize: 13.5, fontWeight: 700, textDecoration: "none" }}>
+          {t.brandSetup} {lang === "ar" ? "←" : "→"}
+        </a>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 420 }}>
           <div>

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { canPerformAction } from "@/lib/permissions";
 import { invalidateTalent, privateNoStoreHeaders } from "@/lib/cache";
 import { ProfileError, profileService } from "@/features/profiles";
-import { TALENT_PHYSICAL_KEYS } from "@/lib/profile-fields";
+import { TALENT_PHYSICAL_KEYS, normalizeGender } from "@/lib/profile-fields";
 
 /**
  * Writes one section's fields to the typed core row through the provider layer.
@@ -114,6 +114,10 @@ export async function PATCH(req: NextRequest) {
       const incoming = Object.fromEntries(
         Object.entries(data as Record<string,string>).filter(([k,v]) => TALENT_PHYSICAL_KEYS.includes(k as any) && v && String(v).trim().length > 0),
       );
+      // gender rides along with the physical section but is validated to
+      // male/female only (it feeds the Explore filter).
+      const gender = normalizeGender((data as Record<string, unknown>).gender);
+      if (gender) incoming.gender = gender;
       saveError = await saveTalentProfileSection(uid, { social_links: { ...existingSocialLinks, ...incoming } });
     } else if (section === "packages") {
       saveError = await saveTalentProfileSection(uid, { packages: data.packages });

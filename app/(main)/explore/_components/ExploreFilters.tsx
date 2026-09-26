@@ -18,6 +18,7 @@ interface Props {
   onVerified: (v: boolean) => void;
   sex: string;
   onSexChange: (s: string) => void;
+  genderCounts: { male: number; female: number };
   types: TypeTab[];
   activeType: string;
   onTypeChange: (t: string) => void;
@@ -36,7 +37,7 @@ export default function ExploreFilters({
   lang, sort, onSort,
   minPrice, maxPrice, onMinPrice, onMaxPrice,
   verified, onVerified,
-  sex, onSexChange,
+  sex, onSexChange, genderCounts,
   types, activeType, onTypeChange,
   open, onClose,
 }: Props) {
@@ -139,7 +140,8 @@ export default function ExploreFilters({
       </div>
 
       {/* Secondary filters — collapsed by default, no extra JS state (native <details>) */}
-      <details className={styles.moreFilters}>
+      {/* Opens by itself when a gender filter is active, so it's never hidden. */}
+      <details className={styles.moreFilters} open={sex !== "all" || undefined}>
         <summary className={styles.moreFiltersSummary}>
           {t.more}
           <ChevronDown size={14} />
@@ -150,8 +152,8 @@ export default function ExploreFilters({
             <div className={styles.chipRow}>
               {[
                 { key: "all", label: t.all },
-                { key: "male", label: t.male },
-                { key: "female", label: t.female },
+                { key: "male", label: `${t.male} (${genderCounts.male})` },
+                { key: "female", label: `${t.female} (${genderCounts.female})` },
               ].map(({ key, label }) => {
                 const active = sex === key;
                 return (

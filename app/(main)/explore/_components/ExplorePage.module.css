@@ -56,10 +56,12 @@
   position: absolute;
   inset: 0;
   z-index: -1;
+  /* The cover art is already dark in the middle; keep its creators visible at
+     the sides and only deepen the centre (title + search) and the bottom
+     (featured marquee) for legibility. */
   background:
-    radial-gradient(circle at 18% 15%, rgba(231,165,138, 0.24), transparent 24rem),
-    radial-gradient(circle at 86% 10%, rgba(8,127,131, 0.28), transparent 22rem),
-    linear-gradient(180deg, rgba(27,19,16, 0.88) 0%, rgba(27,19,16, 0.86) 55%, rgba(27,19,16, 0.94) 100%);
+    radial-gradient(ellipse 42% 70% at 50% 42%, rgba(27,19,16, 0.72), rgba(27,19,16, 0.2) 70%, transparent 100%),
+    linear-gradient(180deg, rgba(27,19,16, 0.25) 0%, rgba(27,19,16, 0.15) 45%, rgba(27,19,16, 0.85) 100%);
 }
 
 .heroContent {
@@ -1027,52 +1029,146 @@
   cursor: default;
 }
 
-/* ── Trust / features band ───────────────────────────── */
+/* ── Trust / features band ("Why Talents") ───────────
+   Heading on the reading-start side, four cards beside it, on a warm peach
+   wash with fine line-art (start side) and leaves (end side). The two SVGs
+   are decoration only and sit behind the content. */
 .featureBand {
-  background: var(--bg-page-subtle);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding-block: clamp(2rem, 4vw, 3rem);
+  background:
+    radial-gradient(60% 120% at 0% 100%, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent 70%),
+    radial-gradient(40% 90% at 100% 100%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 70%),
+    var(--bg-page-subtle);
   border-top: 1px solid var(--divider);
-  border-bottom: 1px solid var(--divider);
+}
+
+.bandInner {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 3fr);
+  align-items: center;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.bandHead .sectionKicker { margin-bottom: 0.35rem; }
+
+.bandTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+/* hand-drawn peach underline under the second line */
+.bandSwoosh {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.35em;
+}
+
+.bandSwoosh::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0 8%;
+  bottom: 0;
+  height: 0.38em;
+  background: no-repeat center / 100% 100%
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 14' preserveAspectRatio='none'%3E%3Cpath d='M2 10 C 50 3 120 2 198 7' fill='none' stroke='%23E7A58A' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 .featureGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
 }
 
 .featureCard {
   display: grid;
-  gap: 0.6rem;
-  padding: 1.3rem;
-  border: 1px solid var(--border-subtle);
+  align-content: start;
+  gap: 0.45rem;
+  padding: 1.1rem 1.1rem 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--border-subtle));
   border-radius: var(--radius-md);
-  background: var(--bg-surface);
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
   box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(2px);
 }
 
 .featureIcon {
-  width: 2.8rem;
-  height: 2.8rem;
+  width: 2.4rem;
+  height: 2.4rem;
   display: grid;
   place-items: center;
+  margin-bottom: 0.25rem;
   border-radius: var(--radius-sm);
-  background: var(--color-primary-soft);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
-  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-accent) 26%, transparent);
+  color: var(--color-accent-strong);
 }
 
 .featureCard h3 {
   margin: 0;
   color: var(--text-primary);
-  font-weight: 900;
-  font-size: var(--text-lg);
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: var(--text-base);
 }
 
 .featureCard p {
   margin: 0;
   color: var(--text-secondary);
-  font-size: var(--text-sm);
-  line-height: 1.7;
+  font-size: var(--text-xs);
+  line-height: 1.6;
+}
+
+/* decoration */
+.bandLines,
+.bandLeaves {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.bandLines {
+  inset-inline-start: 0;
+  top: 0;
+  width: clamp(160px, 18vw, 260px);
+  height: 100%;
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-accent) 70%, transparent);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.bandLines circle { fill: var(--color-accent); stroke: none; }
+
+.bandLeaves {
+  inset-inline-end: -12px;
+  bottom: -6px;
+  width: clamp(130px, 13vw, 210px);
+  height: auto;
+}
+
+:global([dir="rtl"]) .bandLeaves { transform: scaleX(-1); }
+
+.leafDark  { fill: #1f4a4b; }
+.leafTeal  { fill: var(--color-secondary-alt); opacity: 0.85; }
+.leafPeach { fill: var(--color-accent); opacity: 0.9; }
+.leafVein  { fill: none; stroke: color-mix(in srgb, #fbf7ea 45%, transparent); stroke-width: 1.2; }
+
+@media (max-width: 1100px) {
+  .bandInner { grid-template-columns: 1fr; }
+  .featureGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bandLeaves { width: 120px; opacity: 0.8; }
+}
+
+@media (max-width: 560px) {
+  .featureGrid { grid-template-columns: 1fr; }
+  .bandLines { width: 150px; height: 180px; }
 }
 
 /* ── Final CTA ───────────────────────────────────────── */

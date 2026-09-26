@@ -18,7 +18,7 @@ import { useSite } from "@/contexts/SiteContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { cdnImage } from "@/lib/images";
 import { getWizardSteps, type WizardStepKey } from "@/components/profile/completion-wizard-steps";
-import { GENERAL_PHYSICAL_FIELDS, MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
+import { GENERAL_PHYSICAL_FIELDS, MODEL_PHYSICAL_FIELDS, TALENT_SOCIAL_KEYS, normalizeGender } from "@/lib/profile-fields";
 import { fromDbAvailability } from "@/lib/availability-status";
 import { calculateCompletion } from "@/lib/profile-completion";
 import { uploadToCloudinary, cloudinaryUploadErrorText } from "@/lib/cloudinary-client-upload";
@@ -314,6 +314,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
   const sl = talentProfile?.social_links ?? {};
   const [personal, setPersonal] = useState({ full_name: profile?.full_name ?? "", city: profile?.city ?? "" });
   const [bio, setBio] = useState(profile?.bio ?? talentProfile?.bio ?? "");
+  const [gender, setGender] = useState<string>(normalizeGender(talentProfile?.social_links?.gender) ?? "");
   const [presence, setPresence] = useState<Record<string, string>>(
     Object.fromEntries(TALENT_SOCIAL_KEYS.map((k) => [k, sl[k] ?? ""])),
   );
@@ -584,6 +585,7 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
       if (key === "basic") {
         if (personal.full_name.trim()) await patchSection("personal", { full_name: personal.full_name.trim(), city: personal.city.trim() });
         if (bio.trim()) await patchSection("bio", { bio: bio.trim() });
+        if (gender) await patchSection("physical", { gender });
       } else if (key === "physical") {
         if (Object.values(physical).some((v) => String(v).trim().length > 0)) await patchSection("physical", physical);
       } else if (key === "professional") {
@@ -831,6 +833,18 @@ export default function CompleteProfileShell({ profile, talentProfile, portfolio
                 <div>
                   <label style={label}>{t.labels.city}</label>
                   <input style={inp} value={personal.city} onChange={(e) => setPersonal((f) => ({ ...f, city: e.target.value }))} />
+                </div>
+                <div>
+                  <label style={label}>{lang === "ar" ? "النوع" : "Gender"}</label>
+                  <div role="radiogroup" style={{ display: "flex", gap: 8 }}>
+                    {([["male", lang === "ar" ? "ذكر" : "Male"], ["female", lang === "ar" ? "أنثى" : "Female"]] as const).map(([v, l]) => (
+                      <button key={v} type="button" role="radio" aria-checked={gender === v} onClick={() => setGender(v)} style={{
+                        flex: 1, minHeight: 42, borderRadius: "var(--radius-sm)", fontSize: 13.5, fontWeight: 700, cursor: "pointer",
+                        fontFamily: "var(--font-sans)", background: gender === v ? TEAL : INP, color: gender === v ? INK : MUTED,
+                        border: `1px solid ${gender === v ? TEAL : BORDER}`,
+                      }}>{l}</button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label style={label}>{t.labels.bio}</label>

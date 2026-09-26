@@ -564,7 +564,7 @@ export default function RegisterPage() {
         sessionStorage.setItem("talent_other_type_text", form.otherTypeText.trim());
       }
       router.push(safeNextPath() ?? (
-        form.role !== "talent" ? "/profile/me" :
+        form.role !== "talent" ? "/onboarding/brand" :
         isOtherTalentType      ? "/waitlist" :
         "/onboarding"
       ));

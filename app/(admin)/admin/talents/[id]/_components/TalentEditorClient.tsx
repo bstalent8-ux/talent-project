@@ -11,7 +11,7 @@ import TalentBrandsPanel from "./TalentBrandsPanel";
 import { LeadWhatsAppButton } from "@/app/(admin)/admin/leads/_components/LeadContactActions";
 import TalentComplaintButton from "../../_components/TalentComplaintButton";
 import type { TalentAction, AdminTalentBrand } from "@/features/admin/types";
-import { TALENT_SOCIAL_KEYS } from "@/lib/profile-fields";
+import { TALENT_SOCIAL_KEYS, normalizeGender } from "@/lib/profile-fields";
 import { canonicalTalentPath } from "@/lib/talent-profile-route";
 
 const TX = {
@@ -210,6 +210,7 @@ function extractAdvanced(socialLinks: Record<string, unknown>): Record<string, u
   const rest = { ...socialLinks };
   for (const key of TALENT_SOCIAL_KEYS) delete rest[key];
   delete rest["usage_addons"];
+  delete rest["gender"]; // has its own control
   return rest;
 }
 
@@ -230,6 +231,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
   });
   const [packages, setPackages] = useState<PackageForm[]>(() => normalizePackages(initialData.packages));
   const [socialFields, setSocialFields] = useState<Record<string, string>>(() => extractSocialFields(initialData.social_links));
+  const [gender, setGender] = useState<string>(() => normalizeGender(initialData.social_links?.gender) ?? "");
   const [addons, setAddons] = useState<AddonForm[]>(() => normalizeAddons(initialData.social_links));
   const [advancedJson, setAdvancedJson] = useState(() => JSON.stringify(extractAdvanced(initialData.social_links), null, 2));
   const [status, setStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -347,6 +349,7 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
       if (v) socialLinks[key] = v;
     }
     if (cleanAddons.length > 0) socialLinks["usage_addons"] = cleanAddons;
+    if (normalizeGender(gender)) socialLinks["gender"] = normalizeGender(gender);
 
     setStatus("saving");
     const res = await fetch(`/api/admin/talents/${talentProfileId}/profile`, {
@@ -609,6 +612,14 @@ export default function TalentEditorClient({ talentProfileId, profileUserId, ini
             <div>
               {label(t.city)}
               <input style={inp} value={form.city} onChange={e => set("city", e.target.value)} />
+            </div>
+            <div>
+              {label(ar ? "النوع (فلتر Explore)" : "Gender (Explore filter)")}
+              <select style={inp} value={gender} onChange={e => setGender(e.target.value)}>
+                <option value="">{ar ? "غير محدد" : "Not set"}</option>
+                <option value="male">{ar ? "ذكر" : "Male"}</option>
+                <option value="female">{ar ? "أنثى" : "Female"}</option>
+              </select>
             </div>
             <div>
               {label(t.category)}

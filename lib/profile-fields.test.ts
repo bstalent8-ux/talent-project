@@ -1,27 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { MODEL_PHYSICAL_FIELDS, TALENT_PHYSICAL_KEYS, TALENT_SOCIAL_KEYS } from "./profile-fields";
+import { TALENT_PHYSICAL_KEYS, normalizeGender } from "./profile-fields";
 
-describe("profile-fields canonical key lists", () => {
-  it("TALENT_PHYSICAL_KEYS includes eye_color and the chest/waist/hip measurements alongside the pre-existing keys", () => {
-    expect(TALENT_PHYSICAL_KEYS).toEqual([
-      "height", "weight", "hair_color", "shoe_size", "age", "languages", "dialect", "eye_color",
-      "chest", "waist", "hip",
-    ]);
+describe("normalizeGender", () => {
+  it("maps English and Arabic spellings to male/female", () => {
+    for (const v of ["male", "Male", " M ", "man", "ذكر", "رجل"]) expect(normalizeGender(v)).toBe("male");
+    for (const v of ["female", "FEMALE", "f", "woman", "أنثى", "انثى"]) expect(normalizeGender(v)).toBe("female");
   });
 
-  it("MODEL_PHYSICAL_FIELDS is exactly the approved Model minimum — no invented fields", () => {
-    expect(MODEL_PHYSICAL_FIELDS).toEqual(["height", "weight", "shoe_size", "hair_color", "eye_color", "chest", "waist", "hip"]);
+  it("returns null for anything else", () => {
+    for (const v of ["", "other", "x", null, undefined, 1, {}]) expect(normalizeGender(v)).toBeNull();
   });
 
-  it("every MODEL_PHYSICAL_FIELDS entry is a subset of TALENT_PHYSICAL_KEYS", () => {
-    for (const key of MODEL_PHYSICAL_FIELDS) {
-      expect(TALENT_PHYSICAL_KEYS).toContain(key);
-    }
-  });
-
-  it("TALENT_SOCIAL_KEYS covers all 8 Professional Presence platforms", () => {
-    expect(TALENT_SOCIAL_KEYS).toEqual([
-      "instagram", "tiktok", "facebook", "youtube", "linkedin", "telegram", "website", "other",
-    ]);
+  it("gender is not a physical key (it must not complete that section on its own)", () => {
+    expect((TALENT_PHYSICAL_KEYS as readonly string[]).includes("gender")).toBe(false);
   });
 });

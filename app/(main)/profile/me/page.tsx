@@ -1,6 +1,7 @@
 "use client";
 export const runtime = 'edge';
 
+import { normalizeGender } from "@/lib/profile-fields";
 import { useModalPresence } from "@/hooks/useModalClose";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -276,6 +277,9 @@ export default function DashboardPage() {
       setStatus("none"); return;
     }
     const { profile: prof, talentProfile: talentProf, portfolioItems } = await res.json();
+    // This page edits a talent profile. A brand edits its public page in the
+    // brand wizard instead (/profile/brand-setup).
+    if (prof?.role === "brand") { router.replace("/profile/brand-setup"); return; }
     setProfile(prof);
     setTp(talentProf ?? null);
     setMedia(portfolioItems ?? []);
@@ -311,6 +315,7 @@ export default function DashboardPage() {
       shoe_size:    sl.shoe_size      ?? "",
       languages:    sl.languages      ?? "",
       dialect:      sl.dialect        ?? "",
+      gender:       normalizeGender(sl.gender) ?? "",
       availability: fromDbAvailability(talentProf?.availability),
     });
     setStatus("ready");
@@ -447,6 +452,7 @@ export default function DashboardPage() {
       age: form.age, hair_color: form.hair_color, eye_color: form.eye_color,
       shoe_size: form.shoe_size, languages: form.languages,
       dialect: form.dialect,
+      ...(normalizeGender(form.gender) ? { gender: normalizeGender(form.gender) } : {}),
       usage_addons: addons,
       brands,
     };
@@ -734,6 +740,16 @@ export default function DashboardPage() {
                     <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{t.city}</label>
                     <input value={form.city} onChange={e => setF("city", e.target.value)} style={inp} />
                   </div>
+                  {tp && (
+                    <div>
+                      <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{lang === "ar" ? "النوع" : "Gender"}</label>
+                      <select value={form.gender ?? ""} onChange={e => setF("gender", e.target.value)} style={inp}>
+                        <option value="">{lang === "ar" ? "اختر…" : "Choose…"}</option>
+                        <option value="male">{lang === "ar" ? "ذكر" : "Male"}</option>
+                        <option value="female">{lang === "ar" ? "أنثى" : "Female"}</option>
+                      </select>
+                    </div>
+                  )}
                   <div>
                     <label style={{ color: MUTED, fontSize: 11, display: "block", marginBottom: 4 }}>{t.bio}</label>
                     <textarea value={form.bio} onChange={e => setF("bio", e.target.value)} rows={3} placeholder={t.bioPlaceholder} style={{ ...inp, resize: "vertical", lineHeight: 1.7 }} />

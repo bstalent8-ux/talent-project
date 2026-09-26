@@ -34,9 +34,9 @@ export default function FloatingChatWidget({ myId }: { myId: string }) {
   const { dark, lang } = useSite();
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  // /profile/me pins a full-width Save bar to the bottom on phones — lift the
+  // /profile/me and /profile/brand-setup pin a full-width Save bar to the bottom on phones — lift the
   // bubble (and its panel) above it so it never covers the Save button.
-  const fabBottom = isMobile && pathname?.startsWith("/profile/me") ? 88 : 24;
+  const fabBottom = isMobile && (pathname?.startsWith("/profile/me") || pathname?.startsWith("/profile/brand-setup")) ? 96 : 24;
   const ar = lang === "ar";
 
   // ─── widget state ────────────────────────────────────────────────────────

@@ -15,10 +15,11 @@ export const runtime = 'edge';
 
 import { notFound } from "next/navigation";
 import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
-import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileError, profileService } from "@/features/profiles";
 import type { PublicProfileDTO } from "@/features/profiles/types/dto";
+import { getBrandPageData } from "@/features/brand-page/brand-page.service";
+import type { BrandPublicCore } from "@/features/profiles/types/dto";
 import BrandProfileShell from "./_components/BrandProfileShell";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -46,19 +47,36 @@ async function loadBrand(id: string): Promise<PublicProfileDTO | null> {
  * another visitor's role). Mirrors getAdminPreviewIfAllowed in
  * app/(main)/_lib/load-talent-profile.ts.
  */
+/** Everything on the page that is not in the profile DTO (jobs, stats, reviews…). */
+function loadPageData(profile: PublicProfileDTO) {
+  const core = profile.core as BrandPublicCore;
+  return getBrandPageData({
+    brandUserId:      profile.identity.id,
+    categoryId:       core.categoryId,
+    industry:         core.industry,
+    businessApproved: core.isApproved,
+  });
+}
+
 async function getAdminPreviewIfAllowed(id: string): Promise<PublicProfileDTO | null> {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const { data: viewer } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    if (viewer?.role !== "admin") return null;
+    const { data: viewer } = await supabase.from("profiles").select("role, handle").eq("id", user.id).single();
+    // The brand itself may preview its own page while it is still pending, so
+    // "View your page" in the setup wizard works before admin approval. Owner
+    // match is checked on the id/handle BEFORE loading anything, so a
+    // non-admin can never pull someone else's unapproved page.
+    const isOwner = id === user.id || (!!viewer?.handle && id.toLowerCase() === viewer.handle.toLowerCase());
+    if (viewer?.role !== "admin" && !isOwner) return null;
 
     const { profile } = UUID_RE.test(id)
       ? await profileService.getAdminPreviewProfileById(id)
       : await profileService.getAdminPreviewProfileByHandle(id);
     if (profile.meta.typeSlug !== "brand") return null;
+    if (viewer?.role !== "admin" && profile.identity.id !== user.id) return null;
 
     return profile;
   } catch {
@@ -86,16 +104,8 @@ export default async function BrandDetailPage({
       if (!profile) return null;
       if (profile.meta.typeSlug !== "brand") return null;
 
-      // Collaboration count is a booking fact, not a profile one, so it is not
-      // in the DTO. Read after the profile so an unapproved brand costs one
-      // query instead of two.
-      const { data: bookings } = await adminClient
-        .from("bookings")
-        .select("id")
-        .eq("brand_id", profile.identity.id)
-        .eq("status", "completed");
-
-      return { profile, completedBookings: bookings?.length ?? 0 };
+      // Read after the profile so an unapproved brand costs one query, not eight.
+      return { profile, page: await loadPageData(profile) };
     },
   );
 
@@ -104,24 +114,10 @@ export default async function BrandDetailPage({
     const adminProfile = await getAdminPreviewIfAllowed(id);
     if (!adminProfile) notFound();
 
-    const { data: bookings } = await adminClient
-      .from("bookings")
-      .select("id")
-      .eq("brand_id", adminProfile.identity.id)
-      .eq("status", "completed");
-
-    return (
-      <BrandProfileShell
-        completedBookings={bookings?.length ?? 0}
-        profile={adminProfile}
-      />
-    );
+    return <BrandProfileShell page={await loadPageData(adminProfile)} profile={adminProfile} />;
   }
 
   return (
-    <BrandProfileShell
-      completedBookings={payload.completedBookings}
-      profile={payload.profile}
-    />
+    <BrandProfileShell page={payload.page} profile={payload.profile} />
   );
 }

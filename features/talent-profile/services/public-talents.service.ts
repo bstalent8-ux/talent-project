@@ -2,6 +2,7 @@ import { CACHE_SECONDS, CACHE_TAGS, cachedPublic } from "@/lib/cache";
 import { parsePrice } from "@/lib/price";
 import { adminClient } from "@/lib/supabase/admin";
 import { safePublicDisplayName } from "@/lib/public-display-name";
+import { normalizeGender } from "@/lib/profile-fields";
 
 export interface PublicTalentCard {
   id: string;
@@ -118,7 +119,7 @@ function toPublicTalentCards(rows: PublicTalentProfile[]): PublicTalentCard[] {
       verified:       Boolean(p.is_verified),
       fast_response:  Boolean(sl.fast_response),
       premium:        Boolean(sl.premium),
-      gender:         (sl.gender as string) ?? null,
+      gender:         normalizeGender(sl.gender),
     }];
   });
 }

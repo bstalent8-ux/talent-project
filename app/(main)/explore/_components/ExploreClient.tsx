@@ -75,6 +75,12 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
   const [maxPrice, setMaxPrice] = useState<number>(10000);
   const [verified, setVerified] = useState(false);
   const [sex,      setSex]      = useState("all");
+  // How many talents have each gender set — shown on the filter chips so an
+  // empty result reads as "not many set yet", not as a broken filter.
+  const genderCounts = useMemo(() => ({
+    male:   talents.filter((t) => t.gender === "male").length,
+    female: talents.filter((t) => t.gender === "female").length,
+  }), [talents]);
   const [page,     setPage]     = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -312,7 +318,7 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
               minPrice={minPrice} maxPrice={maxPrice}
               onMinPrice={setMinPrice} onMaxPrice={setMaxPrice}
               verified={verified} onVerified={setVerified}
-              sex={sex} onSexChange={setSex}
+              sex={sex} onSexChange={setSex} genderCounts={genderCounts}
               types={TALENT_TYPES} activeType={type} onTypeChange={setType}
               open={filtersOpen} onClose={() => setFiltersOpen(false)}
             />
@@ -368,12 +374,28 @@ export default function ExploreClient({ talents, viewerBrandCategory = null }: P
 
       {/* ── Trust / features band ──────────────────────── */}
       <section className={`${styles.section} ${styles.featureBand}`}>
-        <div className={styles.container}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionHeaderText}>
-              <p className={styles.sectionKicker}>{ar ? "لماذا Talents" : "Why Talents"}</p>
-              <h2 className={styles.sectionTitle}>{ar ? "احجز بثقة من أول رسالة" : "Book with confidence, start to finish"}</h2>
-            </div>
+        {/* Decoration only: fine peach line-art on the reading-start side, leaves on the other. */}
+        <svg className={styles.bandLines} viewBox="0 0 260 220" aria-hidden="true" focusable="false">
+          <path d="M-10 190 C 40 120 90 150 120 90 S 190 20 250 40" />
+          <path d="M-10 214 C 60 170 120 196 170 140 S 230 90 270 100" />
+          <path d="M34 40 C 58 18 92 20 104 44 C 80 58 50 58 34 40 Z" />
+          <path d="M34 40 L 104 44" />
+          <circle cx="150" cy="178" r="3" />
+        </svg>
+        <svg className={styles.bandLeaves} viewBox="0 0 220 240" aria-hidden="true" focusable="false">
+          <path className={styles.leafDark} d="M178 238 C 150 170 150 110 196 52 C 214 120 214 186 178 238 Z" />
+          <path className={styles.leafPeach} d="M150 240 C 96 206 70 160 78 96 C 128 130 152 184 150 240 Z" />
+          <path className={styles.leafTeal} d="M204 240 C 214 196 240 160 270 146 C 262 196 238 226 204 240 Z" />
+          <path className={styles.leafDark} d="M120 240 C 84 226 50 226 20 240 C 52 206 92 206 120 240 Z" />
+          <path className={styles.leafVein} d="M180 232 C 184 170 188 118 196 60 M146 236 C 128 190 102 150 80 102" />
+        </svg>
+        <div className={`${styles.container} ${styles.bandInner}`}>
+          <div className={styles.bandHead}>
+            <p className={styles.sectionKicker}>{ar ? "لماذا Talents" : "Why Talents"}</p>
+            <h2 className={styles.bandTitle}>
+              {ar ? "احجز بثقة،" : "Book with confidence,"}{" "}
+              <span className={styles.bandSwoosh}>{ar ? "من أول رسالة" : "start to finish"}</span>
+            </h2>
           </div>
           <div className={styles.featureGrid}>
             {features.map((f) => {
